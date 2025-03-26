@@ -5,17 +5,24 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
 
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <body class="bg-gray-100">
-    <main class="container mx-auto mt-28 px-5 flex">
+  <body class="bg-gray-100 flex flex-col min-h-screen">
+
+    <%= render "layouts/navbar" %>
+
+    <main class="flex-grow container mx-auto px-4 pt-24 pb-10">
       <%= yield %>
     </main>
+
+    <%= render "layouts/footer" %>
+
   </body>
 </html>
+
 

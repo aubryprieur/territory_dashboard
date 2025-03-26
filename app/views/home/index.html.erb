@@ -1,1 +1,464 @@
-<h1 class="text-4xl text-green-600 text-center mt-10">Tailwind fonctionne 🎉</h1>
+<!-- app/views/home/index.html.erb -->
+
+
+
+<!-- Hero Section -->
+<div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+    <div class="flex flex-col md:flex-row items-center">
+      <div class="md:w-1/2 mb-12 md:mb-0">
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+          Valorisez les données de votre territoire
+        </h1>
+        <p class="text-xl text-indigo-100 mb-8">
+          Une solution complète pour analyser et visualiser les données démographiques, socio-économiques et créer des enquêtes pour votre commune.
+        </p>
+        <div class="flex space-x-4">
+          <a href="#" class="inline-flex items-center justify-center bg-white text-indigo-600 hover:text-indigo-500 font-medium py-3 px-6 rounded-md">
+            Démarrer
+          </a>
+          <a href="#" class="inline-flex items-center justify-center bg-transparent border border-white text-white hover:bg-white hover:text-indigo-600 font-medium py-3 px-6 rounded-md">
+            En savoir plus
+          </a>
+        </div>
+      </div>
+      <div class="md:w-1/2">
+        <div class="bg-white p-4 rounded-lg shadow-lg">
+          <div class="aspect-w-16 aspect-h-9 bg-gray-100 rounded">
+            <div class="flex items-center justify-center h-64">
+              <span class="text-gray-400">Aperçu du tableau de bord</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<div class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
+        Fonctionnalités principales
+      </h2>
+      <p class="text-xl text-gray-500 max-w-3xl mx-auto">
+        Tout ce dont vous avez besoin pour analyser, visualiser et exploiter les données de votre territoire.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Feature 1 -->
+      <div class="p-6 bg-gray-50 rounded-lg">
+        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-md flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">Données territoriales</h3>
+        <p class="text-gray-600">
+          Visualisez les données démographiques, socio-économiques, de natalité, de scolarisation et de sécurité publique de votre commune.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="p-6 bg-gray-50 rounded-lg">
+        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-md flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.088.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">Création d'enquêtes</h3>
+        <p class="text-gray-600">
+          Concevez, diffusez et analysez des enquêtes personnalisées avec différents types de questions et rapports détaillés des résultats.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="p-6 bg-gray-50 rounded-lg">
+        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-md flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">Analyses et rapports</h3>
+        <p class="text-gray-600">
+          Générez des analyses comparatives, des graphiques interactifs et exportez vos données en PDF ou CSV pour vos présentations.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Modules Section -->
+<div class="py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
+        Modules principaux
+      </h2>
+      <p class="text-xl text-gray-500 max-w-3xl mx-auto">
+        Une solution complète pour vos besoins d'analyse territoriale
+      </p>
+    </div>
+
+    <!-- Module Rows -->
+    <!-- Module 1 -->
+    <div class="mb-16">
+      <div class="flex flex-col md:flex-row items-center bg-white rounded-lg overflow-hidden shadow-lg">
+        <div class="md:w-1/2 p-8">
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Analyse démographique</h3>
+          <p class="text-gray-600 mb-4">
+            Explorez les données démographiques détaillées de votre commune : population par âge, évolution historique, natalité et structure familiale.
+          </p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-center">
+              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Comparaison avec l'EPCI, le département et la région</span>
+            </li>
+            <li class="flex items-center">
+              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Évolution historique sur 10 ans</span>
+            </li>
+            <li class="flex items-center">
+              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Analyse des tendances démographiques</span>
+            </li>
+          </ul>
+          <a href="#" class="inline-flex items-center font-medium text-indigo-600 hover:text-indigo-500">
+            Découvrir cette fonctionnalité
+            <svg class="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </a>
+        </div>
+        <div class="md:w-1/2 bg-gray-100 p-8 flex items-center justify-center">
+          <div class="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
+            <span class="text-gray-400">Graphique démographique</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module 2 -->
+    <div class="mb-16">
+      <div class="flex flex-col md:flex-row-reverse items-center bg-white rounded-lg overflow-hidden shadow-lg">
+        <div class="md:w-1/2 p-8">
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Gestion d'enquêtes</h3>
+          <p class="text-gray-600 mb-4">
+            Créez et gérez des enquêtes personnalisées pour consulter vos habitants et recueillir leurs avis sur vos projets communaux.
+          </p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-center">
+              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Multiples types de questions (choix unique, multiple, texte libre)</span>
+            </li>
+            <li class="flex items-center">
+              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Génération de QR codes et affiches personnalisées</span>
+            </li>
+            <li class="flex items-center">
+              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Statistiques en temps réel et analyse des résultats</span>
+            </li>
+          </ul>
+          <a href="#" class="inline-flex items-center font-medium text-indigo-600 hover:text-indigo-500">
+            Découvrir cette fonctionnalité
+            <svg class="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </a>
+        </div>
+        <div class="md:w-1/2 bg-gray-100 p-8 flex items-center justify-center">
+          <div class="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
+            <span class="text-gray-400">Interface d'enquête</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module 3 -->
+    <div>
+      <div class="flex flex-col md:flex-row items-center bg-white rounded-lg overflow-hidden shadow-lg">
+        <div class="md:w-1/2 p-8">
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Données socio-économiques</h3>
+          <p class="text-gray-600 mb-4">
+            Analysez les données socio-économiques de votre territoire : revenus, emploi, scolarisation et sécurité publique.
+          </p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-center">
+              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Indicateurs de revenus et d'emploi</span>
+            </li>
+            <li class="flex items-center">
+              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Données sur la scolarisation et l'accueil petite enfance</span>
+            </li>
+            <li class="flex items-center">
+              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Statistiques de sécurité publique</span>
+            </li>
+          </ul>
+          <a href="#" class="inline-flex items-center font-medium text-indigo-600 hover:text-indigo-500">
+            Découvrir cette fonctionnalité
+            <svg class="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+          </a>
+        </div>
+        <div class="md:w-1/2 bg-gray-100 p-8 flex items-center justify-center">
+          <div class="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
+            <span class="text-gray-400">Graphiques socio-économiques</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Testimonials Section -->
+<div class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
+        Ce que disent nos utilisateurs
+      </h2>
+      <p class="text-xl text-gray-500 max-w-3xl mx-auto">
+        Découvrez l'expérience des collectivités qui utilisent déjà notre plateforme.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Testimonial 1 -->
+      <div class="p-6 bg-gray-50 rounded-lg">
+        <div class="flex items-center mb-4">
+          <div class="w-12 h-12 bg-gray-300 rounded-full mr-4"></div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Marie Dumas</h3>
+            <p class="text-gray-600">Directrice des services, Commune de 5000 habitants</p>
+          </div>
+        </div>
+        <p class="text-gray-600 italic">
+          "Grâce à Territory Dashboard, nous avons pu facilement analyser les tendances démographiques de notre commune et adapter nos services en conséquence. Les enquêtes nous ont permis de mieux comprendre les besoins de nos habitants."
+        </p>
+      </div>
+
+      <!-- Testimonial 2 -->
+      <div class="p-6 bg-gray-50 rounded-lg">
+        <div class="flex items-center mb-4">
+          <div class="w-12 h-12 bg-gray-300 rounded-full mr-4"></div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Thomas Martin</h3>
+            <p class="text-gray-600">Maire adjoint, Commune de 15000 habitants</p>
+          </div>
+        </div>
+        <p class="text-gray-600 italic">
+          "L'interface intuitive et les visualisations claires nous ont permis de prendre des décisions basées sur des données concrètes. La génération de rapports PDF nous fait gagner un temps précieux lors de nos présentations en conseil municipal."
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pricing Section -->
+<div class="py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
+        Tarifs adaptés à la taille de votre commune
+      </h2>
+      <p class="text-xl text-gray-500 max-w-3xl mx-auto">
+        Des formules d'abonnement annuel selon le nombre d'habitants de votre territoire.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Pricing 1 -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-8">
+          <h3 class="text-lg font-medium text-gray-900">Petites communes</h3>
+          <div class="mt-4 flex items-baseline text-indigo-600">
+            <span class="text-5xl font-extrabold tracking-tight">1000€</span>
+            <span class="ml-1 text-xl font-medium text-gray-500">/an</span>
+          </div>
+          <p class="mt-5 text-gray-500">
+            Pour les communes jusqu'à 3500 habitants
+          </p>
+        </div>
+        <div class="px-6 pt-6 pb-8">
+          <ul class="space-y-4">
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Toutes les données démographiques</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Création de 3 enquêtes par an</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Exports PDF et CSV</span>
+            </li>
+          </ul>
+          <div class="mt-8">
+            <a href="#" class="block w-full text-center rounded-md bg-indigo-600 px-6 py-3 text-white font-medium hover:bg-indigo-700">
+              Commencer
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing 2 -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-indigo-500">
+        <div class="p-8">
+          <h3 class="text-lg font-medium text-gray-900">Communes moyennes</h3>
+          <div class="mt-4 flex items-baseline text-indigo-600">
+            <span class="text-5xl font-extrabold tracking-tight">1500€</span>
+            <span class="ml-1 text-xl font-medium text-gray-500">/an</span>
+          </div>
+          <p class="mt-5 text-gray-500">
+            Pour les communes de 3501 à 10000 habitants
+          </p>
+        </div>
+        <div class="px-6 pt-6 pb-8">
+          <ul class="space-y-4">
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Toutes les données démographiques</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Création de 5 enquêtes par an</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Analyse comparative avancée</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Support prioritaire</span>
+            </li>
+          </ul>
+          <div class="mt-8">
+            <a href="#" class="block w-full text-center rounded-md bg-indigo-600 px-6 py-3 text-white font-medium hover:bg-indigo-700">
+              Commencer
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing 3 -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-8">
+          <h3 class="text-lg font-medium text-gray-900">Grandes communes</h3>
+          <div class="mt-4 flex items-baseline text-indigo-600">
+            <span class="text-5xl font-extrabold tracking-tight">2000€</span>
+            <span class="ml-1 text-xl font-medium text-gray-500">/an</span>
+          </div>
+          <p class="mt-5 text-gray-500">
+            Pour les communes de 10001 à 100000 habitants
+          </p>
+        </div>
+        <div class="px-6 pt-6 pb-8">
+          <ul class="space-y-4">
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Fonctionnalités complètes</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Enquêtes illimitées</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Données historiques étendues</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="ml-3 text-gray-700">Formation et accompagnement</span>
+            </li>
+          </ul>
+          <div class="mt-8">
+            <a href="#" class="block w-full text-center rounded-md bg-indigo-600 px-6 py-3 text-white font-medium hover:bg-indigo-700">
+              Commencer
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom pricing -->
+    <div class="mt-10 text-center">
+      <p class="text-gray-600">
+        Vous êtes une métropole ou une commune de plus de 100000 habitants ?
+      </p>
+      <a href="#" class="inline-flex items-center mt-2 font-medium text-indigo-600 hover:text-indigo-500">
+        Contactez-nous pour une offre sur mesure
+        <svg class="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- CTA Section -->
+<div class="bg-indigo-700 text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+    <h2 class="text-3xl font-extrabold mb-4">
+      Prêt à optimiser la gestion de votre territoire ?
+    </h2>
+    <p class="text-xl text-indigo-200 mb-8 max-w-3xl mx-auto">
+      Rejoignez les collectivités qui utilisent déjà Territory Dashboard pour analyser leurs données territoriales et créer des enquêtes efficaces.
+    </p>
+    <div class="inline-flex space-x-4">
+      <a href="#" class="inline-flex items-center justify-center bg-white text-indigo-600 hover:bg-indigo-50 font-medium py-3 px-8 rounded-md text-lg">
+        Demander une démo
+      </a>
+      <a href="#" class="inline-flex items-center justify-center bg-transparent border border-white text-white hover:bg-white hover:text-indigo-600 font-medium py-3 px-8 rounded-md text-lg">
+        Nous contacter
+      </a>
+    </div>
+  </div>
+</div>
