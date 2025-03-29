@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_29_144027) do
+ActiveRecord::Schema[8.0].define(version: 2025_03_29_155853) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "unaccent"
+
+  create_table "territories", force: :cascade do |t|
+    t.string "libgeo"
+    t.string "codgeo"
+    t.string "epci"
+    t.string "dep"
+    t.string "reg"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["libgeo"], name: "index_territories_on_libgeo"
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false

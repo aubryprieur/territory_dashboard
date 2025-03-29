@@ -43,16 +43,178 @@
   </div>
 
   <div class="mb-4">
-    <%= form.label :territory_code, "Code du territoire", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= form.text_field :territory_code, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" %>
+    <%= form.label :territory_name, "Nom du territoire", class: "block text-sm font-medium text-gray-700 mb-1" %>
+
+    <!-- Champ autocomplete caché qui stockera le nom formaté avec code -->
+    <div class="relative">
+      <%= form.text_field :territory_name, class: "hidden", id: "real_territory_name" %>
+
+      <!-- Champ de recherche visible -->
+      <input type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" id="territory_search" placeholder="Rechercher une commune..." autocomplete="off">
+
+      <!-- Liste déroulante pour les suggestions -->
+      <div id="territory_suggestions" class="absolute z-10 w-full bg-white mt-1 border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto hidden">
+        <!-- Les suggestions seront injectées ici par JavaScript -->
+      </div>
+    </div>
+
+    <p class="mt-1 text-sm text-gray-500">
+      Commencez à taper le nom de la commune pour voir les suggestions. Assurez-vous de bien sélectionner la commune avec le bon code INSEE.
+    </p>
   </div>
 
   <div class="mb-4">
-    <%= form.label :territory_name, "Nom du territoire", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= form.text_field :territory_name, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" %>
+    <%= form.label :territory_code, "Code du territoire", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= form.text_field :territory_code, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50", readonly: true %>
   </div>
 
   <div class="flex justify-end">
     <%= form.submit class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
   </div>
 <% end %>
+
+<script>
+  document.addEventListener('turbo:load', function() {
+    const territorySearch = document.getElementById('territory_search');
+    const realTerritoryName = document.getElementById('real_territory_name');
+    const territorySuggestions = document.getElementById('territory_suggestions');
+    const territoryCodeField = document.getElementById('user_territory_code');
+    const territoryTypeSelect = document.getElementById('user_territory_type');
+
+    if (territorySearch && territorySuggestions) {
+      // Si un nom de territoire est déjà défini, l'afficher dans le champ de recherche
+      if (realTerritoryName.value) {
+        territorySearch.value = realTerritoryName.value;
+      }
+
+      // Fonction pour normaliser les chaînes de caractères (enlever les accents)
+      function normalizeString(str) {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+
+      // Variable pour stocker le timeout de recherche
+      let searchTimeout;
+
+      // Écouteur d'événements pour la saisie
+      territorySearch.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+
+        // Vider le champ de code si la recherche est vide
+        if (searchTerm === '') {
+          territoryCodeField.value = '';
+          realTerritoryName.value = '';
+          territorySuggestions.classList.add('hidden');
+          return;
+        }
+
+        // Effacer le timeout précédent
+        clearTimeout(searchTimeout);
+
+        if (searchTerm.length >= 2) {
+          // Attendre 300ms avant de faire la recherche pour éviter trop de requêtes
+          searchTimeout = setTimeout(() => {
+            fetch(`/territories/autocomplete?term=${encodeURIComponent(searchTerm)}`, {
+              headers: {
+                'Accept': 'application/json'
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              // Vider les suggestions existantes
+              territorySuggestions.innerHTML = '';
+
+              // Si aucun résultat, masquer la liste
+              if (data.length === 0) {
+                territorySuggestions.classList.add('hidden');
+                return;
+              }
+
+              // Normaliser le terme de recherche
+              const normalizedSearchTerm = normalizeString(searchTerm.toLowerCase());
+
+              // Trier les résultats par pertinence
+              data.sort((a, b) => {
+                const aName = normalizeString(a.value.toLowerCase());
+                const bName = normalizeString(b.value.toLowerCase());
+
+                // Les communes qui commencent par le terme recherché sont prioritaires
+                const aStartsWith = aName.startsWith(normalizedSearchTerm);
+                const bStartsWith = bName.startsWith(normalizedSearchTerm);
+
+                if (aStartsWith && !bStartsWith) return -1;
+                if (!aStartsWith && bStartsWith) return 1;
+
+                // Sinon trier par département puis par nom
+                if (a.dep !== b.dep) return a.dep.localeCompare(b.dep);
+                return aName.localeCompare(bName);
+              });
+
+              // Créer un élément pour chaque suggestion
+              data.forEach(territory => {
+                const suggestion = document.createElement('div');
+                suggestion.className = 'px-4 py-2 hover:bg-indigo-50 cursor-pointer';
+                suggestion.textContent = territory.display_value;
+
+                // Stocker les données du territoire dans l'élément
+                suggestion.dataset.codgeo = territory.codgeo;
+                suggestion.dataset.epci = territory.epci;
+                suggestion.dataset.dep = territory.dep;
+                suggestion.dataset.reg = territory.reg;
+                suggestion.dataset.fullName = territory.display_value;
+                suggestion.dataset.name = territory.value;
+
+                // Ajouter un gestionnaire d'événements pour la sélection
+                suggestion.addEventListener('click', function() {
+                  // Mettre à jour les champs avec les données du territoire sélectionné
+                  territorySearch.value = this.dataset.fullName;
+                  realTerritoryName.value = this.dataset.name;
+                  territoryCodeField.value = this.dataset.codgeo;
+                  territoryTypeSelect.value = 'commune';
+
+                  // Masquer les suggestions
+                  territorySuggestions.classList.add('hidden');
+                });
+
+                territorySuggestions.appendChild(suggestion);
+              });
+
+              // Afficher la liste de suggestions
+              territorySuggestions.classList.remove('hidden');
+            })
+            .catch(error => {
+              console.error('Erreur lors de la recherche:', error);
+              territorySuggestions.classList.add('hidden');
+            });
+          }, 300);
+        } else {
+          // Masquer les suggestions si la recherche est trop courte
+          territorySuggestions.classList.add('hidden');
+        }
+      });
+
+      // Masquer les suggestions lorsque l'utilisateur clique ailleurs
+      document.addEventListener('click', function(event) {
+        if (!territorySearch.contains(event.target) && !territorySuggestions.contains(event.target)) {
+          territorySuggestions.classList.add('hidden');
+        }
+      });
+
+      // Rétablir la valeur sélectionnée si l'utilisateur quitte le champ sans sélectionner une suggestion
+      territorySearch.addEventListener('blur', function() {
+        // Attendre un peu pour permettre la sélection d'une suggestion
+        setTimeout(() => {
+          if (realTerritoryName.value && !territorySuggestions.contains(document.activeElement)) {
+            // Si une valeur a été précédemment sélectionnée, la rétablir
+            if (territoryCodeField.value) {
+              territorySearch.value = realTerritoryName.value;
+            } else {
+              // Si aucune valeur n'a été sélectionnée, vider le champ
+              territorySearch.value = '';
+              realTerritoryName.value = '';
+            }
+          }
+        }, 200);
+      });
+    }
+  });
+</script>

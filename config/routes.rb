@@ -8,5 +8,8 @@ Rails.application.routes.draw do
     resources :users
   end
 
+  # Route pour l'autocomplétion des territoires
+  get 'territories/autocomplete', to: 'territories#autocomplete'
+
   root "home#index"
 end

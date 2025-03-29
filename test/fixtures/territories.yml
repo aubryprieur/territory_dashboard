@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  libgeo: MyString
+  codgeo: MyString
+  epci: MyString
+  dep: MyString
+  reg: MyString
+
+two:
+  libgeo: MyString
+  codgeo: MyString
+  epci: MyString
+  dep: MyString
+  reg: MyString
