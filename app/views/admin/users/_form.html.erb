@@ -132,28 +132,57 @@
               // Normaliser le terme de recherche
               const normalizedSearchTerm = normalizeString(searchTerm.toLowerCase());
 
+              // Déterminer les correspondances exactes, partielles et qui commencent par
+              data.forEach(territory => {
+                const normalizedTerritory = normalizeString(territory.value.toLowerCase());
+                territory.exact_match = normalizedTerritory === normalizedSearchTerm;
+                territory.starts_with = normalizedTerritory.startsWith(normalizedSearchTerm);
+              });
+
               // Trier les résultats par pertinence
               data.sort((a, b) => {
-                const aName = normalizeString(a.value.toLowerCase());
-                const bName = normalizeString(b.value.toLowerCase());
+                // Priorité 1: Les correspondances exactes
+                if (a.exact_match && !b.exact_match) return -1;
+                if (!a.exact_match && b.exact_match) return 1;
 
-                // Les communes qui commencent par le terme recherché sont prioritaires
-                const aStartsWith = aName.startsWith(normalizedSearchTerm);
-                const bStartsWith = bName.startsWith(normalizedSearchTerm);
+                // Priorité 2: Les communes qui commencent par le terme recherché
+                if (a.starts_with && !b.starts_with) return -1;
+                if (!a.starts_with && b.starts_with) return 1;
 
-                if (aStartsWith && !bStartsWith) return -1;
-                if (!aStartsWith && bStartsWith) return 1;
-
-                // Sinon trier par département puis par nom
+                // Priorité 3: Par département
                 if (a.dep !== b.dep) return a.dep.localeCompare(b.dep);
-                return aName.localeCompare(bName);
+
+                // Puis par nom
+                return a.value.localeCompare(b.value);
               });
 
               // Créer un élément pour chaque suggestion
               data.forEach(territory => {
                 const suggestion = document.createElement('div');
-                suggestion.className = 'px-4 py-2 hover:bg-indigo-50 cursor-pointer';
-                suggestion.textContent = territory.display_value;
+
+                // Appliquer une classe spéciale pour les correspondances exactes
+                let cssClass = 'px-4 py-2 hover:bg-indigo-50 cursor-pointer flex items-center justify-between';
+
+                if (territory.exact_match) {
+                  cssClass += ' bg-indigo-100 font-semibold';
+                } else if (territory.starts_with) {
+                  cssClass += ' bg-indigo-50';
+                }
+
+                suggestion.className = cssClass;
+
+                // Créer le contenu principal
+                const mainContent = document.createElement('span');
+                mainContent.textContent = territory.display_value;
+                suggestion.appendChild(mainContent);
+
+                // Ajouter un badge pour les correspondances exactes
+                if (territory.exact_match) {
+                  const badge = document.createElement('span');
+                  badge.className = 'px-2 py-1 text-xs bg-indigo-600 text-white rounded-full ml-2';
+                  badge.textContent = 'Exact';
+                  suggestion.appendChild(badge);
+                }
 
                 // Stocker les données du territoire dans l'élément
                 suggestion.dataset.codgeo = territory.codgeo;

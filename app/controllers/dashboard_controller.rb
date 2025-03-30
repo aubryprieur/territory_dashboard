@@ -26,8 +26,15 @@ class DashboardController < ApplicationController
   private
 
   def check_user_territory
+    # Si l'utilisateur n'a pas de territoire associé
     unless current_user.territory_code.present?
-      redirect_to root_path, alert: "Vous n'avez pas de territoire associé à votre compte."
+      # Si c'est un super_admin, rediriger vers la gestion des utilisateurs
+      if current_user.super_admin?
+        redirect_to admin_users_path, notice: "En tant que Super Admin, vous avez été redirigé vers la gestion des utilisateurs."
+      else
+        # Pour un utilisateur normal sans territoire (cas qui ne devrait pas se produire selon vos règles)
+        redirect_to root_path, alert: "Vous n'avez pas de territoire associé à votre compte. Veuillez contacter un administrateur."
+      end
     end
   end
 end

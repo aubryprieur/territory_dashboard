@@ -19,7 +19,9 @@ class TerritoriesController < ApplicationController
             codgeo: t.codgeo,
             epci: t.epci,
             dep: t.dep,
-            reg: t.reg
+            reg: t.reg,
+            exact_match: t.libgeo.downcase == params[:term].downcase,
+            starts_with: t.libgeo.downcase.start_with?(params[:term].downcase)
           }
         }
       }
