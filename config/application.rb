@@ -11,17 +11,14 @@ module TerritoryDashboard
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.0
 
-    # Please, add to the `ignore` list any other `lib` subdirectories that do
-    # not contain `.rb` files, or that should not be reloaded or eager loaded.
-    # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
-    # Configuration for the application, engines, and railties goes here.
-    #
-    # These settings can be overridden in specific environments using the files
-    # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
+    # Configuration de l'API
+    config.api = {
+      base_url: Rails.application.credentials.dig(:api, :base_url) || ENV['API_BASE_URL'] || 'https://api-population-france-13608c575683.herokuapp.com',
+      username: Rails.application.credentials.dig(:api, :username) || ENV['API_USERNAME'] || 'aubry',
+      password: Rails.application.credentials.dig(:api, :password) || ENV['API_PASSWORD'] || 'IgnB+=vb)$cPzVPF2NF!'
+    }
+
   end
 end

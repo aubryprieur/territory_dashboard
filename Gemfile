@@ -24,6 +24,8 @@ gem "devise"
 gem 'roo', '~> 2.10.0'
  # Pour l'autocomplétion
 gem 'jquery-rails'
+# http
+gem 'http'
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
