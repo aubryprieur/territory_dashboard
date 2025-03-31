@@ -13,6 +13,14 @@ module TerritoryDashboard
 
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # Configuration des paramètres de localisation
+    config.i18n.default_locale = :fr
+    config.i18n.available_locales = [:fr, :en]
+    config.time_zone = 'Paris'
+
+    # Formats de nombre français
+    config.i18n.enforce_available_locales = true
+
     # Configuration de l'API
     config.api = {
       base_url: Rails.application.credentials.dig(:api, :base_url) || ENV['API_BASE_URL'] || 'https://api-population-france-13608c575683.herokuapp.com',

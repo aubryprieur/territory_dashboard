@@ -15,25 +15,25 @@
         <div class="bg-indigo-50 p-4 rounded-lg">
           <h3 class="text-sm font-medium text-indigo-800 mb-1">Population totale</h3>
           <p class="text-2xl font-bold text-indigo-900">
-            <%= number_with_delimiter(@population_data&.first&.dig("NB") || 0) %>
+            <%= number_with_delimiter(@total_population, delimiter: " ") %>
           </p>
         </div>
         <div class="bg-green-50 p-4 rounded-lg">
           <h3 class="text-sm font-medium text-green-800 mb-1">Enfants de moins de 3 ans</h3>
           <p class="text-2xl font-bold text-green-900">
-            <%= number_with_delimiter(@children_data&.dig("children_under_3") || 0) %>
+            <%= number_with_delimiter(@children_data&.dig("children_under_3")&.round || 0) %>
           </p>
           <p class="text-sm text-green-600">
-            <%= number_to_percentage(@children_data&.dig("under_3_rate") || 0, precision: 1) %> de la population
+            <%= number_to_percentage(@children_data&.dig("under_3_rate") || 0, precision: 2) %> de la population
           </p>
         </div>
         <div class="bg-purple-50 p-4 rounded-lg">
           <h3 class="text-sm font-medium text-purple-800 mb-1">Enfants de 3 à 5 ans</h3>
           <p class="text-2xl font-bold text-purple-900">
-            <%= number_with_delimiter(@children_data&.dig("children_3_to_5") || 0) %>
+            <%= number_with_delimiter(@children_data&.dig("children_3_to_5")&.round || 0) %>
           </p>
           <p class="text-sm text-purple-600">
-            <%= number_to_percentage(@children_data&.dig("three_to_five_rate") || 0, precision: 1) %> de la population
+            <%= number_to_percentage(@children_data&.dig("three_to_five_rate") || 0, precision: 2) %> de la population
           </p>
         </div>
       </div>

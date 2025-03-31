@@ -8,6 +8,7 @@ class DashboardController < ApplicationController
 
     # Récupérer les données de base pour la commune
     @population_data = Api::PopulationService.get_commune_data(@territory_code)
+    @total_population = @population_data.present? ? @population_data.sum { |item| item["NB"].to_f }.round : 0
     @children_data = Api::PopulationService.get_children_data(@territory_code)
     @historical_data = Api::HistoricalService.get_historical_data(@territory_code)
     @revenue_data = Api::RevenueService.get_median_revenues(@territory_code)
