@@ -42,8 +42,8 @@
     <!-- Graphique d'évolution historique -->
     <div class="bg-white shadow rounded-lg p-6 mb-6">
       <h2 class="text-lg font-medium text-gray-900 mb-4">Évolution démographique</h2>
-      <div class="h-64" id="historical-chart">
-        <!-- Le graphique sera injecté ici par JavaScript -->
+      <div class="h-64">
+        <canvas id="historical-chart"></canvas>
       </div>
     </div>
 
@@ -180,13 +180,18 @@
 
 <!-- Inclusion du script Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
 <script>
-document.addEventListener('turbo:load', function() {
+document.addEventListener('DOMContentLoaded', function() {
+  Chart.register(ChartDataLabels);
+
   // Données pour le graphique d'évolution historique
   const historicalData = <%= raw (@historical_data || []).to_json %>;
+  const chartElement = document.getElementById('historical-chart');
 
-  if(historicalData.length > 0 && document.getElementById('historical-chart')) {
+  if(historicalData.length > 0 && chartElement) {
+    console.log("Canvas trouvé, création du graphique...");
     const years = ['1968', '1975', '1982', '1990', '1999', '2010', '2015', '2021'];
     const populations = years.map(year => {
       const yearKey = year === '1968' ? 'D68_POP' :
@@ -200,7 +205,7 @@ document.addEventListener('turbo:load', function() {
     });
 
     // Créer le graphique
-    new Chart(document.getElementById('historical-chart'), {
+    new Chart(chartElement, {
       type: 'line',
       data: {
         labels: years,
@@ -222,7 +227,7 @@ document.addEventListener('turbo:load', function() {
             beginAtZero: false,
             ticks: {
               callback: function(value) {
-                return new Intl.NumberFormat().format(value);
+                return new Intl.NumberFormat('fr-FR').format(value);
               }
             }
           }
@@ -234,12 +239,34 @@ document.addEventListener('turbo:load', function() {
           tooltip: {
             callbacks: {
               label: function(context) {
-                return 'Population: ' + new Intl.NumberFormat().format(context.raw);
+                return 'Population: ' + new Intl.NumberFormat('fr-FR').format(context.raw);
               }
+            }
+          },
+          // Ajout du plugin pour afficher les valeurs sur les points
+          datalabels: {
+            align: 'top',
+            anchor: 'end',
+            formatter: function(value) {
+              return new Intl.NumberFormat('fr-FR').format(value);
+            },
+            font: {
+              weight: 'bold',
+              size: 10
+            },
+            color: '#4F46E5',
+            padding: {
+              top: 10
             }
           }
         }
       }
+    });
+    console.log("Graphique créé avec succès");
+  } else {
+    console.warn("Élément canvas ou données non trouvés", {
+      canvasExists: !!chartElement,
+      dataLength: historicalData.length
     });
   }
 });
