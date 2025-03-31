@@ -178,96 +178,127 @@
   </div>
 </div>
 
-<!-- Inclusion du script Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-
 <script>
+document.addEventListener('turbo:load', function() {
+  initHistoricalChart();
+});
+
+// Aussi écouter DOMContentLoaded pour le chargement initial
 document.addEventListener('DOMContentLoaded', function() {
-  Chart.register(ChartDataLabels);
+  initHistoricalChart();
+});
 
-  // Données pour le graphique d'évolution historique
-  const historicalData = <%= raw (@historical_data || []).to_json %>;
+function initHistoricalChart() {
+  // Vérifier si Chart.js est chargé
+  if (typeof Chart === 'undefined') {
+    console.warn("Chart.js n'est pas chargé, attente...");
+    setTimeout(initHistoricalChart, 100);
+    return;
+  }
+
+  // Vérifier si ChartDataLabels est chargé
+  if (typeof ChartDataLabels === 'undefined') {
+    try {
+      // Essayer d'enregistrer le plugin s'il est disponible globalement
+      Chart.register(window.ChartDataLabels);
+    } catch (e) {
+      console.warn("ChartDataLabels n'est pas disponible", e);
+    }
+  } else {
+    Chart.register(ChartDataLabels);
+  }
+
+  // Vérifier si l'élément canvas existe
   const chartElement = document.getElementById('historical-chart');
+  const historicalData = <%= raw (@historical_data || []).to_json %>;
 
-  if(historicalData.length > 0 && chartElement) {
-    console.log("Canvas trouvé, création du graphique...");
-    const years = ['1968', '1975', '1982', '1990', '1999', '2010', '2015', '2021'];
-    const populations = years.map(year => {
-      const yearKey = year === '1968' ? 'D68_POP' :
-                      year === '1975' ? 'D75_POP' :
-                      year === '1982' ? 'D82_POP' :
-                      year === '1990' ? 'D90_POP' :
-                      year === '1999' ? 'D99_POP' :
-                      year === '2010' ? 'P10_POP' :
-                      year === '2015' ? 'P15_POP' : 'P21_POP';
-      return historicalData[0][yearKey] || 0;
-    });
+  if (!chartElement) {
+    console.warn("Élément canvas non trouvé");
+    return;
+  }
 
-    // Créer le graphique
-    new Chart(chartElement, {
-      type: 'line',
-      data: {
-        labels: years,
-        datasets: [{
-          label: 'Population',
-          data: populations,
-          backgroundColor: 'rgba(79, 70, 229, 0.2)',
-          borderColor: 'rgba(79, 70, 229, 1)',
-          borderWidth: 2,
-          tension: 0.1,
-          pointBackgroundColor: 'rgba(79, 70, 229, 1)'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: false,
-            ticks: {
-              callback: function(value) {
-                return new Intl.NumberFormat('fr-FR').format(value);
-              }
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return 'Population: ' + new Intl.NumberFormat('fr-FR').format(context.raw);
-              }
-            }
-          },
-          // Ajout du plugin pour afficher les valeurs sur les points
-          datalabels: {
-            align: 'top',
-            anchor: 'end',
-            formatter: function(value) {
+  if (!historicalData || historicalData.length === 0) {
+    console.warn("Données historiques non disponibles");
+    return;
+  }
+
+  // Vérifier si un graphique existe déjà sur ce canvas
+  const existingChart = Chart.getChart(chartElement);
+  if (existingChart) {
+    existingChart.destroy();
+  }
+
+  // Le reste de votre code pour créer le graphique...
+  const years = ['1968', '1975', '1982', '1990', '1999', '2010', '2015', '2021'];
+  const populations = years.map(year => {
+    const yearKey = year === '1968' ? 'D68_POP' :
+                    year === '1975' ? 'D75_POP' :
+                    year === '1982' ? 'D82_POP' :
+                    year === '1990' ? 'D90_POP' :
+                    year === '1999' ? 'D99_POP' :
+                    year === '2010' ? 'P10_POP' :
+                    year === '2015' ? 'P15_POP' : 'P21_POP';
+    return historicalData[0]?.[yearKey] || 0;
+  });
+
+  // Créer le graphique
+  new Chart(chartElement, {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [{
+        label: 'Population',
+        data: populations,
+        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+        borderColor: 'rgba(79, 70, 229, 1)',
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: 'rgba(79, 70, 229, 1)'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: false,
+          ticks: {
+            callback: function(value) {
               return new Intl.NumberFormat('fr-FR').format(value);
-            },
-            font: {
-              weight: 'bold',
-              size: 10
-            },
-            color: '#4F46E5',
-            padding: {
-              top: 10
             }
           }
         }
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'Population: ' + new Intl.NumberFormat('fr-FR').format(context.raw);
+            }
+          }
+        },
+        datalabels: {
+          align: 'top',
+          anchor: 'end',
+          formatter: function(value) {
+            return new Intl.NumberFormat('fr-FR').format(value);
+          },
+          font: {
+            weight: 'bold',
+            size: 10
+          },
+          color: '#4F46E5',
+          padding: {
+            top: 10
+          }
+        }
       }
-    });
-    console.log("Graphique créé avec succès");
-  } else {
-    console.warn("Élément canvas ou données non trouvés", {
-      canvasExists: !!chartElement,
-      dataLength: historicalData.length
-    });
-  }
-});
+    }
+  });
+
+  console.log("Graphique créé avec succès");
+}
 </script>
