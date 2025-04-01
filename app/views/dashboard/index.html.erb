@@ -9,43 +9,11 @@
     </div>
 
     <!-- Carte de synthèse -->
-    <div class="bg-white shadow rounded-lg p-6 mb-6">
-      <h2 class="text-lg font-medium text-gray-900 mb-4">Synthèse démographique</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-indigo-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-indigo-800 mb-1">Population totale</h3>
-          <p class="text-2xl font-bold text-indigo-900">
-            <%= number_with_delimiter(@total_population, delimiter: " ") %>
-          </p>
-        </div>
-        <div class="bg-green-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-green-800 mb-1">Enfants de moins de 3 ans</h3>
-          <p class="text-2xl font-bold text-green-900">
-            <%= number_with_delimiter(@children_data&.dig("children_under_3")&.round || 0) %>
-          </p>
-          <p class="text-sm text-green-600">
-            <%= number_to_percentage(@children_data&.dig("under_3_rate") || 0, precision: 2) %> de la population
-          </p>
-        </div>
-        <div class="bg-purple-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-purple-800 mb-1">Enfants de 3 à 5 ans</h3>
-          <p class="text-2xl font-bold text-purple-900">
-            <%= number_with_delimiter(@children_data&.dig("children_3_to_5")&.round || 0) %>
-          </p>
-          <p class="text-sm text-purple-600">
-            <%= number_to_percentage(@children_data&.dig("three_to_five_rate") || 0, precision: 2) %> de la population
-          </p>
-        </div>
-      </div>
-    </div>
+    <%= render "dashboard/synthese" %>
 
     <!-- Graphique d'évolution historique -->
-    <div class="bg-white shadow rounded-lg p-6 mb-6">
-      <h2 class="text-lg font-medium text-gray-900 mb-4">Évolution démographique</h2>
-      <div class="h-64">
-        <canvas id="historical-chart"></canvas>
-      </div>
-    </div>
+    <%= render "dashboard/historique" %>
+
 
     <!-- Données économiques -->
     <div class="bg-white shadow rounded-lg p-6 mb-6">
@@ -443,516 +411,355 @@
 </div>
 
 <script>
-// Essayons un autre approche pour s'assurer que Chart.js est chargé
-document.addEventListener('DOMContentLoaded', function() {
-  // Attendre que Chart.js et ChartDataLabels soient chargés
-  const checkChartAvailability = setInterval(function() {
-    if (typeof Chart !== 'undefined') {
-      clearInterval(checkChartAvailability);
-      console.log("Chart.js est chargé, initialisation des graphiques...");
-
-      try {
-        if (typeof ChartDataLabels !== 'undefined') {
-          Chart.register(ChartDataLabels);
-        }
-      } catch (e) {
-        console.warn("ChartDataLabels n'est pas disponible, continuons sans lui:", e);
-      }
-
-      // Initialiser tous les graphiques
-      initAllCharts();
-    }
-  }, 100);
-
-  // 10 secondes de timeout maximum
-  setTimeout(function() {
-    clearInterval(checkChartAvailability);
-    console.warn("Chart.js n'a pas été chargé après 10 secondes, abandon");
-  }, 10000);
-});
-
-// Initialisation de tous les graphiques
-function initAllCharts() {
-  console.log("Initialisation de tous les graphiques");
-  initHistoricalChart();
-  initRevenueChart();
-  initPovertyChart();
-}
-
-// Fonctions d'initialisation des graphiques
-function initHistoricalChart() {
-  console.log("Tentative d'initialisation du graphique historique");
-
-  // Vérifier si l'élément canvas existe
-  const chartElement = document.getElementById('historical-chart');
-  const historicalData = <%= raw (@historical_data || []).to_json %>;
-
-  if (!chartElement) {
-    console.warn("Élément canvas 'historical-chart' non trouvé");
-    return;
-  }
-
-  if (!historicalData || historicalData.length === 0) {
-    console.warn("Données historiques non disponibles");
-    return;
-  }
-
-  // Vérifier si un graphique existe déjà sur ce canvas
-  try {
-    const existingChart = Chart.getChart(chartElement);
-    if (existingChart) {
-      existingChart.destroy();
-    }
-  } catch (e) {
-    console.warn("Erreur en vérifiant si un graphique existant:", e);
-  }
-
-  // Le reste de votre code pour créer le graphique...
-  const years = ['1968', '1975', '1982', '1990', '1999', '2010', '2015', '2021'];
-  const populations = years.map(year => {
-    const yearKey = year === '1968' ? 'D68_POP' :
-                    year === '1975' ? 'D75_POP' :
-                    year === '1982' ? 'D82_POP' :
-                    year === '1990' ? 'D90_POP' :
-                    year === '1999' ? 'D99_POP' :
-                    year === '2010' ? 'P10_POP' :
-                    year === '2015' ? 'P15_POP' : 'P21_POP';
-    return historicalData[0]?.[yearKey] || 0;
+  // Initialisation des graphiques restants (revenu et pauvreté)
+  document.addEventListener('turbo:load', function () {
+    initRevenueChart();
+    initPovertyChart();
   });
 
-  try {
-    // Créer le graphique
-    new Chart(chartElement, {
-      type: 'line',
-      data: {
-        labels: years,
-        datasets: [{
-          label: 'Population',
-          data: populations,
-          backgroundColor: 'rgba(79, 70, 229, 0.2)',
-          borderColor: 'rgba(79, 70, 229, 1)',
-          borderWidth: 2,
-          tension: 0.1,
-          pointBackgroundColor: 'rgba(79, 70, 229, 1)'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: false,
-            ticks: {
-              callback: function(value) {
-                return new Intl.NumberFormat('fr-FR').format(value);
-              }
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return 'Population: ' + new Intl.NumberFormat('fr-FR').format(context.raw);
-              }
-            }
-          },
-          datalabels: {
-            align: 'top',
-            anchor: 'end',
-            formatter: function(value) {
-              return new Intl.NumberFormat('fr-FR').format(value);
-            },
-            font: {
-              weight: 'bold',
-              size: 10
-            },
-            color: '#4F46E5',
-            padding: {
-              top: 10
-            }
-          }
-        }
-      }
-    });
+  // Graphique évolution des revenus médians
+  function initRevenueChart() {
+    console.log("Tentative d'initialisation du graphique des revenus");
 
-    console.log("Graphique d'évolution démographique créé avec succès");
-  } catch (e) {
-    console.error("Erreur lors de la création du graphique démographique:", e);
-  }
-}
+    const chartElement = document.getElementById('revenue-chart');
+    if (!chartElement) {
+      console.warn("Élément canvas 'revenue-chart' non trouvé");
+      return;
+    }
 
-// Graphique évolution des revenus médians
-function initRevenueChart() {
-  console.log("Tentative d'initialisation du graphique des revenus");
+    const communeRevenueData = <%= raw (@revenue_data&.dig("median_revenues") || {}).to_json %>;
+    const epciRevenueData = <%= raw (@epci_revenue_data&.dig("median_revenues") || {}).to_json %>;
+    const departmentRevenueData = <%= raw (@department_revenue_data&.dig("median_revenues") || {}).to_json %>;
+    const regionRevenueData = <%= raw (@region_revenue_data&.dig("median_revenues") || {}).to_json %>;
+    const franceRevenueData = <%= raw (@france_revenue_data&.dig("median_revenues") || {}).to_json %>;
 
-  // Vérifier si l'élément canvas existe
-  const chartElement = document.getElementById('revenue-chart');
-  if (!chartElement) {
-    console.warn("Élément canvas 'revenue-chart' non trouvé");
-    return;
-  }
+    const communeName = "<%= @territory_name %>";
+    const epciName = "<%= @epci_revenue_data&.dig('name') || 'EPCI' %>";
+    const departmentName = "<%= @department_revenue_data&.dig('name') || 'Département' %>";
+    const regionName = "<%= @region_revenue_data&.dig('name') || 'Région' %>";
 
-  // Récupérer les données de revenus pour tous les territoires
-  const communeRevenueData = <%= raw (@revenue_data&.dig("median_revenues") || {}).to_json %>;
-  const epciRevenueData = <%= raw (@epci_revenue_data&.dig("median_revenues") || {}).to_json %>;
-  const departmentRevenueData = <%= raw (@department_revenue_data&.dig("median_revenues") || {}).to_json %>;
-  const regionRevenueData = <%= raw (@region_revenue_data&.dig("median_revenues") || {}).to_json %>;
-  const franceRevenueData = <%= raw (@france_revenue_data&.dig("median_revenues") || {}).to_json %>;
-
-  // Récupérer les noms des territoires
-  const communeName = "<%= @territory_name %>";
-  const epciName = "<%= @epci_revenue_data&.dig('name') || 'EPCI' %>";
-  const departmentName = "<%= @department_revenue_data&.dig('name') || 'Département' %>";
-  const regionName = "<%= @region_revenue_data&.dig('name') || 'Région' %>";
-
-  // Si aucune donnée n'est disponible pour aucun territoire
-  if (Object.keys(communeRevenueData).length === 0 &&
+    if (
+      Object.keys(communeRevenueData).length === 0 &&
       Object.keys(epciRevenueData).length === 0 &&
       Object.keys(departmentRevenueData).length === 0 &&
       Object.keys(regionRevenueData).length === 0 &&
-      Object.keys(franceRevenueData).length === 0) {
-    console.warn("Aucune donnée de revenus disponible");
-    return;
-  }
-
-  // Vérifier si un graphique existe déjà sur ce canvas
-  try {
-    const existingChart = Chart.getChart(chartElement);
-    if (existingChart) {
-      existingChart.destroy();
+      Object.keys(franceRevenueData).length === 0
+    ) {
+      console.warn("Aucune donnée de revenus disponible");
+      return;
     }
-  } catch (e) {
-    console.warn("Erreur en vérifiant si un graphique de revenus existant:", e);
-  }
 
-  // Collecter toutes les années disponibles dans tous les territoires
-  const allYears = new Set();
-  [communeRevenueData, epciRevenueData, departmentRevenueData, regionRevenueData, franceRevenueData].forEach(data => {
-    Object.keys(data).forEach(year => allYears.add(year));
-  });
+    try {
+      const existingChart = Chart.getChart(chartElement);
+      if (existingChart) existingChart.destroy();
+    } catch (e) {
+      console.warn("Erreur en vérifiant si un graphique de revenus existant:", e);
+    }
 
-  // Convertir en tableau et trier
-  const years = Array.from(allYears).sort();
-
-  // Définir des couleurs distinctes pour chaque territoire
-  const colors = {
-    commune: { line: 'rgba(79, 209, 197, 1)', fill: 'rgba(79, 209, 197, 0.2)' },
-    epci: { line: 'rgba(59, 130, 246, 1)', fill: 'rgba(59, 130, 246, 0.2)' },
-    department: { line: 'rgba(139, 92, 246, 1)', fill: 'rgba(139, 92, 246, 0.2)' },
-    region: { line: 'rgba(249, 115, 22, 1)', fill: 'rgba(249, 115, 22, 0.2)' },
-    france: { line: 'rgba(220, 38, 38, 1)', fill: 'rgba(220, 38, 38, 0.2)' }
-  };
-
-  // Préparer les datasets pour le graphique
-  const datasets = [];
-
-  // Dataset pour la commune
-  if (Object.keys(communeRevenueData).length > 0) {
-    datasets.push({
-      label: communeName,
-      data: years.map(year => communeRevenueData[year] || null),
-      backgroundColor: colors.commune.fill,
-      borderColor: colors.commune.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.commune.line
+    const allYears = new Set();
+    [communeRevenueData, epciRevenueData, departmentRevenueData, regionRevenueData, franceRevenueData].forEach(data => {
+      Object.keys(data).forEach(year => allYears.add(year));
     });
-  }
+    const years = Array.from(allYears).sort();
 
-  // Dataset pour l'EPCI
-  if (Object.keys(epciRevenueData).length > 0) {
-    datasets.push({
-      label: epciName,
-      data: years.map(year => epciRevenueData[year] || null),
-      backgroundColor: colors.epci.fill,
-      borderColor: colors.epci.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.epci.line
-    });
-  }
+    const colors = {
+      commune: { line: 'rgba(79, 209, 197, 1)', fill: 'rgba(79, 209, 197, 0.2)' },
+      epci: { line: 'rgba(59, 130, 246, 1)', fill: 'rgba(59, 130, 246, 0.2)' },
+      department: { line: 'rgba(139, 92, 246, 1)', fill: 'rgba(139, 92, 246, 0.2)' },
+      region: { line: 'rgba(249, 115, 22, 1)', fill: 'rgba(249, 115, 22, 0.2)' },
+      france: { line: 'rgba(220, 38, 38, 1)', fill: 'rgba(220, 38, 38, 0.2)' }
+    };
 
-  // Dataset pour le département
-  if (Object.keys(departmentRevenueData).length > 0) {
-    datasets.push({
-      label: departmentName,
-      data: years.map(year => departmentRevenueData[year] || null),
-      backgroundColor: colors.department.fill,
-      borderColor: colors.department.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.department.line
-    });
-  }
+    const datasets = [];
 
-  // Dataset pour la région
-  if (Object.keys(regionRevenueData).length > 0) {
-    datasets.push({
-      label: regionName,
-      data: years.map(year => regionRevenueData[year] || null),
-      backgroundColor: colors.region.fill,
-      borderColor: colors.region.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.region.line
-    });
-  }
+    if (Object.keys(communeRevenueData).length > 0) {
+      datasets.push({
+        label: communeName,
+        data: years.map(year => communeRevenueData[year] || null),
+        backgroundColor: colors.commune.fill,
+        borderColor: colors.commune.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.commune.line
+      });
+    }
 
-  // Dataset pour la France
-  if (Object.keys(franceRevenueData).length > 0) {
-    datasets.push({
-      label: 'France',
-      data: years.map(year => franceRevenueData[year] || null),
-      backgroundColor: colors.france.fill,
-      borderColor: colors.france.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.france.line
-    });
-  }
+    if (Object.keys(epciRevenueData).length > 0) {
+      datasets.push({
+        label: epciName,
+        data: years.map(year => epciRevenueData[year] || null),
+        backgroundColor: colors.epci.fill,
+        borderColor: colors.epci.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.epci.line
+      });
+    }
 
-  try {
-    // Créer le graphique
-    new Chart(chartElement, {
-      type: 'line',
-      data: {
-        labels: years,
-        datasets: datasets
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: false,
-            ticks: {
-              callback: function(value) {
-                return new Intl.NumberFormat('fr-FR').format(value) + ' €';
-              }
-            }
-          }
+    if (Object.keys(departmentRevenueData).length > 0) {
+      datasets.push({
+        label: departmentName,
+        data: years.map(year => departmentRevenueData[year] || null),
+        backgroundColor: colors.department.fill,
+        borderColor: colors.department.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.department.line
+      });
+    }
+
+    if (Object.keys(regionRevenueData).length > 0) {
+      datasets.push({
+        label: regionName,
+        data: years.map(year => regionRevenueData[year] || null),
+        backgroundColor: colors.region.fill,
+        borderColor: colors.region.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.region.line
+      });
+    }
+
+    if (Object.keys(franceRevenueData).length > 0) {
+      datasets.push({
+        label: 'France',
+        data: years.map(year => franceRevenueData[year] || null),
+        backgroundColor: colors.france.fill,
+        borderColor: colors.france.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.france.line
+      });
+    }
+
+    try {
+      new Chart(chartElement, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: datasets
         },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'bottom',
-            labels: {
-              boxWidth: 12,
-              usePointStyle: true
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return context.dataset.label + ': ' + new Intl.NumberFormat('fr-FR').format(context.raw) + ' €';
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              ticks: {
+                callback: function (value) {
+                  return new Intl.NumberFormat('fr-FR').format(value) + ' €';
+                }
               }
             }
           },
-          datalabels: {
-            display: false // Désactiver les étiquettes de données car il y a trop de séries
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return context.dataset.label + ': ' + new Intl.NumberFormat('fr-FR').format(context.raw) + ' €';
+                }
+              }
+            },
+            datalabels: {
+              display: false
+            }
           }
         }
-      }
-    });
+      });
 
-    console.log("Graphique des revenus créé avec succès");
-  } catch (e) {
-    console.error("Erreur lors de la création du graphique des revenus:", e);
-  }
-}
-
-// Graphique évolution du taux de pauvreté
-function initPovertyChart() {
-  console.log("Tentative d'initialisation du graphique des taux de pauvreté");
-
-  // Vérifier si l'élément canvas existe
-  const chartElement = document.getElementById('poverty-chart');
-  if (!chartElement) {
-    console.warn("Élément canvas 'poverty-chart' non trouvé");
-    return;
-  }
-
-  // Récupérer les données de taux de pauvreté pour tous les territoires
-  const communePovertyData = <%= raw (@revenue_data&.dig("poverty_rates") || {}).to_json %>;
-  const epciPovertyData = <%= raw (@epci_revenue_data&.dig("poverty_rates") || {}).to_json %>;
-  const departmentPovertyData = <%= raw (@department_revenue_data&.dig("poverty_rates") || {}).to_json %>;
-  const regionPovertyData = <%= raw (@region_revenue_data&.dig("poverty_rates") || {}).to_json %>;
-  const francePovertyData = <%= raw (@france_revenue_data&.dig("poverty_rates") || {}).to_json %>;
-
-  // Récupérer les noms des territoires
-  const communeName = "<%= @territory_name %>";
-  const epciName = "<%= @epci_revenue_data&.dig('name') || 'EPCI' %>";
-  const departmentName = "<%= @department_revenue_data&.dig('name') || 'Département' %>";
-  const regionName = "<%= @region_revenue_data&.dig('name') || 'Région' %>";
-
-  // Si aucune donnée n'est disponible pour aucun territoire
-  if (Object.keys(communePovertyData).length === 0 &&
-      Object.keys(epciPovertyData).length === 0 &&
-      Object.keys(departmentPovertyData).length === 0 &&
-      Object.keys(regionPovertyData).length === 0 &&
-      Object.keys(francePovertyData).length === 0) {
-    console.warn("Aucune donnée de taux de pauvreté disponible");
-    return;
-  }
-
-  // Vérifier si un graphique existe déjà sur ce canvas
-  try {
-    const existingChart = Chart.getChart(chartElement);
-    if (existingChart) {
-      existingChart.destroy();
+      console.log("Graphique des revenus créé avec succès");
+    } catch (e) {
+      console.error("Erreur lors de la création du graphique des revenus:", e);
     }
-  } catch (e) {
-    console.warn("Erreur en vérifiant si un graphique de pauvreté existant:", e);
   }
 
-  // Collecter toutes les années disponibles dans tous les territoires
-  const allYears = new Set();
-  [communePovertyData, epciPovertyData, departmentPovertyData, regionPovertyData, francePovertyData].forEach(data => {
-    Object.keys(data).forEach(year => allYears.add(year));
-  });
+  // Graphique évolution du taux de pauvreté
+  function initPovertyChart() {
+    console.log("Tentative d'initialisation du graphique des taux de pauvreté");
 
-  // Convertir en tableau et trier
-  const years = Array.from(allYears).sort();
+    // Vérifier si l'élément canvas existe
+    const chartElement = document.getElementById('poverty-chart');
+    if (!chartElement) {
+      console.warn("Élément canvas 'poverty-chart' non trouvé");
+      return;
+    }
 
-  // Définir des couleurs distinctes pour chaque territoire - on garde les mêmes que pour les revenus pour la cohérence
-  const colors = {
-    commune: { line: 'rgba(79, 209, 197, 1)', fill: 'rgba(79, 209, 197, 0.2)' },
-    epci: { line: 'rgba(59, 130, 246, 1)', fill: 'rgba(59, 130, 246, 0.2)' },
-    department: { line: 'rgba(139, 92, 246, 1)', fill: 'rgba(139, 92, 246, 0.2)' },
-    region: { line: 'rgba(249, 115, 22, 1)', fill: 'rgba(249, 115, 22, 0.2)' },
-    france: { line: 'rgba(220, 38, 38, 1)', fill: 'rgba(220, 38, 38, 0.2)' }
-  };
+    // Récupérer les données de taux de pauvreté pour tous les territoires
+    const communePovertyData = <%= raw (@revenue_data&.dig("poverty_rates") || {}).to_json %>;
+    const epciPovertyData = <%= raw (@epci_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+    const departmentPovertyData = <%= raw (@department_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+    const regionPovertyData = <%= raw (@region_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+    const francePovertyData = <%= raw (@france_revenue_data&.dig("poverty_rates") || {}).to_json %>;
 
-  // Préparer les datasets pour le graphique
-  const datasets = [];
+    // Récupérer les noms des territoires
+    const communeName = "<%= @territory_name %>";
+    const epciName = "<%= @epci_revenue_data&.dig('name') || 'EPCI' %>";
+    const departmentName = "<%= @department_revenue_data&.dig('name') || 'Département' %>";
+    const regionName = "<%= @region_revenue_data&.dig('name') || 'Région' %>";
 
-  // Dataset pour la commune
-  if (Object.keys(communePovertyData).length > 0) {
-    datasets.push({
-      label: communeName,
-      data: years.map(year => communePovertyData[year] || null),
-      backgroundColor: colors.commune.fill,
-      borderColor: colors.commune.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.commune.line
+    // Si aucune donnée n'est disponible pour aucun territoire
+    if (Object.keys(communePovertyData).length === 0 &&
+        Object.keys(epciPovertyData).length === 0 &&
+        Object.keys(departmentPovertyData).length === 0 &&
+        Object.keys(regionPovertyData).length === 0 &&
+        Object.keys(francePovertyData).length === 0) {
+      console.warn("Aucune donnée de taux de pauvreté disponible");
+      return;
+    }
+
+    // Vérifier si un graphique existe déjà sur ce canvas
+    try {
+      const existingChart = Chart.getChart(chartElement);
+      if (existingChart) {
+        existingChart.destroy();
+      }
+    } catch (e) {
+      console.warn("Erreur en vérifiant si un graphique de pauvreté existant:", e);
+    }
+
+    // Collecter toutes les années disponibles dans tous les territoires
+    const allYears = new Set();
+    [communePovertyData, epciPovertyData, departmentPovertyData, regionPovertyData, francePovertyData].forEach(data => {
+      Object.keys(data).forEach(year => allYears.add(year));
     });
-  }
 
-  // Dataset pour l'EPCI
-  if (Object.keys(epciPovertyData).length > 0) {
-    datasets.push({
-      label: epciName,
-      data: years.map(year => epciPovertyData[year] || null),
-      backgroundColor: colors.epci.fill,
-      borderColor: colors.epci.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.epci.line
-    });
-  }
+    // Convertir en tableau et trier
+    const years = Array.from(allYears).sort();
 
-  // Dataset pour le département
-  if (Object.keys(departmentPovertyData).length > 0) {
-    datasets.push({
-      label: departmentName,
-      data: years.map(year => departmentPovertyData[year] || null),
-      backgroundColor: colors.department.fill,
-      borderColor: colors.department.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.department.line
-    });
-  }
+    // Définir des couleurs distinctes pour chaque territoire - on garde les mêmes que pour les revenus pour la cohérence
+    const colors = {
+      commune: { line: 'rgba(79, 209, 197, 1)', fill: 'rgba(79, 209, 197, 0.2)' },
+      epci: { line: 'rgba(59, 130, 246, 1)', fill: 'rgba(59, 130, 246, 0.2)' },
+      department: { line: 'rgba(139, 92, 246, 1)', fill: 'rgba(139, 92, 246, 0.2)' },
+      region: { line: 'rgba(249, 115, 22, 1)', fill: 'rgba(249, 115, 22, 0.2)' },
+      france: { line: 'rgba(220, 38, 38, 1)', fill: 'rgba(220, 38, 38, 0.2)' }
+    };
 
-  // Dataset pour la région
-  if (Object.keys(regionPovertyData).length > 0) {
-    datasets.push({
-      label: regionName,
-      data: years.map(year => regionPovertyData[year] || null),
-      backgroundColor: colors.region.fill,
-      borderColor: colors.region.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.region.line
-    });
-  }
+    // Préparer les datasets pour le graphique
+    const datasets = [];
 
-  // Dataset pour la France
-  if (Object.keys(francePovertyData).length > 0) {
-    datasets.push({
-      label: 'France',
-      data: years.map(year => francePovertyData[year] || null),
-      backgroundColor: colors.france.fill,
-      borderColor: colors.france.line,
-      borderWidth: 2,
-      tension: 0.1,
-      pointBackgroundColor: colors.france.line
-    });
-  }
+    // Dataset pour la commune
+    if (Object.keys(communePovertyData).length > 0) {
+      datasets.push({
+        label: communeName,
+        data: years.map(year => communePovertyData[year] || null),
+        backgroundColor: colors.commune.fill,
+        borderColor: colors.commune.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.commune.line
+      });
+    }
 
-  try {
-    // Créer le graphique
-    new Chart(chartElement, {
-      type: 'line',
-      data: {
-        labels: years,
-        datasets: datasets
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            suggestedMax: 40, // Plafond suggéré pour les taux de pauvreté
-            ticks: {
-              callback: function(value) {
-                return value + '%';
-              }
-            }
-          }
+    // Dataset pour l'EPCI
+    if (Object.keys(epciPovertyData).length > 0) {
+      datasets.push({
+        label: epciName,
+        data: years.map(year => epciPovertyData[year] || null),
+        backgroundColor: colors.epci.fill,
+        borderColor: colors.epci.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.epci.line
+      });
+    }
+
+    // Dataset pour le département
+    if (Object.keys(departmentPovertyData).length > 0) {
+      datasets.push({
+        label: departmentName,
+        data: years.map(year => departmentPovertyData[year] || null),
+        backgroundColor: colors.department.fill,
+        borderColor: colors.department.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.department.line
+      });
+    }
+
+    // Dataset pour la région
+    if (Object.keys(regionPovertyData).length > 0) {
+      datasets.push({
+        label: regionName,
+        data: years.map(year => regionPovertyData[year] || null),
+        backgroundColor: colors.region.fill,
+        borderColor: colors.region.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.region.line
+      });
+    }
+
+    // Dataset pour la France
+    if (Object.keys(francePovertyData).length > 0) {
+      datasets.push({
+        label: 'France',
+        data: years.map(year => francePovertyData[year] || null),
+        backgroundColor: colors.france.fill,
+        borderColor: colors.france.line,
+        borderWidth: 2,
+        tension: 0.1,
+        pointBackgroundColor: colors.france.line
+      });
+    }
+
+    try {
+      // Créer le graphique
+      new Chart(chartElement, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: datasets
         },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'bottom',
-            labels: {
-              boxWidth: 12,
-              usePointStyle: true
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return context.dataset.label + ': ' + context.raw + '%';
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              suggestedMax: 40, // Plafond suggéré pour les taux de pauvreté
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
               }
             }
           },
-          datalabels: {
-            display: false // Désactiver les étiquettes de données car il y a trop de séries
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.raw + '%';
+                }
+              }
+            },
+            datalabels: {
+              display: false // Désactiver les étiquettes de données car il y a trop de séries
+            }
           }
         }
-      }
-    });
+      });
 
-    console.log("Graphique des taux de pauvreté créé avec succès");
-  } catch (e) {
-    console.error("Erreur lors de la création du graphique des taux de pauvreté:", e);
+      console.log("Graphique des taux de pauvreté créé avec succès");
+    } catch (e) {
+      console.error("Erreur lors de la création du graphique des taux de pauvreté:", e);
+    }
   }
-}
-
-// Écouter aussi turbo:load pour la compatibilité avec Turbo
-document.addEventListener('turbo:load', function() {
-  setTimeout(initAllCharts, 100); // Petit délai pour s'assurer que tout est prêt
-});
 </script>
 
-<script>
-  console.log("Type de Chart dans le DOM :", typeof Chart);
-  console.log("Chart:", typeof Chart); // ➜ "function"
-</script>

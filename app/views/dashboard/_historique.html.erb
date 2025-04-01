@@ -1,0 +1,10 @@
+<!-- Graphique d'évolution historique -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Évolution historique</h2>
+  <div class="h-64">
+    <canvas id="historical-chart"></canvas>
+  </div>
+  <script type="application/json" id="historical-data">
+    <%= raw(@historical_data.to_json) %>
+  </script>
+</div>

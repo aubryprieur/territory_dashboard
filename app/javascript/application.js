@@ -13,3 +13,6 @@ import * as ChartModule from "chart.js"
 import * as ChartDataLabels from "chartjs-plugin-datalabels"
 window.Chart = ChartModule.Chart
 window.ChartDataLabels = ChartDataLabels
+Chart.register(ChartDataLabels)
+
+import "charts/historique_chart"
