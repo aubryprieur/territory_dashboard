@@ -1,0 +1,31 @@
+<!-- Scolarisation -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Scolarisation</h2>
+  <h3 class="text-sm font-medium text-gray-700 mb-2">Taux de scolarisation (Année: <%= @schooling_data&.dig("data")&.keys&.sort&.last || "N/A" %>)</h3>
+  <div class="space-y-4">
+    <%
+      latest_year = @schooling_data&.dig("data")&.keys&.sort&.last
+      latest_data = @schooling_data&.dig("data", latest_year) if latest_year
+    %>
+    <div class="bg-yellow-50 p-4 rounded-md">
+      <h4 class="font-medium text-yellow-800">Enfants de 2 ans</h4>
+      <p class="text-xl font-bold text-yellow-900">
+        <%= number_to_percentage(latest_data&.dig("schooling_rate_2y") || 0, precision: 2) %>
+      </p>
+      <p class="text-sm text-yellow-700">
+        <%= number_with_delimiter(latest_data&.dig("schooled_children_2y")&.round || 0) %>
+        sur <%= number_with_delimiter(latest_data&.dig("total_children_2y")&.round || 0) %> enfants
+      </p>
+    </div>
+    <div class="bg-orange-50 p-4 rounded-md">
+      <h4 class="font-medium text-orange-800">Enfants de 3 à 5 ans</h4>
+      <p class="text-xl font-bold text-orange-900">
+        <%= number_to_percentage(latest_data&.dig("schooling_rate_3_5y") || 0, precision: 2) %>
+      </p>
+      <p class="text-sm text-orange-700">
+        <%= number_with_delimiter(latest_data&.dig("schooled_children_3_5y")&.round || 0) %>
+        sur <%= number_with_delimiter(latest_data&.dig("total_children_3_5y")&.round || 0) %> enfants
+      </p>
+    </div>
+  </div>
+</div>
