@@ -12,6 +12,7 @@ pin "chartjs-plugin-datalabels", to: "https://cdn.jsdelivr.net/npm/chartjs-plugi
 pin "alpinejs", to: "https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/module.esm.js"
 
 pin "charts/historique_chart", to: "charts/historique_chart.js"
+pin "charts/economic_charts", to: "charts/economic_charts.js"
 
 
 

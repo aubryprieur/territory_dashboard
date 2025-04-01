@@ -16,3 +16,4 @@ window.ChartDataLabels = ChartDataLabels
 Chart.register(ChartDataLabels)
 
 import "charts/historique_chart"
+import "charts/economic_charts"

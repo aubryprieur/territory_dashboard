@@ -1,0 +1,25 @@
+<!-- Script pour initialiser les données économiques -->
+<script>
+  // Initialiser l'objet global des données économiques
+  window.economicData = {};
+
+  // Données des revenus médians
+  window.economicData.communeRevenueData = <%= raw (@revenue_data&.dig("median_revenues") || {}).to_json %>;
+  window.economicData.epciRevenueData = <%= raw (@epci_revenue_data&.dig("median_revenues") || {}).to_json %>;
+  window.economicData.departmentRevenueData = <%= raw (@department_revenue_data&.dig("median_revenues") || {}).to_json %>;
+  window.economicData.regionRevenueData = <%= raw (@region_revenue_data&.dig("median_revenues") || {}).to_json %>;
+  window.economicData.franceRevenueData = <%= raw (@france_revenue_data&.dig("median_revenues") || {}).to_json %>;
+
+  // Données des taux de pauvreté
+  window.economicData.communePovertyData = <%= raw (@revenue_data&.dig("poverty_rates") || {}).to_json %>;
+  window.economicData.epciPovertyData = <%= raw (@epci_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+  window.economicData.departmentPovertyData = <%= raw (@department_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+  window.economicData.regionPovertyData = <%= raw (@region_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+  window.economicData.francePovertyData = <%= raw (@france_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+
+  // Noms des territoires
+  window.economicData.communeName = "<%= @territory_name %>";
+  window.economicData.epciName = "<%= @epci_revenue_data&.dig('name') || 'EPCI' %>";
+  window.economicData.departmentName = "<%= @department_revenue_data&.dig('name') || 'Département' %>";
+  window.economicData.regionName = "<%= @region_revenue_data&.dig('name') || 'Région' %>";
+</script>
