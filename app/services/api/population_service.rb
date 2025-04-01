@@ -24,20 +24,4 @@ module Api
   end
 end
 
-# app/services/api/schooling_service.rb
-module Api
-  class SchoolingService
-    def self.get_commune_schooling(code)
-      ApiClientService.instance.get("/education/schooling/commune/#{code}")
-    end
-  end
-end
 
-# app/services/api/childcare_service.rb
-module Api
-  class ChildcareService
-    def self.get_coverage_by_commune(code)
-      ApiClientService.instance.get("/childcare/commune/#{code}")
-    end
-  end
-end

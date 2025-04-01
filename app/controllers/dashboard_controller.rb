@@ -2,41 +2,45 @@ class DashboardController < ApplicationController
   include UserAuthorization
   before_action :check_user_territory
 
-def index
-  @territory_code = current_user.territory_code
-  @territory_name = current_user.territory_name
+  def index
+    @territory_code = current_user.territory_code
+    @territory_name = current_user.territory_name
 
-  # Récupérer les données de base pour la commune
-  @population_data = Api::PopulationService.get_commune_data(@territory_code)
-  @total_population = @population_data.present? ? @population_data.sum { |item| item["NB"].to_f }.round : 0
-  @children_data = Api::PopulationService.get_children_data(@territory_code)
-  @historical_data = Api::HistoricalService.get_historical_data(@territory_code)
-  @revenue_data = Api::RevenueService.get_median_revenues(@territory_code)
-  @schooling_data = Api::SchoolingService.get_commune_schooling(@territory_code)
-  @childcare_data = Api::ChildcareService.get_coverage_by_commune(@territory_code)
+    # Récupérer les données de base pour la commune
+    @population_data = Api::PopulationService.get_commune_data(@territory_code)
+    @total_population = @population_data.present? ? @population_data.sum { |item| item["NB"].to_f }.round : 0
+    @children_data = Api::PopulationService.get_children_data(@territory_code)
+    @historical_data = Api::HistoricalService.get_historical_data(@territory_code)
+    @revenue_data = Api::RevenueService.get_median_revenues(@territory_code)
+    @schooling_data = Api::SchoolingService.get_commune_schooling(@territory_code)
+    @childcare_data = Api::ChildcareService.get_coverage_by_commune(@territory_code)
 
-  # Récupérer les données pour la France
-  @france_revenue_data = Api::RevenueService.get_median_revenues_france
+    # Récupérer les données pour la France
+    @france_revenue_data = Api::RevenueService.get_median_revenues_france
+    @france_schooling_data = Api::SchoolingService.get_france_schooling
 
-  # Si l'utilisateur a une commune, récupérer les données EPCI, département et région associées
-  if current_user.territory_type == 'commune'
-    territory = Territory.find_by(codgeo: @territory_code)
-    if territory
-      if territory.epci.present?
-        @epci_data = Api::PopulationService.get_epci_children_data(territory.epci)
-        @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(territory.epci)
-      end
+    # Si l'utilisateur a une commune, récupérer les données EPCI, département et région associées
+    if current_user.territory_type == 'commune'
+      territory = Territory.find_by(codgeo: @territory_code)
+      if territory
+        if territory.epci.present?
+          @epci_data = Api::PopulationService.get_epci_children_data(territory.epci)
+          @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(territory.epci)
+          @epci_schooling_data = Api::SchoolingService.get_epci_schooling(territory.epci)
+        end
 
-      if territory.dep.present?
-        @department_revenue_data = Api::RevenueService.get_median_revenues_department(territory.dep)
-      end
+        if territory.dep.present?
+          @department_revenue_data = Api::RevenueService.get_median_revenues_department(territory.dep)
+          @department_schooling_data = Api::SchoolingService.get_department_schooling(territory.dep)
+        end
 
-      if territory.reg.present?
-        @region_revenue_data = Api::RevenueService.get_median_revenues_region(territory.reg)
+        if territory.reg.present?
+          @region_revenue_data = Api::RevenueService.get_median_revenues_region(territory.reg)
+          @region_schooling_data = Api::SchoolingService.get_region_schooling(territory.reg)
+        end
       end
     end
   end
-end
 
   private
 
