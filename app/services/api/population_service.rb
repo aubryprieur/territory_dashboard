@@ -24,15 +24,6 @@ module Api
   end
 end
 
-# app/services/api/revenue_service.rb
-module Api
-  class RevenueService
-    def self.get_median_revenues(code)
-      ApiClientService.instance.get("/revenues/median/commune/#{code}")
-    end
-  end
-end
-
 # app/services/api/schooling_service.rb
 module Api
   class SchoolingService

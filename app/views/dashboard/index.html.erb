@@ -50,46 +50,310 @@
     <!-- Données économiques -->
     <div class="bg-white shadow rounded-lg p-6 mb-6">
       <h2 class="text-lg font-medium text-gray-900 mb-4">Indicateurs socio-économiques</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 class="text-sm font-medium text-gray-700 mb-2">Revenus médians (€)</h3>
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Année</th>
-                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <% @revenue_data&.dig("median_revenues")&.sort&.reverse&.each do |year, amount| %>
-                <tr>
-                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900"><%= year %></td>
-                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                    <%= number_to_currency(amount, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Revenus médians historiques - transformé en graphique -->
+      <div>
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Évolution des revenus médians (€)</h3>
+        <div class="h-64">
+          <canvas id="revenue-chart"></canvas>
         </div>
+      </div>
+      <!-- Tableau comparatif des revenus médians avec évolution des écarts -->
+      <div>
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Comparaison des revenus médians (€)</h3>
+        <%
+          # Trouver l'année la plus récente commune à tous les territoires
+          commune_years = @revenue_data&.dig("median_revenues")&.keys || []
+          epci_years = @epci_revenue_data&.dig("median_revenues")&.keys || []
+          department_years = @department_revenue_data&.dig("median_revenues")&.keys || []
+          region_years = @region_revenue_data&.dig("median_revenues")&.keys || []
+          france_years = @france_revenue_data&.dig("median_revenues")&.keys || []
+
+          all_years = (commune_years + epci_years + department_years + region_years + france_years).uniq
+          latest_year = all_years.sort.last
+          oldest_year = all_years.sort.first
+
+          # Récupérer les valeurs pour la commune
+          commune_latest = @revenue_data&.dig("median_revenues", latest_year)
+          commune_oldest = @revenue_data&.dig("median_revenues", oldest_year)
+        %>
+
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Revenu médian (<%= latest_year || 'N/A' %>)
+              </th>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Évolution des écarts (<%= oldest_year || 'N/A' %> - <%= latest_year || 'N/A' %>)
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour la commune -->
+            <tr>
+              <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                <%= @territory_name %>
+              </td>
+              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                <%= number_to_currency(commune_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+              </td>
+              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                Référence
+              </td>
+            </tr>
+            <!-- Ligne pour l'EPCI si disponible -->
+            <% if @epci_revenue_data.present? %>
+              <%
+                epci_latest = @epci_revenue_data&.dig("median_revenues", latest_year)
+                epci_oldest = @epci_revenue_data&.dig("median_revenues", oldest_year)
+
+                # Calcul des écarts
+                if commune_latest && epci_latest && commune_oldest && epci_oldest
+                  latest_gap = commune_latest - epci_latest
+                  oldest_gap = commune_oldest - epci_oldest
+                  gap_evolution = latest_gap - oldest_gap
+
+                  # Si la valeur est négative, la commune s'éloigne (creusement de l'écart)
+                  # Si la valeur est positive, la commune se rapproche (réduction de l'écart)
+                  gap_text = if gap_evolution < 0
+                               "S'éloigne de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
+                             elsif gap_evolution > 0
+                               "Se rapproche de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
+                             else
+                               "Stable"
+                             end
+                else
+                  gap_text = "Données insuffisantes"
+                end
+              %>
+              <tr>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= @epci_revenue_data&.dig("name") || "EPCI" %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_currency(epci_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm
+                    <%= gap_evolution && gap_evolution < 0 ? "text-red-600" : (gap_evolution && gap_evolution > 0 ? "text-green-600" : "text-gray-500") %>">
+                  <%= gap_text %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour le département si disponible -->
+            <% if @department_revenue_data.present? %>
+              <%
+                dept_latest = @department_revenue_data&.dig("median_revenues", latest_year)
+                dept_oldest = @department_revenue_data&.dig("median_revenues", oldest_year)
+
+                # Calcul des écarts
+                if commune_latest && dept_latest && commune_oldest && dept_oldest
+                  latest_gap = commune_latest - dept_latest
+                  oldest_gap = commune_oldest - dept_oldest
+                  gap_evolution = latest_gap - oldest_gap
+
+                  # Si la valeur est négative, la commune s'éloigne (creusement de l'écart)
+                  # Si la valeur est positive, la commune se rapproche (réduction de l'écart)
+                  gap_text = if gap_evolution < 0
+                               "S'éloigne de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
+                             elsif gap_evolution > 0
+                               "Se rapproche de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
+                             else
+                               "Stable"
+                             end
+                else
+                  gap_text = "Données insuffisantes"
+                end
+              %>
+              <tr>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= @department_revenue_data&.dig("name") || "Département" %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_currency(dept_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm
+                    <%= gap_evolution && gap_evolution < 0 ? "text-red-600" : (gap_evolution && gap_evolution > 0 ? "text-green-600" : "text-gray-500") %>">
+                  <%= gap_text %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région si disponible -->
+            <% if @region_revenue_data.present? %>
+              <%
+                region_latest = @region_revenue_data&.dig("median_revenues", latest_year)
+                region_oldest = @region_revenue_data&.dig("median_revenues", oldest_year)
+
+                # Calcul des écarts
+                if commune_latest && region_latest && commune_oldest && region_oldest
+                  latest_gap = commune_latest - region_latest
+                  oldest_gap = commune_oldest - region_oldest
+                  gap_evolution = latest_gap - oldest_gap
+
+                  # Si la valeur est négative, la commune s'éloigne (creusement de l'écart)
+                  # Si la valeur est positive, la commune se rapproche (réduction de l'écart)
+                  gap_text = if gap_evolution < 0
+                               "S'éloigne de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
+                             elsif gap_evolution > 0
+                               "Se rapproche de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
+                             else
+                               "Stable"
+                             end
+                else
+                  gap_text = "Données insuffisantes"
+                end
+              %>
+              <tr>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= @region_revenue_data&.dig("name") || "Région" %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_currency(region_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm
+                    <%= gap_evolution && gap_evolution < 0 ? "text-red-600" : (gap_evolution && gap_evolution > 0 ? "text-green-600" : "text-gray-500") %>">
+                  <%= gap_text %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la France -->
+            <% if @france_revenue_data.present? %>
+              <%
+                france_latest = @france_revenue_data&.dig("median_revenues", latest_year)
+                france_oldest = @france_revenue_data&.dig("median_revenues", oldest_year)
+
+                # Calcul des écarts
+                if commune_latest && france_latest && commune_oldest && france_oldest
+                  latest_gap = commune_latest - france_latest
+                  oldest_gap = commune_oldest - france_oldest
+                  gap_evolution = latest_gap - oldest_gap
+
+                  # Si la valeur est négative, la commune s'éloigne (creusement de l'écart)
+                  # Si la valeur est positive, la commune se rapproche (réduction de l'écart)
+                  gap_text = if gap_evolution < 0
+                               "S'éloigne de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
+                             elsif gap_evolution > 0
+                               "Se rapproche de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
+                             else
+                               "Stable"
+                             end
+                else
+                  gap_text = "Données insuffisantes"
+                end
+              %>
+              <tr>
+                <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                  France
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_currency(france_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm
+                    <%= gap_evolution && gap_evolution < 0 ? "text-red-600" : (gap_evolution && gap_evolution > 0 ? "text-green-600" : "text-gray-500") %>">
+                  <%= gap_text %>
+                </td>
+              </tr>
+            <% end %>
+
+
+          </tbody>
+        </table>
+      </div>
+      </div>
+      <!-- Deuxième rangée pour les taux de pauvreté -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Taux de pauvreté historiques - transformé en graphique -->
         <div>
-          <h3 class="text-sm font-medium text-gray-700 mb-2">Taux de pauvreté (%)</h3>
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Évolution du taux de pauvreté (%)</h3>
+          <div class="h-64">
+            <canvas id="poverty-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Nouveau tableau comparatif des taux de pauvreté -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Comparaison des taux de pauvreté (%)</h3>
+          <%
+            # Trouver l'année la plus récente commune à tous les territoires pour les taux de pauvreté
+            commune_poverty_years = @revenue_data&.dig("poverty_rates")&.keys || []
+            epci_poverty_years = @epci_revenue_data&.dig("poverty_rates")&.keys || []
+            department_poverty_years = @department_revenue_data&.dig("poverty_rates")&.keys || []
+            region_poverty_years = @region_revenue_data&.dig("poverty_rates")&.keys || []
+            france_poverty_years = @france_revenue_data&.dig("poverty_rates")&.keys || []
+
+            all_poverty_years = (commune_poverty_years + epci_poverty_years + department_poverty_years + region_poverty_years + france_poverty_years).uniq
+            latest_poverty_year = all_poverty_years.sort.last
+          %>
+
           <table class="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Année</th>
-                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux</th>
+                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
+                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Taux de pauvreté (<%= latest_poverty_year || 'N/A' %>)
+                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <% @revenue_data&.dig("poverty_rates")&.sort&.reverse&.each do |year, rate| %>
+              <!-- Ligne pour la commune -->
+              <tr>
+                <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <%= @territory_name %>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_percentage(@revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
+                </td>
+              </tr>
+
+              <!-- Ligne pour l'EPCI si disponible -->
+              <% if @epci_revenue_data.present? %>
                 <tr>
-                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900"><%= year %></td>
                   <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                    <%= number_to_percentage(rate, precision: 1) %>
+                    <%= @epci_revenue_data&.dig("name") || "EPCI" %>
+                  </td>
+                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(@epci_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
                   </td>
                 </tr>
               <% end %>
+
+              <!-- Ligne pour le département si disponible -->
+              <% if @department_revenue_data.present? %>
+                <tr>
+                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <%= @department_revenue_data&.dig("name") || "Département" %>
+                  </td>
+                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(@department_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
+                  </td>
+                </tr>
+              <% end %>
+
+              <!-- Ligne pour la région si disponible -->
+              <% if @region_revenue_data.present? %>
+                <tr>
+                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <%= @region_revenue_data&.dig("name") || "Région" %>
+                  </td>
+                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(@region_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
+                  </td>
+                </tr>
+              <% end %>
+
+              <!-- Ligne pour la France -->
+              <tr>
+                <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                  France
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_percentage(@france_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -179,41 +443,52 @@
 </div>
 
 <script>
-document.addEventListener('turbo:load', function() {
-  initHistoricalChart();
-});
-
-// Aussi écouter DOMContentLoaded pour le chargement initial
+// Essayons un autre approche pour s'assurer que Chart.js est chargé
 document.addEventListener('DOMContentLoaded', function() {
-  initHistoricalChart();
+  // Attendre que Chart.js et ChartDataLabels soient chargés
+  const checkChartAvailability = setInterval(function() {
+    if (typeof Chart !== 'undefined') {
+      clearInterval(checkChartAvailability);
+      console.log("Chart.js est chargé, initialisation des graphiques...");
+
+      try {
+        if (typeof ChartDataLabels !== 'undefined') {
+          Chart.register(ChartDataLabels);
+        }
+      } catch (e) {
+        console.warn("ChartDataLabels n'est pas disponible, continuons sans lui:", e);
+      }
+
+      // Initialiser tous les graphiques
+      initAllCharts();
+    }
+  }, 100);
+
+  // 10 secondes de timeout maximum
+  setTimeout(function() {
+    clearInterval(checkChartAvailability);
+    console.warn("Chart.js n'a pas été chargé après 10 secondes, abandon");
+  }, 10000);
 });
 
-function initHistoricalChart() {
-  // Vérifier si Chart.js est chargé
-  if (typeof Chart === 'undefined') {
-    console.warn("Chart.js n'est pas chargé, attente...");
-    setTimeout(initHistoricalChart, 100);
-    return;
-  }
+// Initialisation de tous les graphiques
+function initAllCharts() {
+  console.log("Initialisation de tous les graphiques");
+  initHistoricalChart();
+  initRevenueChart();
+  initPovertyChart();
+}
 
-  // Vérifier si ChartDataLabels est chargé
-  if (typeof ChartDataLabels === 'undefined') {
-    try {
-      // Essayer d'enregistrer le plugin s'il est disponible globalement
-      Chart.register(window.ChartDataLabels);
-    } catch (e) {
-      console.warn("ChartDataLabels n'est pas disponible", e);
-    }
-  } else {
-    Chart.register(ChartDataLabels);
-  }
+// Fonctions d'initialisation des graphiques
+function initHistoricalChart() {
+  console.log("Tentative d'initialisation du graphique historique");
 
   // Vérifier si l'élément canvas existe
   const chartElement = document.getElementById('historical-chart');
   const historicalData = <%= raw (@historical_data || []).to_json %>;
 
   if (!chartElement) {
-    console.warn("Élément canvas non trouvé");
+    console.warn("Élément canvas 'historical-chart' non trouvé");
     return;
   }
 
@@ -223,9 +498,13 @@ function initHistoricalChart() {
   }
 
   // Vérifier si un graphique existe déjà sur ce canvas
-  const existingChart = Chart.getChart(chartElement);
-  if (existingChart) {
-    existingChart.destroy();
+  try {
+    const existingChart = Chart.getChart(chartElement);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+  } catch (e) {
+    console.warn("Erreur en vérifiant si un graphique existant:", e);
   }
 
   // Le reste de votre code pour créer le graphique...
@@ -241,64 +520,439 @@ function initHistoricalChart() {
     return historicalData[0]?.[yearKey] || 0;
   });
 
-  // Créer le graphique
-  new Chart(chartElement, {
-    type: 'line',
-    data: {
-      labels: years,
-      datasets: [{
-        label: 'Population',
-        data: populations,
-        backgroundColor: 'rgba(79, 70, 229, 0.2)',
-        borderColor: 'rgba(79, 70, 229, 1)',
-        borderWidth: 2,
-        tension: 0.1,
-        pointBackgroundColor: 'rgba(79, 70, 229, 1)'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: false,
-          ticks: {
-            callback: function(value) {
-              return new Intl.NumberFormat('fr-FR').format(value);
-            }
-          }
-        }
+  try {
+    // Créer le graphique
+    new Chart(chartElement, {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [{
+          label: 'Population',
+          data: populations,
+          backgroundColor: 'rgba(79, 70, 229, 0.2)',
+          borderColor: 'rgba(79, 70, 229, 1)',
+          borderWidth: 2,
+          tension: 0.1,
+          pointBackgroundColor: 'rgba(79, 70, 229, 1)'
+        }]
       },
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return 'Population: ' + new Intl.NumberFormat('fr-FR').format(context.raw);
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: {
+              callback: function(value) {
+                return new Intl.NumberFormat('fr-FR').format(value);
+              }
             }
           }
         },
-        datalabels: {
-          align: 'top',
-          anchor: 'end',
-          formatter: function(value) {
-            return new Intl.NumberFormat('fr-FR').format(value);
+        plugins: {
+          legend: {
+            display: false
           },
-          font: {
-            weight: 'bold',
-            size: 10
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return 'Population: ' + new Intl.NumberFormat('fr-FR').format(context.raw);
+              }
+            }
           },
-          color: '#4F46E5',
-          padding: {
-            top: 10
+          datalabels: {
+            align: 'top',
+            anchor: 'end',
+            formatter: function(value) {
+              return new Intl.NumberFormat('fr-FR').format(value);
+            },
+            font: {
+              weight: 'bold',
+              size: 10
+            },
+            color: '#4F46E5',
+            padding: {
+              top: 10
+            }
           }
         }
       }
+    });
+
+    console.log("Graphique d'évolution démographique créé avec succès");
+  } catch (e) {
+    console.error("Erreur lors de la création du graphique démographique:", e);
+  }
+}
+
+// Graphique évolution des revenus médians
+function initRevenueChart() {
+  console.log("Tentative d'initialisation du graphique des revenus");
+
+  // Vérifier si l'élément canvas existe
+  const chartElement = document.getElementById('revenue-chart');
+  if (!chartElement) {
+    console.warn("Élément canvas 'revenue-chart' non trouvé");
+    return;
+  }
+
+  // Récupérer les données de revenus pour tous les territoires
+  const communeRevenueData = <%= raw (@revenue_data&.dig("median_revenues") || {}).to_json %>;
+  const epciRevenueData = <%= raw (@epci_revenue_data&.dig("median_revenues") || {}).to_json %>;
+  const departmentRevenueData = <%= raw (@department_revenue_data&.dig("median_revenues") || {}).to_json %>;
+  const regionRevenueData = <%= raw (@region_revenue_data&.dig("median_revenues") || {}).to_json %>;
+  const franceRevenueData = <%= raw (@france_revenue_data&.dig("median_revenues") || {}).to_json %>;
+
+  // Récupérer les noms des territoires
+  const communeName = "<%= @territory_name %>";
+  const epciName = "<%= @epci_revenue_data&.dig('name') || 'EPCI' %>";
+  const departmentName = "<%= @department_revenue_data&.dig('name') || 'Département' %>";
+  const regionName = "<%= @region_revenue_data&.dig('name') || 'Région' %>";
+
+  // Si aucune donnée n'est disponible pour aucun territoire
+  if (Object.keys(communeRevenueData).length === 0 &&
+      Object.keys(epciRevenueData).length === 0 &&
+      Object.keys(departmentRevenueData).length === 0 &&
+      Object.keys(regionRevenueData).length === 0 &&
+      Object.keys(franceRevenueData).length === 0) {
+    console.warn("Aucune donnée de revenus disponible");
+    return;
+  }
+
+  // Vérifier si un graphique existe déjà sur ce canvas
+  try {
+    const existingChart = Chart.getChart(chartElement);
+    if (existingChart) {
+      existingChart.destroy();
     }
+  } catch (e) {
+    console.warn("Erreur en vérifiant si un graphique de revenus existant:", e);
+  }
+
+  // Collecter toutes les années disponibles dans tous les territoires
+  const allYears = new Set();
+  [communeRevenueData, epciRevenueData, departmentRevenueData, regionRevenueData, franceRevenueData].forEach(data => {
+    Object.keys(data).forEach(year => allYears.add(year));
   });
 
-  console.log("Graphique créé avec succès");
+  // Convertir en tableau et trier
+  const years = Array.from(allYears).sort();
+
+  // Définir des couleurs distinctes pour chaque territoire
+  const colors = {
+    commune: { line: 'rgba(79, 209, 197, 1)', fill: 'rgba(79, 209, 197, 0.2)' },
+    epci: { line: 'rgba(59, 130, 246, 1)', fill: 'rgba(59, 130, 246, 0.2)' },
+    department: { line: 'rgba(139, 92, 246, 1)', fill: 'rgba(139, 92, 246, 0.2)' },
+    region: { line: 'rgba(249, 115, 22, 1)', fill: 'rgba(249, 115, 22, 0.2)' },
+    france: { line: 'rgba(220, 38, 38, 1)', fill: 'rgba(220, 38, 38, 0.2)' }
+  };
+
+  // Préparer les datasets pour le graphique
+  const datasets = [];
+
+  // Dataset pour la commune
+  if (Object.keys(communeRevenueData).length > 0) {
+    datasets.push({
+      label: communeName,
+      data: years.map(year => communeRevenueData[year] || null),
+      backgroundColor: colors.commune.fill,
+      borderColor: colors.commune.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.commune.line
+    });
+  }
+
+  // Dataset pour l'EPCI
+  if (Object.keys(epciRevenueData).length > 0) {
+    datasets.push({
+      label: epciName,
+      data: years.map(year => epciRevenueData[year] || null),
+      backgroundColor: colors.epci.fill,
+      borderColor: colors.epci.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.epci.line
+    });
+  }
+
+  // Dataset pour le département
+  if (Object.keys(departmentRevenueData).length > 0) {
+    datasets.push({
+      label: departmentName,
+      data: years.map(year => departmentRevenueData[year] || null),
+      backgroundColor: colors.department.fill,
+      borderColor: colors.department.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.department.line
+    });
+  }
+
+  // Dataset pour la région
+  if (Object.keys(regionRevenueData).length > 0) {
+    datasets.push({
+      label: regionName,
+      data: years.map(year => regionRevenueData[year] || null),
+      backgroundColor: colors.region.fill,
+      borderColor: colors.region.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.region.line
+    });
+  }
+
+  // Dataset pour la France
+  if (Object.keys(franceRevenueData).length > 0) {
+    datasets.push({
+      label: 'France',
+      data: years.map(year => franceRevenueData[year] || null),
+      backgroundColor: colors.france.fill,
+      borderColor: colors.france.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.france.line
+    });
+  }
+
+  try {
+    // Créer le graphique
+    new Chart(chartElement, {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: {
+              callback: function(value) {
+                return new Intl.NumberFormat('fr-FR').format(value) + ' €';
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + new Intl.NumberFormat('fr-FR').format(context.raw) + ' €';
+              }
+            }
+          },
+          datalabels: {
+            display: false // Désactiver les étiquettes de données car il y a trop de séries
+          }
+        }
+      }
+    });
+
+    console.log("Graphique des revenus créé avec succès");
+  } catch (e) {
+    console.error("Erreur lors de la création du graphique des revenus:", e);
+  }
 }
+
+// Graphique évolution du taux de pauvreté
+function initPovertyChart() {
+  console.log("Tentative d'initialisation du graphique des taux de pauvreté");
+
+  // Vérifier si l'élément canvas existe
+  const chartElement = document.getElementById('poverty-chart');
+  if (!chartElement) {
+    console.warn("Élément canvas 'poverty-chart' non trouvé");
+    return;
+  }
+
+  // Récupérer les données de taux de pauvreté pour tous les territoires
+  const communePovertyData = <%= raw (@revenue_data&.dig("poverty_rates") || {}).to_json %>;
+  const epciPovertyData = <%= raw (@epci_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+  const departmentPovertyData = <%= raw (@department_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+  const regionPovertyData = <%= raw (@region_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+  const francePovertyData = <%= raw (@france_revenue_data&.dig("poverty_rates") || {}).to_json %>;
+
+  // Récupérer les noms des territoires
+  const communeName = "<%= @territory_name %>";
+  const epciName = "<%= @epci_revenue_data&.dig('name') || 'EPCI' %>";
+  const departmentName = "<%= @department_revenue_data&.dig('name') || 'Département' %>";
+  const regionName = "<%= @region_revenue_data&.dig('name') || 'Région' %>";
+
+  // Si aucune donnée n'est disponible pour aucun territoire
+  if (Object.keys(communePovertyData).length === 0 &&
+      Object.keys(epciPovertyData).length === 0 &&
+      Object.keys(departmentPovertyData).length === 0 &&
+      Object.keys(regionPovertyData).length === 0 &&
+      Object.keys(francePovertyData).length === 0) {
+    console.warn("Aucune donnée de taux de pauvreté disponible");
+    return;
+  }
+
+  // Vérifier si un graphique existe déjà sur ce canvas
+  try {
+    const existingChart = Chart.getChart(chartElement);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+  } catch (e) {
+    console.warn("Erreur en vérifiant si un graphique de pauvreté existant:", e);
+  }
+
+  // Collecter toutes les années disponibles dans tous les territoires
+  const allYears = new Set();
+  [communePovertyData, epciPovertyData, departmentPovertyData, regionPovertyData, francePovertyData].forEach(data => {
+    Object.keys(data).forEach(year => allYears.add(year));
+  });
+
+  // Convertir en tableau et trier
+  const years = Array.from(allYears).sort();
+
+  // Définir des couleurs distinctes pour chaque territoire - on garde les mêmes que pour les revenus pour la cohérence
+  const colors = {
+    commune: { line: 'rgba(79, 209, 197, 1)', fill: 'rgba(79, 209, 197, 0.2)' },
+    epci: { line: 'rgba(59, 130, 246, 1)', fill: 'rgba(59, 130, 246, 0.2)' },
+    department: { line: 'rgba(139, 92, 246, 1)', fill: 'rgba(139, 92, 246, 0.2)' },
+    region: { line: 'rgba(249, 115, 22, 1)', fill: 'rgba(249, 115, 22, 0.2)' },
+    france: { line: 'rgba(220, 38, 38, 1)', fill: 'rgba(220, 38, 38, 0.2)' }
+  };
+
+  // Préparer les datasets pour le graphique
+  const datasets = [];
+
+  // Dataset pour la commune
+  if (Object.keys(communePovertyData).length > 0) {
+    datasets.push({
+      label: communeName,
+      data: years.map(year => communePovertyData[year] || null),
+      backgroundColor: colors.commune.fill,
+      borderColor: colors.commune.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.commune.line
+    });
+  }
+
+  // Dataset pour l'EPCI
+  if (Object.keys(epciPovertyData).length > 0) {
+    datasets.push({
+      label: epciName,
+      data: years.map(year => epciPovertyData[year] || null),
+      backgroundColor: colors.epci.fill,
+      borderColor: colors.epci.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.epci.line
+    });
+  }
+
+  // Dataset pour le département
+  if (Object.keys(departmentPovertyData).length > 0) {
+    datasets.push({
+      label: departmentName,
+      data: years.map(year => departmentPovertyData[year] || null),
+      backgroundColor: colors.department.fill,
+      borderColor: colors.department.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.department.line
+    });
+  }
+
+  // Dataset pour la région
+  if (Object.keys(regionPovertyData).length > 0) {
+    datasets.push({
+      label: regionName,
+      data: years.map(year => regionPovertyData[year] || null),
+      backgroundColor: colors.region.fill,
+      borderColor: colors.region.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.region.line
+    });
+  }
+
+  // Dataset pour la France
+  if (Object.keys(francePovertyData).length > 0) {
+    datasets.push({
+      label: 'France',
+      data: years.map(year => francePovertyData[year] || null),
+      backgroundColor: colors.france.fill,
+      borderColor: colors.france.line,
+      borderWidth: 2,
+      tension: 0.1,
+      pointBackgroundColor: colors.france.line
+    });
+  }
+
+  try {
+    // Créer le graphique
+    new Chart(chartElement, {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            suggestedMax: 40, // Plafond suggéré pour les taux de pauvreté
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.raw + '%';
+              }
+            }
+          },
+          datalabels: {
+            display: false // Désactiver les étiquettes de données car il y a trop de séries
+          }
+        }
+      }
+    });
+
+    console.log("Graphique des taux de pauvreté créé avec succès");
+  } catch (e) {
+    console.error("Erreur lors de la création du graphique des taux de pauvreté:", e);
+  }
+}
+
+// Écouter aussi turbo:load pour la compatibilité avec Turbo
+document.addEventListener('turbo:load', function() {
+  setTimeout(initAllCharts, 100); // Petit délai pour s'assurer que tout est prêt
+});
+</script>
+
+<script>
+  console.log("Type de Chart dans le DOM :", typeof Chart);
+  console.log("Chart:", typeof Chart); // ➜ "function"
 </script>

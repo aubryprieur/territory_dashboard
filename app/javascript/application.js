@@ -1,12 +1,15 @@
-// Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
 import * as Turbo from "@hotwired/turbo"
 window.Turbo = Turbo
 
 import "controllers"
 
-import Alpine from "alpinejs"
+// ✅ AlpineJS via CDN, pas de default export
+import * as Alpine from "alpinejs"
 window.Alpine = Alpine
 Alpine.start()
 
-import * as Chart from "chart.js";
-import * as ChartDataLabels from "chartjs-plugin-datalabels";
+// ✅ Chart.js UMD (pas de default)
+import * as ChartModule from "chart.js"
+import * as ChartDataLabels from "chartjs-plugin-datalabels"
+window.Chart = ChartModule.Chart
+window.ChartDataLabels = ChartDataLabels
