@@ -17,27 +17,29 @@ class DashboardController < ApplicationController
     @births_data = Api::PopulationService.get_births_data(@territory_code)
     @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
 
-
     # Récupérer les données pour la France
     @france_revenue_data = Api::RevenueService.get_median_revenues_france
     @france_schooling_data = Api::SchoolingService.get_france_schooling
+    @france_children_data = Api::PopulationService.get_france_children_data
 
     # Si l'utilisateur a une commune, récupérer les données EPCI, département et région associées
     if current_user.territory_type == 'commune'
       territory = Territory.find_by(codgeo: @territory_code)
       if territory
         if territory.epci.present?
-          @epci_data = Api::PopulationService.get_epci_children_data(territory.epci)
+          @epci_children_data = Api::PopulationService.get_epci_children_data(territory.epci)
           @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(territory.epci)
           @epci_schooling_data = Api::SchoolingService.get_epci_schooling(territory.epci)
         end
 
         if territory.dep.present?
+          @department_children_data = Api::PopulationService.get_department_children_data(territory.dep)
           @department_revenue_data = Api::RevenueService.get_median_revenues_department(territory.dep)
           @department_schooling_data = Api::SchoolingService.get_department_schooling(territory.dep)
         end
 
         if territory.reg.present?
+          @region_children_data = Api::PopulationService.get_region_children_data(territory.reg)
           @region_revenue_data = Api::RevenueService.get_median_revenues_region(territory.reg)
           @region_schooling_data = Api::SchoolingService.get_region_schooling(territory.reg)
         end
