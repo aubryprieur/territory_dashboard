@@ -14,6 +14,9 @@ class DashboardController < ApplicationController
     @revenue_data = Api::RevenueService.get_median_revenues(@territory_code)
     @schooling_data = Api::SchoolingService.get_commune_schooling(@territory_code)
     @childcare_data = Api::ChildcareService.get_coverage_by_commune(@territory_code)
+    @births_data = Api::PopulationService.get_births_data(@territory_code)
+    @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
+
 
     # Récupérer les données pour la France
     @france_revenue_data = Api::RevenueService.get_median_revenues_france

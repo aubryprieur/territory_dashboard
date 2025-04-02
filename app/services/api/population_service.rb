@@ -12,6 +12,9 @@ module Api
     def self.get_epci_children_data(epci_code)
       ApiClientService.instance.get("/population/children/epci/#{epci_code}")
     end
+    def self.get_births_data(code)
+      ApiClientService.instance.get("/births/#{code}")
+    end
   end
 end
 

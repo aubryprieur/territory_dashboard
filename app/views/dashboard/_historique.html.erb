@@ -1,10 +1,31 @@
 <!-- Graphique d'évolution historique -->
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-4">Évolution historique</h2>
-  <div class="h-64">
-    <canvas id="historical-chart"></canvas>
+
+  <!-- Grille pour deux graphiques côte à côte sur grands écrans -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Graphique de population -->
+    <div>
+      <h3 class="text-sm font-medium text-gray-700 mb-2">Évolution de la population</h3>
+      <div class="h-64">
+        <canvas id="historical-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Nouveau graphique des naissances -->
+    <div>
+      <h3 class="text-sm font-medium text-gray-700 mb-2">Évolution des naissances</h3>
+      <div class="h-64">
+        <canvas id="births-chart"></canvas>
+      </div>
+    </div>
   </div>
+
+  <!-- Données JSON pour les graphiques -->
   <script type="application/json" id="historical-data">
     <%= raw(@historical_data.to_json) %>
+  </script>
+  <script type="application/json" id="births-data">
+    <%= raw(@births_data_filtered.to_json) %>
   </script>
 </div>
