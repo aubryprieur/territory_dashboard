@@ -1,0 +1,271 @@
+<!-- app/views/dashboard/_families.html.erb -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Familles</h2>
+
+  <%
+    # Déterminer l'année la plus récente disponible
+    latest_year = @family_data&.dig("family_data")&.keys&.sort&.last
+    latest_data = @family_data&.dig("family_data", latest_year) if latest_year
+
+    # Récupérer les données d'évolution
+    single_parent_evolution = @family_data&.dig("evolution", "single_parent_families_percentage")
+    single_fathers_evolution = @family_data&.dig("evolution", "single_fathers")
+    single_mothers_evolution = @family_data&.dig("evolution", "single_mothers")
+  %>
+
+  <!-- Section familles monoparentales -->
+  <h3 class="text-sm font-medium text-gray-700 mb-4">Familles monoparentales (Année: <%= latest_year || "N/A" %>)</h3>
+
+  <!-- Disposition en grille pour carte violette + tableau -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Carte de synthèse violette (1 colonne sur les petits écrans, 1 colonne sur 3 sur les écrans moyens et larges) -->
+    <div class="md:col-span-1">
+      <div class="bg-purple-50 p-4 rounded-md h-full">
+        <h4 class="font-medium text-purple-800">Familles monoparentales</h4>
+        <div class="flex items-baseline mt-2">
+          <p class="text-2xl font-bold text-purple-900">
+            <%= number_to_percentage(latest_data&.dig("single_parent_families_percentage") || 0, precision: 2) %>
+          </p>
+          <% if single_parent_evolution && single_parent_evolution["evolution_percentage"] %>
+            <p class="ml-2 text-sm">
+              <%= display_trend(single_parent_evolution["evolution_percentage"]) %>
+              <span class="text-xs text-gray-500">(<%= single_parent_evolution["period"] %>)</span>
+            </p>
+          <% end %>
+        </div>
+        <p class="text-sm text-purple-700 mt-1">
+          <%= number_with_delimiter(latest_data&.dig("single_parent_families")&.round || 0) %>
+          sur <%= number_with_delimiter(latest_data&.dig("total_families")&.round || 0) %> familles
+        </p>
+
+        <div class="mt-3 border-t border-purple-200 pt-3">
+          <div class="flex items-baseline">
+            <p class="text-sm text-purple-700 font-medium">Pères seuls :</p>
+            <p class="ml-1 text-sm text-purple-700">
+              <%= number_with_delimiter(latest_data&.dig("single_fathers")&.round || 0) %>
+              (<%= latest_data&.dig("single_fathers") && latest_data&.dig("single_parent_families") ?
+                  number_to_percentage(latest_data["single_fathers"] / latest_data["single_parent_families"] * 100, precision: 1) :
+                  "N/A" %>)
+            </p>
+            <% if single_fathers_evolution && single_fathers_evolution["evolution_percentage"] %>
+              <p class="ml-2 text-xs">
+                <%= display_trend(single_fathers_evolution["evolution_percentage"]) %>
+              </p>
+            <% end %>
+          </div>
+
+          <div class="flex items-baseline mt-1">
+            <p class="text-sm text-purple-700 font-medium">Mères seules :</p>
+            <p class="ml-1 text-sm text-purple-700">
+              <%= number_with_delimiter(latest_data&.dig("single_mothers")&.round || 0) %>
+              (<%= latest_data&.dig("single_mothers") && latest_data&.dig("single_parent_families") ?
+                  number_to_percentage(latest_data["single_mothers"] / latest_data["single_parent_families"] * 100, precision: 1) :
+                  "N/A" %>)
+            </p>
+            <% if single_mothers_evolution && single_mothers_evolution["evolution_percentage"] %>
+              <p class="ml-2 text-xs">
+                <%= display_trend(single_mothers_evolution["evolution_percentage"]) %>
+              </p>
+            <% end %>
+          </div>
+        </div>
+
+        <% if single_parent_evolution && single_parent_evolution["period"] %>
+          <div class="mt-3 text-xs text-gray-500">
+            <p>* Les évolutions sont calculées sur la période <%= single_parent_evolution["period"] %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Tableau comparatif (2 colonnes sur 3 sur les écrans moyens et larges) -->
+    <div class="md:col-span-2">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Territoire
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Taux
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Familles monoparentales
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total familles
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour la commune -->
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                <%= @territory_name %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%
+                  commune_rate = latest_data&.dig("single_parent_families_percentage")
+                  commune_rate_formatted = commune_rate ? number_to_percentage(commune_rate, precision: 2) : 'N/A'
+                %>
+                <div class="flex items-center">
+                  <span class="<%= commune_rate && commune_rate > 0 ? "font-semibold" : "" %>">
+                    <%= commune_rate_formatted %>
+                  </span>
+                  <% if commune_rate && commune_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-purple-600 h-2 rounded-full" style="width: <%= [commune_rate, 50].min * 2 %>%"></div>
+                    </div>
+                  <% end %>
+                  <% if single_parent_evolution && single_parent_evolution["evolution_percentage"] %>
+                    <span class="ml-2 text-xs">
+                      <%= display_trend(single_parent_evolution["evolution_percentage"]) %>
+                    </span>
+                  <% end %>
+                </div>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                <%= number_with_delimiter(latest_data&.dig("single_parent_families")&.round || 'N/A') %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                <%= number_with_delimiter(latest_data&.dig("total_families")&.round || 'N/A') %>
+              </td>
+            </tr>
+
+            <!-- Ligne pour l'EPCI si disponible -->
+            <% epci_latest_data = @epci_family_data&.dig("family_data", latest_year) %>
+            <% if epci_latest_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= @epci_revenue_data&.dig("name") || "EPCI" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    epci_rate = epci_latest_data&.dig("single_parent_families_percentage")
+                    epci_rate_formatted = epci_rate ? number_to_percentage(epci_rate, precision: 2) : 'N/A'
+                  %>
+                  <div class="flex items-center">
+                    <span class="<%= epci_rate && epci_rate > 0 ? "font-semibold" : "" %>">
+                      <%= epci_rate_formatted %>
+                    </span>
+                    <% if epci_rate && epci_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: <%= [epci_rate, 50].min * 2 %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <%= number_with_delimiter(epci_latest_data&.dig("single_parent_families")&.round || 'N/A') %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <%= number_with_delimiter(epci_latest_data&.dig("total_families")&.round || 'N/A') %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour le département si disponible -->
+            <% dept_latest_data = @department_family_data&.dig("family_data", latest_year) %>
+            <% if dept_latest_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= @department_revenue_data&.dig("name") || "Département" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    dept_rate = dept_latest_data&.dig("single_parent_families_percentage")
+                    dept_rate_formatted = dept_rate ? number_to_percentage(dept_rate, precision: 2) : 'N/A'
+                  %>
+                  <div class="flex items-center">
+                    <span class="<%= dept_rate && dept_rate > 0 ? "font-semibold" : "" %>">
+                      <%= dept_rate_formatted %>
+                    </span>
+                    <% if dept_rate && dept_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= [dept_rate, 50].min * 2 %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <%= number_with_delimiter(dept_latest_data&.dig("single_parent_families")&.round || 'N/A') %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <%= number_with_delimiter(dept_latest_data&.dig("total_families")&.round || 'N/A') %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région si disponible -->
+            <% region_latest_data = @region_family_data&.dig("family_data", latest_year) %>
+            <% if region_latest_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= @region_revenue_data&.dig("name") || "Région" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    region_rate = region_latest_data&.dig("single_parent_families_percentage")
+                    region_rate_formatted = region_rate ? number_to_percentage(region_rate, precision: 2) : 'N/A'
+                  %>
+                  <div class="flex items-center">
+                    <span class="<%= region_rate && region_rate > 0 ? "font-semibold" : "" %>">
+                      <%= region_rate_formatted %>
+                    </span>
+                    <% if region_rate && region_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full" style="width: <%= [region_rate, 50].min * 2 %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <%= number_with_delimiter(region_latest_data&.dig("single_parent_families")&.round || 'N/A') %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <%= number_with_delimiter(region_latest_data&.dig("total_families")&.round || 'N/A') %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la France -->
+            <% france_latest_data = @france_family_data&.dig("family_data", latest_year) %>
+            <% if france_latest_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  France
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    france_rate = france_latest_data&.dig("single_parent_families_percentage")
+                    france_rate_formatted = france_rate ? number_to_percentage(france_rate, precision: 2) : 'N/A'
+                  %>
+                  <div class="flex items-center">
+                    <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
+                      <%= france_rate_formatted %>
+                    </span>
+                    <% if france_rate && france_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-red-600 h-2 rounded-full" style="width: <%= [france_rate, 50].min * 2 %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <%= number_with_delimiter(france_latest_data&.dig("single_parent_families")&.round || 'N/A') %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <%= number_with_delimiter(france_latest_data&.dig("total_families")&.round || 'N/A') %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-3 text-xs text-gray-500">
+        <p>Note: Les barres de progression sont calibrées pour un maximum de 50%.</p>
+      </div>
+    </div>
+  </div>
+</div>

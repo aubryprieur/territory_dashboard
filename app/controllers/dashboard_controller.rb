@@ -18,6 +18,7 @@ class DashboardController < ApplicationController
     @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
     @employment_data = Api::EmploymentService.get_commune_employment(@territory_code)
     @safety_data = Api::PublicSafetyService.get_commune_safety(@territory_code)
+    @family_data = Api::FamilyService.get_commune_families(@territory_code)
 
     # Récupérer les données pour la France
     @france_revenue_data = Api::RevenueService.get_median_revenues_france
@@ -25,6 +26,7 @@ class DashboardController < ApplicationController
     @france_children_data = Api::PopulationService.get_france_children_data
     @france_employment_data = Api::EmploymentService.get_france_employment
     @france_childcare_data = Api::ChildcareService.get_coverage_france
+    @france_family_data = Api::FamilyService.get_france_families
 
     # Si l'utilisateur a une commune, récupérer les données EPCI, département et région associées
     if current_user.territory_type == 'commune'
@@ -36,6 +38,7 @@ class DashboardController < ApplicationController
           @epci_schooling_data = Api::SchoolingService.get_epci_schooling(territory.epci)
           @epci_employment_data = Api::EmploymentService.get_epci_employment(territory.epci)
           @epci_childcare_data = Api::ChildcareService.get_coverage_by_epci(territory.epci) if territory&.epci.present?
+          @epci_family_data = Api::FamilyService.get_epci_families(territory.epci)
         end
 
         if territory.dep.present?
@@ -45,6 +48,7 @@ class DashboardController < ApplicationController
           @department_employment_data = Api::EmploymentService.get_department_employment(territory.dep)
           @department_safety_data = Api::PublicSafetyService.get_department_safety(territory.dep)
           @department_childcare_data = Api::ChildcareService.get_coverage_by_department(territory.dep) if territory&.dep.present?
+          @department_family_data = Api::FamilyService.get_department_families(territory.dep)
         end
 
         if territory.reg.present?
@@ -54,6 +58,7 @@ class DashboardController < ApplicationController
           @region_employment_data = Api::EmploymentService.get_region_employment(territory.reg)
           @region_safety_data = Api::PublicSafetyService.get_region_safety(territory.reg)
           @region_childcare_data = Api::ChildcareService.get_coverage_by_region(territory.reg) if territory&.reg.present?
+          @region_family_data = Api::FamilyService.get_region_families(territory.reg)
         end
       end
     end

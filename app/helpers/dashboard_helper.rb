@@ -16,4 +16,16 @@ module DashboardHelper
 
     result
   end
+
+  def display_trend(evolution_percentage)
+    return '' unless evolution_percentage
+
+    if evolution_percentage > 0
+      "<span class=\"text-green-600\">↑ +#{evolution_percentage.abs}%</span>".html_safe
+    elsif evolution_percentage < 0
+      "<span class=\"text-red-600\">↓ -#{evolution_percentage.abs}%</span>".html_safe
+    else
+      "<span class=\"text-gray-600\">→ 0%</span>".html_safe
+    end
+  end
 end
