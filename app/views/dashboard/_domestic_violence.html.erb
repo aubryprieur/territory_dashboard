@@ -1,0 +1,258 @@
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Violences intrafamiliales</h2>
+
+  <%
+    commune_data = extract_domestic_violence_data(@safety_data&.dig("commune") || {})
+    department_data = extract_domestic_violence_data(@department_safety_data&.dig("department") || {})
+    region_data = extract_domestic_violence_data(@region_safety_data&.dig("region") || {})
+
+    # Récupérer toutes les années disponibles
+    all_years = (commune_data.keys + department_data.keys + region_data.keys).uniq.sort
+    latest_year = all_years.last
+  %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Graphique d'évolution -->
+    <div>
+      <h3 class="text-sm font-medium text-gray-700 mb-2">Évolution des violences intrafamiliales</h3>
+      <div class="h-64">
+        <canvas id="domestic-violence-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Tableau comparatif -->
+    <div>
+      <h3 class="text-sm font-medium text-gray-700 mb-2">Comparaison territoriale (<%= latest_year || 'N/A' %>)</h3>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Territoire
+            </th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Taux pour 1000 habitants
+            </th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Évolution sur 5 ans
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <!-- Ligne pour la commune -->
+          <tr>
+            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+              <%= @territory_name %>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <% latest_rate = commune_data[latest_year] %>
+              <%= number_with_precision(latest_rate, precision: 2) || 'N/A' %>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <%
+                earliest_year = all_years.first
+                if latest_year && earliest_year && latest_year != earliest_year
+                  latest_rate = commune_data[latest_year]
+                  earliest_rate = commune_data[earliest_year]
+                  if latest_rate && earliest_rate
+                    period_length = latest_year.to_i - earliest_year.to_i
+                    difference = (latest_rate - earliest_rate).round(2)
+                    difference_class = difference > 0 ? "text-red-600" : (difference < 0 ? "text-green-600" : "text-gray-500")
+                    difference_symbol = difference > 0 ? "↑" : (difference < 0 ? "↓" : "→")
+              %>
+                <span class="<%= difference_class %>">
+                  <%= difference_symbol %> <%= difference.abs %> points sur <%= period_length %> ans
+                </span>
+              <% else %>
+                <span class="text-gray-500">Données insuffisantes</span>
+              <% end %>
+            <% else %>
+              <span class="text-gray-500">N/A</span>
+            <% end %>
+            </td>
+          </tr>
+
+          <!-- Ligne pour le département -->
+          <% if department_data.present? %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= @department_safety_data&.dig("department", "name") || "Département" %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <% latest_dept_rate = department_data[latest_year] %>
+                <%= number_with_precision(latest_dept_rate, precision: 2) || 'N/A' %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%
+                  dept_earliest_year = department_data.keys.min
+                  dept_latest_year = department_data.keys.max
+                  if dept_latest_year && dept_earliest_year && dept_latest_year != dept_earliest_year
+                    dept_latest_rate = department_data[dept_latest_year]
+                    dept_earliest_rate = department_data[dept_earliest_year]
+                    if dept_latest_rate && dept_earliest_rate
+                      dept_period_length = dept_latest_year.to_i - dept_earliest_year.to_i
+                      dept_difference = (dept_latest_rate - dept_earliest_rate).round(2)
+                      dept_difference_class = dept_difference > 0 ? "text-red-600" : (dept_difference < 0 ? "text-green-600" : "text-gray-500")
+                      dept_difference_symbol = dept_difference > 0 ? "↑" : (dept_difference < 0 ? "↓" : "→")
+                %>
+                  <span class="<%= dept_difference_class %>">
+                    <%= dept_difference_symbol %> <%= dept_difference.abs %> points sur <%= dept_period_length %> ans
+                  </span>
+                <% else %>
+                  <span class="text-gray-500">Données insuffisantes</span>
+                <% end %>
+              <% else %>
+                <span class="text-gray-500">N/A</span>
+              <% end %>
+              </td>
+            </tr>
+          <% end %>
+
+          <!-- Ligne pour la région -->
+          <% if region_data.present? %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= @region_safety_data&.dig("region", "name") || "Région" %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <% latest_region_rate = region_data[latest_year] %>
+                <%= number_with_precision(latest_region_rate, precision: 2) || 'N/A' %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%
+                  region_earliest_year = region_data.keys.min
+                  region_latest_year = region_data.keys.max
+                  if region_latest_year && region_earliest_year && region_latest_year != region_earliest_year
+                    region_latest_rate = region_data[region_latest_year]
+                    region_earliest_rate = region_data[region_earliest_year]
+                    if region_latest_rate && region_earliest_rate
+                      region_period_length = region_latest_year.to_i - region_earliest_year.to_i
+                      region_difference = (region_latest_rate - region_earliest_rate).round(2)
+                      region_difference_class = region_difference > 0 ? "text-red-600" : (region_difference < 0 ? "text-green-600" : "text-gray-500")
+                      region_difference_symbol = region_difference > 0 ? "↑" : (region_difference < 0 ? "↓" : "→")
+                %>
+                  <span class="<%= region_difference_class %>">
+                    <%= region_difference_symbol %> <%= region_difference.abs %> points sur <%= region_period_length %> ans
+                  </span>
+                <% else %>
+                  <span class="text-gray-500">Données insuffisantes</span>
+                <% end %>
+              <% else %>
+                <span class="text-gray-500">N/A</span>
+              <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section d'aide à l'interprétation -->
+  <div class="mt-6 bg-gray-50 p-4 rounded-md">
+    <h3 class="text-sm font-medium text-gray-700 mb-2">À savoir</h3>
+    <p class="text-sm text-gray-600">
+      Les données présentées concernent les coups et blessures volontaires intrafamiliaux enregistrés par les services de police et de gendarmerie.
+      L'augmentation du nombre de signalements peut refléter une hausse réelle des incidents, mais aussi une meilleure propension des victimes à porter plainte ou un meilleur repérage par les forces de l'ordre.
+    </p>
+  </div>
+</div>
+
+<!-- Script pour le graphique -->
+<script>
+  document.addEventListener('turbo:load', function() {
+    const chartElement = document.getElementById('domestic-violence-chart');
+    if (!chartElement || typeof Chart === "undefined") {
+      console.warn("Chart.js ou élément manquant pour le graphique des violences intrafamiliales");
+      return;
+    }
+
+    // Organiser les données pour le graphique
+    const years = <%= raw all_years.to_json %>;
+    const communeData = [];
+    const departmentData = [];
+    const regionData = [];
+
+    <% all_years.each do |year| %>
+      communeData.push(<%= commune_data[year] || 'null' %>);
+      departmentData.push(<%= department_data[year] || 'null' %>);
+      regionData.push(<%= region_data[year] || 'null' %>);
+    <% end %>
+
+    const datasets = [];
+
+    if (communeData.some(val => val !== null)) {
+      datasets.push({
+        label: '<%= @territory_name %>',
+        data: communeData,
+        borderColor: 'rgba(220, 38, 38, 1)',
+        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false
+      });
+    }
+
+    if (departmentData.some(val => val !== null)) {
+      datasets.push({
+        label: '<%= @department_safety_data&.dig("department", "name") || "Département" %>',
+        data: departmentData,
+        borderColor: 'rgba(79, 70, 229, 1)',
+        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false
+      });
+    }
+
+    if (regionData.some(val => val !== null)) {
+      datasets.push({
+        label: '<%= @region_safety_data&.dig("region", "name") || "Région" %>',
+        data: regionData,
+        borderColor: 'rgba(16, 185, 129, 1)',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false
+      });
+    }
+
+    try {
+      new Chart(chartElement, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.raw.toFixed(2);
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Taux pour 1000 habitants'
+              }
+            }
+          }
+        }
+      });
+
+      console.log("✅ Graphique des violences intrafamiliales créé avec succès");
+    } catch (e) {
+      console.error("Erreur lors de la création du graphique des violences intrafamiliales:", e);
+    }
+  });
+</script>

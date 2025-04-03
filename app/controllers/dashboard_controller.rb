@@ -17,6 +17,7 @@ class DashboardController < ApplicationController
     @births_data = Api::PopulationService.get_births_data(@territory_code)
     @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
     @employment_data = Api::EmploymentService.get_commune_employment(@territory_code)
+    @safety_data = Api::PublicSafetyService.get_commune_safety(@territory_code)
 
     # Récupérer les données pour la France
     @france_revenue_data = Api::RevenueService.get_median_revenues_france
@@ -40,6 +41,7 @@ class DashboardController < ApplicationController
           @department_revenue_data = Api::RevenueService.get_median_revenues_department(territory.dep)
           @department_schooling_data = Api::SchoolingService.get_department_schooling(territory.dep)
           @department_employment_data = Api::EmploymentService.get_department_employment(territory.dep)
+          @department_safety_data = Api::PublicSafetyService.get_department_safety(territory.dep)
         end
 
         if territory.reg.present?
@@ -47,6 +49,7 @@ class DashboardController < ApplicationController
           @region_revenue_data = Api::RevenueService.get_median_revenues_region(territory.reg)
           @region_schooling_data = Api::SchoolingService.get_region_schooling(territory.reg)
           @region_employment_data = Api::EmploymentService.get_region_employment(territory.reg)
+          @region_safety_data = Api::PublicSafetyService.get_region_safety(territory.reg)
         end
       end
     end
