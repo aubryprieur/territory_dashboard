@@ -18,3 +18,4 @@ Chart.register(ChartDataLabels)
 import "charts/historique_chart"
 import "charts/economic_charts"
 import "charts/births_chart"
+import "charts/domestic_violence_chart"

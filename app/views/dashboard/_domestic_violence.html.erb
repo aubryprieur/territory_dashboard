@@ -157,102 +157,17 @@
   </div>
 </div>
 
-<!-- Script pour le graphique -->
+<!-- Script d'initialisation des données pour le graphique -->
 <script>
-  document.addEventListener('turbo:load', function() {
-    const chartElement = document.getElementById('domestic-violence-chart');
-    if (!chartElement || typeof Chart === "undefined") {
-      console.warn("Chart.js ou élément manquant pour le graphique des violences intrafamiliales");
-      return;
+  window.domesticViolenceData = {
+    years: <%= raw all_years.to_json %>,
+    communeData: [<%= all_years.map { |year| commune_data[year] || 'null' }.join(',') %>],
+    departmentData: [<%= all_years.map { |year| department_data[year] || 'null' }.join(',') %>],
+    regionData: [<%= all_years.map { |year| region_data[year] || 'null' }.join(',') %>],
+    territoryNames: {
+      commune: "<%= @territory_name %>",
+      department: "<%= @department_safety_data&.dig("department", "name") || "Département" %>",
+      region: "<%= @region_safety_data&.dig("region", "name") || "Région" %>"
     }
-
-    // Organiser les données pour le graphique
-    const years = <%= raw all_years.to_json %>;
-    const communeData = [];
-    const departmentData = [];
-    const regionData = [];
-
-    <% all_years.each do |year| %>
-      communeData.push(<%= commune_data[year] || 'null' %>);
-      departmentData.push(<%= department_data[year] || 'null' %>);
-      regionData.push(<%= region_data[year] || 'null' %>);
-    <% end %>
-
-    const datasets = [];
-
-    if (communeData.some(val => val !== null)) {
-      datasets.push({
-        label: '<%= @territory_name %>',
-        data: communeData,
-        borderColor: 'rgba(220, 38, 38, 1)',
-        backgroundColor: 'rgba(220, 38, 38, 0.1)',
-        borderWidth: 2,
-        tension: 0.3,
-        fill: false
-      });
-    }
-
-    if (departmentData.some(val => val !== null)) {
-      datasets.push({
-        label: '<%= @department_safety_data&.dig("department", "name") || "Département" %>',
-        data: departmentData,
-        borderColor: 'rgba(79, 70, 229, 1)',
-        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-        borderWidth: 2,
-        tension: 0.3,
-        fill: false
-      });
-    }
-
-    if (regionData.some(val => val !== null)) {
-      datasets.push({
-        label: '<%= @region_safety_data&.dig("region", "name") || "Région" %>',
-        data: regionData,
-        borderColor: 'rgba(16, 185, 129, 1)',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        borderWidth: 2,
-        tension: 0.3,
-        fill: false
-      });
-    }
-
-    try {
-      new Chart(chartElement, {
-        type: 'line',
-        data: {
-          labels: years,
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return context.dataset.label + ': ' + context.raw.toFixed(2);
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Taux pour 1000 habitants'
-              }
-            }
-          }
-        }
-      });
-
-      console.log("✅ Graphique des violences intrafamiliales créé avec succès");
-    } catch (e) {
-      console.error("Erreur lors de la création du graphique des violences intrafamiliales:", e);
-    }
-  });
+  };
 </script>

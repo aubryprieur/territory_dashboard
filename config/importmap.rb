@@ -14,5 +14,6 @@ pin "alpinejs", to: "https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/module.es
 pin "charts/historique_chart", to: "charts/historique_chart.js"
 pin "charts/economic_charts", to: "charts/economic_charts.js"
 pin "charts/births_chart", to: "charts/births_chart.js"
+pin "charts/domestic_violence_chart", to: "charts/domestic_violence_chart.js"
 
 
