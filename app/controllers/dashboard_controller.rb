@@ -24,6 +24,7 @@ class DashboardController < ApplicationController
     @france_schooling_data = Api::SchoolingService.get_france_schooling
     @france_children_data = Api::PopulationService.get_france_children_data
     @france_employment_data = Api::EmploymentService.get_france_employment
+    @france_childcare_data = Api::ChildcareService.get_coverage_france
 
     # Si l'utilisateur a une commune, récupérer les données EPCI, département et région associées
     if current_user.territory_type == 'commune'
@@ -34,6 +35,7 @@ class DashboardController < ApplicationController
           @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(territory.epci)
           @epci_schooling_data = Api::SchoolingService.get_epci_schooling(territory.epci)
           @epci_employment_data = Api::EmploymentService.get_epci_employment(territory.epci)
+          @epci_childcare_data = Api::ChildcareService.get_coverage_by_epci(territory.epci) if territory&.epci.present?
         end
 
         if territory.dep.present?
@@ -42,6 +44,7 @@ class DashboardController < ApplicationController
           @department_schooling_data = Api::SchoolingService.get_department_schooling(territory.dep)
           @department_employment_data = Api::EmploymentService.get_department_employment(territory.dep)
           @department_safety_data = Api::PublicSafetyService.get_department_safety(territory.dep)
+          @department_childcare_data = Api::ChildcareService.get_coverage_by_department(territory.dep) if territory&.dep.present?
         end
 
         if territory.reg.present?
@@ -50,6 +53,7 @@ class DashboardController < ApplicationController
           @region_schooling_data = Api::SchoolingService.get_region_schooling(territory.reg)
           @region_employment_data = Api::EmploymentService.get_region_employment(territory.reg)
           @region_safety_data = Api::PublicSafetyService.get_region_safety(territory.reg)
+          @region_childcare_data = Api::ChildcareService.get_coverage_by_region(territory.reg) if territory&.reg.present?
         end
       end
     end

@@ -1,16 +1,37 @@
 <!-- Modes d'accueil petite enfance -->
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-4">Accueil de la petite enfance</h2>
-  <h3 class="text-sm font-medium text-gray-700 mb-2">Modes d'accueil petite enfance</h3>
+
   <%
-    latest_year = @childcare_data&.dig("coverage_data")&.keys&.sort&.last
-    latest_childcare = @childcare_data&.dig("coverage_data", latest_year)&.dig("coverage_rates") if latest_year
+    # Déterminer d'abord l'année la plus récente disponible pour la commune
+    commune_years = @childcare_data&.dig("coverage_data")&.keys || []
+    reference_year = commune_years.sort.last
+
+    # Récupérer les données pour la commune pour cette année de référence
+    latest_childcare = @childcare_data&.dig("coverage_data", reference_year)&.dig("coverage_rates") if reference_year
+
+    # Récupérer les données des autres territoires pour la même année de référence
+    epci_childcare = @epci_childcare_data&.dig("coverage_data", reference_year)&.dig("coverage_rates") if reference_year
+    department_childcare = @department_childcare_data&.dig("coverage_data", reference_year)&.dig("coverage_rates") if reference_year
+    region_childcare = @region_childcare_data&.dig("coverage_data", reference_year)&.dig("coverage_rates") if reference_year
+    france_childcare = @france_childcare_data&.dig("coverage_data", reference_year)&.dig("coverage_rates") if reference_year
+
+    # Fonction helper pour afficher "N.C." si la valeur est exactement 0.0
+    def format_rate(rate)
+      if rate.nil? || rate == 0.0
+        "N.C."
+      else
+        number_to_percentage(rate, precision: 1)
+      end
+    end
   %>
+
+  <h3 class="text-sm font-medium text-gray-700 mb-2">Modes d'accueil petite enfance (<%= reference_year || 'N/A' %>)</h3>
   <% if latest_childcare %>
     <div class="space-y-2">
       <div class="flex justify-between items-center">
         <span class="text-sm text-gray-600">Accueil collectif</span>
-        <span class="font-medium"><%= number_to_percentage(latest_childcare["eaje_total"] || 0, precision: 1) %></span>
+        <span class="font-medium"><%= format_rate(latest_childcare["eaje_total"]) %></span>
       </div>
       <div class="w-full bg-gray-200 rounded-full h-2.5">
         <div class="bg-blue-600 h-2.5 rounded-full" style="width: <%= latest_childcare["eaje_total"] || 0 %>%"></div>
@@ -18,7 +39,7 @@
 
       <div class="flex justify-between items-center">
         <span class="text-sm text-gray-600">Assistantes maternelles</span>
-        <span class="font-medium"><%= number_to_percentage(latest_childcare["childminder"] || 0, precision: 1) %></span>
+        <span class="font-medium"><%= format_rate(latest_childcare["childminder"]) %></span>
       </div>
       <div class="w-full bg-gray-200 rounded-full h-2.5">
         <div class="bg-green-600 h-2.5 rounded-full" style="width: <%= latest_childcare["childminder"] || 0 %>%"></div>
@@ -26,7 +47,7 @@
 
       <div class="flex justify-between items-center">
         <span class="text-sm text-gray-600">Préscolarisation</span>
-        <span class="font-medium"><%= number_to_percentage(latest_childcare["preschool"] || 0, precision: 1) %></span>
+        <span class="font-medium"><%= format_rate(latest_childcare["preschool"]) %></span>
       </div>
       <div class="w-full bg-gray-200 rounded-full h-2.5">
         <div class="bg-purple-600 h-2.5 rounded-full" style="width: <%= latest_childcare["preschool"] || 0 %>%"></div>
@@ -34,7 +55,7 @@
 
       <div class="flex justify-between items-center mt-4">
         <span class="text-sm font-medium text-gray-700">Couverture globale</span>
-        <span class="font-bold"><%= number_to_percentage(latest_childcare["global"] || 0, precision: 1) %></span>
+        <span class="font-bold"><%= format_rate(latest_childcare["global"]) %></span>
       </div>
       <div class="w-full bg-gray-200 rounded-full h-3">
         <div class="bg-indigo-600 h-3 rounded-full" style="width: <%= latest_childcare["global"] || 0 %>%"></div>
@@ -42,5 +63,143 @@
     </div>
   <% else %>
     <p class="text-gray-500 italic">Données non disponibles</p>
+  <% end %>
+
+  <!-- Tableau comparatif entre territoires -->
+  <% if reference_year.present? %>
+    <div class="mt-8">
+      <h3 class="text-sm font-medium text-gray-700 mb-4">Comparaison territoriale des taux d'accueil (<%= reference_year %>)</h3>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Accueil collectif</th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assistantes maternelles</th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Préscolarisation</th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Couverture globale</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour la commune -->
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900"><%= @territory_name %></td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= format_rate(latest_childcare&.dig("eaje_total")) %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= format_rate(latest_childcare&.dig("childminder")) %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= format_rate(latest_childcare&.dig("preschool")) %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
+                <%= format_rate(latest_childcare&.dig("global")) %>
+              </td>
+            </tr>
+
+            <!-- Ligne pour l'EPCI si disponible -->
+            <% if epci_childcare %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <%= @epci_childcare_data&.dig("coverage_data", reference_year, "epci", "name") ||
+                      @childcare_data&.dig("coverage_data", reference_year, "epci", "name") ||
+                      @epci_revenue_data&.dig("name") || "EPCI" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(epci_childcare["eaje_total"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(epci_childcare["childminder"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(epci_childcare["preschool"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
+                  <%= format_rate(epci_childcare["global"]) %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour le département si disponible -->
+            <% if department_childcare %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <%= @department_childcare_data&.dig("coverage_data", reference_year, "territory_name") ||
+                      @department_revenue_data&.dig("name") || "Département" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(department_childcare["eaje_total"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(department_childcare["childminder"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(department_childcare["preschool"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
+                  <%= format_rate(department_childcare["global"]) %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région si disponible -->
+            <% if region_childcare %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <%= @region_childcare_data&.dig("coverage_data", reference_year, "territory_name") ||
+                      @region_childcare_data&.dig("coverage_data", reference_year, "region", "name") ||
+                      @region_revenue_data&.dig("name") || "Région" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(region_childcare["eaje_total"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(region_childcare["childminder"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(region_childcare["preschool"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
+                  <%= format_rate(region_childcare["global"]) %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la France si disponible -->
+            <% if france_childcare %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">France</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(france_childcare["eaje_total"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(france_childcare["childminder"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= format_rate(france_childcare["preschool"]) %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
+                  <%= format_rate(france_childcare["global"]) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Note explicative -->
+      <div class="mt-4 bg-gray-50 p-4 rounded-md">
+        <h4 class="text-sm font-medium text-gray-700 mb-2">À propos des données</h4>
+        <ul class="text-xs text-gray-600 space-y-1">
+          <li><strong>Accueil collectif :</strong> Établissements d'accueil du jeune enfant (crèches, haltes-garderies, etc.)</li>
+          <li><strong>Assistantes maternelles :</strong> Accueil au domicile d'une assistante maternelle agréée</li>
+          <li><strong>Préscolarisation :</strong> Accueil en école maternelle des enfants de moins de 3 ans</li>
+          <li><strong>Couverture globale :</strong> Capacité théorique d'accueil pour 100 enfants de moins de 3 ans</li>
+          <li><strong>Note :</strong> N.C. = Non Communiqué (donnée non disponible)</li>
+        </ul>
+      </div>
+    </div>
   <% end %>
 </div>
