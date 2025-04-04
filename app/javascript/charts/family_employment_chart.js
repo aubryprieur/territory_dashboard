@@ -1,15 +1,17 @@
-// app/javascript/charts/family_employment_chart.js
-// Graphique pour l'emploi des familles avec enfants de moins de 3 ans
 document.addEventListener('turbo:load', function() {
-  initFamilyEmploymentChart();
+  // Initialiser le graphique pour les enfants de moins de 3 ans
+  initFamilyEmploymentChart('family-employment-under3-chart', 'family-employment-under3-data');
+
+  // Initialiser le graphique pour les enfants de 3 à 5 ans
+  initFamilyEmploymentChart('family-employment-3to5-chart', 'family-employment-3to5-data');
 });
 
-function initFamilyEmploymentChart() {
-  const chartElement = document.getElementById('family-employment-chart');
-  const dataElement = document.getElementById('family-employment-data');
+function initFamilyEmploymentChart(chartElementId, dataElementId) {
+  const chartElement = document.getElementById(chartElementId);
+  const dataElement = document.getElementById(dataElementId);
 
   if (!chartElement || !dataElement) {
-    console.warn("Éléments nécessaires non trouvés pour le graphique d'emploi des familles");
+    console.warn(`Éléments nécessaires non trouvés pour le graphique ${chartElementId}`);
     return;
   }
 
@@ -19,7 +21,7 @@ function initFamilyEmploymentChart() {
 
     // Vérifier si des données sont disponibles
     if (!chartData.categories || !chartData.categories.length) {
-      console.warn("Pas de catégories disponibles pour le graphique d'emploi des familles");
+      console.warn(`Pas de catégories disponibles pour le graphique ${chartElementId}`);
       return;
     }
 
@@ -131,10 +133,10 @@ function initFamilyEmploymentChart() {
                 const label = this.getLabelForValue(value);
                 // Ajoute un retour à la ligne après chaque virgule ou tiret
                 return label.split(/, | - /g);
-                }
               }
             }
-          },
+          }
+        },
         plugins: {
           legend: {
             position: 'bottom',
@@ -175,8 +177,8 @@ function initFamilyEmploymentChart() {
       plugins: [ChartDataLabels]
     });
 
-    console.log("✅ Graphique d'emploi des familles créé avec succès");
+    console.log(`✅ Graphique ${chartElementId} créé avec succès`);
   } catch (e) {
-    console.error("Erreur lors de la création du graphique d'emploi des familles:", e);
+    console.error(`Erreur lors de la création du graphique ${chartElementId}:`, e);
   }
 }

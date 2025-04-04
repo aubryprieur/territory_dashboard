@@ -1,20 +1,28 @@
 <!-- app/views/dashboard/_family_employment.html.erb -->
-<!-- Emploi des familles avec enfants de moins de 3 ans -->
+<!-- Emploi des familles avec enfants -->
+
 <div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-4">Emploi des familles avec enfants de moins de 3 ans</h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Emploi des familles avec enfants</h2>
 
   <%
     # Récupérer l'année la plus récente disponible
     latest_year = @family_employment_under3_data&.dig("data")&.keys&.sort&.last
+    latest_year_3to5 = @family_employment_3to5_data&.dig("data")&.keys&.sort&.last
 
-    # Récupérer les données de chaque territoire pour cette année
+    # Récupérer les données pour chaque âge
     commune_data = @family_employment_under3_data&.dig("data", latest_year)
     epci_data = @epci_family_employment_under3_data&.dig("data", latest_year) if @epci_family_employment_under3_data.present?
     department_data = @department_family_employment_under3_data&.dig("data", latest_year) if @department_family_employment_under3_data.present?
     region_data = @region_family_employment_under3_data&.dig("data", latest_year) if @region_family_employment_under3_data.present?
     france_data = @france_family_employment_under3_data&.dig("data", latest_year) if @france_family_employment_under3_data.present?
 
-    # Définir des catégories simplifiées pour un affichage plus clair
+    commune_data_3to5 = @family_employment_3to5_data&.dig("data", latest_year_3to5)
+    epci_data_3to5 = @epci_family_employment_3to5_data&.dig("data", latest_year_3to5) if @epci_family_employment_3to5_data.present?
+    department_data_3to5 = @department_family_employment_3to5_data&.dig("data", latest_year_3to5) if @department_family_employment_3to5_data.present?
+    region_data_3to5 = @region_family_employment_3to5_data&.dig("data", latest_year_3to5) if @region_family_employment_3to5_data.present?
+    france_data_3to5 = @france_family_employment_3to5_data&.dig("data", latest_year_3to5) if @france_family_employment_3to5_data.present?
+
+    # Définir les catégories simplifiées
     category_mapping = {
       "Famille monoparentale - Homme sans emploi" => "Père seul sans emploi",
       "Famille monoparentale - Femme active ayant un emploi" => "Mère seule en emploi",
@@ -22,21 +30,22 @@
       "Couple avec enfant(s) - Deux parents actifs ayant un emploi" => "Deux parents en emploi",
       "Couple avec enfant(s) - Homme actif ayant un emploi, conjoint sans emploi" => "Père en emploi, \nmère sans emploi",
       "Couple avec enfant(s) - Femme active ayant un emploi, \nconjoint sans emploi" => "Mère en emploi, père sans emploi",
-      "Couple avec enfant(s) - Aucun parent actif ayant un emploi" => "Aucun parent en emploi"
+      "Couple avec enfant(s) - Aucun parent actif ayant un emploi" => "Aucun parent en emploi",
+      "Famille monoparentale - Homme actif ayant un emploi" => "Père seul en emploi"
     }
 
-    # Couleurs pour le graphique par catégorie
     category_colors = {
-      "Père seul sans emploi" => "#FCD34D", # jaune
-      "Mère seule en emploi" => "#60A5FA", # bleu clair
-      "Mère seule sans emploi" => "#F87171", # rouge clair
-      "Deux parents en emploi" => "#34D399", # vert
-      "Père en emploi, mère sans emploi" => "#A78BFA", # violet
-      "Mère en emploi, père sans emploi" => "#FCA5A5", # rose
-      "Aucun parent en emploi" => "#6B7280" # gris
+      "Père seul sans emploi" => "#FCD34D",
+      "Père seul en emploi" => "#FBBF24",
+      "Mère seule en emploi" => "#60A5FA",
+      "Mère seule sans emploi" => "#F87171",
+      "Deux parents en emploi" => "#34D399",
+      "Père en emploi, mère sans emploi" => "#A78BFA",
+      "Mère en emploi, père sans emploi" => "#FCA5A5",
+      "Aucun parent en emploi" => "#6B7280"
     }
 
-    # Préparer les données pour le graphique
+    # Moins de 3 ans
     chart_categories = []
     commune_percentages = []
     epci_percentages = []
@@ -46,89 +55,86 @@
 
     if commune_data&.dig("distributions").present?
       commune_data["distributions"].each do |category, data|
-        # Utiliser la version simplifiée du nom de catégorie
         simple_category = category_mapping[category] || category
-
-        # Ajouter les catégories et pourcentages (une seule fois pour éviter les doublons)
         unless chart_categories.include?(simple_category)
           chart_categories << simple_category
           commune_percentages << data["percentage"]
+          epci_percentages << (epci_data&.dig("distributions", category)&.dig("percentage"))
+          department_percentages << (department_data&.dig("distributions", category)&.dig("percentage"))
+          region_percentages << (region_data&.dig("distributions", category)&.dig("percentage"))
+          france_percentages << (france_data&.dig("distributions", category)&.dig("percentage"))
+        end
+      end
+    end
 
-          # Ajouter les données correspondantes des autres territoires si disponibles
-          if epci_data&.dig("distributions", category).present?
-            epci_percentages << epci_data["distributions"][category]["percentage"]
-          else
-            epci_percentages << nil
-          end
+    # 3 à 5 ans
+    chart_categories_3to5 = []
+    commune_percentages_3to5 = []
+    epci_percentages_3to5 = []
+    department_percentages_3to5 = []
+    region_percentages_3to5 = []
+    france_percentages_3to5 = []
 
-          if department_data&.dig("distributions", category).present?
-            department_percentages << department_data["distributions"][category]["percentage"]
-          else
-            department_percentages << nil
-          end
-
-          if region_data&.dig("distributions", category).present?
-            region_percentages << region_data["distributions"][category]["percentage"]
-          else
-            region_percentages << nil
-          end
-
-          if france_data&.dig("distributions", category).present?
-            france_percentages << france_data["distributions"][category]["percentage"]
-          else
-            france_percentages << nil
-          end
+    if commune_data_3to5&.dig("distributions").present?
+      commune_data_3to5["distributions"].each do |category, data|
+        simple_category = category_mapping[category] || category
+        unless chart_categories_3to5.include?(simple_category)
+          chart_categories_3to5 << simple_category
+          commune_percentages_3to5 << data["percentage"]
+          epci_percentages_3to5 << (epci_data_3to5&.dig("distributions", category)&.dig("percentage"))
+          department_percentages_3to5 << (department_data_3to5&.dig("distributions", category)&.dig("percentage"))
+          region_percentages_3to5 << (region_data_3to5&.dig("distributions", category)&.dig("percentage"))
+          france_percentages_3to5 << (france_data_3to5&.dig("distributions", category)&.dig("percentage"))
         end
       end
     end
   %>
 
   <% if latest_year.present? && chart_categories.any? %>
-    <h3 class="text-sm font-medium text-gray-700 mb-4">Répartition des situations d'emploi (<%= latest_year %>)</h3>
-
-    <!-- Graphique uniquement -->
-    <div class="h-[500px] w-full overflow-x-auto">
-      <canvas id="family-employment-chart"></canvas>
+    <h3 class="text-sm font-medium text-gray-700 mb-4">Familles avec enfants de moins de 3 ans (<%= latest_year %>)</h3>
+    <div class="h-[500px] w-full overflow-x-auto mb-6">
+      <canvas id="family-employment-under3-chart"></canvas>
     </div>
-
-    <!-- Script pour initialiser le graphique -->
-    <script type="application/json" id="family-employment-data">
+    <script type="application/json" id="family-employment-under3-data">
       {
         "categories": <%= raw chart_categories.to_json %>,
-        "commune": {
-          "name": "<%= @territory_name %>",
-          "data": <%= raw commune_percentages.to_json %>
-        },
-        "epci": {
-          "name": "<%= @epci_revenue_data&.dig("name") || "EPCI" %>",
-          "data": <%= raw epci_percentages.to_json %>
-        },
-        "department": {
-          "name": "<%= @department_revenue_data&.dig("name") || "Département" %>",
-          "data": <%= raw department_percentages.to_json %>
-        },
-        "region": {
-          "name": "<%= @region_revenue_data&.dig("name") || "Région" %>",
-          "data": <%= raw region_percentages.to_json %>
-        },
-        "france": {
-          "name": "France",
-          "data": <%= raw france_percentages.to_json %>
-        },
+        "commune": { "name": "<%= @territory_name %>", "data": <%= raw commune_percentages.to_json %> },
+        "epci": { "name": "<%= @epci_revenue_data&.dig("name") || "EPCI" %>", "data": <%= raw epci_percentages.to_json %> },
+        "department": { "name": "<%= @department_revenue_data&.dig("name") || "Département" %>", "data": <%= raw department_percentages.to_json %> },
+        "region": { "name": "<%= @region_revenue_data&.dig("name") || "Région" %>", "data": <%= raw region_percentages.to_json %> },
+        "france": { "name": "France", "data": <%= raw france_percentages.to_json %> },
         "colors": <%= raw category_colors.to_json %>
       }
     </script>
-  <% else %>
-    <p class="text-gray-500 italic">Données non disponibles</p>
   <% end %>
 
-  <!-- Note explicative -->
+  <% if latest_year_3to5.present? && chart_categories_3to5.any? %>
+    <h3 class="text-sm font-medium text-gray-700 mb-4">Familles avec enfants de 3 à 5 ans (<%= latest_year_3to5 %>)</h3>
+    <div class="h-[500px] w-full overflow-x-auto mb-6">
+      <canvas id="family-employment-3to5-chart"></canvas>
+    </div>
+    <script type="application/json" id="family-employment-3to5-data">
+      {
+        "categories": <%= raw chart_categories_3to5.to_json %>,
+        "commune": { "name": "<%= @territory_name %>", "data": <%= raw commune_percentages_3to5.to_json %> },
+        "epci": { "name": "<%= @epci_revenue_data&.dig("name") || "EPCI" %>", "data": <%= raw epci_percentages_3to5.to_json %> },
+        "department": { "name": "<%= @department_revenue_data&.dig("name") || "Département" %>", "data": <%= raw department_percentages_3to5.to_json %> },
+        "region": { "name": "<%= @region_revenue_data&.dig("name") || "Région" %>", "data": <%= raw region_percentages_3to5.to_json %> },
+        "france": { "name": "France", "data": <%= raw france_percentages_3to5.to_json %> },
+        "colors": <%= raw category_colors.to_json %>
+      }
+    </script>
+  <% end %>
+
   <div class="mt-6 bg-gray-50 p-4 rounded-md">
     <h3 class="text-sm font-medium text-gray-700 mb-2">À propos des données</h3>
-    <p class="text-sm text-gray-600">
-      Ces données présentent la répartition des situations d'emploi des parents d'enfants de moins de 3 ans.
-      Elles permettent de mieux comprendre la diversité des situations familiales et d'orienter les politiques
-      d'accueil du jeune enfant en fonction des besoins spécifiques du territoire.
+    <p class="text-sm text-gray-600 mb-2">
+      Ces données présentent la répartition des situations d'emploi des parents selon l’âge des enfants.
+    </p>
+    <p class="text-sm text-gray-600 italic">
+      La tranche 0–3 ans est souvent associée à la garde d’enfants à domicile ou en crèche.
+      Celle de 3–5 ans correspond généralement à la scolarisation en maternelle,
+      ce qui peut influencer l’organisation familiale et les choix professionnels.
     </p>
   </div>
 </div>
