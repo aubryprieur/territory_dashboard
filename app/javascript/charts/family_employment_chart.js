@@ -107,7 +107,7 @@ function initFamilyEmploymentChart() {
         scales: {
           y: {
             beginAtZero: true,
-            max: 100,
+            max: 80,
             title: {
               display: true,
               text: 'Pourcentage (%)'
