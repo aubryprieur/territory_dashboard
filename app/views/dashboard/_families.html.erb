@@ -13,6 +13,42 @@
     single_mothers_evolution = @family_data&.dig("evolution", "single_mothers")
   %>
 
+  <!-- Synthèse des familles en 3 cases -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Case 1: Couples avec enfants -->
+    <div class="bg-indigo-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-indigo-800 mb-1">Couples avec enfants</h3>
+      <p class="text-2xl font-bold text-indigo-900">
+        <%= number_to_percentage(latest_data&.dig("couples_with_children_percentage") || 0, precision: 2) %>
+      </p>
+      <p class="text-sm text-indigo-600">
+        <%= number_with_delimiter(latest_data&.dig("couples_with_children")&.round || 0) %> familles
+      </p>
+    </div>
+
+    <!-- Case 2: Familles monoparentales -->
+    <div class="bg-purple-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-purple-800 mb-1">Familles monoparentales</h3>
+      <p class="text-2xl font-bold text-purple-900">
+        <%= number_to_percentage(latest_data&.dig("single_parent_families_percentage") || 0, precision: 2) %>
+      </p>
+      <p class="text-sm text-purple-600">
+        <%= number_with_delimiter(latest_data&.dig("single_parent_families")&.round || 0) %> familles
+      </p>
+    </div>
+
+    <!-- Case 3: Familles nombreuses -->
+    <div class="bg-blue-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-blue-800 mb-1">Familles nombreuses</h3>
+      <p class="text-2xl font-bold text-blue-900">
+        <%= number_to_percentage(latest_data&.dig("large_families_percentage") || 0, precision: 2) %>
+      </p>
+      <p class="text-sm text-blue-600">
+        <%= number_with_delimiter(latest_data&.dig("total_large_families")&.round || 0) %> familles
+      </p>
+    </div>
+  </div>
+
   <!-- Section couples avec enfants -->
   <h3 class="text-sm font-medium text-gray-700 mb-4">Couples avec enfants (Année: <%= latest_year || "N/A" %>)</h3>
 
@@ -58,12 +94,6 @@
               <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Taux
               </th>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Couples avec enfants
-              </th>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total familles
-              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -93,12 +123,6 @@
                   <% end %>
                 </div>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(latest_data&.dig("couples_with_children")&.round || 'N/A') %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(latest_data&.dig("total_families")&.round || 'N/A') %>
-              </td>
             </tr>
 
             <!-- Ligne pour l'EPCI si disponible -->
@@ -123,12 +147,6 @@
                       </div>
                     <% end %>
                   </div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(epci_latest_data&.dig("couples_with_children")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(epci_latest_data&.dig("total_families")&.round || 'N/A') %>
                 </td>
               </tr>
             <% end %>
@@ -156,12 +174,6 @@
                     <% end %>
                   </div>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(dept_latest_data&.dig("couples_with_children")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(dept_latest_data&.dig("total_families")&.round || 'N/A') %>
-                </td>
               </tr>
             <% end %>
 
@@ -188,12 +200,6 @@
                     <% end %>
                   </div>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(region_latest_data&.dig("couples_with_children")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(region_latest_data&.dig("total_families")&.round || 'N/A') %>
-                </td>
               </tr>
             <% end %>
 
@@ -219,12 +225,6 @@
                       </div>
                     <% end %>
                   </div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(france_latest_data&.dig("couples_with_children")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(france_latest_data&.dig("total_families")&.round || 'N/A') %>
                 </td>
               </tr>
             <% end %>
@@ -314,12 +314,6 @@
               <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Taux
               </th>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Familles monoparentales
-              </th>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total familles
-              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -349,12 +343,6 @@
                   <% end %>
                 </div>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(latest_data&.dig("single_parent_families")&.round || 'N/A') %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(latest_data&.dig("total_families")&.round || 'N/A') %>
-              </td>
             </tr>
 
             <!-- Ligne pour l'EPCI si disponible -->
@@ -379,12 +367,6 @@
                       </div>
                     <% end %>
                   </div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(epci_latest_data&.dig("single_parent_families")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(epci_latest_data&.dig("total_families")&.round || 'N/A') %>
                 </td>
               </tr>
             <% end %>
@@ -412,12 +394,6 @@
                     <% end %>
                   </div>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(dept_latest_data&.dig("single_parent_families")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(dept_latest_data&.dig("total_families")&.round || 'N/A') %>
-                </td>
               </tr>
             <% end %>
 
@@ -444,12 +420,6 @@
                     <% end %>
                   </div>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(region_latest_data&.dig("single_parent_families")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(region_latest_data&.dig("total_families")&.round || 'N/A') %>
-                </td>
               </tr>
             <% end %>
 
@@ -475,12 +445,6 @@
                       </div>
                     <% end %>
                   </div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(france_latest_data&.dig("single_parent_families")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(france_latest_data&.dig("total_families")&.round || 'N/A') %>
                 </td>
               </tr>
             <% end %>
@@ -571,12 +535,6 @@
                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Taux
                 </th>
-                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Familles nombreuses
-                </th>
-                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total familles
-                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -606,12 +564,6 @@
                     <% end %>
                   </div>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(latest_data&.dig("total_large_families")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(latest_data&.dig("total_families")&.round || 'N/A') %>
-                </td>
               </tr>
 
               <!-- Ligne pour l'EPCI si disponible -->
@@ -636,12 +588,6 @@
                         </div>
                       <% end %>
                     </div>
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <%= number_with_delimiter(epci_latest_data&.dig("total_large_families")&.round || 'N/A') %>
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <%= number_with_delimiter(epci_latest_data&.dig("total_families")&.round || 'N/A') %>
                   </td>
                 </tr>
               <% end %>
@@ -669,12 +615,6 @@
                       <% end %>
                     </div>
                   </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <%= number_with_delimiter(dept_latest_data&.dig("total_large_families")&.round || 'N/A') %>
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <%= number_with_delimiter(dept_latest_data&.dig("total_families")&.round || 'N/A') %>
-                  </td>
                 </tr>
               <% end %>
 
@@ -701,12 +641,6 @@
                       <% end %>
                     </div>
                   </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <%= number_with_delimiter(region_latest_data&.dig("total_large_families")&.round || 'N/A') %>
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <%= number_with_delimiter(region_latest_data&.dig("total_families")&.round || 'N/A') %>
-                  </td>
                 </tr>
               <% end %>
 
@@ -732,12 +666,6 @@
                         </div>
                       <% end %>
                     </div>
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <%= number_with_delimiter(france_latest_data&.dig("total_large_families")&.round || 'N/A') %>
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <%= number_with_delimiter(france_latest_data&.dig("total_families")&.round || 'N/A') %>
                   </td>
                 </tr>
               <% end %>
