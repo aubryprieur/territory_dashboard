@@ -22,6 +22,8 @@ class DashboardController < ApplicationController
     @family_employment_under3_data = Api::FamilyEmploymentService.get_under3_commune(@territory_code)
     @family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_commune(@territory_code)
 
+    @age_pyramid_data = prepare_age_pyramid_data(@population_data)
+
     # Récupérer les données pour la France
     @france_revenue_data = Api::RevenueService.get_median_revenues_france
     @france_schooling_data = Api::SchoolingService.get_france_schooling
@@ -88,4 +90,38 @@ class DashboardController < ApplicationController
       end
     end
   end
+
+  def prepare_age_pyramid_data(population_data)
+    return {} if population_data.blank?
+
+    age_groups = []
+    male_counts = []
+    female_counts = []
+
+    (0..100).each do |age|
+      age_str = age.to_s
+      male_count = population_data.select { |item| item["AGED100"].to_s == age_str && item["SEXE"].to_s == "1" }
+                                  .sum { |item| item["NB"].to_f }
+      female_count = population_data.select { |item| item["AGED100"].to_s == age_str && item["SEXE"].to_s == "2" }
+                                    .sum { |item| item["NB"].to_f }
+
+      label = (age == 100) ? "100+" : age.to_s
+
+      age_groups << label
+      male_counts << male_count.round
+      female_counts << female_count.round
+    end
+
+    # Inverser les groupes d'âge pour que les plus jeunes soient en bas
+    result = {
+      ageGroups: age_groups.reverse,
+      maleData: male_counts.reverse,
+      femaleData: female_counts.reverse
+    }
+
+    Rails.logger.debug "Age pyramid data: #{result.inspect}"
+
+    result
+  end
+
 end

@@ -27,4 +27,16 @@
       </p>
     </div>
   </div>
+
+  <!-- Nouvelle section pour la pyramide des âges -->
+  <div class="mt-6">
+    <h3 class="text-sm font-medium text-gray-700 mb-4">Pyramide des âges</h3>
+    <div class="h-120">
+      <canvas id="age-pyramid-chart"></canvas>
+    </div>
+    <script type="application/json" id="age-pyramid-data">
+      <%= raw(@age_pyramid_data.to_json) %>
+    </script>
+  </div>
+
 </div>
