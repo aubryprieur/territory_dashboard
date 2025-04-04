@@ -50,12 +50,6 @@
               <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Taux
               </th>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Enfants scolarisés
-              </th>
-              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Population (2 ans)
-              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -80,12 +74,6 @@
                   <% end %>
                 </div>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@schooling_data&.dig("data", latest_year, "schooled_children_2y")&.round || 'N/A') %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@schooling_data&.dig("data", latest_year, "total_children_2y")&.round || 'N/A') %>
-              </td>
             </tr>
 
             <!-- Ligne pour l'EPCI si disponible -->
@@ -109,12 +97,6 @@
                       </div>
                     <% end %>
                   </div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(@epci_schooling_data&.dig("data", latest_year, "schooled_children_2y")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(@epci_schooling_data&.dig("data", latest_year, "total_children_2y")&.round || 'N/A') %>
                 </td>
               </tr>
             <% end %>
@@ -141,12 +123,6 @@
                     <% end %>
                   </div>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(@department_schooling_data&.dig("data", latest_year, "schooled_children_2y")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(@department_schooling_data&.dig("data", latest_year, "total_children_2y")&.round || 'N/A') %>
-                </td>
               </tr>
             <% end %>
 
@@ -172,12 +148,6 @@
                     <% end %>
                   </div>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(@region_schooling_data&.dig("data", latest_year, "schooled_children_2y")&.round || 'N/A') %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  <%= number_with_delimiter(@region_schooling_data&.dig("data", latest_year, "total_children_2y")&.round || 'N/A') %>
-                </td>
               </tr>
             <% end %>
 
@@ -201,12 +171,6 @@
                     </div>
                   <% end %>
                 </div>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@france_schooling_data&.dig("data", latest_year, "schooled_children_2y")&.round || 'N/A') %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@france_schooling_data&.dig("data", latest_year, "total_children_2y")&.round || 'N/A') %>
               </td>
             </tr>
           </tbody>
@@ -253,12 +217,6 @@
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Taux
             </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Enfants scolarisés
-            </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Population (3-5 ans)
-            </th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -283,12 +241,6 @@
                 <% end %>
               </div>
             </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-              <%= number_with_delimiter(@schooling_data&.dig("data", latest_year, "schooled_children_3_5y")&.round || 'N/A') %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-              <%= number_with_delimiter(@schooling_data&.dig("data", latest_year, "total_children_3_5y")&.round || 'N/A') %>
-            </td>
           </tr>
 
           <!-- Ligne pour l'EPCI si disponible -->
@@ -312,12 +264,6 @@
                     </div>
                   <% end %>
                 </div>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@epci_schooling_data&.dig("data", latest_year, "schooled_children_3_5y")&.round || 'N/A') %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@epci_schooling_data&.dig("data", latest_year, "total_children_3_5y")&.round || 'N/A') %>
               </td>
             </tr>
           <% end %>
@@ -344,12 +290,6 @@
                   <% end %>
                 </div>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@department_schooling_data&.dig("data", latest_year, "schooled_children_3_5y")&.round || 'N/A') %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@department_schooling_data&.dig("data", latest_year, "total_children_3_5y")&.round || 'N/A') %>
-              </td>
             </tr>
           <% end %>
 
@@ -375,12 +315,6 @@
                   <% end %>
                 </div>
               </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@region_schooling_data&.dig("data", latest_year, "schooled_children_3_5y")&.round || 'N/A') %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                <%= number_with_delimiter(@region_schooling_data&.dig("data", latest_year, "total_children_3_5y")&.round || 'N/A') %>
-              </td>
             </tr>
           <% end %>
 
@@ -404,12 +338,6 @@
                   </div>
                 <% end %>
               </div>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-              <%= number_with_delimiter(@france_schooling_data&.dig("data", latest_year, "schooled_children_3_5y")&.round || 'N/A') %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-              <%= number_with_delimiter(@france_schooling_data&.dig("data", latest_year, "total_children_3_5y")&.round || 'N/A') %>
             </td>
           </tr>
         </tbody>
