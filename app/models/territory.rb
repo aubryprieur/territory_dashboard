@@ -2,6 +2,8 @@ class Territory < ApplicationRecord
   validates :libgeo, presence: true
   validates :codgeo, presence: true, uniqueness: true
 
+  belongs_to :epci_relation, class_name: 'Epci', foreign_key: :epci, primary_key: :epci, optional: true
+
   # Méthode de recherche améliorée pour l'autocomplétion
   def self.search(term)
     # Échappe les caractères spéciaux dans la recherche

@@ -10,6 +10,9 @@ Rails.application.routes.draw do
 
   # Route pour l'autocomplétion des territoires
   get 'territories/autocomplete', to: 'territories#autocomplete'
+  # Route pour l'autocomplétion des EPCI
+  get 'epcis/autocomplete', to: 'epcis#autocomplete'
+
 
   # Routes pour le dashboard
   get 'dashboard', to: 'dashboard#index'
