@@ -10,10 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_29_155853) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_06_143345) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
+
+  create_table "epcis", force: :cascade do |t|
+    t.string "epci", null: false
+    t.string "libepci"
+    t.string "nature_epci"
+    t.integer "nb_com"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["epci"], name: "index_epcis_on_epci", unique: true
+  end
 
   create_table "territories", force: :cascade do |t|
     t.string "libgeo"
@@ -38,6 +48,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_29_155853) do
     t.string "territory_type"
     t.string "territory_code"
     t.string "territory_name"
+    t.text "commune_codes"
+    t.text "commune_names"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["territory_type", "territory_code"], name: "index_users_on_territory_type_and_territory_code"
