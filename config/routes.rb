@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "epci_dashboard/index"
   devise_for :users, controllers: {
     sessions: 'users/sessions',
     registrations: 'users/registrations'
@@ -13,14 +14,15 @@ Rails.application.routes.draw do
   # Route pour l'autocomplétion des EPCI
   get 'epcis/autocomplete', to: 'epcis#autocomplete'
 
-
-  # Routes pour le dashboard
+  # Routes pour les dashboards
   get 'dashboard', to: 'dashboard#index'
+  get 'epci_dashboard', to: 'epci_dashboard#index'
 
-  # Rediriger les utilisateurs connectés vers leur dashboard
+  # Redirection conditionnelle selon le type d'utilisateur
   authenticated :user do
-    root 'dashboard#index', as: :authenticated_root
+    root to: "application#dashboard_router", as: :authenticated_root
   end
 
+  # Route par défaut
   root "home#index"
 end

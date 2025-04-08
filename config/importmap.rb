@@ -11,11 +11,15 @@ pin "chartjs-plugin-datalabels", to: "https://cdn.jsdelivr.net/npm/chartjs-plugi
 # ✅ AlpineJS via UMD (ne pas utiliser "default")
 pin "alpinejs", to: "https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/module.esm.js"
 
+# Commune Dashboard
 pin "charts/historique_chart", to: "charts/historique_chart.js"
 pin "charts/economic_charts", to: "charts/economic_charts.js"
 pin "charts/births_chart", to: "charts/births_chart.js"
 pin "charts/domestic_violence_chart", to: "charts/domestic_violence_chart.js"
 pin "charts/family_employment_chart", to: "charts/family_employment_chart.js"
 pin "charts/age_pyramid_chart", to: "charts/age_pyramid_chart.js"
+
+# EPCI Dashboard
+pin "charts/epci_communes_chart", to: "charts/epci_communes_chart.js"
 
 
