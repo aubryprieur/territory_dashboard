@@ -14,6 +14,9 @@ class EpciDashboardController < ApplicationController
     @epci_schooling_data = Api::SchoolingService.get_epci_schooling(@epci_code)
     @epci_childcare_data = Api::ChildcareService.get_coverage_by_epci(@epci_code)
 
+    # Récupérer les données géographiques des communes de l'EPCI
+    prepare_geojson_data if @epci_communes_data.present?
+
     # Préparation des données pour les graphiques
     prepare_communes_chart_data if @epci_communes_data.present?
   end
@@ -36,5 +39,38 @@ class EpciDashboardController < ApplicationController
       commune_codes: communes.map { |c| c["code"] },
       commune_populations: communes.map { |c| c["total_population"].round }
     }
+  end
+
+  def prepare_geojson_data
+    # Préparer le GeoJSON pour les communes de l'EPCI
+    features = []
+
+    @epci_communes_data["communes"].each do |commune|
+      # Récupérer la géométrie depuis la base de données
+      territory = Territory.find_by(codgeo: commune["code"])
+      geometry = CommuneGeometry.find_by(code_insee: commune["code"])
+
+      next unless geometry&.geojson.present?
+
+      # Créer un feature GeoJSON avec les propriétés dont nous avons besoin
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          under3_rate: commune["under_3_rate"],
+          children_under3: commune["children_under_3"].round,
+          population: commune["total_population"].round
+        },
+        geometry: JSON.parse(geometry.geojson)
+      }
+
+      features << feature
+    end
+
+    @communes_geojson = {
+      type: "FeatureCollection",
+      features: features
+    }.to_json
   end
 end

@@ -10,10 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_06_143345) do
+ActiveRecord::Schema[8.0].define(version: 2025_04_08_123510) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
+
+  create_table "commune_geometries", force: :cascade do |t|
+    t.string "code_insee", null: false
+    t.string "nom"
+    t.string "epci"
+    t.text "geojson"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code_insee"], name: "index_commune_geometries_on_code_insee", unique: true
+    t.index ["epci"], name: "index_commune_geometries_on_epci"
+  end
 
   create_table "epcis", force: :cascade do |t|
     t.string "epci", null: false
