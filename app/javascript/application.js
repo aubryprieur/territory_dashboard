@@ -15,9 +15,13 @@ window.Chart = ChartModule.Chart
 window.ChartDataLabels = ChartDataLabels
 Chart.register(ChartDataLabels)
 
+// Commune Dashboard
 import "charts/historique_chart"
 import "charts/economic_charts"
 import "charts/births_chart"
 import "charts/domestic_violence_chart"
 import "charts/family_employment_chart"
 import "charts/age_pyramid_chart"
+
+// EPCI Dashboard
+import "charts/epci_communes_chart"
