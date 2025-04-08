@@ -47,7 +47,7 @@
     legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
 
     const format = val => {
-      if (unit === "%") return val.toFixed(2);
+      if (unit.includes("%")) return val.toFixed(2);
       return Math.round(val);
     };
 
