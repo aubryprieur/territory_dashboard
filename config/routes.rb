@@ -23,6 +23,8 @@ Rails.application.routes.draw do
     root to: "application#dashboard_router", as: :authenticated_root
   end
 
+  get 'api/communes_geometries/:epci_code', to: 'api/geometries#communes_by_epci'
+
   # Route par défaut
   root "home#index"
 end

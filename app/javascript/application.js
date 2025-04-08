@@ -8,6 +8,10 @@ import * as Alpine from "alpinejs"
 window.Alpine = Alpine
 Alpine.start()
 
+// Ajouter l'import pour Leaflet
+import * as L from "leaflet"
+window.L = L
+
 // ✅ Chart.js UMD (pas de default)
 import * as ChartModule from "chart.js"
 import * as ChartDataLabels from "chartjs-plugin-datalabels"

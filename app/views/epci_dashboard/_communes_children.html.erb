@@ -1,24 +1,185 @@
-<!-- app/views/epci_dashboard/_communes_children.html.erb -->
 <div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-4">Taux d'enfants par commune</h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Les enfants</h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Répartition des enfants de moins de 3 ans par commune</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- 🟩 Carte des effectifs -->
+    <div>
+      <h3 class="text-sm font-medium text-gray-700 mb-2">Carte des effectifs par commune</h3>
+      <div id="communes-map-effectifs" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="effectif-legend" class="mt-3"></div>
+    </div>
 
-  <div class="mb-6">
-    <h3 class="text-sm font-medium text-gray-700 mb-4">Enfants de moins de 3 ans (% de la population)</h3>
-    <div class="h-[600px] overflow-y-auto pr-4">
-      <canvas id="epci-communes-chart"></canvas>
+    <!-- 🟦 Carte des taux -->
+    <div>
+      <h3 class="text-sm font-medium text-gray-700 mb-2">Carte des taux par commune</h3>
+      <div id="communes-map" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="taux-legend" class="mt-3"></div>
     </div>
   </div>
 
   <div class="mt-6 bg-gray-50 p-4 rounded-md">
     <h3 class="text-sm font-medium text-gray-700 mb-2">À propos de ces données</h3>
     <p class="text-sm text-gray-600">
-      Ce graphique présente le pourcentage d'enfants de moins de 3 ans dans chaque commune de votre EPCI,
-      classées par ordre décroissant. Les communes avec des taux élevés peuvent nécessiter une attention
-      particulière concernant les structures d'accueil de la petite enfance.
+      Cette visualisation présente à gauche les effectifs d'enfants de moins de 3 ans par commune,
+      et à droite leur pourcentage dans la population totale.
+      Les seuils de couleur ont été déterminés automatiquement à l’aide de la méthode de discrétisation statistique de Jenks (Jenks Natural Breaks),
+      afin de mieux faire ressortir les variations significatives entre les communes.
     </p>
   </div>
 </div>
 
-<script type="application/json" id="communes-children-data">
-  <%= raw(@communes_under3_data.to_json) %>
+<!-- Données JSON -->
+<script type="application/json" id="communes-geojson">
+  <%= raw(@communes_geojson) %>
+</script>
+
+<script>
+  document.addEventListener("turbo:load", function () {
+    initializeMapEffectifs();
+    initializeMapTaux();
+  });
+
+  function renderLegend(breaks, containerId, colors, unit = "") {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+
+    const legend = document.createElement("div");
+    legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
+
+    const format = val => {
+      if (unit === "%") return val.toFixed(2);
+      return Math.round(val);
+    };
+
+    const labels = [
+      `≤ ${format(breaks[1] - 0.01)}${unit}`,
+      `${format(breaks[1])} – ${format(breaks[2] - 0.01)}${unit}`,
+      `${format(breaks[2])} – ${format(breaks[3] - 0.01)}${unit}`,
+      `≥ ${format(breaks[3])}${unit}`
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      const item = document.createElement("div");
+      item.className = "flex items-center";
+
+      const colorBox = document.createElement("div");
+      colorBox.className = "w-4 h-4 rounded mr-2";
+      colorBox.style.backgroundColor = colors[i];
+
+      const label = document.createElement("span");
+      label.textContent = labels[i];
+
+      item.appendChild(colorBox);
+      item.appendChild(label);
+      legend.appendChild(item);
+    }
+
+    container.appendChild(legend);
+  }
+
+  function initializeMapEffectifs() {
+    const mapElement = document.getElementById("communes-map-effectifs");
+    const geojsonElement = document.getElementById("communes-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.children_under3).sort((a, b) => a - b);
+    const clusters = ss.ckmeans(values, 4);
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    const colors = ["#6baed6", "#fed976", "#fd8d3c", "#e31a1c"];
+
+    function getColor(count) {
+      return count > breaks[3] ? colors[3] :
+             count > breaks[2] ? colors[2] :
+             count > breaks[1] ? colors[1] :
+                                 colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.children_under3),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Enfants < 3 ans : ${feature.properties.children_under3}<br>
+          Taux : ${feature.properties.under3_rate.toFixed(2)}%<br>
+          Population : ${feature.properties.population.toLocaleString('fr-FR')}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    renderLegend(breaks, "effectif-legend", colors);
+  }
+
+  function initializeMapTaux() {
+    const mapElement = document.getElementById("communes-map");
+    const geojsonElement = document.getElementById("communes-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.under3_rate).sort((a, b) => a - b);
+    const clusters = ss.ckmeans(values, 4);
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    const colors = ["#6baed6", "#fed976", "#fd8d3c", "#e31a1c"];
+
+    function getColor(rate) {
+      return rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                                colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.under3_rate),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Taux d'enfants < 3 ans : ${feature.properties.under3_rate.toFixed(2)}%<br>
+          Enfants : ${feature.properties.children_under3}<br>
+          Population : ${feature.properties.population.toLocaleString('fr-FR')}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    renderLegend(breaks, "taux-legend", colors, " %");
+  }
 </script>
