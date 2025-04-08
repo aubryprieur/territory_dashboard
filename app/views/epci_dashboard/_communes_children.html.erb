@@ -1,29 +1,61 @@
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-4">Les enfants</h2>
-  <h2 class="text-lg font-medium text-gray-900 mb-4">Répartition des enfants de moins de 3 ans par commune</h2>
+
+  <!-- Section des enfants de moins de 3 ans -->
+  <h3 class="text-lg font-medium text-gray-900 mb-4">Répartition des enfants de moins de 3 ans par commune</h3>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <!-- 🟩 Carte des effectifs -->
     <div>
-      <h3 class="text-sm font-medium text-gray-700 mb-2">Carte des effectifs par commune</h3>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Carte des effectifs par commune</h4>
       <div id="communes-map-effectifs" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
       <div id="effectif-legend" class="mt-3"></div>
     </div>
 
     <!-- 🟦 Carte des taux -->
     <div>
-      <h3 class="text-sm font-medium text-gray-700 mb-2">Carte des taux par commune</h3>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Carte des taux par commune</h4>
       <div id="communes-map" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
       <div id="taux-legend" class="mt-3"></div>
     </div>
   </div>
 
+  <!-- Boîte d'information explicative -->
   <div class="mt-6 bg-gray-50 p-4 rounded-md">
-    <h3 class="text-sm font-medium text-gray-700 mb-2">À propos de ces données</h3>
+    <h4 class="text-sm font-medium text-gray-700 mb-2">À propos de ces données</h4>
     <p class="text-sm text-gray-600">
       Cette visualisation présente à gauche les effectifs d'enfants de moins de 3 ans par commune,
       et à droite leur pourcentage dans la population totale.
-      Les seuils de couleur ont été déterminés automatiquement à l’aide de la méthode de discrétisation statistique de Jenks (Jenks Natural Breaks),
+      Les seuils de couleur ont été déterminés automatiquement à l'aide de la méthode de discrétisation statistique de Jenks (Jenks Natural Breaks),
       afin de mieux faire ressortir les variations significatives entre les communes.
+    </p>
+  </div>
+
+  <!-- Nouvelle section pour les enfants de 3 à 5 ans -->
+  <h3 class="text-lg font-medium text-gray-900 mt-10 mb-4">Répartition des enfants de 3 à 5 ans par commune</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- 🟧 Carte des effectifs 3-5 ans -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Carte des effectifs par commune</h4>
+      <div id="communes-map-effectifs-3to5" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="effectif-legend-3to5" class="mt-3"></div>
+    </div>
+
+    <!-- 🟪 Carte des taux 3-5 ans -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Carte des taux par commune</h4>
+      <div id="communes-map-3to5" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="taux-legend-3to5" class="mt-3"></div>
+    </div>
+  </div>
+
+  <!-- Boîte d'information explicative pour 3-5 ans -->
+  <div class="mt-6 bg-gray-50 p-4 rounded-md">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">À propos de ces données</h4>
+    <p class="text-sm text-gray-600">
+      Cette visualisation présente à gauche les effectifs d'enfants de 3 à 5 ans par commune,
+      et à droite leur pourcentage dans la population totale.
+      Cette tranche d'âge correspond généralement à la scolarisation en maternelle, ce qui peut influencer
+      les politiques publiques en matière d'éducation et d'infrastructures scolaires.
     </p>
   </div>
 </div>
@@ -33,10 +65,16 @@
   <%= raw(@communes_geojson) %>
 </script>
 
+<script type="application/json" id="communes-geojson-3to5">
+  <%= raw(@communes_geojson_3to5) %>
+</script>
+
 <script>
   document.addEventListener("turbo:load", function () {
     initializeMapEffectifs();
     initializeMapTaux();
+    initializeMapEffectifs3to5();
+    initializeMapTaux3to5();
   });
 
   function renderLegend(breaks, containerId, colors, unit = "") {
@@ -180,6 +218,116 @@
     const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
     map.fitBounds(layer.getBounds());
 
-    renderLegend(breaks, "taux-legend", colors, " %");
+    renderLegend(breaks, "taux-legend", colors, " %");
+  }
+
+  // Nouvelle fonction pour initialiser la carte des effectifs 3-5 ans
+  function initializeMapEffectifs3to5() {
+    const mapElement = document.getElementById("communes-map-effectifs-3to5");
+    const geojsonElement = document.getElementById("communes-geojson-3to5");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.children_3to5).sort((a, b) => a - b);
+    const clusters = ss.ckmeans(values, 4);
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs différente pour distinguer visuellement
+    const colors = ["#6baed6", "#fed976", "#fd8d3c", "#e31a1c"];
+
+    function getColor(count) {
+      return count > breaks[3] ? colors[3] :
+             count > breaks[2] ? colors[2] :
+             count > breaks[1] ? colors[1] :
+                                 colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.children_3to5),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Enfants 3-5 ans : ${feature.properties.children_3to5}<br>
+          Taux : ${feature.properties.rate_3to5.toFixed(2)}%<br>
+          Population : ${feature.properties.population.toLocaleString('fr-FR')}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    renderLegend(breaks, "effectif-legend-3to5", colors);
+  }
+
+  // Nouvelle fonction pour initialiser la carte des taux 3-5 ans
+  function initializeMapTaux3to5() {
+    const mapElement = document.getElementById("communes-map-3to5");
+    const geojsonElement = document.getElementById("communes-geojson-3to5");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.rate_3to5).sort((a, b) => a - b);
+    const clusters = ss.ckmeans(values, 4);
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs différente
+    const colors = ["#6baed6", "#fed976", "#fd8d3c", "#e31a1c"];
+
+    function getColor(rate) {
+      return rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                                colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.rate_3to5),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Taux d'enfants 3-5 ans : ${feature.properties.rate_3to5.toFixed(2)}%<br>
+          Enfants : ${feature.properties.children_3to5}<br>
+          Population : ${feature.properties.population.toLocaleString('fr-FR')}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    renderLegend(breaks, "taux-legend-3to5", colors, " %");
   }
 </script>
