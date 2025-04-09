@@ -3,6 +3,109 @@
 
   <!-- Section des enfants de moins de 3 ans -->
   <h3 class="text-lg font-medium text-gray-900 mb-4">Répartition des enfants de moins de 3 ans par commune</h3>
+  <!-- Tableau de comparaison des taux d'enfants de moins de 3 ans -->
+  <div class="mt-8 mb-8">
+    <h3 class="text-sm font-medium text-gray-700 mb-4">Comparaison des taux d'enfants de moins de 3 ans</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <!-- Ligne pour l'EPCI -->
+          <tr>
+            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+              <%= @epci_name %>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <% epci_rate = @epci_children_data&.dig("under_3_rate") || 0 %>
+              <div class="flex items-center">
+                <span class="<%= epci_rate && epci_rate > 0 ? "font-semibold" : "" %>">
+                  <%= number_to_percentage(epci_rate, precision: 2) %>
+                </span>
+                <% if epci_rate && epci_rate > 0 %>
+                  <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                    <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= [epci_rate * 100 / 8, 100].min %>%"></div>
+                  </div>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Ligne pour le département si disponible -->
+          <% if @department_children_data.present? %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= @department_name || "Département" %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <% dept_rate = @department_children_data&.dig("under_3_rate") || 0 %>
+                <div class="flex items-center">
+                  <span class="<%= dept_rate && dept_rate > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_percentage(dept_rate, precision: 2) %>
+                  </span>
+                  <% if dept_rate && dept_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-blue-600 h-2 rounded-full" style="width: <%= [dept_rate * 100 / 8, 100].min %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+
+          <!-- Ligne pour la région si disponible -->
+          <% if @region_children_data.present? %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= @region_name || "Région" %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <% region_rate = @region_children_data&.dig("under_3_rate") || 0 %>
+                <div class="flex items-center">
+                  <span class="<%= region_rate && region_rate > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_percentage(region_rate, precision: 2) %>
+                  </span>
+                  <% if region_rate && region_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-green-600 h-2 rounded-full" style="width: <%= [region_rate * 100 / 8, 100].min %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+
+          <!-- Ligne pour la France -->
+          <tr>
+            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+              France
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <% france_rate = @france_children_data&.dig("under_3_rate") || 0 %>
+              <div class="flex items-center">
+                <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
+                  <%= number_to_percentage(france_rate, precision: 2) %>
+                </span>
+                <% if france_rate && france_rate > 0 %>
+                  <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                    <div class="bg-red-600 h-2 rounded-full" style="width: <%= [france_rate * 100 / 8, 100].min %>%"></div>
+                  </div>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-3 text-xs text-gray-500">
+      <p>Note: Les barres de progression sont calibrées pour un maximum de 8%, ce qui correspond approximativement au taux maximal observé pour les enfants de moins de 3 ans.</p>
+    </div>
+  </div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <!-- 🟩 Carte des effectifs -->
     <div>
@@ -32,6 +135,111 @@
 
   <!-- Nouvelle section pour les enfants de 3 à 5 ans -->
   <h3 class="text-lg font-medium text-gray-900 mt-10 mb-4">Répartition des enfants de 3 à 5 ans par commune</h3>
+
+  <!-- Tableau de comparaison des taux d'enfants de 3 à 5 ans -->
+  <div class="mt-8 mb-8">
+    <h3 class="text-sm font-medium text-gray-700 mb-4">Comparaison des taux d'enfants de 3 à 5 ans</h3>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <!-- Ligne pour l'EPCI -->
+          <tr>
+            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+              <%= @epci_name %>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <% epci_rate = @epci_children_data&.dig("three_to_five_rate") || 0 %>
+              <div class="flex items-center">
+                <span class="<%= epci_rate && epci_rate > 0 ? "font-semibold" : "" %>">
+                  <%= number_to_percentage(epci_rate, precision: 2) %>
+                </span>
+                <% if epci_rate && epci_rate > 0 %>
+                  <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                    <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= [epci_rate * 100 / 8, 100].min %>%"></div>
+                  </div>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Ligne pour le département si disponible -->
+          <% if @department_children_data.present? %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= @department_name || "Département" %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <% dept_rate = @department_children_data&.dig("three_to_five_rate") || 0 %>
+                <div class="flex items-center">
+                  <span class="<%= dept_rate && dept_rate > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_percentage(dept_rate, precision: 2) %>
+                  </span>
+                  <% if dept_rate && dept_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-blue-600 h-2 rounded-full" style="width: <%= [dept_rate * 100 / 8, 100].min %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+
+          <!-- Ligne pour la région si disponible -->
+          <% if @region_children_data.present? %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= @region_name || "Région" %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <% region_rate = @region_children_data&.dig("three_to_five_rate") || 0 %>
+                <div class="flex items-center">
+                  <span class="<%= region_rate && region_rate > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_percentage(region_rate, precision: 2) %>
+                  </span>
+                  <% if region_rate && region_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-green-600 h-2 rounded-full" style="width: <%= [region_rate * 100 / 8, 100].min %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+
+          <!-- Ligne pour la France -->
+          <tr>
+            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+              France
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <% france_rate = @france_children_data&.dig("three_to_five_rate") || 0 %>
+              <div class="flex items-center">
+                <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
+                  <%= number_to_percentage(france_rate, precision: 2) %>
+                </span>
+                <% if france_rate && france_rate > 0 %>
+                  <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                    <div class="bg-red-600 h-2 rounded-full" style="width: <%= [france_rate * 100 / 8, 100].min %>%"></div>
+                  </div>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-3 text-xs text-gray-500">
+      <p>Note: Les barres de progression sont calibrées pour un maximum de 8%, ce qui correspond approximativement au taux maximal observé pour les enfants de 3 à 5 ans.</p>
+    </div>
+  </div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <!-- 🟧 Carte des effectifs 3-5 ans -->
     <div>
