@@ -1,0 +1,160 @@
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Naissances</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Carte des effectifs de naissances -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Carte des naissances par commune (<%= @epci_latest_birth_year %>)</h4>
+      <div id="communes-map-births" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="births-count-legend" class="mt-3"></div>
+    </div>
+
+    <!-- Graphique d'évolution des naissances -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Évolution des naissances dans l'EPCI</h4>
+      <div class="h-[500px]">
+        <canvas id="epci-births-history-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Boîte d'information explicative -->
+  <div class="mt-6 bg-gray-50 p-4 rounded-md">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">À propos des naissances</h4>
+    <p class="text-sm text-gray-600">
+      Cette visualisation présente à gauche le nombre de naissances par commune pour l'année <%= @epci_latest_birth_year %>,
+      et à droite l'évolution des naissances dans tout l'EPCI sur une période de <%= @epci_births_data["years_available"].size %> ans.
+      Ces données permettent d'évaluer le dynamisme démographique et d'anticiper les besoins futurs en services pour la petite enfance.
+    </p>
+  </div>
+</div>
+
+<!-- Données JSON pour la carte -->
+<script type="application/json" id="communes-births-geojson">
+  <%= raw(@communes_births_geojson) %>
+</script>
+
+<!-- Données JSON pour le graphique d'évolution -->
+<script type="application/json" id="epci-births-history-data">
+  {
+    "years": <%= raw(@epci_births_data["years_available"].to_json) %>,
+    "values": <%= raw(@epci_births_data["epci_births_by_year"].values.to_json) %>
+  }
+</script>
+
+<script>
+  document.addEventListener("turbo:load", function () {
+    initializeBirthsCountMap();
+    initializeBirthsHistoryChart();
+  });
+
+  function initializeBirthsCountMap() {
+    const mapElement = document.getElementById("communes-map-births");
+    const geojsonElement = document.getElementById("communes-births-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.births_count).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 1], [values[Math.floor(values.length/2)] || 2], [values[values.length-1] || 3]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    const colors = ["#feebe2", "#fbb4b9", "#f768a1", "#ae017e"];
+
+    function getColor(count) {
+      return count > breaks[3] ? colors[3] :
+             count > breaks[2] ? colors[2] :
+             count > breaks[1] ? colors[1] :
+                                colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.births_count),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Naissances (${feature.properties.latest_year}) : ${feature.properties.births_count}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    renderLegend(breaks, "births-count-legend", colors);
+  }
+
+  function initializeBirthsHistoryChart() {
+    const chartElement = document.getElementById("epci-births-history-chart");
+    const dataElement = document.getElementById("epci-births-history-data");
+    if (!chartElement || !dataElement || typeof Chart === "undefined") return;
+
+    const data = JSON.parse(dataElement.textContent);
+    const years = data.years;
+    const birthCounts = data.values;
+
+    new Chart(chartElement, {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [{
+          label: 'Naissances',
+          data: birthCounts,
+          borderColor: 'rgba(246, 114, 128, 1)',
+          backgroundColor: 'rgba(246, 114, 128, 0.2)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: 'Nombre de naissances'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Année'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Naissances: ${context.raw.toLocaleString('fr-FR')}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+</script>

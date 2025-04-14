@@ -13,6 +13,7 @@ class EpciDashboardController < ApplicationController
     @epci_family_data = Api::FamilyService.get_epci_families(@epci_code)
     @epci_schooling_data = Api::SchoolingService.get_epci_schooling(@epci_code)
     @epci_childcare_data = Api::ChildcareService.get_coverage_by_epci(@epci_code)
+    @epci_births_data = Api::EpciBirthsService.get_births_by_communes(@epci_code)
 
     # Récupérer les données France
     @france_children_data = Api::PopulationService.get_france_children_data
@@ -40,10 +41,14 @@ class EpciDashboardController < ApplicationController
       end
 
       # Récupérer les données géographiques des communes de l'EPCI
-      prepare_geojson_data if @epci_communes_data.present?
+      if @epci_communes_data.present?
+        prepare_geojson_data
+        # Préparation des données pour les graphiques
+        prepare_communes_chart_data
+      end
 
-      # Préparation des données pour les graphiques
-      prepare_communes_chart_data if @epci_communes_data.present?
+      # Ajouter l'appel à la méthode de préparation des données de naissances
+      prepare_births_geojson_data if @epci_births_data.present?
     end
   end
 
@@ -128,5 +133,44 @@ class EpciDashboardController < ApplicationController
       type: "FeatureCollection",
       features: features_3to5
     }.to_json
+  end
+
+  def prepare_births_geojson_data
+    # Préparer le GeoJSON pour les naissances par commune
+    features_births = []
+
+    # Récupérer l'année la plus récente
+    latest_year = @epci_births_data["years_available"].max.to_s
+
+    @epci_births_data["communes"].each do |commune|
+      # Récupérer la géométrie depuis la base de données
+      geometry = CommuneGeometry.find_by(code_insee: commune["code"])
+      next unless geometry&.geojson.present?
+
+      # Récupérer le nombre de naissances pour la dernière année disponible
+      births_count = commune["births_by_year"][latest_year].to_f
+
+      # Créer un feature GeoJSON avec les propriétés dont nous avons besoin
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          births_count: births_count.round,
+          latest_year: latest_year.to_i
+        },
+        geometry: JSON.parse(geometry.geojson)
+      }
+
+      features_births << feature
+    end
+
+    @communes_births_geojson = {
+      type: "FeatureCollection",
+      features: features_births
+    }.to_json
+
+    # Stocker l'année la plus récente pour l'affichage
+    @epci_latest_birth_year = latest_year.to_i
   end
 end
