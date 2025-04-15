@@ -30,3 +30,4 @@ import "charts/age_pyramid_chart"
 // EPCI Dashboard
 import "charts/epci_communes_chart"
 import "charts/epci_age_pyramid_chart"
+import "charts/epci_population_history_chart"

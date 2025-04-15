@@ -15,6 +15,7 @@ class EpciDashboardController < ApplicationController
     @epci_childcare_data = Api::ChildcareService.get_coverage_by_epci(@epci_code)
     @epci_births_data = Api::EpciBirthsService.get_births_by_communes(@epci_code)
     @epci_population_data = Api::EpciPopulationService.get_population_data(@epci_code)
+    @epci_historical_data = Api::EpciHistoricalService.get_historical_data(@epci_code)
 
     # Préparer les données pour la pyramide des âges de l'EPCI
     @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
