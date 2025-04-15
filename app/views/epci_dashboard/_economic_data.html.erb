@@ -1,0 +1,300 @@
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Indicateurs socio-économiques</h2>
+
+  <!-- Première rangée : Carte et Tableau de comparaison côte à côte -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Carte des revenus médians -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Revenus médians par commune (<%= @epci_latest_revenue_year %>)</h4>
+      <div id="communes-map-revenues" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="revenues-legend" class="mt-3"></div>
+    </div>
+
+    <!-- Tableau de comparaison -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Comparaison avec les autres échelons territoriaux</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Territoire
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Revenu médian (<%= @epci_latest_revenue_year || 'N/A' %>)
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour l'EPCI -->
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                <%= @epci_name %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%
+                  # Utiliser directement les données de l'API
+                  latest_year = @epci_latest_revenue_year.to_s
+                  epci_median = @epci_revenue_data&.dig("median_revenues", latest_year)
+                %>
+                <div class="flex items-center">
+                  <span class="<%= epci_median && epci_median > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_currency(epci_median, unit: "€", precision: 0, delimiter: " ", format: "%n %u") %>
+                  </span>
+                  <% if epci_median && epci_median > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= [epci_median * 100 / 40000, 100].min %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Ligne pour le département si disponible -->
+            <% if @department_revenue_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= @department_name %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <% dept_rate = @department_revenue_data&.dig("median_revenues", latest_year) %>
+                  <div class="flex items-center">
+                    <span class="<%= dept_rate && dept_rate > 0 ? "font-semibold" : "" %>">
+                      <%= number_to_currency(dept_rate, unit: "€", precision: 0, delimiter: " ", format: "%n %u") %>
+                    </span>
+                    <% if dept_rate && dept_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: <%= [dept_rate * 100 / 40000, 100].min %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région si disponible -->
+            <% if @region_revenue_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= @region_name %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <% region_rate = @region_revenue_data&.dig("median_revenues", latest_year) %>
+                  <div class="flex items-center">
+                    <span class="<%= region_rate && region_rate > 0 ? "font-semibold" : "" %>">
+                      <%= number_to_currency(region_rate, unit: "€", precision: 0, delimiter: " ", format: "%n %u") %>
+                    </span>
+                    <% if region_rate && region_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full" style="width: <%= [region_rate * 100 / 40000, 100].min %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la France -->
+            <% if @france_revenue_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  France
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <% france_rate = @france_revenue_data&.dig("median_revenues", latest_year) %>
+                  <div class="flex items-center">
+                    <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
+                      <%= number_to_currency(france_rate, unit: "€", precision: 0, delimiter: " ", format: "%n %u") %>
+                    </span>
+                    <% if france_rate && france_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-red-600 h-2 rounded-full" style="width: <%= [france_rate * 100 / 40000, 100].min %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-3 text-xs text-gray-500">
+        <p>Note: Les barres de progression sont calibrées pour un maximum de 40 000€.</p>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Deuxième rangée : Statistiques des revenus en pleine largeur -->
+  <div class="mt-8">
+    <h4 class="text-sm font-medium text-gray-700 mb-4">Statistiques des revenus</h4>
+
+    <div class="bg-gray-50 p-4 rounded-md">
+      <p class="text-gray-600 mb-4">Analyse des revenus médians sur le territoire de l'EPCI :</p>
+
+      <% if @epci_revenues_data && @epci_revenues_data["communes"].present? %>
+        <%
+          # Calculer quelques statistiques
+          communes_with_revenues = @epci_revenues_data["communes"].select { |c| c["median_revenues"][@epci_latest_revenue_year.to_s].present? }
+          revenues = communes_with_revenues.map { |c| c["median_revenues"][@epci_latest_revenue_year.to_s] }
+
+          if revenues.any?
+            min_revenue = revenues.min
+            max_revenue = revenues.max
+
+            # Trouver les communes avec les revenus min et max
+            min_commune = communes_with_revenues.find { |c| c["median_revenues"][@epci_latest_revenue_year.to_s] == min_revenue }
+            max_commune = communes_with_revenues.find { |c| c["median_revenues"][@epci_latest_revenue_year.to_s] == max_revenue }
+          end
+        %>
+
+        <% if revenues.any? %>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Revenu médian moyen -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Revenu médian de l'epci</h5>
+              <p class="text-xl font-bold text-indigo-600">
+                <span class="<%= epci_median && epci_median > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_currency(epci_median, unit: "€", precision: 0, delimiter: " ", format: "%n %u") %>
+                </span>
+              </p>
+            </div>
+
+            <!-- Écart entre communes -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Écart maxi entre communes</h5>
+              <p class="text-xl font-bold text-indigo-600"><%= number_to_currency(max_revenue - min_revenue, unit: "€", precision: 0, delimiter: " ") %></p>
+            </div>
+
+            <!-- Commune avec le revenu le plus bas -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Commune avec le revenu le plus bas</h5>
+              <p class="font-medium"><%= min_commune["name"] %></p>
+              <p class="text-xl font-bold text-indigo-600"><%= number_to_currency(min_revenue, unit: "€", precision: 0, delimiter: " ") %></p>
+            </div>
+
+            <!-- Commune avec le revenu le plus élevé -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Commune avec le revenu le plus élevé</h5>
+              <p class="font-medium"><%= max_commune["name"] %></p>
+              <p class="text-xl font-bold text-indigo-600"><%= number_to_currency(max_revenue, unit: "€", precision: 0, delimiter: " ") %></p>
+            </div>
+          </div>
+        <% else %>
+          <p class="text-gray-500 italic">Données de revenus non disponibles</p>
+        <% end %>
+      <% else %>
+        <p class="text-gray-500 italic">Données non disponibles</p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Boîte d'information explicative -->
+  <div class="mt-6 bg-gray-50 p-4 rounded-md">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">À propos des revenus médians</h4>
+    <p class="text-sm text-gray-600">
+      Cette carte présente les revenus médians par commune au sein de l'EPCI pour l'année <%= @epci_latest_revenue_year %>.
+      Le revenu médian divise la population en deux parties égales : 50% des personnes appartiennent à un ménage qui déclare
+      un revenu supérieur et 50% un revenu inférieur.
+      Ces données permettent d'identifier les disparités économiques entre les communes de l'EPCI et d'adapter les politiques publiques.
+    </p>
+  </div>
+</div>
+
+<!-- Données JSON pour la carte -->
+<script type="application/json" id="communes-revenues-geojson">
+  <%= raw(@communes_revenues_geojson) %>
+</script>
+
+<script>
+  document.addEventListener("turbo:load", function () {
+    initializeRevenuesMap();
+  });
+
+  function initializeRevenuesMap() {
+    const mapElement = document.getElementById("communes-map-revenues");
+    const geojsonElement = document.getElementById("communes-revenues-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.median_revenue).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 1], [values[Math.floor(values.length/2)] || 2], [values[values.length-1] || 3]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour les revenus (du plus faible au plus élevé)
+    const colors = ["#feebe2", "#fbb4b9", "#f768a1", "#7a0177"];
+
+    function getColor(revenue) {
+      return revenue > breaks[3] ? colors[3] :
+             revenue > breaks[2] ? colors[2] :
+             revenue > breaks[1] ? colors[1] :
+                                  colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.median_revenue),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Revenu médian (${feature.properties.latest_year}) : ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(feature.properties.median_revenue)}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    // Créer une légende pour la carte
+    const legendContainer = document.getElementById("revenues-legend");
+    legendContainer.innerHTML = "";
+
+    const legend = document.createElement("div");
+    legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
+
+    const format = val => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
+
+    const labels = [
+      `≤ ${format(breaks[1] - 0.01)}`,
+      `${format(breaks[1])} – ${format(breaks[2] - 0.01)}`,
+      `${format(breaks[2])} – ${format(breaks[3] - 0.01)}`,
+      `≥ ${format(breaks[3])}`
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      const item = document.createElement("div");
+      item.className = "flex items-center";
+
+      const colorBox = document.createElement("div");
+      colorBox.className = "w-4 h-4 rounded mr-2";
+      colorBox.style.backgroundColor = colors[i];
+
+      const label = document.createElement("span");
+      label.textContent = labels[i];
+
+      item.appendChild(colorBox);
+      item.appendChild(label);
+      legend.appendChild(item);
+    }
+
+    legendContainer.appendChild(legend);
+  }
+</script>

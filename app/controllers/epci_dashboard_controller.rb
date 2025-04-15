@@ -9,19 +9,21 @@ class EpciDashboardController < ApplicationController
     # Récupérer les données EPCI
     @epci_communes_data = Api::EpciCommunesService.get_children_by_communes(@epci_code)
     @epci_children_data = Api::PopulationService.get_epci_children_data(@epci_code)
-    @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(@epci_code)
     @epci_family_data = Api::FamilyService.get_epci_families(@epci_code)
     @epci_schooling_data = Api::SchoolingService.get_epci_schooling(@epci_code)
     @epci_childcare_data = Api::ChildcareService.get_coverage_by_epci(@epci_code)
     @epci_births_data = Api::EpciBirthsService.get_births_by_communes(@epci_code)
     @epci_population_data = Api::EpciPopulationService.get_population_data(@epci_code)
     @epci_historical_data = Api::EpciHistoricalService.get_historical_data(@epci_code)
+    @epci_revenues_data = Api::EpciRevenuesService.get_epci_revenues(@epci_code)
+    @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(@epci_code)
 
     # Préparer les données pour la pyramide des âges de l'EPCI
     @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
 
     # Récupérer les données France
     @france_children_data = Api::PopulationService.get_france_children_data
+    @france_revenue_data = Api::RevenueService.get_median_revenues_france
 
     # Déterminer le département et la région principale de l'EPCI
     epci_object = Epci.find_by(epci: @epci_code)
@@ -37,12 +39,14 @@ class EpciDashboardController < ApplicationController
         @department_children_data = Api::PopulationService.get_department_children_data(main_department_code)
         @department_code = main_department_code
         @department_name = "Département " + main_department_code
+        @department_revenue_data = Api::RevenueService.get_median_revenues_department(main_department_code)
       end
 
       if main_region_code.present?
         @region_children_data = Api::PopulationService.get_region_children_data(main_region_code)
         @region_code = main_region_code
         @region_name = "Région " + main_region_code
+        @region_revenue_data = Api::RevenueService.get_median_revenues_region(main_region_code)
       end
 
       # Récupérer les données géographiques des communes de l'EPCI
@@ -52,8 +56,9 @@ class EpciDashboardController < ApplicationController
         prepare_communes_chart_data
       end
 
-      # Ajouter l'appel à la méthode de préparation des données de naissances
+      # Ajouter l'appel à la méthode de préparation des données
       prepare_births_geojson_data if @epci_births_data.present?
+      prepare_revenues_geojson_data if @epci_revenues_data.present?
     end
   end
 
@@ -211,5 +216,44 @@ class EpciDashboardController < ApplicationController
     Rails.logger.debug "EPCI Age pyramid data: #{result.inspect}"
 
     result
+  end
+
+  def prepare_revenues_geojson_data
+    # Préparer le GeoJSON pour les revenus médians par commune
+    features_revenues = []
+
+    # Récupérer l'année la plus récente
+    latest_year = @epci_revenues_data["latest_year"].to_s
+
+    @epci_revenues_data["communes"].each do |commune|
+      # Récupérer la géométrie depuis la base de données
+      geometry = CommuneGeometry.find_by(code_insee: commune["code"])
+      next unless geometry&.geojson.present?
+
+      # Récupérer le revenu médian pour la dernière année disponible
+      median_revenue = commune["median_revenues"][latest_year].to_f
+
+      # Créer un feature GeoJSON avec les propriétés dont nous avons besoin
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          median_revenue: median_revenue,
+          latest_year: latest_year
+        },
+        geometry: JSON.parse(geometry.geojson)
+      }
+
+      features_revenues << feature
+    end
+
+    @communes_revenues_geojson = {
+      type: "FeatureCollection",
+      features: features_revenues
+    }.to_json
+
+    # Stocker l'année la plus récente pour l'affichage
+    @epci_latest_revenue_year = latest_year.to_i
   end
 end
