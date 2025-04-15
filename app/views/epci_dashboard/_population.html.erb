@@ -1,0 +1,55 @@
+<!-- Synthèse démographique EPCI -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Démographie de l'EPCI</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-indigo-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-indigo-800 mb-1">Population totale</h3>
+      <p class="text-2xl font-bold text-indigo-900">
+        <%= number_with_delimiter(@epci_population_data["total_population"]&.round || 0, delimiter: " ") %>
+      </p>
+      <p class="text-sm text-indigo-600">
+        <%= @epci_population_data["communes_count"] %> communes
+      </p>
+    </div>
+    <div class="bg-blue-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-blue-800 mb-1">Hommes</h3>
+      <p class="text-2xl font-bold text-blue-900">
+        <%= number_with_delimiter(@epci_population_data["men_count"]&.round || 0, delimiter: " ") %>
+      </p>
+      <p class="text-sm text-blue-600">
+        <%= number_to_percentage(@epci_population_data.dig("gender_ratio", "men_percentage") || 0, precision: 1) %> de la population
+      </p>
+    </div>
+    <div class="bg-pink-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-pink-800 mb-1">Femmes</h3>
+      <p class="text-2xl font-bold text-pink-900">
+        <%= number_with_delimiter(@epci_population_data["women_count"]&.round || 0, delimiter: " ") %>
+      </p>
+      <p class="text-sm text-pink-600">
+        <%= number_to_percentage(@epci_population_data.dig("gender_ratio", "women_percentage") || 0, precision: 1) %> de la population
+      </p>
+    </div>
+  </div>
+
+  <!-- Pyramide des âges -->
+  <div>
+    <h3 class="text-sm font-medium text-gray-700 mb-4">Pyramide des âges</h3>
+    <div class="h-120">
+      <canvas id="epci-age-pyramid-chart"></canvas>
+    </div>
+    <script type="application/json" id="epci-age-pyramid-data">
+      <%= raw(@epci_age_pyramid_data.to_json) %>
+    </script>
+  </div>
+
+  <!-- Information explicative -->
+  <div class="mt-6 bg-gray-50 p-4 rounded-md">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">Lecture de la pyramide des âges</h4>
+    <p class="text-sm text-gray-600">
+      Cette pyramide des âges présente la répartition de la population par âge et par sexe dans l'ensemble de l'EPCI.
+      Les hommes sont représentés à gauche (en bleu) et les femmes à droite (en rose).
+      Cette visualisation permet d'identifier les déséquilibres démographiques et d'anticiper les besoins futurs en termes d'infrastructures et de services.
+    </p>
+  </div>
+</div>

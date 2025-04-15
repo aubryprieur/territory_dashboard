@@ -14,6 +14,10 @@ class EpciDashboardController < ApplicationController
     @epci_schooling_data = Api::SchoolingService.get_epci_schooling(@epci_code)
     @epci_childcare_data = Api::ChildcareService.get_coverage_by_epci(@epci_code)
     @epci_births_data = Api::EpciBirthsService.get_births_by_communes(@epci_code)
+    @epci_population_data = Api::EpciPopulationService.get_population_data(@epci_code)
+
+    # Préparer les données pour la pyramide des âges de l'EPCI
+    @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
 
     # Récupérer les données France
     @france_children_data = Api::PopulationService.get_france_children_data
@@ -172,5 +176,39 @@ class EpciDashboardController < ApplicationController
 
     # Stocker l'année la plus récente pour l'affichage
     @epci_latest_birth_year = latest_year.to_i
+  end
+
+  def prepare_epci_age_pyramid_data(population_data)
+    return {} if population_data.blank? || !population_data.key?("population_by_age")
+
+    # Extraire les données de population par âge
+    population_by_age = population_data["population_by_age"]
+
+    # Initialiser les tableaux
+    age_groups = []
+    male_counts = []
+    female_counts = []
+
+    # Remplir les tableaux avec les données
+    population_by_age.each do |age_data|
+      age = age_data["age"].to_s
+      male_count = age_data["men"].to_f.round
+      female_count = age_data["women"].to_f.round
+
+      age_groups << age
+      male_counts << male_count
+      female_counts << female_count
+    end
+
+    # Inverser les tableaux pour que les plus jeunes soient en bas
+    result = {
+      ageGroups: age_groups.reverse,
+      maleData: male_counts.reverse,
+      femaleData: female_counts.reverse
+    }
+
+    Rails.logger.debug "EPCI Age pyramid data: #{result.inspect}"
+
+    result
   end
 end

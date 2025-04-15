@@ -21,7 +21,8 @@ pin "charts/age_pyramid_chart", to: "charts/age_pyramid_chart.js"
 
 # EPCI Dashboard
 pin "charts/epci_communes_chart", to: "charts/epci_communes_chart.js"
-# config/importmap.rb
+pin "charts/epci_age_pyramid_chart", to: "charts/epci_age_pyramid_chart.js"
+
+# leaflet
 pin "leaflet", to: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 pin "leaflet-css", to: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css", preload: true
-
