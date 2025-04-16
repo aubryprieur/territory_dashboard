@@ -230,8 +230,9 @@ class EpciDashboardController < ApplicationController
       geometry = CommuneGeometry.find_by(code_insee: commune["code"])
       next unless geometry&.geojson.present?
 
-      # Récupérer le revenu médian pour la dernière année disponible
+      # Récupérer le revenu médian et taux de pauvreté pour la dernière année disponible
       median_revenue = commune["median_revenues"][latest_year].to_f
+      poverty_rate = commune["poverty_rates"][latest_year]
 
       # Créer un feature GeoJSON avec les propriétés dont nous avons besoin
       feature = {
@@ -240,6 +241,7 @@ class EpciDashboardController < ApplicationController
           code: commune["code"],
           name: commune["name"],
           median_revenue: median_revenue,
+          poverty_rate: poverty_rate,
           latest_year: latest_year
         },
         geometry: JSON.parse(geometry.geojson)
