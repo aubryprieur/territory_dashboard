@@ -1,121 +1,246 @@
 <div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-4">Couples avec enfants</h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Familles</h2>
+  <h3 class="text-md font-medium text-gray-800 mb-4 mt-8">Couples avec enfant(s)</h3>
+
+  <!-- Nouveau tableau de comparaison à ajouter ici -->
+  <!-- Tableau de comparaison -->
+  <div class="mb-6">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">Comparaison territoriale (<%= @epci_family_data&.dig("family_data")&.keys&.sort&.last || @epci_families_data&.dig("year") %>)</h4>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Échelon territorial
+            </th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Taux de couples avec enfants
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <!-- EPCI -->
+          <tr>
+            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+              <%= @epci_name %>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <div class="flex items-center">
+                <%
+                  epci_rate = @epci_families_data.present? ?
+                    @epci_families_data["epci_couples_with_children_percentage"] :
+                    @epci_family_data&.dig("family_data", @epci_family_data&.dig("family_data")&.keys&.sort&.last, "couples_with_children_percentage")
+                %>
+                <span class="<%= epci_rate && epci_rate > 0 ? "font-semibold" : "" %>">
+                  <%= number_to_percentage(epci_rate, precision: 2) %>
+                </span>
+                <% if epci_rate && epci_rate > 0 %>
+                  <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                    <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= [epci_rate * 100 / 50, 100].min %>%"></div>
+                  </div>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Département -->
+          <% if @department_family_data.present? %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= @department_name %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <div class="flex items-center">
+                  <%
+                    latest_year = @department_family_data&.dig("family_data")&.keys&.sort&.last
+                    dept_rate = latest_year ? @department_family_data&.dig("family_data", latest_year, "couples_with_children_percentage") : nil
+                  %>
+                  <span class="<%= dept_rate && dept_rate > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_percentage(dept_rate, precision: 2) %>
+                  </span>
+                  <% if dept_rate && dept_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-blue-600 h-2 rounded-full" style="width: <%= [dept_rate * 100 / 50, 100].min %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+
+          <!-- Région -->
+          <% if @region_family_data.present? %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%= @region_name %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <div class="flex items-center">
+                  <%
+                    latest_year = @region_family_data&.dig("family_data")&.keys&.sort&.last
+                    region_rate = latest_year ? @region_family_data&.dig("family_data", latest_year, "couples_with_children_percentage") : nil
+                  %>
+                  <span class="<%= region_rate && region_rate > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_percentage(region_rate, precision: 2) %>
+                  </span>
+                  <% if region_rate && region_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-green-600 h-2 rounded-full" style="width: <%= [region_rate * 100 / 50, 100].min %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+
+          <!-- France -->
+          <% if @france_family_data.present? %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                France
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <div class="flex items-center">
+                  <%
+                    latest_year = @france_family_data&.dig("family_data")&.keys&.sort&.last
+                    france_rate = latest_year ? @france_family_data&.dig("family_data", latest_year, "couples_with_children_percentage") : nil
+                  %>
+                  <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_percentage(france_rate, precision: 2) %>
+                  </span>
+                  <% if france_rate && france_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-red-600 h-2 rounded-full" style="width: <%= [france_rate * 100 / 50, 100].min %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-2 text-xs text-gray-500">
+      <p>Note: Les barres de progression sont calibrées pour un maximum de 50%.</p>
+    </div>
+  </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- Carte des couples avec enfants -->
-    <div>
-      <h4 class="text-sm font-medium text-gray-700 mb-2">Répartition des couples avec enfants par commune (<%= @epci_families_data["year"] %>)</h4>
-      <div id="communes-map-families" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
-      <div id="families-legend" class="mt-3"></div>
-    </div>
-
-    <!-- Statistiques de synthèse -->
-    <div>
-      <h4 class="text-sm font-medium text-gray-700 mb-2">Statistiques des couples avec enfants</h4>
-
-      <div class="bg-gray-50 p-4 rounded-md mb-4">
-        <div class="grid grid-cols-2 gap-4">
-          <!-- Pourcentage moyen EPCI -->
-          <div class="bg-white p-3 rounded shadow-sm">
-            <h5 class="text-sm font-medium text-gray-700 mb-1">Moyenne EPCI</h5>
-            <p class="text-xl font-bold text-indigo-600">
-              <%= number_to_percentage(@epci_families_data["epci_couples_with_children_percentage"], precision: 2) %>
-            </p>
-          </div>
-
-          <!-- Nombre total -->
-          <div class="bg-white p-3 rounded shadow-sm">
-            <h5 class="text-sm font-medium text-gray-700 mb-1">Nombre total</h5>
-            <p class="text-xl font-bold text-indigo-600">
-              <%= number_with_delimiter(@epci_families_data["total_couples_with_children"].round) %>
-            </p>
-          </div>
-        </div>
+      <!-- Carte des couples avec enfants -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Répartition des couples avec enfants par commune (<%= @epci_families_data["year"] %>)</h4>
+        <div id="communes-map-families" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+        <div id="families-legend" class="mt-3"></div>
       </div>
 
-      <% if @epci_families_data["communes"].present? %>
-        <%
-          # Calculer quelques statistiques
-          communes = @epci_families_data["communes"]
-          sorted_communes = communes.sort_by { |c| c["couples_with_children_percentage"] }
+      <!-- Statistiques de synthèse -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Statistiques des couples avec enfants</h4>
 
-          min_commune = sorted_communes.first
-          max_commune = sorted_communes.last
+        <div class="bg-gray-50 p-4 rounded-md mb-4">
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Pourcentage moyen EPCI -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Moyenne EPCI</h5>
+              <p class="text-xl font-bold text-indigo-600">
+                <%= number_to_percentage(@epci_families_data["epci_couples_with_children_percentage"], precision: 2) %>
+              </p>
+            </div>
 
-          median_index = communes.length / 2
-          median_commune = sorted_communes[median_index]
-        %>
-
-        <div class="overflow-x-auto mt-4">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Indicateur
-                </th>
-                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Commune
-                </th>
-                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Taux
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <!-- Commune avec le taux le plus bas -->
-              <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Taux le plus bas
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= min_commune["name"] %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= number_to_percentage(min_commune["couples_with_children_percentage"], precision: 2) %>
-                </td>
-              </tr>
-
-              <!-- Commune médiane -->
-              <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Valeur médiane
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= median_commune["name"] %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= number_to_percentage(median_commune["couples_with_children_percentage"], precision: 2) %>
-                </td>
-              </tr>
-
-              <!-- Commune avec le taux le plus élevé -->
-              <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Taux le plus élevé
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= max_commune["name"] %>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= number_to_percentage(max_commune["couples_with_children_percentage"], precision: 2) %>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+            <!-- Nombre total -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Nombre total</h5>
+              <p class="text-xl font-bold text-indigo-600">
+                <%= number_with_delimiter(@epci_families_data["total_couples_with_children"].round) %>
+              </p>
+            </div>
+          </div>
         </div>
-      <% end %>
-    </div>
-  </div>
 
-  <!-- Boîte d'information explicative -->
-  <div class="mt-6 bg-gray-50 p-4 rounded-md">
-    <h4 class="text-sm font-medium text-gray-700 mb-2">À propos des couples avec enfants</h4>
-    <p class="text-sm text-gray-600">
-      Cette carte présente le pourcentage de couples avec enfants parmi l'ensemble des ménages de chaque commune.
-      Cet indicateur permet d'identifier les communes où la proportion de familles est plus importante, ce qui peut
-      influencer les politiques en matière de logement, d'éducation et de services aux familles.
-    </p>
-  </div>
+        <% if @epci_families_data["communes"].present? %>
+          <%
+            # Calculer quelques statistiques
+            communes = @epci_families_data["communes"]
+            sorted_communes = communes.sort_by { |c| c["couples_with_children_percentage"] }
+
+            min_commune = sorted_communes.first
+            max_commune = sorted_communes.last
+
+            median_index = communes.length / 2
+            median_commune = sorted_communes[median_index]
+          %>
+
+          <div class="overflow-x-auto mt-4">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Indicateur
+                  </th>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Commune
+                  </th>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Taux
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Commune avec le taux le plus bas -->
+                <tr>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Taux le plus bas
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= min_commune["name"] %>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(min_commune["couples_with_children_percentage"], precision: 2) %>
+                  </td>
+                </tr>
+
+                <!-- Commune médiane -->
+                <tr>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Valeur médiane
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= median_commune["name"] %>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(median_commune["couples_with_children_percentage"], precision: 2) %>
+                  </td>
+                </tr>
+
+                <!-- Commune avec le taux le plus élevé -->
+                <tr>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Taux le plus élevé
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= max_commune["name"] %>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(max_commune["couples_with_children_percentage"], precision: 2) %>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Boîte d'information explicative -->
+    <div class="mt-6 bg-gray-50 p-4 rounded-md">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">À propos des couples avec enfants</h4>
+      <p class="text-sm text-gray-600">
+        Cette carte présente le pourcentage de couples avec enfants parmi l'ensemble des ménages de chaque commune.
+        Cet indicateur permet d'identifier les communes où la proportion de familles est plus importante, ce qui peut
+        influencer les politiques en matière de logement, d'éducation et de services aux familles.
+      </p>
+    </div>
 
     <!-- Nouveau bloc pour les familles monoparentales -->
     <h3 class="text-md font-medium text-gray-800 mb-4 mt-8">Familles monoparentales</h3>
@@ -370,6 +495,7 @@
         les politiques de transport, d'activités périscolaires et de soutien à la parentalité.
       </p>
     </div>
+  </div>
   </div>
 </div>
 

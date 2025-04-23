@@ -27,6 +27,7 @@ class EpciDashboardController < ApplicationController
     # Récupérer les données France
     @france_children_data = Api::PopulationService.get_france_children_data
     @france_revenue_data = Api::RevenueService.get_median_revenues_france
+    @france_family_data = Api::FamilyService.get_france_families
 
     # Déterminer le département et la région principale de l'EPCI
     epci_object = Epci.find_by(epci: @epci_code)
@@ -43,6 +44,7 @@ class EpciDashboardController < ApplicationController
         @department_code = main_department_code
         @department_name = "Département " + main_department_code
         @department_revenue_data = Api::RevenueService.get_median_revenues_department(main_department_code)
+        @department_family_data = Api::FamilyService.get_department_families(@department_code)
       end
 
       if main_region_code.present?
@@ -50,6 +52,7 @@ class EpciDashboardController < ApplicationController
         @region_code = main_region_code
         @region_name = "Région " + main_region_code
         @region_revenue_data = Api::RevenueService.get_median_revenues_region(main_region_code)
+        @region_family_data = Api::FamilyService.get_region_families(@region_code)
       end
 
       # Récupérer les données géographiques des communes de l'EPCI
