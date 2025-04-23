@@ -20,6 +20,7 @@ class EpciDashboardController < ApplicationController
     @epci_families_data = Api::EpciFamiliesService.get_couples_with_children(@epci_code)
     @epci_single_parent_data = Api::EpciFamiliesService.get_single_parent_families(@epci_code)
     @epci_large_families_data = Api::EpciFamiliesService.get_large_families(@epci_code)
+    @epci_schooling_communes_data = Api::EpciSchoolingService.get_schooling_by_communes(@epci_code)
 
     # Préparer les données pour la pyramide des âges de l'EPCI
     @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
@@ -68,6 +69,7 @@ class EpciDashboardController < ApplicationController
       prepare_families_geojson_data if @epci_families_data.present?
       prepare_single_parent_geojson_data if @epci_single_parent_data.present?
       prepare_large_families_geojson_data if @epci_large_families_data.present?
+      prepare_schooling_geojson_data if @epci_schooling_communes_data.present?
     end
   end
 
@@ -374,6 +376,44 @@ class EpciDashboardController < ApplicationController
     @communes_large_families_geojson = {
       type: "FeatureCollection",
       features: features_large_families
+    }.to_json
+  end
+
+  # Dans app/controllers/epci_dashboard_controller.rb
+  def prepare_schooling_geojson_data
+    # Préparer le GeoJSON pour les taux de scolarisation des enfants de 2 ans
+    features_schooling = []
+
+    @epci_schooling_communes_data["communes"].each do |commune|
+      # Récupérer la géométrie depuis la base de données
+      geometry = CommuneGeometry.find_by(code_insee: commune["code"])
+      next unless geometry&.geojson.present?
+
+      # Récupérer le taux de scolarisation des enfants de 2 ans
+      schooling_rate_2y = commune["schooling_rate_2y"].to_f
+
+      # Créer un feature GeoJSON avec les propriétés
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          schooling_rate_2y: schooling_rate_2y,
+          total_children_2y: commune["total_children_2y"].round(1),
+          schooled_children_2y: commune["schooled_children_2y"].round(1),
+          schooling_rate_3_5y: commune["schooling_rate_3_5y"].to_f,
+          total_children_3_5y: commune["total_children_3_5y"].round(1),
+          schooled_children_3_5y: commune["schooled_children_3_5y"].round(1)
+        },
+        geometry: JSON.parse(geometry.geojson)
+      }
+
+      features_schooling << feature
+    end
+
+    @communes_schooling_geojson = {
+      type: "FeatureCollection",
+      features: features_schooling
     }.to_json
   end
 end

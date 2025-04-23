@@ -1,0 +1,427 @@
+<!-- app/views/epci_dashboard/_schooling.html.erb -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Scolarisation</h2>
+
+  <!-- Statistiques générales sur la scolarisation -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-amber-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-amber-800 mb-1">Scolarisation des enfants de 2 ans</h3>
+      <p class="text-2xl font-bold text-amber-900">
+        <%= number_to_percentage(@epci_schooling_communes_data["average_schooling_rate_2y"] || 0, precision: 1) %>
+      </p>
+      <p class="text-sm text-amber-600">
+        Moyenne sur l'EPCI
+      </p>
+    </div>
+    <div class="bg-green-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-green-800 mb-1">Scolarisation des enfants de 3 à 5 ans</h3>
+      <p class="text-2xl font-bold text-green-900">
+        <%= number_to_percentage(@epci_schooling_communes_data["average_schooling_rate_3_5y"] || 0, precision: 1) %>
+      </p>
+      <p class="text-sm text-green-600">
+        Moyenne sur l'EPCI
+      </p>
+    </div>
+    <div class="bg-indigo-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-indigo-800 mb-1">Enfants concernés</h3>
+      <p class="text-2xl font-bold text-indigo-900">
+        <%
+          total_2y = @epci_schooling_communes_data["communes"].sum { |c| c["total_children_2y"].to_f }.round
+          total_3_5y = @epci_schooling_communes_data["communes"].sum { |c| c["total_children_3_5y"].to_f }.round
+          total = total_2y + total_3_5y
+        %>
+        <%= number_with_delimiter(total) %>
+      </p>
+      <p class="text-sm text-indigo-600">
+        Enfants de 2 à 5 ans sur le territoire
+      </p>
+    </div>
+  </div>
+
+  <!-- Carte de scolarisation des enfants de 2 ans -->
+  <h3 class="text-md font-medium text-gray-800 mb-4">Taux de scolarisation des enfants de 2 ans</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Carte des taux de scolarisation à 2 ans -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Carte par commune (<%= @epci_schooling_communes_data["year"] %>)</h4>
+      <div id="communes-map-schooling-2y" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="schooling-2y-legend" class="mt-3"></div>
+    </div>
+
+    <!-- Tableau des communes avec taux extrêmes -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Communes avec les taux extrêmes</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commune</th>
+              <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux</th>
+              <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enfants scolarisés</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <%
+              # Communes avec les taux les plus élevés
+              top_communes = @epci_schooling_communes_data["communes"]
+                              .select { |c| c["total_children_2y"].to_f >= 5 } # Filtre pour éviter les communes avec trop peu d'enfants
+                              .sort_by { |c| -c["schooling_rate_2y"].to_f }
+                              .first(3)
+
+              # Communes avec les taux les plus bas
+              bottom_communes = @epci_schooling_communes_data["communes"]
+                              .select { |c| c["total_children_2y"].to_f >= 5 } # Filtre pour éviter les communes avec trop peu d'enfants
+                              .sort_by { |c| c["schooling_rate_2y"].to_f }
+                              .first(3)
+            %>
+
+            <!-- Entête pour les communes avec les taux les plus élevés -->
+            <tr>
+              <td colspan="3" class="px-3 py-2 text-sm font-medium text-gray-900 bg-gray-100">Taux les plus élevés</td>
+            </tr>
+
+            <% top_communes.each do |commune| %>
+              <tr>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-green-600">
+                  <%= number_to_percentage(commune["schooling_rate_2y"], precision: 1) %>
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= commune["schooled_children_2y"].round(1) %> / <%= commune["total_children_2y"].round(1) %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Entête pour les communes avec les taux les plus bas -->
+            <tr>
+              <td colspan="3" class="px-3 py-2 text-sm font-medium text-gray-900 bg-gray-100">Taux les plus bas</td>
+            </tr>
+
+            <% bottom_communes.each do |commune| %>
+              <tr>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-red-600">
+                  <%= number_to_percentage(commune["schooling_rate_2y"], precision: 1) %>
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= commune["schooled_children_2y"].round(1) %> / <%= commune["total_children_2y"].round(1) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carte de scolarisation des enfants de 3 à 5 ans -->
+  <h3 class="text-md font-medium text-gray-800 mb-4 mt-8">Taux de scolarisation des enfants de 3 à 5 ans</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Carte des taux de scolarisation de 3 à 5 ans -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Carte par commune (<%= @epci_schooling_communes_data["year"] %>)</h4>
+      <div id="communes-map-schooling-3-5y" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="schooling-3-5y-legend" class="mt-3"></div>
+    </div>
+
+    <!-- Visualisation des effectifs -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Répartition des effectifs</h4>
+      <div class="bg-gray-50 p-4 rounded-md h-full">
+        <p class="text-sm text-gray-600 mb-4">
+          Les enfants de 3 à 5 ans sont généralement scolarisés à un taux élevé en France. Voici la répartition sur le territoire :
+        </p>
+
+        <div class="space-y-4">
+          <div>
+            <p class="text-sm font-medium text-gray-700 mb-1">Enfants de 3 à 5 ans total</p>
+            <p class="text-xl font-bold text-indigo-600">
+              <%= number_with_delimiter(total_3_5y) %>
+            </p>
+          </div>
+
+          <div>
+            <p class="text-sm font-medium text-gray-700 mb-1">Enfants de 3 à 5 ans scolarisés</p>
+            <%
+              total_schooled_3_5y = @epci_schooling_communes_data["communes"].sum { |c| c["schooled_children_3_5y"].to_f }.round
+            %>
+            <p class="text-xl font-bold text-green-600">
+              <%= number_with_delimiter(total_schooled_3_5y) %>
+            </p>
+          </div>
+
+          <div>
+            <p class="text-sm font-medium text-gray-700 mb-1">Taux global de scolarisation 3-5 ans</p>
+            <%
+              global_rate_3_5y = total_schooled_3_5y.to_f / total_3_5y * 100 if total_3_5y > 0
+            %>
+            <p class="text-xl font-bold text-blue-600">
+              <%= number_to_percentage(global_rate_3_5y || 0, precision: 1) %>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Boîte d'information explicative -->
+  <div class="mt-6 bg-gray-50 p-4 rounded-md">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">À propos de la scolarisation</h4>
+    <p class="text-sm text-gray-600">
+      Les enfants de 2 ans peuvent être scolarisés en maternelle sous certaines conditions et selon les places disponibles.
+      Les taux de scolarisation à 2 ans varient fortement d'une commune à l'autre et reflètent souvent les priorités éducatives locales.
+      En revanche, la scolarisation des enfants de 3 à 5 ans est obligatoire depuis la loi "Pour une École de la confiance" de 2019.
+      Ces données permettent d'identifier les zones où des efforts particuliers pourraient être nécessaires pour améliorer l'accès précoce à l'éducation.
+    </p>
+  </div>
+</div>
+
+<!-- Données JSON pour les cartes -->
+<script type="application/json" id="communes-schooling-geojson">
+  <%= raw(@communes_schooling_geojson) %>
+</script>
+
+<script>
+  document.addEventListener("turbo:load", function () {
+    initializeSchooling2yMap();
+    initializeSchooling35yMap();
+  });
+
+  function initializeSchooling2yMap() {
+    const mapElement = document.getElementById("communes-map-schooling-2y");
+    const geojsonElement = document.getElementById("communes-schooling-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+
+    // Filtrer pour ne garder que les communes avec suffisamment d'enfants pour des statistiques significatives
+    const significantData = geojsonData.features.filter(f => f.properties.total_children_2y >= 5);
+
+    const values = significantData.map(f => f.properties.schooling_rate_2y).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [25], [50], [75], [100]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour le taux de scolarisation à 2 ans
+    const colors = ["#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      // Couleur grise pour les communes avec trop peu d'enfants
+      if (feature.properties.total_children_2y < 5) {
+        return {
+          fillColor: "#e5e7eb",
+          weight: 1,
+          opacity: 1,
+          color: "white",
+          fillOpacity: 0.7
+        };
+      }
+
+      return {
+        fillColor: getColor(feature.properties.schooling_rate_2y),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const props = feature.properties;
+      const insignificantData = props.total_children_2y < 5;
+
+      const popup = `
+        <div class="text-sm">
+          <strong>${props.name}</strong><br>
+          ${insignificantData
+            ? `<span class="text-gray-500">Données non significatives (moins de 5 enfants)</span><br>`
+            : `Taux de scolarisation à 2 ans : <strong>${props.schooling_rate_2y.toFixed(1)}%</strong><br>`}
+          Enfants de 2 ans : ${props.total_children_2y} enfants<br>
+          Enfants de 2 ans scolarisés : ${props.schooled_children_2y} enfants
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    // Créer une légende pour la carte
+    const legendContainer = document.getElementById("schooling-2y-legend");
+    legendContainer.innerHTML = "";
+
+    const legend = document.createElement("div");
+    legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
+
+    // Ajouter une entrée pour les données non significatives
+    const insignificantItem = document.createElement("div");
+    insignificantItem.className = "flex items-center";
+    const insignificantColorBox = document.createElement("div");
+    insignificantColorBox.className = "w-4 h-4 rounded mr-2";
+    insignificantColorBox.style.backgroundColor = "#e5e7eb";
+    const insignificantLabel = document.createElement("span");
+    insignificantLabel.textContent = "Données non significatives (<5 enfants)";
+    insignificantItem.appendChild(insignificantColorBox);
+    insignificantItem.appendChild(insignificantLabel);
+    legend.appendChild(insignificantItem);
+
+    const labels = [
+      `≤ ${breaks[1].toFixed(1)}%`,
+      `${breaks[1].toFixed(1)}% – ${breaks[2].toFixed(1)}%`,
+      `${breaks[2].toFixed(1)}% – ${breaks[3].toFixed(1)}%`,
+      `${breaks[3].toFixed(1)}% – ${breaks[4].toFixed(1)}%`,
+      `≥ ${breaks[4].toFixed(1)}%`
+    ];
+
+    for (let i = 0; i < 5; i++) {
+      const item = document.createElement("div");
+      item.className = "flex items-center";
+
+      const colorBox = document.createElement("div");
+      colorBox.className = "w-4 h-4 rounded mr-2";
+      colorBox.style.backgroundColor = colors[i];
+
+      const label = document.createElement("span");
+      label.textContent = labels[i];
+
+      item.appendChild(colorBox);
+      item.appendChild(label);
+      legend.appendChild(item);
+    }
+
+    legendContainer.appendChild(legend);
+  }
+
+  function initializeSchooling35yMap() {
+    const mapElement = document.getElementById("communes-map-schooling-3-5y");
+    const geojsonElement = document.getElementById("communes-schooling-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+
+    // Filtrer pour ne garder que les communes avec suffisamment d'enfants pour des statistiques significatives
+    const significantData = geojsonData.features.filter(f => f.properties.total_children_3_5y >= 10);
+
+    const values = significantData.map(f => f.properties.schooling_rate_3_5y).sort((a, b) => a - b);
+
+    // Pour les 3-5 ans, utiliser des seuils adaptés (généralement plus élevés)
+    const breaks = [0, 85, 90, 95, 100]; // Seuils fixes adaptés aux taux généralement élevés
+
+    // Palette de couleurs pour le taux de scolarisation de 3 à 5 ans (teintes de vert)
+    const colors = ["#edf8e9", "#c7e9c0", "#a1d99b", "#74c476", "#238b45"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      // Couleur grise pour les communes avec trop peu d'enfants
+      if (feature.properties.total_children_3_5y < 10) {
+        return {
+          fillColor: "#e5e7eb",
+          weight: 1,
+          opacity: 1,
+          color: "white",
+          fillOpacity: 0.7
+        };
+      }
+
+      return {
+        fillColor: getColor(feature.properties.schooling_rate_3_5y),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const props = feature.properties;
+      const insignificantData = props.total_children_3_5y < 10;
+
+      const popup = `
+        <div class="text-sm">
+          <strong>${props.name}</strong><br>
+          ${insignificantData
+            ? `<span class="text-gray-500">Données non significatives (moins de 10 enfants)</span><br>`
+            : `Taux de scolarisation 3-5 ans : <strong>${props.schooling_rate_3_5y.toFixed(1)}%</strong><br>`}
+          Enfants de 3 à 5 ans : ${props.total_children_3_5y} enfants<br>
+          Enfants de 3 à 5 ans scolarisés : ${props.schooled_children_3_5y} enfants
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    // Créer une légende pour la carte
+    const legendContainer = document.getElementById("schooling-3-5y-legend");
+    legendContainer.innerHTML = "";
+
+    const legend = document.createElement("div");
+    legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
+
+    // Ajouter une entrée pour les données non significatives
+    const insignificantItem = document.createElement("div");
+    insignificantItem.className = "flex items-center";
+    const insignificantColorBox = document.createElement("div");
+    insignificantColorBox.className = "w-4 h-4 rounded mr-2";
+    insignificantColorBox.style.backgroundColor = "#e5e7eb";
+    const insignificantLabel = document.createElement("span");
+    insignificantLabel.textContent = "Données non significatives (<10 enfants)";
+    insignificantItem.appendChild(insignificantColorBox);
+    insignificantItem.appendChild(insignificantLabel);
+    legend.appendChild(insignificantItem);
+
+    const labels = [
+      `< 85%`,
+      `85% – 90%`,
+      `90% – 95%`,
+      `95% – 100%`,
+      `100%`
+    ];
+
+    for (let i = 0; i < 5; i++) {
+      const item = document.createElement("div");
+      item.className = "flex items-center";
+
+      const colorBox = document.createElement("div");
+      colorBox.className = "w-4 h-4 rounded mr-2";
+      colorBox.style.backgroundColor = colors[i];
+
+      const label = document.createElement("span");
+      label.textContent = labels[i];
+
+      item.appendChild(colorBox);
+      item.appendChild(label);
+      legend.appendChild(item);
+    }
+
+    legendContainer.appendChild(legend);
+  }
+</script>
