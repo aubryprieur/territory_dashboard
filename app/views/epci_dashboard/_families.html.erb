@@ -116,6 +116,134 @@
       influencer les politiques en matière de logement, d'éducation et de services aux familles.
     </p>
   </div>
+
+    <!-- Nouveau bloc pour les familles monoparentales -->
+    <h3 class="text-md font-medium text-gray-800 mb-4 mt-8">Familles monoparentales</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Carte des familles monoparentales -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Répartition des familles monoparentales par commune (<%= @epci_single_parent_data["year"] %>)</h4>
+        <div id="communes-map-single-parent" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+        <div id="single-parent-legend" class="mt-3"></div>
+      </div>
+
+      <!-- Statistiques de synthèse des familles monoparentales -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Statistiques des familles monoparentales</h4>
+
+        <div class="bg-gray-50 p-4 rounded-md mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Pourcentage moyen EPCI -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Moyenne EPCI</h5>
+              <p class="text-xl font-bold text-purple-600">
+                <%= number_to_percentage(@epci_single_parent_data["epci_single_parent_percentage"], precision: 2) %>
+              </p>
+            </div>
+
+            <!-- Répartition pères/mères -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Pères seuls</h5>
+              <p class="text-xl font-bold text-blue-600">
+                <%= number_to_percentage(@epci_single_parent_data["epci_single_father_percentage"], precision: 2) %>
+              </p>
+            </div>
+
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Mères seules</h5>
+              <p class="text-xl font-bold text-pink-600">
+                <%= number_to_percentage(@epci_single_parent_data["epci_single_mother_percentage"], precision: 2) %>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <% if @epci_single_parent_data["communes"].present? %>
+          <%
+            # Calculer quelques statistiques
+            communes = @epci_single_parent_data["communes"]
+            sorted_communes = communes.sort_by { |c| c["single_parent_percentage"] }
+
+            min_commune = sorted_communes.first
+            max_commune = sorted_communes.last
+
+            median_index = communes.length / 2
+            median_commune = sorted_communes[median_index]
+          %>
+
+          <div class="overflow-x-auto mt-4">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Indicateur
+                  </th>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Commune
+                  </th>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Taux
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Commune avec le taux le plus bas -->
+                <tr>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Taux le plus bas
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= min_commune["name"] %>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(min_commune["single_parent_percentage"], precision: 2) %>
+                  </td>
+                </tr>
+
+                <!-- Commune médiane -->
+                <tr>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Valeur médiane
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= median_commune["name"] %>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(median_commune["single_parent_percentage"], precision: 2) %>
+                  </td>
+                </tr>
+
+                <!-- Commune avec le taux le plus élevé -->
+                <tr>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Taux le plus élevé
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= max_commune["name"] %>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(max_commune["single_parent_percentage"], precision: 2) %>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Boîte d'information explicative pour les familles monoparentales -->
+    <div class="mt-6 bg-gray-50 p-4 rounded-md">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">À propos des familles monoparentales</h4>
+      <p class="text-sm text-gray-600">
+        Cette carte présente le pourcentage de familles monoparentales parmi l'ensemble des ménages de chaque commune.
+        Cet indicateur est important pour orienter les politiques sociales, l'accès aux services de garde d'enfants,
+        et les aides spécifiques. Les familles monoparentales peuvent avoir des besoins particuliers en termes de
+        logement, d'emploi flexible et de soutien communautaire.
+      </p>
+    </div>
+  </div>
 </div>
 
 <!-- Données JSON pour la carte -->
@@ -123,9 +251,16 @@
   <%= raw(@communes_families_geojson) %>
 </script>
 
+<!-- Ajouter les données JSON pour les familles monoparentales -->
+<script type="application/json" id="communes-single-parent-geojson">
+  <%= raw(@communes_single_parent_geojson) %>
+</script>
+
 <script>
   document.addEventListener("turbo:load", function () {
     initializeFamiliesMap();
+    initializeSingleParentMap();
+
   });
 
   function initializeFamiliesMap() {
@@ -183,6 +318,95 @@
 
     // Créer une légende pour la carte
     const legendContainer = document.getElementById("families-legend");
+    legendContainer.innerHTML = "";
+
+    const legend = document.createElement("div");
+    legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
+
+    const labels = [
+      `≤ ${breaks[1].toFixed(2)}%`,
+      `${breaks[1].toFixed(2)}% – ${breaks[2].toFixed(2)}%`,
+      `${breaks[2].toFixed(2)}% – ${breaks[3].toFixed(2)}%`,
+      `≥ ${breaks[3].toFixed(2)}%`
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      const item = document.createElement("div");
+      item.className = "flex items-center";
+
+      const colorBox = document.createElement("div");
+      colorBox.className = "w-4 h-4 rounded mr-2";
+      colorBox.style.backgroundColor = colors[i];
+
+      const label = document.createElement("span");
+      label.textContent = labels[i];
+
+      item.appendChild(colorBox);
+      item.appendChild(label);
+      legend.appendChild(item);
+    }
+
+    legendContainer.appendChild(legend);
+  }
+
+   // Ajouter une nouvelle fonction pour la carte des familles monoparentales
+  function initializeSingleParentMap() {
+    const mapElement = document.getElementById("communes-map-single-parent");
+    const geojsonElement = document.getElementById("communes-single-parent-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.single_parent_percentage).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 10], [values[Math.floor(values.length/2)] || 20], [values[values.length-1] || 30]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour les familles monoparentales (teintes de violet)
+    const colors = ["#f2d4f7", "#dcb0e3", "#c77dcd", "#9945b0"];
+
+    function getColor(percentage) {
+      return percentage > breaks[3] ? colors[3] :
+             percentage > breaks[2] ? colors[2] :
+             percentage > breaks[1] ? colors[1] :
+                                     colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.single_parent_percentage),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Familles monoparentales : ${feature.properties.single_parent_percentage.toFixed(2)}%<br>
+          Nombre : ${feature.properties.single_parent_count} familles<br>
+          Pères seuls : ${feature.properties.single_fathers_percentage.toFixed(2)}%<br>
+          Mères seules : ${feature.properties.single_mothers_percentage.toFixed(2)}%<br>
+          Total ménages : ${feature.properties.total_households}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    // Créer une légende pour la carte
+    const legendContainer = document.getElementById("single-parent-legend");
     legendContainer.innerHTML = "";
 
     const legend = document.createElement("div");

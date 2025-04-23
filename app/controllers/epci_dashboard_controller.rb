@@ -18,6 +18,7 @@ class EpciDashboardController < ApplicationController
     @epci_revenues_data = Api::EpciRevenuesService.get_epci_revenues(@epci_code)
     @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(@epci_code)
     @epci_families_data = Api::EpciFamiliesService.get_couples_with_children(@epci_code)
+    @epci_single_parent_data = Api::EpciFamiliesService.get_single_parent_families(@epci_code)
 
     # Préparer les données pour la pyramide des âges de l'EPCI
     @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
@@ -61,6 +62,7 @@ class EpciDashboardController < ApplicationController
       prepare_births_geojson_data if @epci_births_data.present?
       prepare_revenues_geojson_data if @epci_revenues_data.present?
       prepare_families_geojson_data if @epci_families_data.present?
+      prepare_single_parent_geojson_data if @epci_single_parent_data.present?
     end
   end
 
@@ -293,6 +295,43 @@ class EpciDashboardController < ApplicationController
     @communes_families_geojson = {
       type: "FeatureCollection",
       features: features_families
+    }.to_json
+  end
+
+  def prepare_single_parent_geojson_data
+    # Préparer le GeoJSON pour les familles monoparentales par commune
+    features_single_parent = []
+
+    @epci_single_parent_data["communes"].each do |commune|
+      # Récupérer la géométrie depuis la base de données
+      geometry = CommuneGeometry.find_by(code_insee: commune["code"])
+      next unless geometry&.geojson.present?
+
+      # Récupérer le pourcentage de familles monoparentales
+      single_parent_percentage = commune["single_parent_percentage"].to_f
+
+      # Créer un feature GeoJSON avec les propriétés dont nous avons besoin
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          single_parent_percentage: single_parent_percentage,
+          single_parent_count: commune["single_parent_families"].round,
+          single_fathers_percentage: commune["single_father_percentage"].to_f,
+          single_mothers_percentage: commune["single_mother_percentage"].to_f,
+          total_households: commune["total_households"].round,
+          year: @epci_single_parent_data["year"]
+        },
+        geometry: JSON.parse(geometry.geojson)
+      }
+
+      features_single_parent << feature
+    end
+
+    @communes_single_parent_geojson = {
+      type: "FeatureCollection",
+      features: features_single_parent
     }.to_json
   end
 end
