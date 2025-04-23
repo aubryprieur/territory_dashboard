@@ -19,6 +19,7 @@ class EpciDashboardController < ApplicationController
     @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(@epci_code)
     @epci_families_data = Api::EpciFamiliesService.get_couples_with_children(@epci_code)
     @epci_single_parent_data = Api::EpciFamiliesService.get_single_parent_families(@epci_code)
+    @epci_large_families_data = Api::EpciFamiliesService.get_large_families(@epci_code)
 
     # Préparer les données pour la pyramide des âges de l'EPCI
     @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
@@ -63,6 +64,7 @@ class EpciDashboardController < ApplicationController
       prepare_revenues_geojson_data if @epci_revenues_data.present?
       prepare_families_geojson_data if @epci_families_data.present?
       prepare_single_parent_geojson_data if @epci_single_parent_data.present?
+      prepare_large_families_geojson_data if @epci_large_families_data.present?
     end
   end
 
@@ -332,6 +334,43 @@ class EpciDashboardController < ApplicationController
     @communes_single_parent_geojson = {
       type: "FeatureCollection",
       features: features_single_parent
+    }.to_json
+  end
+
+  def prepare_large_families_geojson_data
+    # Préparer le GeoJSON pour les familles nombreuses par commune
+    features_large_families = []
+
+    @epci_large_families_data["communes"].each do |commune|
+      # Récupérer la géométrie depuis la base de données
+      geometry = CommuneGeometry.find_by(code_insee: commune["code"])
+      next unless geometry&.geojson.present?
+
+      # Récupérer le pourcentage de familles nombreuses
+      large_families_percentage = commune["large_families_percentage"].to_f
+
+      # Créer un feature GeoJSON avec les propriétés dont nous avons besoin
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          large_families_percentage: large_families_percentage,
+          large_families_count: commune["large_families"].round,
+          families_3_children_percentage: commune["families_3_children_percentage"].to_f,
+          families_4_plus_percentage: commune["families_4_plus_percentage"].to_f,
+          total_households: commune["total_households"].round,
+          year: @epci_large_families_data["year"]
+        },
+        geometry: JSON.parse(geometry.geojson)
+      }
+
+      features_large_families << feature
+    end
+
+    @communes_large_families_geojson = {
+      type: "FeatureCollection",
+      features: features_large_families
     }.to_json
   end
 end

@@ -243,6 +243,133 @@
         logement, d'emploi flexible et de soutien communautaire.
       </p>
     </div>
+
+    <!-- Nouveau bloc pour les familles nombreuses - à ajouter après la section des familles monoparentales -->
+    <h3 class="text-md font-medium text-gray-800 mb-4 mt-8">Familles nombreuses</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Carte des familles nombreuses -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Répartition des familles nombreuses par commune (<%= @epci_large_families_data["year"] %>)</h4>
+        <div id="communes-map-large-families" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+        <div id="large-families-legend" class="mt-3"></div>
+      </div>
+
+      <!-- Statistiques de synthèse des familles nombreuses -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Statistiques des familles nombreuses</h4>
+
+        <div class="bg-gray-50 p-4 rounded-md mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Pourcentage moyen EPCI -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">Moyenne EPCI</h5>
+              <p class="text-xl font-bold text-blue-600">
+                <%= number_to_percentage(@epci_large_families_data["epci_large_families_percentage"], precision: 2) %>
+              </p>
+            </div>
+
+            <!-- Répartition 3 enfants/4+ enfants -->
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">3 enfants</h5>
+              <p class="text-xl font-bold text-green-600">
+                <%= number_to_percentage(@epci_large_families_data["epci_families_3_children_percentage"], precision: 2) %>
+              </p>
+            </div>
+
+            <div class="bg-white p-3 rounded shadow-sm">
+              <h5 class="text-sm font-medium text-gray-700 mb-1">4 enfants ou +</h5>
+              <p class="text-xl font-bold text-yellow-600">
+                <%= number_to_percentage(@epci_large_families_data["epci_families_4_plus_percentage"], precision: 2) %>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <% if @epci_large_families_data["communes"].present? %>
+          <%
+            # Calculer quelques statistiques
+            communes = @epci_large_families_data["communes"]
+            sorted_communes = communes.sort_by { |c| c["large_families_percentage"] }
+
+            min_commune = sorted_communes.first
+            max_commune = sorted_communes.last
+
+            median_index = communes.length / 2
+            median_commune = sorted_communes[median_index]
+          %>
+
+          <div class="overflow-x-auto mt-4">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Indicateur
+                  </th>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Commune
+                  </th>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Taux
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Commune avec le taux le plus bas -->
+                <tr>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Taux le plus bas
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= min_commune["name"] %>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(min_commune["large_families_percentage"], precision: 2) %>
+                  </td>
+                </tr>
+
+                <!-- Commune médiane -->
+                <tr>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Valeur médiane
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= median_commune["name"] %>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(median_commune["large_families_percentage"], precision: 2) %>
+                  </td>
+                </tr>
+
+                <!-- Commune avec le taux le plus élevé -->
+                <tr>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Taux le plus élevé
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= max_commune["name"] %>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <%= number_to_percentage(max_commune["large_families_percentage"], precision: 2) %>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Boîte d'information explicative pour les familles nombreuses -->
+    <div class="mt-6 bg-gray-50 p-4 rounded-md">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">À propos des familles nombreuses</h4>
+      <p class="text-sm text-gray-600">
+        Cette carte représente le pourcentage de familles nombreuses (3 enfants ou plus) parmi l'ensemble des ménages de chaque commune.
+        Cet indicateur permet d'identifier les zones où les besoins en logements familiaux, en équipements scolaires et en services
+        adaptés aux familles nombreuses sont les plus importants. La présence de familles nombreuses peut également influencer
+        les politiques de transport, d'activités périscolaires et de soutien à la parentalité.
+      </p>
+    </div>
   </div>
 </div>
 
@@ -256,11 +383,15 @@
   <%= raw(@communes_single_parent_geojson) %>
 </script>
 
+<script type="application/json" id="communes-large-families-geojson">
+  <%= raw(@communes_large_families_geojson) %>
+</script>
+
 <script>
   document.addEventListener("turbo:load", function () {
     initializeFamiliesMap();
     initializeSingleParentMap();
-
+    initializeLargeFamiliesMap();
   });
 
   function initializeFamiliesMap() {
@@ -407,6 +538,95 @@
 
     // Créer une légende pour la carte
     const legendContainer = document.getElementById("single-parent-legend");
+    legendContainer.innerHTML = "";
+
+    const legend = document.createElement("div");
+    legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
+
+    const labels = [
+      `≤ ${breaks[1].toFixed(2)}%`,
+      `${breaks[1].toFixed(2)}% – ${breaks[2].toFixed(2)}%`,
+      `${breaks[2].toFixed(2)}% – ${breaks[3].toFixed(2)}%`,
+      `≥ ${breaks[3].toFixed(2)}%`
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      const item = document.createElement("div");
+      item.className = "flex items-center";
+
+      const colorBox = document.createElement("div");
+      colorBox.className = "w-4 h-4 rounded mr-2";
+      colorBox.style.backgroundColor = colors[i];
+
+      const label = document.createElement("span");
+      label.textContent = labels[i];
+
+      item.appendChild(colorBox);
+      item.appendChild(label);
+      legend.appendChild(item);
+    }
+
+    legendContainer.appendChild(legend);
+  }
+
+  // Ajouter une nouvelle fonction pour la carte des familles nombreuses
+  function initializeLargeFamiliesMap() {
+    const mapElement = document.getElementById("communes-map-large-families");
+    const geojsonElement = document.getElementById("communes-large-families-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.large_families_percentage).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 5], [values[Math.floor(values.length/2)] || 10], [values[values.length-1] || 15]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour les familles nombreuses (teintes de bleu/vert)
+    const colors = ["#f1faee", "#a8dadc", "#457b9d", "#1d3557"];
+
+    function getColor(percentage) {
+      return percentage > breaks[3] ? colors[3] :
+             percentage > breaks[2] ? colors[2] :
+             percentage > breaks[1] ? colors[1] :
+                                    colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.large_families_percentage),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Familles nombreuses : ${feature.properties.large_families_percentage.toFixed(2)}%<br>
+          Nombre : ${feature.properties.large_families_count} familles<br>
+          3 enfants : ${feature.properties.families_3_children_percentage.toFixed(2)}%<br>
+          4 enfants ou + : ${feature.properties.families_4_plus_percentage.toFixed(2)}%<br>
+          Total ménages : ${feature.properties.total_households}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    // Créer une légende pour la carte
+    const legendContainer = document.getElementById("large-families-legend");
     legendContainer.innerHTML = "";
 
     const legend = document.createElement("div");

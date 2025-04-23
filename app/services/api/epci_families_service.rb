@@ -7,5 +7,9 @@ module Api
     def self.get_single_parent_families(epci_code)
       ApiClientService.instance.get("/epci/families/single-parent/#{epci_code}")
     end
+
+    def self.get_large_families(epci_code)
+      ApiClientService.instance.get("/epci/families/large-families/#{epci_code}")
+    end
   end
 end
