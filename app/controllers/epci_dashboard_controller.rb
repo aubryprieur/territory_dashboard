@@ -17,6 +17,7 @@ class EpciDashboardController < ApplicationController
     @epci_historical_data = Api::EpciHistoricalService.get_historical_data(@epci_code)
     @epci_revenues_data = Api::EpciRevenuesService.get_epci_revenues(@epci_code)
     @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(@epci_code)
+    @epci_families_data = Api::EpciFamiliesService.get_couples_with_children(@epci_code)
 
     # Préparer les données pour la pyramide des âges de l'EPCI
     @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
@@ -59,6 +60,7 @@ class EpciDashboardController < ApplicationController
       # Ajouter l'appel à la méthode de préparation des données
       prepare_births_geojson_data if @epci_births_data.present?
       prepare_revenues_geojson_data if @epci_revenues_data.present?
+      prepare_families_geojson_data if @epci_families_data.present?
     end
   end
 
@@ -257,5 +259,40 @@ class EpciDashboardController < ApplicationController
 
     # Stocker l'année la plus récente pour l'affichage
     @epci_latest_revenue_year = latest_year.to_i
+  end
+
+  def prepare_families_geojson_data
+    # Préparer le GeoJSON pour les couples avec enfants par commune
+    features_families = []
+
+    @epci_families_data["communes"].each do |commune|
+      # Récupérer la géométrie depuis la base de données
+      geometry = CommuneGeometry.find_by(code_insee: commune["code"])
+      next unless geometry&.geojson.present?
+
+      # Récupérer le pourcentage de couples avec enfants
+      couples_percentage = commune["couples_with_children_percentage"].to_f
+
+      # Créer un feature GeoJSON avec les propriétés dont nous avons besoin
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          couples_percentage: couples_percentage,
+          couples_count: commune["couples_with_children"].round,
+          total_households: commune["total_households"].round,
+          year: @epci_families_data["year"]
+        },
+        geometry: JSON.parse(geometry.geojson)
+      }
+
+      features_families << feature
+    end
+
+    @communes_families_geojson = {
+      type: "FeatureCollection",
+      features: features_families
+    }.to_json
   end
 end
