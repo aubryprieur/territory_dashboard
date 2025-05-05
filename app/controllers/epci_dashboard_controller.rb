@@ -21,6 +21,7 @@ class EpciDashboardController < ApplicationController
     @epci_single_parent_data = Api::EpciFamiliesService.get_single_parent_families(@epci_code)
     @epci_large_families_data = Api::EpciFamiliesService.get_large_families(@epci_code)
     @epci_schooling_communes_data = Api::EpciSchoolingService.get_schooling_by_communes(@epci_code)
+    @epci_schooling_data = Api::SchoolingService.get_epci_schooling(@epci_code)
 
     # Préparer les données pour la pyramide des âges de l'EPCI
     @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
@@ -29,6 +30,7 @@ class EpciDashboardController < ApplicationController
     @france_children_data = Api::PopulationService.get_france_children_data
     @france_revenue_data = Api::RevenueService.get_median_revenues_france
     @france_family_data = Api::FamilyService.get_france_families
+    @france_schooling_data = Api::SchoolingService.get_france_schooling
 
     # Déterminer le département et la région principale de l'EPCI
     epci_object = Epci.find_by(epci: @epci_code)
@@ -46,6 +48,7 @@ class EpciDashboardController < ApplicationController
         @department_name = "Département " + main_department_code
         @department_revenue_data = Api::RevenueService.get_median_revenues_department(main_department_code)
         @department_family_data = Api::FamilyService.get_department_families(@department_code)
+        @department_schooling_data = Api::SchoolingService.get_department_schooling(@department_code)
       end
 
       if main_region_code.present?
@@ -54,6 +57,7 @@ class EpciDashboardController < ApplicationController
         @region_name = "Région " + main_region_code
         @region_revenue_data = Api::RevenueService.get_median_revenues_region(main_region_code)
         @region_family_data = Api::FamilyService.get_region_families(@region_code)
+        @region_schooling_data = Api::SchoolingService.get_region_schooling(@region_code)
       end
 
       # Récupérer les données géographiques des communes de l'EPCI
