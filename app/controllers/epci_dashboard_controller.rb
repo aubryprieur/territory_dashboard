@@ -23,6 +23,8 @@ class EpciDashboardController < ApplicationController
     @epci_schooling_communes_data = Api::EpciSchoolingService.get_schooling_by_communes(@epci_code)
     @epci_schooling_data = Api::SchoolingService.get_epci_schooling(@epci_code)
     @epci_childcare_communes_data = Api::EpciChildcareService.get_coverage_by_communes(@epci_code)
+    @epci_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_epci(@epci_code)
+    @epci_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_epci(@epci_code)
 
 # Appeler une nouvelle méthode pour préparer les données GeoJSON
 prepare_childcare_geojson_data if @epci_childcare_communes_data.present?
@@ -36,6 +38,8 @@ prepare_childcare_geojson_data if @epci_childcare_communes_data.present?
     @france_family_data = Api::FamilyService.get_france_families
     @france_schooling_data = Api::SchoolingService.get_france_schooling
     @france_childcare_data = Api::ChildcareService.get_coverage_france
+    @france_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_france
+    @france_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_france
 
     # Déterminer le département et la région principale de l'EPCI
     epci_object = Epci.find_by(epci: @epci_code)
@@ -55,6 +59,8 @@ prepare_childcare_geojson_data if @epci_childcare_communes_data.present?
         @department_family_data = Api::FamilyService.get_department_families(@department_code)
         @department_schooling_data = Api::SchoolingService.get_department_schooling(@department_code)
         @department_childcare_data = Api::ChildcareService.get_coverage_by_department(main_department_code)
+        @department_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_department(main_department_code)
+        @department_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_department(main_department_code)
       end
 
       if main_region_code.present?
@@ -65,6 +71,8 @@ prepare_childcare_geojson_data if @epci_childcare_communes_data.present?
         @region_family_data = Api::FamilyService.get_region_families(@region_code)
         @region_schooling_data = Api::SchoolingService.get_region_schooling(@region_code)
         @region_childcare_data = Api::ChildcareService.get_coverage_by_region(main_region_code)
+        @region_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_region(main_region_code)
+        @region_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_region(main_region_code)
       end
 
       # Récupérer les données géographiques des communes de l'EPCI

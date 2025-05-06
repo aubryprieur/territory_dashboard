@@ -23,6 +23,7 @@ pin "charts/age_pyramid_chart", to: "charts/age_pyramid_chart.js"
 pin "charts/epci_communes_chart", to: "charts/epci_communes_chart.js"
 pin "charts/epci_age_pyramid_chart", to: "charts/epci_age_pyramid_chart.js"
 pin "charts/epci_population_history_chart", to: "charts/epci_population_history_chart.js"
+pin "charts/epci_family_employment_chart", to: "charts/epci_family_employment_chart.js"
 
 # leaflet
 pin "leaflet", to: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
