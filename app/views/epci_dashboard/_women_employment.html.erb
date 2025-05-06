@@ -1,0 +1,211 @@
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-4">Emploi des femmes</h2>
+
+  <!-- En-tête avec les statistiques globales -->
+  <div class="bg-pink-50 p-4 rounded-lg mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <h3 class="text-sm font-medium text-pink-800 mb-1">Taux d'activité moyen</h3>
+        <p class="text-2xl font-bold text-pink-900">
+          <%= number_to_percentage(@epci_women_employment_data&.dig("epci_activity_rate") || 0, precision: 1) %>
+        </p>
+        <p class="text-sm text-pink-600">
+          des femmes de 15 à 64 ans sur l'EPCI
+        </p>
+      </div>
+      <div>
+        <h3 class="text-sm font-medium text-pink-800 mb-1">Taux d'emploi moyen</h3>
+        <p class="text-2xl font-bold text-pink-900">
+          <%= number_to_percentage(@epci_women_employment_data&.dig("epci_employment_rate") || 0, precision: 1) %>
+        </p>
+        <p class="text-sm text-pink-600">
+          des femmes de 15 à 64 ans sur l'EPCI
+        </p>
+      </div>
+      <div>
+        <h3 class="text-sm font-medium text-pink-800 mb-1">Taux de temps partiel</h3>
+        <p class="text-2xl font-bold text-pink-900">
+          <%= number_to_percentage(@epci_women_employment_data&.dig("epci_part_time_rate_15_64") || 0, precision: 1) %>
+        </p>
+        <p class="text-sm text-pink-600">
+          des femmes en emploi (15-64 ans)
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Carte des taux d'activité des femmes -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Carte des taux d'activité des femmes par commune</h4>
+      <div id="communes-map-women-employment" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="women-employment-legend" class="mt-3"></div>
+    </div>
+
+    <!-- Tableau des communes avec les taux extrêmes -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Communes aux taux extrêmes</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commune</th>
+              <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux d'activité</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <%
+              # Communes avec les taux les plus élevés
+              top_communes = @epci_women_employment_data["communes"]
+                              .sort_by { |c| -c["activity_rate"].to_f }
+                              .first(3)
+
+              # Communes avec les taux les plus bas
+              bottom_communes = @epci_women_employment_data["communes"]
+                              .sort_by { |c| c["activity_rate"].to_f }
+                              .first(3)
+            %>
+
+            <!-- Entête pour les communes avec les taux les plus élevés -->
+            <tr>
+              <td colspan="2" class="px-3 py-2 text-sm font-medium text-gray-900 bg-gray-100">Taux les plus élevés</td>
+            </tr>
+
+            <% top_communes.each do |commune| %>
+              <tr>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-green-600">
+                  <%= number_to_percentage(commune["activity_rate"], precision: 1) %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Entête pour les communes avec les taux les plus bas -->
+            <tr>
+              <td colspan="2" class="px-3 py-2 text-sm font-medium text-gray-900 bg-gray-100">Taux les plus bas</td>
+            </tr>
+
+            <% bottom_communes.each do |commune| %>
+              <tr>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-red-600">
+                  <%= number_to_percentage(commune["activity_rate"], precision: 1) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Boîte d'information explicative -->
+  <div class="mt-6 bg-gray-50 p-4 rounded-md">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">À propos du taux d'activité des femmes</h4>
+    <p class="text-sm text-gray-600">
+      Le taux d'activité représente la proportion de femmes de 15 à 64 ans qui sont actives sur le marché du travail (en emploi ou au chômage).
+      Un taux d'activité élevé indique une forte participation des femmes à la vie économique. Ce taux peut être influencé par différents facteurs,
+      comme l'offre de services de garde d'enfants, le niveau d'éducation, ou encore la structure économique du territoire.
+    </p>
+  </div>
+</div>
+
+<!-- Données JSON pour la carte -->
+<script type="application/json" id="communes-women-employment-geojson">
+  <%= raw(@communes_women_employment_geojson) %>
+</script>
+
+<script>
+  document.addEventListener("turbo:load", function () {
+    initializeWomenEmploymentMap();
+  });
+
+  function initializeWomenEmploymentMap() {
+    const mapElement = document.getElementById("communes-map-women-employment");
+    const geojsonElement = document.getElementById("communes-women-employment-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.activity_rate).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [55], [65], [75], [85]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour le taux d'activité (du plus faible au plus élevé)
+    const colors = ["#fee0d2", "#fc9272", "#fb6a4a", "#de2d26", "#a50f15"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.activity_rate),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Taux d'activité : <strong>${feature.properties.activity_rate.toFixed(1)}%</strong><br>
+          Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%<br>
+          Temps partiel : ${feature.properties.part_time_rate_15_64.toFixed(1)}%<br>
+          Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    // Créer une légende pour la carte
+    const legendContainer = document.getElementById("women-employment-legend");
+    legendContainer.innerHTML = "";
+
+    const legend = document.createElement("div");
+    legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
+
+    const labels = [
+      `< ${breaks[1].toFixed(1)}%`,
+      `${breaks[1].toFixed(1)}% - ${breaks[2].toFixed(1)}%`,
+      `${breaks[2].toFixed(1)}% - ${breaks[3].toFixed(1)}%`,
+      `${breaks[3].toFixed(1)}% - ${breaks[4].toFixed(1)}%`,
+      `> ${breaks[4].toFixed(1)}%`
+    ];
+
+    for (let i = 0; i < 5; i++) {
+      const item = document.createElement("div");
+      item.className = "flex items-center";
+
+      const colorBox = document.createElement("div");
+      colorBox.className = "w-4 h-4 rounded mr-2";
+      colorBox.style.backgroundColor = colors[i];
+
+      const label = document.createElement("span");
+      label.textContent = labels[i];
+
+      item.appendChild(colorBox);
+      item.appendChild(label);
+      legend.appendChild(item);
+    }
+
+    legendContainer.appendChild(legend);
+  }
+</script>
