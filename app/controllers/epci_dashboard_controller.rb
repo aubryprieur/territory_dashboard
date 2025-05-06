@@ -22,9 +22,13 @@ class EpciDashboardController < ApplicationController
     @epci_large_families_data = Api::EpciFamiliesService.get_large_families(@epci_code)
     @epci_schooling_communes_data = Api::EpciSchoolingService.get_schooling_by_communes(@epci_code)
     @epci_schooling_data = Api::SchoolingService.get_epci_schooling(@epci_code)
+    @epci_childcare_communes_data = Api::EpciChildcareService.get_coverage_by_communes(@epci_code)
 
+# Appeler une nouvelle méthode pour préparer les données GeoJSON
+prepare_childcare_geojson_data if @epci_childcare_communes_data.present?
     # Préparer les données pour la pyramide des âges de l'EPCI
     @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
+prepare_childcare_geojson_data if @epci_childcare_communes_data.present?
 
     # Récupérer les données France
     @france_children_data = Api::PopulationService.get_france_children_data
@@ -418,6 +422,39 @@ class EpciDashboardController < ApplicationController
     @communes_schooling_geojson = {
       type: "FeatureCollection",
       features: features_schooling
+    }.to_json
+  end
+
+  def prepare_childcare_geojson_data
+    # Préparer le GeoJSON pour la couverture petite enfance par commune
+    features_childcare = []
+
+    @epci_childcare_communes_data["communes"].each do |commune|
+      # Récupérer la géométrie depuis la base de données
+      geometry = CommuneGeometry.find_by(code_insee: commune["code"])
+      next unless geometry&.geojson.present?
+
+      # Récupérer le taux de couverture global
+      global_coverage_rate = commune["global_coverage_rate"].to_f
+
+      # Créer un feature GeoJSON avec les propriétés
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          global_coverage_rate: global_coverage_rate,
+          year: @epci_childcare_communes_data["year"]
+        },
+        geometry: JSON.parse(geometry.geojson)
+      }
+
+      features_childcare << feature
+    end
+
+    @communes_childcare_geojson = {
+      type: "FeatureCollection",
+      features: features_childcare
     }.to_json
   end
 end
