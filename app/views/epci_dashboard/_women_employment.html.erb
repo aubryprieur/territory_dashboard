@@ -108,6 +108,165 @@
       comme l'offre de services de garde d'enfants, le niveau d'éducation, ou encore la structure économique du territoire.
     </p>
   </div>
+
+  <!-- Après la div de la grille actuelle, ajoutez ceci : -->
+  <div class="mt-8">
+    <h3 class="text-md font-medium text-gray-800 mb-4">Taux d'emploi des femmes</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Carte des taux d'emploi des femmes -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Carte des taux d'emploi des femmes par commune</h4>
+        <div id="communes-map-women-employment-rate" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+        <div id="women-employment-rate-legend" class="mt-3"></div>
+      </div>
+
+      <!-- Statistiques complémentaires -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Écart entre taux d'activité et taux d'emploi</h4>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commune</th>
+                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Écart (points)</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <%
+                # Communes avec les écarts les plus importants
+                gap_communes = @epci_women_employment_data["communes"]
+                                .map { |c| c.merge({"gap" => c["activity_rate"].to_f - c["employment_rate"].to_f}) }
+                                .sort_by { |c| -c["gap"] }
+                                .first(5)
+              %>
+
+              <!-- Entête pour les communes avec les écarts les plus importants -->
+              <tr>
+                <td colspan="2" class="px-3 py-2 text-sm font-medium text-gray-900 bg-gray-100">Écarts les plus importants</td>
+              </tr>
+
+              <% gap_communes.each do |commune| %>
+                <tr>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-red-600">
+                    +<%= number_with_precision(commune["gap"], precision: 1) %> pts
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 p-4 bg-gray-50 rounded-md">
+          <p class="text-sm text-gray-600">
+            L'écart entre le taux d'activité et le taux d'emploi représente approximativement le taux de chômage dans la population féminine.
+            Un écart important peut indiquer des difficultés d'accès à l'emploi pour les femmes sur ce territoire.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mt-6 bg-gray-50 p-4 rounded-md">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">À propos des indicateurs d'emploi des femmes</h4>
+    <p class="text-sm text-gray-600 mb-2">
+      <strong>Le taux d'activité</strong> représente la proportion de femmes de 15 à 64 ans qui sont actives sur le marché du travail (en emploi ou au chômage).
+      Un taux d'activité élevé indique une forte participation des femmes à la vie économique.
+    </p>
+    <p class="text-sm text-gray-600 mb-2">
+      <strong>Le taux d'emploi</strong> mesure la proportion de femmes de 15 à 64 ans qui occupent effectivement un emploi.
+      C'est un indicateur de l'insertion effective des femmes sur le marché du travail.
+    </p>
+    <p class="text-sm text-gray-600">
+      <strong>L'écart</strong> entre ces deux taux donne une approximation du taux de chômage des femmes sur le territoire.
+      Ces indicateurs peuvent être influencés par différents facteurs comme l'offre de services de garde d'enfants,
+      le niveau d'éducation, ou encore la structure économique du territoire.
+    </p>
+  </div>
+
+  <!-- Après la section du taux d'emploi, ajoutez ceci : -->
+  <div class="mt-8">
+    <h3 class="text-md font-medium text-gray-800 mb-4">Temps partiel des femmes</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Carte des taux de temps partiel des femmes -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Carte des taux de temps partiel des femmes par commune</h4>
+        <div id="communes-map-women-part-time" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+        <div id="women-part-time-legend" class="mt-3"></div>
+      </div>
+
+      <!-- Analyse complémentaire -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Les communes aux extrêmes</h4>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commune</th>
+                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux de temps partiel</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <%
+                # Communes avec les taux les plus élevés
+                high_part_time = @epci_women_employment_data["communes"]
+                                .sort_by { |c| -c["part_time_rate_15_64"].to_f }
+                                .first(3)
+
+                # Communes avec les taux les plus bas
+                low_part_time = @epci_women_employment_data["communes"]
+                                .sort_by { |c| c["part_time_rate_15_64"].to_f }
+                                .first(3)
+              %>
+
+              <!-- Entête pour les communes avec les taux les plus élevés -->
+              <tr>
+                <td colspan="2" class="px-3 py-2 text-sm font-medium text-gray-900 bg-gray-100">Taux de temps partiel les plus élevés</td>
+              </tr>
+
+              <% high_part_time.each do |commune| %>
+                <tr>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-purple-600">
+                    <%= number_to_percentage(commune["part_time_rate_15_64"], precision: 1) %>
+                  </td>
+                </tr>
+              <% end %>
+
+              <!-- Entête pour les communes avec les taux les plus bas -->
+              <tr>
+                <td colspan="2" class="px-3 py-2 text-sm font-medium text-gray-900 bg-gray-100">Taux de temps partiel les plus bas</td>
+              </tr>
+
+              <% low_part_time.each do |commune| %>
+                <tr>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-blue-600">
+                    <%= number_to_percentage(commune["part_time_rate_15_64"], precision: 1) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 p-4 bg-gray-50 rounded-md">
+          <h5 class="text-sm font-medium text-gray-700 mb-2">Corrélations potentielles</h5>
+          <p class="text-sm text-gray-600">
+            Le taux de temps partiel peut être corrélé à plusieurs facteurs :
+          </p>
+          <ul class="mt-2 text-sm text-gray-600 space-y-1 pl-5 list-disc">
+            <li>La présence d'enfants en bas âge (nécessité de concilier vie familiale et professionnelle)</li>
+            <li>La structure économique du territoire (certains secteurs proposant davantage d'emplois à temps partiel)</li>
+            <li>L'offre de services de garde d'enfants (un taux de couverture faible peut entraîner un recours plus important au temps partiel)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 </div>
 
 <!-- Données JSON pour la carte -->
@@ -118,6 +277,8 @@
 <script>
   document.addEventListener("turbo:load", function () {
     initializeWomenEmploymentMap();
+    initializeWomenEmploymentRateMap();
+    initializeWomenPartTimeMap();
   });
 
   function initializeWomenEmploymentMap() {
@@ -208,4 +369,185 @@
 
     legendContainer.appendChild(legend);
   }
+
+  function initializeWomenEmploymentRateMap() {
+    const mapElement = document.getElementById("communes-map-women-employment-rate");
+    const geojsonElement = document.getElementById("communes-women-employment-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.employment_rate).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [50], [60], [70], [80]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour le taux d'emploi (du plus faible au plus élevé)
+    // Utilisation d'une palette différente pour distinguer des taux d'activité
+    const colors = ["#edf8fb", "#b3cde3", "#8c96c6", "#8856a7", "#810f7c"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.employment_rate),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Taux d'emploi : <strong>${feature.properties.employment_rate.toFixed(1)}%</strong><br>
+          Taux d'activité : ${feature.properties.activity_rate.toFixed(1)}%<br>
+          Écart : ${(feature.properties.activity_rate - feature.properties.employment_rate).toFixed(1)} points<br>
+          Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    // Créer une légende pour la carte
+    const legendContainer = document.getElementById("women-employment-rate-legend");
+    legendContainer.innerHTML = "";
+
+    const legend = document.createElement("div");
+    legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
+
+    const labels = [
+      `< ${breaks[1].toFixed(1)}%`,
+      `${breaks[1].toFixed(1)}% - ${breaks[2].toFixed(1)}%`,
+      `${breaks[2].toFixed(1)}% - ${breaks[3].toFixed(1)}%`,
+      `${breaks[3].toFixed(1)}% - ${breaks[4].toFixed(1)}%`,
+      `> ${breaks[4].toFixed(1)}%`
+    ];
+
+    for (let i = 0; i < 5; i++) {
+      const item = document.createElement("div");
+      item.className = "flex items-center";
+
+      const colorBox = document.createElement("div");
+      colorBox.className = "w-4 h-4 rounded mr-2";
+      colorBox.style.backgroundColor = colors[i];
+
+      const label = document.createElement("span");
+      label.textContent = labels[i];
+
+      item.appendChild(colorBox);
+      item.appendChild(label);
+      legend.appendChild(item);
+    }
+
+    legendContainer.appendChild(legend);
+  }
+
+  function initializeWomenPartTimeMap() {
+    const mapElement = document.getElementById("communes-map-women-part-time");
+    const geojsonElement = document.getElementById("communes-women-employment-geojson");
+    if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.part_time_rate_15_64).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [25], [30], [35], [40]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour le taux de temps partiel (du plus faible au plus élevé)
+    // Utilisation d'une palette violette pour distinguer des autres indicateurs
+    const colors = ["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#756bb1"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.part_time_rate_15_64),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Taux de temps partiel : <strong>${feature.properties.part_time_rate_15_64.toFixed(1)}%</strong><br>
+          Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%<br>
+          Taux d'activité : ${feature.properties.activity_rate.toFixed(1)}%<br>
+          Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    map.fitBounds(layer.getBounds());
+
+    // Créer une légende pour la carte
+    const legendContainer = document.getElementById("women-part-time-legend");
+    legendContainer.innerHTML = "";
+
+    const legend = document.createElement("div");
+    legend.className = "flex flex-wrap items-center justify-center space-x-4 text-xs text-gray-700";
+
+    const labels = [
+      `< ${breaks[1].toFixed(1)}%`,
+      `${breaks[1].toFixed(1)}% - ${breaks[2].toFixed(1)}%`,
+      `${breaks[2].toFixed(1)}% - ${breaks[3].toFixed(1)}%`,
+      `${breaks[3].toFixed(1)}% - ${breaks[4].toFixed(1)}%`,
+      `> ${breaks[4].toFixed(1)}%`
+    ];
+
+    for (let i = 0; i < 5; i++) {
+      const item = document.createElement("div");
+      item.className = "flex items-center";
+
+      const colorBox = document.createElement("div");
+      colorBox.className = "w-4 h-4 rounded mr-2";
+      colorBox.style.backgroundColor = colors[i];
+
+      const label = document.createElement("span");
+      label.textContent = labels[i];
+
+      item.appendChild(colorBox);
+      item.appendChild(label);
+      legend.appendChild(item);
+    }
+
+    legendContainer.appendChild(legend);
+  }
+
 </script>
