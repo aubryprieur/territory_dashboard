@@ -42,6 +42,7 @@ class EpciDashboardController < ApplicationController
     @france_childcare_data = Api::ChildcareService.get_coverage_france
     @france_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_france
     @france_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_france
+    @france_employment_data = Api::EmploymentService.get_france_employment
 
     # Déterminer le département et la région principale de l'EPCI
     epci_object = Epci.find_by(epci: @epci_code)
@@ -63,6 +64,7 @@ class EpciDashboardController < ApplicationController
         @department_childcare_data = Api::ChildcareService.get_coverage_by_department(main_department_code)
         @department_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_department(main_department_code)
         @department_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_department(main_department_code)
+        @department_employment_data = Api::EmploymentService.get_department_employment(main_department_code)
       end
 
       if main_region_code.present?
@@ -75,6 +77,7 @@ class EpciDashboardController < ApplicationController
         @region_childcare_data = Api::ChildcareService.get_coverage_by_region(main_region_code)
         @region_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_region(main_region_code)
         @region_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_region(main_region_code)
+        @region_employment_data = Api::EmploymentService.get_region_employment(main_region_code)
       end
 
       # Récupérer les données géographiques des communes de l'EPCI
