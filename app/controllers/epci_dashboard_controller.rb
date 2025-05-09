@@ -26,6 +26,7 @@ class EpciDashboardController < ApplicationController
     @epci_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_epci(@epci_code)
     @epci_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_epci(@epci_code)
     @epci_women_employment_data = Api::EpciWomenEmploymentService.get_employment_by_communes(@epci_code)
+    @epci_domestic_violence_data = Api::EpciDomesticViolenceService.get_domestic_violence_by_communes(@epci_code)
 
     # Appeler une nouvelle méthode pour préparer les données GeoJSON
     prepare_childcare_geojson_data if @epci_childcare_communes_data.present?
@@ -65,6 +66,7 @@ class EpciDashboardController < ApplicationController
         @department_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_department(main_department_code)
         @department_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_department(main_department_code)
         @department_employment_data = Api::EmploymentService.get_department_employment(main_department_code)
+        @department_domestic_violence_data = Api::EpciDomesticViolenceService.get_department_domestic_violence(main_department_code)
       end
 
       if main_region_code.present?
@@ -78,6 +80,7 @@ class EpciDashboardController < ApplicationController
         @region_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_region(main_region_code)
         @region_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_region(main_region_code)
         @region_employment_data = Api::EmploymentService.get_region_employment(main_region_code)
+        @region_domestic_violence_data = Api::EpciDomesticViolenceService.get_region_domestic_violence(main_region_code)
       end
 
       # Récupérer les données géographiques des communes de l'EPCI
@@ -510,4 +513,20 @@ class EpciDashboardController < ApplicationController
     }.to_json
   end
 
+  def extract_domestic_violence_data(data)
+    result = {}
+
+    if data.present? && data["data"].present?
+      violence_data = data["data"].select { |item| item["indicator_class"] == "Coups et blessures volontaires intrafamiliaux" }
+
+      violence_data.each do |item|
+        year = "20#{item["year"]}" # Convertir 16 en "2016"
+        result[year] = item["rate"]
+      end
+    end
+
+    result
+  end
+
+  helper_method :extract_domestic_violence_data
 end
