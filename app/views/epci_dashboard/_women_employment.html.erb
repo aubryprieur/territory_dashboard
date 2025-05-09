@@ -7,7 +7,7 @@
       <div>
         <h3 class="text-sm font-medium text-pink-800 mb-1">Taux d'activité moyen</h3>
         <p class="text-2xl font-bold text-pink-900">
-          <%= number_to_percentage(@epci_women_employment_data&.dig("epci_activity_rate") || 0, precision: 1) %>
+          <%= number_to_percentage(@epci_women_employment_data&.dig("epci_activity_rate") || 0, precision: 2) %>
         </p>
         <p class="text-sm text-pink-600">
           des femmes de 15 à 64 ans sur l'EPCI
@@ -16,7 +16,7 @@
       <div>
         <h3 class="text-sm font-medium text-pink-800 mb-1">Taux d'emploi moyen</h3>
         <p class="text-2xl font-bold text-pink-900">
-          <%= number_to_percentage(@epci_women_employment_data&.dig("epci_employment_rate") || 0, precision: 1) %>
+          <%= number_to_percentage(@epci_women_employment_data&.dig("epci_employment_rate") || 0, precision: 2) %>
         </p>
         <p class="text-sm text-pink-600">
           des femmes de 15 à 64 ans sur l'EPCI
@@ -25,7 +25,7 @@
       <div>
         <h3 class="text-sm font-medium text-pink-800 mb-1">Taux de temps partiel</h3>
         <p class="text-2xl font-bold text-pink-900">
-          <%= number_to_percentage(@epci_women_employment_data&.dig("epci_part_time_rate_15_64") || 0, precision: 1) %>
+          <%= number_to_percentage(@epci_women_employment_data&.dig("epci_part_time_rate_15_64") || 0, precision: 2) %>
         </p>
         <p class="text-sm text-pink-600">
           des femmes en emploi (15-64 ans)
@@ -59,7 +59,7 @@
               <div class="flex items-center">
                 <% epci_rate = @epci_women_employment_data&.dig("epci_activity_rate") %>
                 <span class="<%= epci_rate && epci_rate > 0 ? "font-semibold" : "" %>">
-                  <%= number_to_percentage(epci_rate, precision: 1) %>
+                  <%= number_to_percentage(epci_rate, precision: 2) %>
                 </span>
                 <% if epci_rate && epci_rate > 0 %>
                   <!-- Debug: Type: <%= epci_rate.class %>, Value: <%= epci_rate.inspect %> -->
@@ -81,7 +81,7 @@
                 <div class="flex items-center">
                   <% dept_rate = @department_employment_data&.dig("rates", "activity_rate") %>
                   <span class="<%= dept_rate && dept_rate > 0 ? "font-semibold" : "" %>">
-                    <%= number_to_percentage(dept_rate, precision: 1) %>
+                    <%= number_to_percentage(dept_rate, precision: 2) %>
                   </span>
                   <% if dept_rate && dept_rate > 0 %>
                     <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
@@ -103,7 +103,7 @@
                 <div class="flex items-center">
                   <% region_rate = @region_employment_data&.dig("rates", "activity_rate") %>
                   <span class="<%= region_rate && region_rate > 0 ? "font-semibold" : "" %>">
-                    <%= number_to_percentage(region_rate, precision: 1) %>
+                    <%= number_to_percentage(region_rate, precision: 2) %>
                   </span>
                   <% if region_rate && region_rate > 0 %>
                     <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
@@ -125,7 +125,7 @@
                 <div class="flex items-center">
                   <% france_rate = @france_employment_data&.dig("rates", "activity_rate") %>
                   <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
-                    <%= number_to_percentage(france_rate, precision: 1) %>
+                    <%= number_to_percentage(france_rate, precision: 2) %>
                   </span>
                   <% if france_rate && france_rate > 0 %>
                     <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
@@ -185,7 +185,7 @@
               <tr>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-green-600">
-                  <%= number_to_percentage(commune["activity_rate"], precision: 1) %>
+                  <%= number_to_percentage(commune["activity_rate"], precision: 2) %>
                 </td>
               </tr>
             <% end %>
@@ -199,7 +199,7 @@
               <tr>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-red-600">
-                  <%= number_to_percentage(commune["activity_rate"], precision: 1) %>
+                  <%= number_to_percentage(commune["activity_rate"], precision: 2) %>
                 </td>
               </tr>
             <% end %>
@@ -222,6 +222,116 @@
   <!-- Après la div de la grille actuelle, ajoutez ceci : -->
   <div class="mt-8">
     <h3 class="text-md font-medium text-gray-800 mb-4">Taux d'emploi des femmes</h3>
+
+    <!-- Tableau de comparaison des taux d'emploi -->
+    <div class="mb-6">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Comparaison des taux d'emploi des femmes</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Échelon territorial
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Taux d'emploi des femmes
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour l'EPCI -->
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                <%= @epci_name %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <div class="flex items-center">
+                  <% epci_employment_rate = @epci_women_employment_data&.dig("epci_employment_rate") %>
+                  <span class="<%= epci_employment_rate && epci_employment_rate > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_percentage(epci_employment_rate, precision: 2) %>
+                  </span>
+                  <% if epci_employment_rate && epci_employment_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= epci_employment_rate %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Ligne pour le département -->
+            <% if @department_employment_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= @department_name || "Département" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <div class="flex items-center">
+                    <% dept_employment_rate = @department_employment_data&.dig("rates", "employment_rate") %>
+                    <span class="<%= dept_employment_rate && dept_employment_rate > 0 ? "font-semibold" : "" %>">
+                      <%= number_to_percentage(dept_employment_rate, precision: 2) %>
+                    </span>
+                    <% if dept_employment_rate && dept_employment_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: <%= dept_employment_rate %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région -->
+            <% if @region_employment_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= @region_name || "Région" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <div class="flex items-center">
+                    <% region_employment_rate = @region_employment_data&.dig("rates", "employment_rate") %>
+                    <span class="<%= region_employment_rate && region_employment_rate > 0 ? "font-semibold" : "" %>">
+                      <%= number_to_percentage(region_employment_rate, precision: 2) %>
+                    </span>
+                    <% if region_employment_rate && region_employment_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full" style="width: <%= region_employment_rate %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la France -->
+            <% if @france_employment_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  France
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <div class="flex items-center">
+                    <% france_employment_rate = @france_employment_data&.dig("rates", "employment_rate") %>
+                    <span class="<%= france_employment_rate && france_employment_rate > 0 ? "font-semibold" : "" %>">
+                      <%= number_to_percentage(france_employment_rate, precision: 2) %>
+                    </span>
+                    <% if france_employment_rate && france_employment_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-red-600 h-2 rounded-full" style="width: <%= france_employment_rate %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">
+        <p>Note: Les barres de progression sont calibrées pour un maximum de 100%.</p>
+      </div>
+    </div>
+
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Carte des taux d'emploi des femmes -->
@@ -298,6 +408,115 @@
   <div class="mt-8">
     <h3 class="text-md font-medium text-gray-800 mb-4">Temps partiel des femmes</h3>
 
+    <!-- Tableau de comparaison des taux de temps partiel -->
+    <div class="mb-6">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Comparaison des taux de temps partiel des femmes</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Échelon territorial
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Taux de temps partiel des femmes
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour l'EPCI -->
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                <%= @epci_name %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <div class="flex items-center">
+                  <% epci_part_time_rate = @epci_women_employment_data&.dig("epci_part_time_rate_15_64") %>
+                  <span class="<%= epci_part_time_rate && epci_part_time_rate > 0 ? "font-semibold" : "" %>">
+                    <%= number_to_percentage(epci_part_time_rate, precision: 2) %>
+                  </span>
+                  <% if epci_part_time_rate && epci_part_time_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-purple-600 h-2 rounded-full" style="width: <%= epci_part_time_rate %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Ligne pour le département -->
+            <% if @department_employment_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= @department_name || "Département" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <div class="flex items-center">
+                    <% dept_part_time_rate = @department_employment_data&.dig("rates", "part_time_rate_15_64") %>
+                    <span class="<%= dept_part_time_rate && dept_part_time_rate > 0 ? "font-semibold" : "" %>">
+                      <%= number_to_percentage(dept_part_time_rate, precision: 2) %>
+                    </span>
+                    <% if dept_part_time_rate && dept_part_time_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: <%= dept_part_time_rate %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région -->
+            <% if @region_employment_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%= @region_name || "Région" %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <div class="flex items-center">
+                    <% region_part_time_rate = @region_employment_data&.dig("rates", "part_time_rate_15_64") %>
+                    <span class="<%= region_part_time_rate && region_part_time_rate > 0 ? "font-semibold" : "" %>">
+                      <%= number_to_percentage(region_part_time_rate, precision: 2) %>
+                    </span>
+                    <% if region_part_time_rate && region_part_time_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full" style="width: <%= region_part_time_rate %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la France -->
+            <% if @france_employment_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  France
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <div class="flex items-center">
+                    <% france_part_time_rate = @france_employment_data&.dig("rates", "part_time_rate_15_64") %>
+                    <span class="<%= france_part_time_rate && france_part_time_rate > 0 ? "font-semibold" : "" %>">
+                      <%= number_to_percentage(france_part_time_rate, precision: 2) %>
+                    </span>
+                    <% if france_part_time_rate && france_part_time_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-red-600 h-2 rounded-full" style="width: <%= france_part_time_rate %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">
+        <p>Note: Les taux de temps partiel étant généralement inférieurs à 50%, les barres de progression peuvent sembler plus courtes.</p>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Carte des taux de temps partiel des femmes -->
       <div>
@@ -339,7 +558,7 @@
                 <tr>
                   <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
                   <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-purple-600">
-                    <%= number_to_percentage(commune["part_time_rate_15_64"], precision: 1) %>
+                    <%= number_to_percentage(commune["part_time_rate_15_64"], precision: 2) %>
                   </td>
                 </tr>
               <% end %>
@@ -353,7 +572,7 @@
                 <tr>
                   <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= commune["name"] %></td>
                   <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium text-blue-600">
-                    <%= number_to_percentage(commune["part_time_rate_15_64"], precision: 1) %>
+                    <%= number_to_percentage(commune["part_time_rate_15_64"], precision: 2) %>
                   </td>
                 </tr>
               <% end %>
