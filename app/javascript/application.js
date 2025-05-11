@@ -19,6 +19,10 @@ window.Chart = ChartModule.Chart
 window.ChartDataLabels = ChartDataLabels
 Chart.register(ChartDataLabels)
 
+// Importer Simple-Statistics
+import * as SimpleStatistics from "simple-statistics"
+window.ss = SimpleStatistics
+
 // Commune Dashboard
 import "charts/historique_chart"
 import "charts/economic_charts"
@@ -32,3 +36,4 @@ import "charts/epci_communes_chart"
 import "charts/epci_age_pyramid_chart"
 import "charts/epci_population_history_chart"
 import "charts/epci_family_employment_chart"
+import "maps/epci_domestic_violence_map"

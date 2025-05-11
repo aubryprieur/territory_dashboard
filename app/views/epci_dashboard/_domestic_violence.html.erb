@@ -27,9 +27,55 @@
     </div>
   <% end %>
 
-  <!-- Affichage du graphique avec ID unique basé sur le code EPCI -->
-  <div class="h-[500px] w-full">
-    <canvas id="domestic-violence-chart-<%= @epci_code %>"></canvas>
+  <!-- Cartes des taux de violences intrafamiliales -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+    <!-- Carte des taux de violences de la dernière année -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Carte des taux de violences intrafamiliales par commune (<%= @epci_latest_violence_year %>)</h4>
+      <div id="communes-map-violence" class="h-[500px] w-full border border-gray-200 rounded-md"></div>
+      <div id="violence-map-legend" class="mt-3"></div>
+    </div>
+
+    <!-- Information complémentaire -->
+    <!-- Information complémentaire (alternative sans flexbox) -->
+    <div>
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Analyse des violences intrafamiliales</h4>
+      <div class="bg-gray-50 p-4 rounded-md min-h-[500px]">
+        <div>
+          <p class="text-gray-600 mb-4">
+            Cette carte présente le taux de violences intrafamiliales (pour 1000 habitants) pour chaque commune de l'EPCI pour l'année <%= @epci_latest_violence_year %>.
+          </p>
+          <p class="text-gray-600 mb-4">
+            Les taux sont calculés à partir des données des services de police et de gendarmerie concernant les coups et blessures volontaires enregistrés dans un cadre familial.
+          </p>
+        </div>
+
+        <div class="mt-8">
+          <h5 class="text-sm font-medium text-gray-700 mb-2">À savoir</h5>
+          <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+            <li>Ces données ne reflètent que les faits déclarés et enregistrés</li>
+            <li>Les taux peuvent être influencés par les variations de pratiques de signalement</li>
+            <li>Pour les petites communes, de faibles variations en nombre peuvent générer de fortes variations en taux</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Données JSON pour la carte -->
+  <script type="application/json" id="communes-domestic-violence-geojson">
+    <%= raw(@communes_domestic_violence_geojson) %>
+  </script>
+
+  <!-- Évolution des taux de violences intrafamiliales -->
+  <div class="mt-8">
+    <h4 class="text-sm font-medium text-gray-700 mb-2">Évolution des taux de violences intrafamiliales par commune (2016-<%= @epci_latest_violence_year.to_s[-2..-1] %>)</h4>
+    <div class="h-[500px] w-full">
+      <canvas id="domestic-violence-chart-<%= @epci_code %>"></canvas>
+    </div>
+    <div id="chart-controls-<%= @epci_code %>" class="mt-4 flex flex-wrap gap-2 justify-center">
+      <!-- Les boutons de contrôle seront ajoutés ici par le script -->
+    </div>
   </div>
 
   <!-- Tableau des communes à taux élevés -->

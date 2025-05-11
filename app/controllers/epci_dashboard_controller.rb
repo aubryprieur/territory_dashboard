@@ -34,6 +34,7 @@ class EpciDashboardController < ApplicationController
         @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
     prepare_childcare_geojson_data if @epci_childcare_communes_data.present?
     prepare_women_employment_geojson_data if @epci_women_employment_data.present?
+    prepare_domestic_violence_geojson_data if @epci_domestic_violence_data.present?
 
     # Récupérer les données France
     @france_children_data = Api::PopulationService.get_france_children_data
@@ -529,4 +530,52 @@ class EpciDashboardController < ApplicationController
   end
 
   helper_method :extract_domestic_violence_data
+
+  def prepare_domestic_violence_geojson_data
+    # Préparer le GeoJSON pour les taux de violences intrafamiliales par commune
+    features_domestic_violence = []
+
+    # Identifier l'année la plus récente disponible
+    latest_available_years = @epci_domestic_violence_data["communes"].map do |commune|
+      commune["yearly_data"].map { |data| data["year"] }
+    end.flatten.uniq.sort
+
+    latest_year = latest_available_years.last
+    short_year = latest_year.to_i
+    full_year = "20#{short_year}"
+
+    @epci_domestic_violence_data["communes"].each do |commune|
+      # Récupérer la géométrie depuis la base de données
+      geometry = CommuneGeometry.find_by(code_insee: commune["code"])
+      next unless geometry&.geojson.present?
+
+      # Récupérer le taux de violences intrafamiliales pour l'année la plus récente
+      latest_data = commune["yearly_data"].find { |d| d["year"] == short_year }
+      violence_rate = latest_data ? latest_data["rate"] : nil
+
+      # Créer un feature GeoJSON avec les propriétés
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          violence_rate: violence_rate,
+          average_rate: commune["average_rate"],
+          latest_year: full_year,
+          population: commune["population"].to_i
+        },
+        geometry: JSON.parse(geometry.geojson)
+      }
+
+      features_domestic_violence << feature
+    end
+
+    @communes_domestic_violence_geojson = {
+      type: "FeatureCollection",
+      features: features_domestic_violence
+    }.to_json
+
+    # Stocker l'année la plus récente pour l'affichage
+    @epci_latest_violence_year = full_year
+  end
 end
