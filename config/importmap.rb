@@ -23,11 +23,24 @@ pin "charts/family_employment_chart", to: "charts/family_employment_chart.js"
 pin "charts/age_pyramid_chart", to: "charts/age_pyramid_chart.js"
 
 # EPCI Dashboard
+# Charts
 pin "charts/epci_communes_chart", to: "charts/epci_communes_chart.js"
 pin "charts/epci_age_pyramid_chart", to: "charts/epci_age_pyramid_chart.js"
 pin "charts/epci_population_history_chart", to: "charts/epci_population_history_chart.js"
 pin "charts/epci_family_employment_chart", to: "charts/epci_family_employment_chart.js"
+pin "charts/epci_births_history_chart", to: "charts/epci_births_history_chart.js"
+pin "charts/epci_domestic_violence_chart", to: "charts/epci_domestic_violence_chart.js"
+
+# Maps
 pin "maps/epci_domestic_violence_map", to: "maps/epci_domestic_violence_map.js"
+pin "maps/epci_childcare_map", to: "maps/epci_childcare_map.js"
+pin "maps/epci_births_map", to: "maps/epci_births_map.js"
+pin "maps/epci_children_maps", to: "maps/epci_children_maps.js"
+pin "maps/epci_economic_maps", to: "maps/epci_economic_maps.js"
+pin "maps/epci_families_maps", to: "maps/epci_families_maps.js"
+pin "maps/epci_schooling_maps", to: "maps/epci_schooling_maps.js"
+pin "maps/epci_women_employment_maps", to: "maps/epci_women_employment_maps.js"
+
 
 # leaflet
 pin "leaflet", to: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"

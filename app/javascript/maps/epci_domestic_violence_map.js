@@ -2,7 +2,10 @@
 function initializeDomesticViolenceMap() {
   const mapElement = document.getElementById("communes-map-violence");
   const geojsonElement = document.getElementById("communes-domestic-violence-geojson");
-  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") return;
+  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
+    console.warn("Éléments nécessaires non trouvés pour la carte des violences intrafamiliales");
+    return;
+  }
 
   const geojsonData = JSON.parse(geojsonElement.textContent);
   const values = geojsonData.features
@@ -62,6 +65,8 @@ function initializeDomesticViolenceMap() {
 
   // Créer une légende pour la carte
   renderMapLegend(breaks, "violence-map-legend", colors, "‰");
+
+  console.log("✅ Carte des violences intrafamiliales initialisée avec succès");
 }
 
 // Fonction de rendu de légende générique

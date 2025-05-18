@@ -32,8 +32,19 @@ import "charts/family_employment_chart"
 import "charts/age_pyramid_chart"
 
 // EPCI Dashboard
+// Charts
 import "charts/epci_communes_chart"
 import "charts/epci_age_pyramid_chart"
 import "charts/epci_population_history_chart"
 import "charts/epci_family_employment_chart"
+import "charts/epci_births_history_chart"
+import "charts/epci_domestic_violence_chart"
+// Maps
 import "maps/epci_domestic_violence_map"
+import "maps/epci_childcare_map"
+import "maps/epci_births_map"
+import "maps/epci_children_maps"
+import "maps/epci_economic_maps"
+import "maps/epci_families_maps"
+import "maps/epci_schooling_maps"
+import "maps/epci_women_employment_maps"
