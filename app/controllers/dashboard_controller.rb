@@ -7,7 +7,6 @@ class DashboardController < ApplicationController
     @territory_name = current_user.territory_name
 
 
-
     # Récupérer les données de base pour la commune
     @population_data = Api::PopulationService.get_commune_data(@territory_code)
     @total_population = @population_data.present? ? @population_data.sum { |item| item["NB"].to_f }.round : 0
