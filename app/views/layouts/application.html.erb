@@ -6,13 +6,13 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <!-- CSS -->
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <script src="https://unpkg.com/simple-statistics@7.7.2/dist/simple-statistics.min.js"></script>
-    <%= javascript_importmap_tags %>
+    <%= stylesheet_link_tag "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css", "data-turbo-track": "reload" %>
 
+    <!-- JavaScript -->
+    <%= javascript_importmap_tags %>
   </head>
 
   <body class="bg-gray-100 flex flex-col min-h-screen">

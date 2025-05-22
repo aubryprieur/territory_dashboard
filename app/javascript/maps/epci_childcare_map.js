@@ -1,9 +1,19 @@
+/**
+ * Carte des taux de couverture petite enfance par commune dans l'EPCI
+ * Affiche une carte choroplèthe avec les taux de couverture globaux
+ */
 function initializeChildcareMap() {
   const mapElement = document.getElementById("communes-map-childcare");
   const geojsonElement = document.getElementById("communes-childcare-geojson");
 
   if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
     console.warn("Éléments nécessaires pour la carte de couverture petite enfance manquants");
+    return;
+  }
+
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte de couverture petite enfance déjà initialisée");
     return;
   }
 
@@ -42,7 +52,14 @@ function initializeChildcareMap() {
         <div class="text-sm">
           <strong>${feature.properties.name}</strong><br>
           Taux de couverture : <strong>${feature.properties.global_coverage_rate.toFixed(1)}%</strong><br>
-          Année : ${feature.properties.year}
+          Année : ${feature.properties.year}<br>
+          <div class="mt-1 text-xs text-gray-600">
+            ${feature.properties.global_coverage_rate > 100
+              ? "✅ Capacité d'accueil supérieure au nombre d'enfants"
+              : feature.properties.global_coverage_rate > 60
+              ? "🟡 Couverture satisfaisante"
+              : "🔴 Couverture insuffisante"}
+          </div>
         </div>
       `;
       layer.bindPopup(popup);
@@ -54,10 +71,22 @@ function initializeChildcareMap() {
     }).addTo(map);
 
     const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-    map.fitBounds(layer.getBounds());
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
 
     // Créer une légende pour la carte
-    createLegend(breaks, "childcare-legend", colors);
+    createChildcareLegend(breaks, "childcare-legend", colors);
+
+    // ✅ Stocker l'instance de carte ET ses bounds initiaux
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
 
     console.log("✅ Carte des taux de couverture petite enfance initialisée avec succès");
   } catch (e) {
@@ -66,7 +95,7 @@ function initializeChildcareMap() {
 }
 
 // Fonction pour créer la légende de la carte
-function createLegend(breaks, containerId, colors) {
+function createChildcareLegend(breaks, containerId, colors) {
   const legendContainer = document.getElementById(containerId);
   if (!legendContainer) return;
 
@@ -83,6 +112,9 @@ function createLegend(breaks, containerId, colors) {
     `> ${breaks[4].toFixed(1)}%`
   ];
 
+  // Ajouter des indicateurs visuels selon les seuils de qualité
+  const indicators = ["🔴", "🟡", "🟡", "✅", "✅"];
+
   for (let i = 0; i < 5; i++) {
     const item = document.createElement("div");
     item.className = "flex items-center";
@@ -92,28 +124,25 @@ function createLegend(breaks, containerId, colors) {
     colorBox.style.backgroundColor = colors[i];
 
     const label = document.createElement("span");
-    label.textContent = labels[i];
+    label.textContent = `${indicators[i]} ${labels[i]}`;
 
     item.appendChild(colorBox);
     item.appendChild(label);
     legend.appendChild(item);
   }
 
+  // Ajouter une note explicative
+  const note = document.createElement("div");
+  note.className = "w-full mt-2 text-xs text-gray-500 text-center";
+  note.innerHTML = "🔴 Insuffisant • 🟡 Satisfaisant • ✅ Excellent";
   legendContainer.appendChild(legend);
+  legendContainer.appendChild(note);
 }
 
-// Initialiser la carte au chargement de la page
+// ✅ Initialiser la carte au chargement de la page (une seule fois sur turbo:load)
 document.addEventListener("turbo:load", function() {
   initializeChildcareMap();
 });
 
-// Également initialiser au chargement initial pour les pages non chargées via Turbo
-document.addEventListener("DOMContentLoaded", function() {
-  // Vérifier si la page a déjà été chargée par Turbo
-  if (!window.childcareMapInitialized) {
-    initializeChildcareMap();
-  }
-});
-
 // Exporter les fonctions pour les rendre disponibles
-export { initializeChildcareMap, createLegend };
+export { initializeChildcareMap, createChildcareLegend };

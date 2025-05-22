@@ -13,33 +13,49 @@ function initializeSchooling2yMap() {
     return;
   }
 
-  const geojsonData = JSON.parse(geojsonElement.textContent);
-  const values = geojsonData.features
-    .filter(f => f.properties.total_children_2y >= 5)
-    .map(f => f.properties.schooling_rate_2y)
-    .sort((a, b) => a - b);
-
-  // Utiliser des discrétisations de Jenks si possible
-  const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [25], [50], [75], [100]];
-  const breaks = clusters.map(c => c[0]);
-  breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
-
-  // Palette de couleurs pour le taux de scolarisation à 2 ans
-  const colors = ["#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"];
-
-  function getColor(rate) {
-    return rate > breaks[4] ? colors[4] :
-           rate > breaks[3] ? colors[3] :
-           rate > breaks[2] ? colors[2] :
-           rate > breaks[1] ? colors[1] :
-                            colors[0];
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte de scolarisation à 2 ans déjà initialisée");
+    return;
   }
 
-  function style(feature) {
-    // Couleur grise pour les communes avec trop peu d'enfants
-    if (feature.properties.total_children_2y < 5) {
+  try {
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features
+      .filter(f => f.properties.total_children_2y >= 5)
+      .map(f => f.properties.schooling_rate_2y)
+      .sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [25], [50], [75], [100]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour le taux de scolarisation à 2 ans
+    const colors = ["#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      // Couleur grise pour les communes avec trop peu d'enfants
+      if (feature.properties.total_children_2y < 5) {
+        return {
+          fillColor: "#e5e7eb",
+          weight: 1,
+          opacity: 1,
+          color: "white",
+          fillOpacity: 0.7
+        };
+      }
+
       return {
-        fillColor: "#e5e7eb",
+        fillColor: getColor(feature.properties.schooling_rate_2y),
         weight: 1,
         opacity: 1,
         color: "white",
@@ -47,44 +63,50 @@ function initializeSchooling2yMap() {
       };
     }
 
-    return {
-      fillColor: getColor(feature.properties.schooling_rate_2y),
-      weight: 1,
-      opacity: 1,
-      color: "white",
-      fillOpacity: 0.7
-    };
+    function onEachFeature(feature, layer) {
+      const props = feature.properties;
+      const insignificantData = props.total_children_2y < 5;
+
+      const popup = `
+        <div class="text-sm">
+          <strong>${props.name}</strong><br>
+          ${insignificantData
+            ? `<span class="text-gray-500">Données non significatives (moins de 5 enfants)</span><br>`
+            : `Taux de scolarisation à 2 ans : <strong>${props.schooling_rate_2y.toFixed(1)}%</strong><br>`}
+          Enfants de 2 ans : ${props.total_children_2y} enfants<br>
+          Enfants de 2 ans scolarisés : ${props.schooled_children_2y} enfants
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
+
+    // Créer une légende pour la carte
+    createSchooling2yLegend(breaks, "schooling-2y-legend", colors);
+
+    // ✅ Stocker l'instance de carte ET ses bounds initiaux
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
+
+    console.log("✅ Carte des taux de scolarisation à 2 ans initialisée avec succès");
+  } catch (e) {
+    console.error("Erreur lors de l'initialisation de la carte de scolarisation à 2 ans:", e);
   }
-
-  function onEachFeature(feature, layer) {
-    const props = feature.properties;
-    const insignificantData = props.total_children_2y < 5;
-
-    const popup = `
-      <div class="text-sm">
-        <strong>${props.name}</strong><br>
-        ${insignificantData
-          ? `<span class="text-gray-500">Données non significatives (moins de 5 enfants)</span><br>`
-          : `Taux de scolarisation à 2 ans : <strong>${props.schooling_rate_2y.toFixed(1)}%</strong><br>`}
-        Enfants de 2 ans : ${props.total_children_2y} enfants<br>
-        Enfants de 2 ans scolarisés : ${props.schooled_children_2y} enfants
-      </div>
-    `;
-    layer.bindPopup(popup);
-  }
-
-  const map = L.map(mapElement);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(map);
-
-  const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-  map.fitBounds(layer.getBounds());
-
-  // Créer une légende pour la carte
-  createSchooling2yLegend(breaks, "schooling-2y-legend", colors);
-
-  console.log("✅ Carte des taux de scolarisation à 2 ans initialisée avec succès");
 }
 
 // Fonction pour créer la légende des taux de scolarisation à 2 ans
@@ -147,31 +169,47 @@ function initializeSchooling35yMap() {
     return;
   }
 
-  const geojsonData = JSON.parse(geojsonElement.textContent);
-  const values = geojsonData.features
-    .filter(f => f.properties.total_children_3_5y >= 10)
-    .map(f => f.properties.schooling_rate_3_5y)
-    .sort((a, b) => a - b);
-
-  // Pour les 3-5 ans, utiliser des seuils adaptés (généralement plus élevés)
-  const breaks = [0, 85, 90, 95, 100]; // Seuils fixes adaptés aux taux généralement élevés
-
-  // Palette de couleurs pour le taux de scolarisation de 3 à 5 ans (teintes de vert)
-  const colors = ["#edf8e9", "#c7e9c0", "#a1d99b", "#74c476", "#238b45"];
-
-  function getColor(rate) {
-    return rate > breaks[4] ? colors[4] :
-           rate > breaks[3] ? colors[3] :
-           rate > breaks[2] ? colors[2] :
-           rate > breaks[1] ? colors[1] :
-                            colors[0];
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte de scolarisation 3-5 ans déjà initialisée");
+    return;
   }
 
-  function style(feature) {
-    // Couleur grise pour les communes avec trop peu d'enfants
-    if (feature.properties.total_children_3_5y < 10) {
+  try {
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features
+      .filter(f => f.properties.total_children_3_5y >= 10)
+      .map(f => f.properties.schooling_rate_3_5y)
+      .sort((a, b) => a - b);
+
+    // Pour les 3-5 ans, utiliser des seuils adaptés (généralement plus élevés)
+    const breaks = [0, 85, 90, 95, 100]; // Seuils fixes adaptés aux taux généralement élevés
+
+    // Palette de couleurs pour le taux de scolarisation de 3 à 5 ans (teintes de vert)
+    const colors = ["#edf8e9", "#c7e9c0", "#a1d99b", "#74c476", "#238b45"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      // Couleur grise pour les communes avec trop peu d'enfants
+      if (feature.properties.total_children_3_5y < 10) {
+        return {
+          fillColor: "#e5e7eb",
+          weight: 1,
+          opacity: 1,
+          color: "white",
+          fillOpacity: 0.7
+        };
+      }
+
       return {
-        fillColor: "#e5e7eb",
+        fillColor: getColor(feature.properties.schooling_rate_3_5y),
         weight: 1,
         opacity: 1,
         color: "white",
@@ -179,44 +217,50 @@ function initializeSchooling35yMap() {
       };
     }
 
-    return {
-      fillColor: getColor(feature.properties.schooling_rate_3_5y),
-      weight: 1,
-      opacity: 1,
-      color: "white",
-      fillOpacity: 0.7
-    };
+    function onEachFeature(feature, layer) {
+      const props = feature.properties;
+      const insignificantData = props.total_children_3_5y < 10;
+
+      const popup = `
+        <div class="text-sm">
+          <strong>${props.name}</strong><br>
+          ${insignificantData
+            ? `<span class="text-gray-500">Données non significatives (moins de 10 enfants)</span><br>`
+            : `Taux de scolarisation 3-5 ans : <strong>${props.schooling_rate_3_5y.toFixed(1)}%</strong><br>`}
+          Enfants de 3 à 5 ans : ${props.total_children_3_5y} enfants<br>
+          Enfants de 3 à 5 ans scolarisés : ${props.schooled_children_3_5y} enfants
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
+
+    // Créer une légende pour la carte
+    createSchooling35yLegend(breaks, "schooling-3-5y-legend", colors);
+
+    // ✅ Stocker l'instance de carte
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
+
+    console.log("✅ Carte des taux de scolarisation 3-5 ans initialisée avec succès");
+  } catch (e) {
+    console.error("Erreur lors de l'initialisation de la carte de scolarisation 3-5 ans:", e);
   }
-
-  function onEachFeature(feature, layer) {
-    const props = feature.properties;
-    const insignificantData = props.total_children_3_5y < 10;
-
-    const popup = `
-      <div class="text-sm">
-        <strong>${props.name}</strong><br>
-        ${insignificantData
-          ? `<span class="text-gray-500">Données non significatives (moins de 10 enfants)</span><br>`
-          : `Taux de scolarisation 3-5 ans : <strong>${props.schooling_rate_3_5y.toFixed(1)}%</strong><br>`}
-        Enfants de 3 à 5 ans : ${props.total_children_3_5y} enfants<br>
-        Enfants de 3 à 5 ans scolarisés : ${props.schooled_children_3_5y} enfants
-      </div>
-    `;
-    layer.bindPopup(popup);
-  }
-
-  const map = L.map(mapElement);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(map);
-
-  const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-  map.fitBounds(layer.getBounds());
-
-  // Créer une légende pour la carte
-  createSchooling35yLegend(breaks, "schooling-3-5y-legend", colors);
-
-  console.log("✅ Carte des taux de scolarisation 3-5 ans initialisée avec succès");
 }
 
 // Fonction pour créer la légende des taux de scolarisation de 3 à 5 ans
@@ -268,14 +312,8 @@ function createSchooling35yLegend(breaks, containerId, colors) {
   legendContainer.appendChild(legend);
 }
 
-// Initialiser les cartes au chargement de la page
+// ✅ Initialiser les cartes au chargement de la page (une seule fois sur turbo:load)
 document.addEventListener("turbo:load", function() {
-  initializeSchooling2yMap();
-  initializeSchooling35yMap();
-});
-
-// Également initialiser au chargement initial pour les pages non chargées via Turbo
-document.addEventListener("DOMContentLoaded", function() {
   initializeSchooling2yMap();
   initializeSchooling35yMap();
 });

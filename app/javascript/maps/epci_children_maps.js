@@ -9,6 +9,12 @@ function initializeMapEffectifs() {
     return;
   }
 
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des effectifs déjà initialisée");
+    return;
+  }
+
   try {
     const geojsonData = JSON.parse(geojsonElement.textContent);
     const values = geojsonData.features.map(f => f.properties.children_under3).sort((a, b) => a - b);
@@ -53,9 +59,21 @@ function initializeMapEffectifs() {
     }).addTo(map);
 
     const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-    map.fitBounds(layer.getBounds());
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
 
     renderLegend(breaks, "effectif-legend", colors);
+
+    // ✅ Stocker l'instance de carte ET ses bounds initiaux
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds); // ✅ Stocker les bounds corrects
 
     console.log("✅ Carte des effectifs d'enfants <3 ans initialisée avec succès");
   } catch (e) {
@@ -71,6 +89,12 @@ function initializeMapTaux() {
   const geojsonElement = document.getElementById("communes-geojson");
   if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
     console.warn("Éléments nécessaires pour la carte des taux d'enfants <3 ans manquants");
+    return;
+  }
+
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des taux déjà initialisée");
     return;
   }
 
@@ -118,9 +142,17 @@ function initializeMapTaux() {
     }).addTo(map);
 
     const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-    map.fitBounds(layer.getBounds());
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
 
     renderLegend(breaks, "taux-legend", colors, " %");
+
+    // ✅ Stocker l'instance de carte
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
 
     console.log("✅ Carte des taux d'enfants <3 ans initialisée avec succès");
   } catch (e) {
@@ -136,6 +168,12 @@ function initializeMapEffectifs3to5() {
   const geojsonElement = document.getElementById("communes-geojson-3to5");
   if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
     console.warn("Éléments nécessaires pour la carte des effectifs d'enfants 3-5 ans manquants");
+    return;
+  }
+
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des effectifs 3-5 ans déjà initialisée");
     return;
   }
 
@@ -184,9 +222,17 @@ function initializeMapEffectifs3to5() {
     }).addTo(map);
 
     const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-    map.fitBounds(layer.getBounds());
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
 
     renderLegend(breaks, "effectif-legend-3to5", colors);
+
+    // ✅ Stocker l'instance de carte
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
 
     console.log("✅ Carte des effectifs d'enfants 3-5 ans initialisée avec succès");
   } catch (e) {
@@ -202,6 +248,12 @@ function initializeMapTaux3to5() {
   const geojsonElement = document.getElementById("communes-geojson-3to5");
   if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
     console.warn("Éléments nécessaires pour la carte des taux d'enfants 3-5 ans manquants");
+    return;
+  }
+
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des taux 3-5 ans déjà initialisée");
     return;
   }
 
@@ -250,9 +302,17 @@ function initializeMapTaux3to5() {
     }).addTo(map);
 
     const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-    map.fitBounds(layer.getBounds());
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
 
     renderLegend(breaks, "taux-legend-3to5", colors, " %");
+
+    // ✅ Stocker l'instance de carte
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
 
     console.log("✅ Carte des taux d'enfants 3-5 ans initialisée avec succès");
   } catch (e) {
@@ -316,18 +376,6 @@ document.addEventListener("turbo:load", function () {
   initializeMapTaux();
   initializeMapEffectifs3to5();
   initializeMapTaux3to5();
-});
-
-// Également initialiser au chargement initial pour les pages non chargées via Turbo
-document.addEventListener("DOMContentLoaded", function() {
-  // Vérifier si la page a déjà été chargée par Turbo pour éviter une double initialisation
-  if (!window.childrenMapsInitialized) {
-    initializeMapEffectifs();
-    initializeMapTaux();
-    initializeMapEffectifs3to5();
-    initializeMapTaux3to5();
-    window.childrenMapsInitialized = true;
-  }
 });
 
 // Exporter les fonctions pour les rendre disponibles
