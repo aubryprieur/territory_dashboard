@@ -1,8 +1,20 @@
-<!-- app/views/dashboard/index.html.erb -->
 <div class="py-6">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-semibold text-gray-900">Dashboard de <%= @territory_name %></h1>
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Dashboard de <%= @territory_name %></h1>
+        <% if @is_commune_access_from_epci %>
+          <div class="mt-2 flex items-center text-sm text-indigo-600">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Accès depuis le dashboard EPCI
+            <button onclick="window.close()" class="ml-2 px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs hover:bg-indigo-200">
+              Fermer cet onglet
+            </button>
+          </div>
+        <% end %>
+      </div>
       <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
         Code INSEE: <%= @territory_code %>
       </span>

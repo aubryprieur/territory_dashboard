@@ -8,6 +8,30 @@
       </span>
     </div>
 
+    <!-- Nouvelle section: Accès aux communes -->
+    <div class="bg-white shadow rounded-lg p-4 mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <h3 class="text-sm font-medium text-gray-700">Accéder au dashboard d'une commune :</h3>
+          <div class="relative">
+            <select id="commune-selector"
+                    class="block w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    onchange="openCommuneDashboard(this.value)">
+              <option value="">Sélectionner une commune...</option>
+              <% if @epci_communes_data && @epci_communes_data["communes"] %>
+                <% @epci_communes_data["communes"].sort_by { |c| c["name"] }.each do |commune| %>
+                  <option value="<%= commune['code'] %>"><%= commune["name"] %> (<%= commune["code"] %>)</option>
+                <% end %>
+              <% end %>
+            </select>
+          </div>
+        </div>
+        <div class="text-sm text-gray-500">
+          <%= @epci_communes_data&.dig("communes")&.count || 0 %> communes dans cet EPCI
+        </div>
+      </div>
+    </div>
+
     <!-- Navigation par onglets -->
     <div class="border-b border-gray-200 mb-6">
       <nav class="-mb-px flex space-x-8 overflow-x-auto">
@@ -197,3 +221,18 @@
     </div>
   </div>
 </div>
+
+<script>
+function openCommuneDashboard(communeCode) {
+  if (communeCode) {
+    // Construire l'URL du dashboard de la commune
+    const url = `/dashboard?commune_code=${communeCode}`;
+
+    // Ouvrir dans un nouvel onglet
+    window.open(url, '_blank');
+
+    // Réinitialiser la sélection
+    document.getElementById('commune-selector').value = '';
+  }
+}
+</script>
