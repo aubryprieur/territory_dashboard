@@ -10,10 +10,15 @@ function initDomesticViolenceChart(epciCode) {
     return;
   }
 
-  // Vérifier si un graphique existe déjà sur ce canvas et le détruire
-  if (window.domesticViolenceCharts && window.domesticViolenceCharts[epciCode]) {
-    console.log("Destroying existing chart for EPCI", epciCode);
-    window.domesticViolenceCharts[epciCode].destroy();
+  // ✅ Vérifier si déjà initialisé et nettoyer si nécessaire
+  try {
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+      console.log("Graphique des violences intrafamiliales déjà initialisé, destruction de l'ancien");
+      existingChart.destroy();
+    }
+  } catch (error) {
+    console.warn("Erreur lors de la vérification du graphique existant:", error);
   }
 
   // Fonction pour décoder les entités HTML
@@ -187,11 +192,11 @@ function initDomesticViolenceChart(epciCode) {
     }
   });
 
-  // Sauvegarder le graphique dans un objet global pour pouvoir le détruire plus tard
-  if (!window.domesticViolenceCharts) {
-    window.domesticViolenceCharts = {};
+  // ✅ Stocker l'instance de graphique
+  if (!window.chartInstances) {
+    window.chartInstances = new Map();
   }
-  window.domesticViolenceCharts[epciCode] = chart;
+  window.chartInstances.set(ctx.id, chart);
 
   // Configurer les contrôles pour le graphique
   setupChartControls(epciCode, chart, allDatasets, years);
@@ -346,11 +351,8 @@ function initAllDomesticViolenceCharts() {
   });
 }
 
-// Initialiser au chargement via Turbo
+// ✅ Initialiser au chargement via Turbo (une seule fois)
 document.addEventListener('turbo:load', initAllDomesticViolenceCharts);
-
-// Exécuter également au chargement initial pour les pages non chargées via Turbo
-document.addEventListener('DOMContentLoaded', initAllDomesticViolenceCharts);
 
 // Exporter les fonctions pour les rendre disponibles
 export { initDomesticViolenceChart, setupChartControls, initAllDomesticViolenceCharts };

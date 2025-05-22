@@ -14,58 +14,80 @@ function initializeFamiliesMap() {
     return;
   }
 
-  const geojsonData = JSON.parse(geojsonElement.textContent);
-  const values = geojsonData.features.map(f => f.properties.couples_percentage).filter(v => v > 0).sort((a, b) => a - b);
-
-  // Utiliser des discrétisations de Jenks si possible
-  const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 25], [values[Math.floor(values.length/2)] || 35], [values[values.length-1] || 50]];
-  const breaks = clusters.map(c => c[0]);
-  breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
-
-  // Palette de couleurs pour les couples avec enfants
-  const colors = ["#ccebc5", "#a8ddb5", "#7bccc4", "#43a2ca"];
-
-  function getColor(percentage) {
-    return percentage > breaks[3] ? colors[3] :
-           percentage > breaks[2] ? colors[2] :
-           percentage > breaks[1] ? colors[1] :
-                                 colors[0];
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des familles déjà initialisée");
+    return;
   }
 
-  function style(feature) {
-    return {
-      fillColor: getColor(feature.properties.couples_percentage),
-      weight: 1,
-      opacity: 1,
-      color: "white",
-      fillOpacity: 0.7
-    };
+  try {
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.couples_percentage).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 25], [values[Math.floor(values.length/2)] || 35], [values[values.length-1] || 50]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour les couples avec enfants
+    const colors = ["#ccebc5", "#a8ddb5", "#7bccc4", "#43a2ca"];
+
+    function getColor(percentage) {
+      return percentage > breaks[3] ? colors[3] :
+             percentage > breaks[2] ? colors[2] :
+             percentage > breaks[1] ? colors[1] :
+                                   colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.couples_percentage),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Couples avec enfants : ${feature.properties.couples_percentage.toFixed(2)}%<br>
+          Nombre : ${feature.properties.couples_count} couples<br>
+          Total ménages : ${feature.properties.total_households}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
+
+    // Créer une légende pour la carte
+    createFamiliesLegend(breaks, "families-legend", colors);
+
+    // ✅ Stocker l'instance de carte ET ses bounds initiaux
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
+
+    console.log("✅ Carte des couples avec enfants initialisée avec succès");
+  } catch (e) {
+    console.error("Erreur lors de l'initialisation de la carte des couples avec enfants:", e);
   }
-
-  function onEachFeature(feature, layer) {
-    const popup = `
-      <div class="text-sm">
-        <strong>${feature.properties.name}</strong><br>
-        Couples avec enfants : ${feature.properties.couples_percentage.toFixed(2)}%<br>
-        Nombre : ${feature.properties.couples_count} couples<br>
-        Total ménages : ${feature.properties.total_households}
-      </div>
-    `;
-    layer.bindPopup(popup);
-  }
-
-  const map = L.map(mapElement);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(map);
-
-  const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-  map.fitBounds(layer.getBounds());
-
-  // Créer une légende pour la carte
-  createFamiliesLegend(breaks, "families-legend", colors);
-
-  console.log("✅ Carte des couples avec enfants initialisée avec succès");
 }
 
 // Fonction pour créer la légende des couples avec enfants
@@ -113,60 +135,82 @@ function initializeSingleParentMap() {
     return;
   }
 
-  const geojsonData = JSON.parse(geojsonElement.textContent);
-  const values = geojsonData.features.map(f => f.properties.single_parent_percentage).filter(v => v > 0).sort((a, b) => a - b);
-
-  // Utiliser des discrétisations de Jenks si possible
-  const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 10], [values[Math.floor(values.length/2)] || 20], [values[values.length-1] || 30]];
-  const breaks = clusters.map(c => c[0]);
-  breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
-
-  // Palette de couleurs pour les familles monoparentales (teintes de violet)
-  const colors = ["#f2d4f7", "#dcb0e3", "#c77dcd", "#9945b0"];
-
-  function getColor(percentage) {
-    return percentage > breaks[3] ? colors[3] :
-           percentage > breaks[2] ? colors[2] :
-           percentage > breaks[1] ? colors[1] :
-                                 colors[0];
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des familles monoparentales déjà initialisée");
+    return;
   }
 
-  function style(feature) {
-    return {
-      fillColor: getColor(feature.properties.single_parent_percentage),
-      weight: 1,
-      opacity: 1,
-      color: "white",
-      fillOpacity: 0.7
-    };
+  try {
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.single_parent_percentage).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 10], [values[Math.floor(values.length/2)] || 20], [values[values.length-1] || 30]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour les familles monoparentales (teintes de violet)
+    const colors = ["#f2d4f7", "#dcb0e3", "#c77dcd", "#9945b0"];
+
+    function getColor(percentage) {
+      return percentage > breaks[3] ? colors[3] :
+             percentage > breaks[2] ? colors[2] :
+             percentage > breaks[1] ? colors[1] :
+                                   colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.single_parent_percentage),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Familles monoparentales : ${feature.properties.single_parent_percentage.toFixed(2)}%<br>
+          Nombre : ${feature.properties.single_parent_count} familles<br>
+          Pères seuls : ${feature.properties.single_fathers_percentage.toFixed(2)}%<br>
+          Mères seules : ${feature.properties.single_mothers_percentage.toFixed(2)}%<br>
+          Total ménages : ${feature.properties.total_households}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
+
+    // Créer une légende pour la carte
+    createSingleParentLegend(breaks, "single-parent-legend", colors);
+
+    // ✅ Stocker l'instance de carte
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
+
+    console.log("✅ Carte des familles monoparentales initialisée avec succès");
+  } catch (e) {
+    console.error("Erreur lors de l'initialisation de la carte des familles monoparentales:", e);
   }
-
-  function onEachFeature(feature, layer) {
-    const popup = `
-      <div class="text-sm">
-        <strong>${feature.properties.name}</strong><br>
-        Familles monoparentales : ${feature.properties.single_parent_percentage.toFixed(2)}%<br>
-        Nombre : ${feature.properties.single_parent_count} familles<br>
-        Pères seuls : ${feature.properties.single_fathers_percentage.toFixed(2)}%<br>
-        Mères seules : ${feature.properties.single_mothers_percentage.toFixed(2)}%<br>
-        Total ménages : ${feature.properties.total_households}
-      </div>
-    `;
-    layer.bindPopup(popup);
-  }
-
-  const map = L.map(mapElement);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(map);
-
-  const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-  map.fitBounds(layer.getBounds());
-
-  // Créer une légende pour la carte
-  createSingleParentLegend(breaks, "single-parent-legend", colors);
-
-  console.log("✅ Carte des familles monoparentales initialisée avec succès");
 }
 
 // Fonction pour créer la légende des familles monoparentales
@@ -214,60 +258,82 @@ function initializeLargeFamiliesMap() {
     return;
   }
 
-  const geojsonData = JSON.parse(geojsonElement.textContent);
-  const values = geojsonData.features.map(f => f.properties.large_families_percentage).filter(v => v > 0).sort((a, b) => a - b);
-
-  // Utiliser des discrétisations de Jenks si possible
-  const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 5], [values[Math.floor(values.length/2)] || 10], [values[values.length-1] || 15]];
-  const breaks = clusters.map(c => c[0]);
-  breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
-
-  // Palette de couleurs pour les familles nombreuses (teintes de bleu/vert)
-  const colors = ["#f1faee", "#a8dadc", "#457b9d", "#1d3557"];
-
-  function getColor(percentage) {
-    return percentage > breaks[3] ? colors[3] :
-           percentage > breaks[2] ? colors[2] :
-           percentage > breaks[1] ? colors[1] :
-                                  colors[0];
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des familles nombreuses déjà initialisée");
+    return;
   }
 
-  function style(feature) {
-    return {
-      fillColor: getColor(feature.properties.large_families_percentage),
-      weight: 1,
-      opacity: 1,
-      color: "white",
-      fillOpacity: 0.7
-    };
+  try {
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.large_families_percentage).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 4) : [[0], [values[0] || 5], [values[Math.floor(values.length/2)] || 10], [values[values.length-1] || 15]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour les familles nombreuses (teintes de bleu/vert)
+    const colors = ["#f1faee", "#a8dadc", "#457b9d", "#1d3557"];
+
+    function getColor(percentage) {
+      return percentage > breaks[3] ? colors[3] :
+             percentage > breaks[2] ? colors[2] :
+             percentage > breaks[1] ? colors[1] :
+                                    colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.large_families_percentage),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Familles nombreuses : ${feature.properties.large_families_percentage.toFixed(2)}%<br>
+          Nombre : ${feature.properties.large_families_count} familles<br>
+          3 enfants : ${feature.properties.families_3_children_percentage.toFixed(2)}%<br>
+          4 enfants ou + : ${feature.properties.families_4_plus_percentage.toFixed(2)}%<br>
+          Total ménages : ${feature.properties.total_households}
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
+
+    // Créer une légende pour la carte
+    createLargeFamiliesLegend(breaks, "large-families-legend", colors);
+
+    // ✅ Stocker l'instance de carte
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
+
+    console.log("✅ Carte des familles nombreuses initialisée avec succès");
+  } catch (e) {
+    console.error("Erreur lors de l'initialisation de la carte des familles nombreuses:", e);
   }
-
-  function onEachFeature(feature, layer) {
-    const popup = `
-      <div class="text-sm">
-        <strong>${feature.properties.name}</strong><br>
-        Familles nombreuses : ${feature.properties.large_families_percentage.toFixed(2)}%<br>
-        Nombre : ${feature.properties.large_families_count} familles<br>
-        3 enfants : ${feature.properties.families_3_children_percentage.toFixed(2)}%<br>
-        4 enfants ou + : ${feature.properties.families_4_plus_percentage.toFixed(2)}%<br>
-        Total ménages : ${feature.properties.total_households}
-      </div>
-    `;
-    layer.bindPopup(popup);
-  }
-
-  const map = L.map(mapElement);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(map);
-
-  const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-  map.fitBounds(layer.getBounds());
-
-  // Créer une légende pour la carte
-  createLargeFamiliesLegend(breaks, "large-families-legend", colors);
-
-  console.log("✅ Carte des familles nombreuses initialisée avec succès");
 }
 
 // Fonction pour créer la légende des familles nombreuses
@@ -306,15 +372,8 @@ function createLargeFamiliesLegend(breaks, containerId, colors) {
   legendContainer.appendChild(legend);
 }
 
-// Initialiser les cartes au chargement de la page
+// ✅ Initialiser les cartes au chargement de la page (une seule fois sur turbo:load)
 document.addEventListener("turbo:load", function() {
-  initializeFamiliesMap();
-  initializeSingleParentMap();
-  initializeLargeFamiliesMap();
-});
-
-// Également initialiser au chargement initial pour les pages non chargées via Turbo
-document.addEventListener("DOMContentLoaded", function() {
   initializeFamiliesMap();
   initializeSingleParentMap();
   initializeLargeFamiliesMap();

@@ -14,60 +14,82 @@ function initializeWomenEmploymentMap() {
     return;
   }
 
-  const geojsonData = JSON.parse(geojsonElement.textContent);
-  const values = geojsonData.features.map(f => f.properties.activity_rate).filter(v => v > 0).sort((a, b) => a - b);
-
-  // Utiliser des discrétisations de Jenks si possible
-  const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [55], [65], [75], [85]];
-  const breaks = clusters.map(c => c[0]);
-  breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
-
-  // Palette de couleurs pour le taux d'activité (du plus faible au plus élevé)
-  const colors = ["#fee0d2", "#fc9272", "#fb6a4a", "#de2d26", "#a50f15"];
-
-  function getColor(rate) {
-    return rate > breaks[4] ? colors[4] :
-           rate > breaks[3] ? colors[3] :
-           rate > breaks[2] ? colors[2] :
-           rate > breaks[1] ? colors[1] :
-                            colors[0];
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des taux d'activité des femmes déjà initialisée");
+    return;
   }
 
-  function style(feature) {
-    return {
-      fillColor: getColor(feature.properties.activity_rate),
-      weight: 1,
-      opacity: 1,
-      color: "white",
-      fillOpacity: 0.7
-    };
+  try {
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.activity_rate).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [55], [65], [75], [85]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour le taux d'activité (du plus faible au plus élevé)
+    const colors = ["#fee0d2", "#fc9272", "#fb6a4a", "#de2d26", "#a50f15"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.activity_rate),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Taux d'activité : <strong>${feature.properties.activity_rate.toFixed(1)}%</strong><br>
+          Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%<br>
+          Temps partiel : ${feature.properties.part_time_rate_15_64.toFixed(1)}%<br>
+          Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
+
+    // Créer une légende pour la carte
+    createWomenEmploymentLegend(breaks, "women-employment-legend", colors);
+
+    // ✅ Stocker l'instance de carte ET ses bounds initiaux
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
+
+    console.log("✅ Carte des taux d'activité des femmes initialisée avec succès");
+  } catch (e) {
+    console.error("Erreur lors de l'initialisation de la carte des taux d'activité des femmes:", e);
   }
-
-  function onEachFeature(feature, layer) {
-    const popup = `
-      <div class="text-sm">
-        <strong>${feature.properties.name}</strong><br>
-        Taux d'activité : <strong>${feature.properties.activity_rate.toFixed(1)}%</strong><br>
-        Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%<br>
-        Temps partiel : ${feature.properties.part_time_rate_15_64.toFixed(1)}%<br>
-        Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
-      </div>
-    `;
-    layer.bindPopup(popup);
-  }
-
-  const map = L.map(mapElement);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(map);
-
-  const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-  map.fitBounds(layer.getBounds());
-
-  // Créer une légende pour la carte
-  createWomenEmploymentLegend(breaks, "women-employment-legend", colors);
-
-  console.log("✅ Carte des taux d'activité des femmes initialisée avec succès");
 }
 
 // Fonction pour créer la légende des taux d'activité des femmes
@@ -116,61 +138,83 @@ function initializeWomenEmploymentRateMap() {
     return;
   }
 
-  const geojsonData = JSON.parse(geojsonElement.textContent);
-  const values = geojsonData.features.map(f => f.properties.employment_rate).filter(v => v > 0).sort((a, b) => a - b);
-
-  // Utiliser des discrétisations de Jenks si possible
-  const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [50], [60], [70], [80]];
-  const breaks = clusters.map(c => c[0]);
-  breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
-
-  // Palette de couleurs pour le taux d'emploi (du plus faible au plus élevé)
-  // Utilisation d'une palette différente pour distinguer des taux d'activité
-  const colors = ["#edf8fb", "#b3cde3", "#8c96c6", "#8856a7", "#810f7c"];
-
-  function getColor(rate) {
-    return rate > breaks[4] ? colors[4] :
-           rate > breaks[3] ? colors[3] :
-           rate > breaks[2] ? colors[2] :
-           rate > breaks[1] ? colors[1] :
-                            colors[0];
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des taux d'emploi des femmes déjà initialisée");
+    return;
   }
 
-  function style(feature) {
-    return {
-      fillColor: getColor(feature.properties.employment_rate),
-      weight: 1,
-      opacity: 1,
-      color: "white",
-      fillOpacity: 0.7
-    };
+  try {
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.employment_rate).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [50], [60], [70], [80]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour le taux d'emploi (du plus faible au plus élevé)
+    // Utilisation d'une palette différente pour distinguer des taux d'activité
+    const colors = ["#edf8fb", "#b3cde3", "#8c96c6", "#8856a7", "#810f7c"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.employment_rate),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Taux d'emploi : <strong>${feature.properties.employment_rate.toFixed(1)}%</strong><br>
+          Taux d'activité : ${feature.properties.activity_rate.toFixed(1)}%<br>
+          Écart : ${(feature.properties.activity_rate - feature.properties.employment_rate).toFixed(1)} points<br>
+          Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
+
+    // Créer une légende pour la carte
+    createWomenEmploymentRateLegend(breaks, "women-employment-rate-legend", colors);
+
+    // ✅ Stocker l'instance de carte
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
+
+    console.log("✅ Carte des taux d'emploi des femmes initialisée avec succès");
+  } catch (e) {
+    console.error("Erreur lors de l'initialisation de la carte des taux d'emploi des femmes:", e);
   }
-
-  function onEachFeature(feature, layer) {
-    const popup = `
-      <div class="text-sm">
-        <strong>${feature.properties.name}</strong><br>
-        Taux d'emploi : <strong>${feature.properties.employment_rate.toFixed(1)}%</strong><br>
-        Taux d'activité : ${feature.properties.activity_rate.toFixed(1)}%<br>
-        Écart : ${(feature.properties.activity_rate - feature.properties.employment_rate).toFixed(1)} points<br>
-        Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
-      </div>
-    `;
-    layer.bindPopup(popup);
-  }
-
-  const map = L.map(mapElement);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(map);
-
-  const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-  map.fitBounds(layer.getBounds());
-
-  // Créer une légende pour la carte
-  createWomenEmploymentRateLegend(breaks, "women-employment-rate-legend", colors);
-
-  console.log("✅ Carte des taux d'emploi des femmes initialisée avec succès");
 }
 
 // Fonction pour créer la légende des taux d'emploi des femmes
@@ -219,61 +263,83 @@ function initializeWomenPartTimeMap() {
     return;
   }
 
-  const geojsonData = JSON.parse(geojsonElement.textContent);
-  const values = geojsonData.features.map(f => f.properties.part_time_rate_15_64).filter(v => v > 0).sort((a, b) => a - b);
-
-  // Utiliser des discrétisations de Jenks si possible
-  const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [25], [30], [35], [40]];
-  const breaks = clusters.map(c => c[0]);
-  breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
-
-  // Palette de couleurs pour le taux de temps partiel (du plus faible au plus élevé)
-  // Utilisation d'une palette violette pour distinguer des autres indicateurs
-  const colors = ["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#756bb1"];
-
-  function getColor(rate) {
-    return rate > breaks[4] ? colors[4] :
-           rate > breaks[3] ? colors[3] :
-           rate > breaks[2] ? colors[2] :
-           rate > breaks[1] ? colors[1] :
-                            colors[0];
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des taux de temps partiel des femmes déjà initialisée");
+    return;
   }
 
-  function style(feature) {
-    return {
-      fillColor: getColor(feature.properties.part_time_rate_15_64),
-      weight: 1,
-      opacity: 1,
-      color: "white",
-      fillOpacity: 0.7
-    };
+  try {
+    const geojsonData = JSON.parse(geojsonElement.textContent);
+    const values = geojsonData.features.map(f => f.properties.part_time_rate_15_64).filter(v => v > 0).sort((a, b) => a - b);
+
+    // Utiliser des discrétisations de Jenks si possible
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [25], [30], [35], [40]];
+    const breaks = clusters.map(c => c[0]);
+    breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
+
+    // Palette de couleurs pour le taux de temps partiel (du plus faible au plus élevé)
+    // Utilisation d'une palette violette pour distinguer des autres indicateurs
+    const colors = ["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#756bb1"];
+
+    function getColor(rate) {
+      return rate > breaks[4] ? colors[4] :
+             rate > breaks[3] ? colors[3] :
+             rate > breaks[2] ? colors[2] :
+             rate > breaks[1] ? colors[1] :
+                              colors[0];
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.part_time_rate_15_64),
+        weight: 1,
+        opacity: 1,
+        color: "white",
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      const popup = `
+        <div class="text-sm">
+          <strong>${feature.properties.name}</strong><br>
+          Taux de temps partiel : <strong>${feature.properties.part_time_rate_15_64.toFixed(1)}%</strong><br>
+          Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%<br>
+          Taux d'activité : ${feature.properties.activity_rate.toFixed(1)}%<br>
+          Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
+        </div>
+      `;
+      layer.bindPopup(popup);
+    }
+
+    const map = L.map(mapElement);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
+
+    // Créer une légende pour la carte
+    createWomenPartTimeLegend(breaks, "women-part-time-legend", colors);
+
+    // ✅ Stocker l'instance de carte
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds);
+
+    console.log("✅ Carte des taux de temps partiel des femmes initialisée avec succès");
+  } catch (e) {
+    console.error("Erreur lors de l'initialisation de la carte des taux de temps partiel des femmes:", e);
   }
-
-  function onEachFeature(feature, layer) {
-    const popup = `
-      <div class="text-sm">
-        <strong>${feature.properties.name}</strong><br>
-        Taux de temps partiel : <strong>${feature.properties.part_time_rate_15_64.toFixed(1)}%</strong><br>
-        Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%<br>
-        Taux d'activité : ${feature.properties.activity_rate.toFixed(1)}%<br>
-        Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
-      </div>
-    `;
-    layer.bindPopup(popup);
-  }
-
-  const map = L.map(mapElement);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(map);
-
-  const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-  map.fitBounds(layer.getBounds());
-
-  // Créer une légende pour la carte
-  createWomenPartTimeLegend(breaks, "women-part-time-legend", colors);
-
-  console.log("✅ Carte des taux de temps partiel des femmes initialisée avec succès");
 }
 
 // Fonction pour créer la légende des taux de temps partiel des femmes
@@ -313,15 +379,8 @@ function createWomenPartTimeLegend(breaks, containerId, colors) {
   legendContainer.appendChild(legend);
 }
 
-// Initialiser les cartes au chargement de la page
+// ✅ Initialiser les cartes au chargement de la page (une seule fois sur turbo:load)
 document.addEventListener("turbo:load", function() {
-  initializeWomenEmploymentMap();
-  initializeWomenEmploymentRateMap();
-  initializeWomenPartTimeMap();
-});
-
-// Également initialiser au chargement initial pour les pages non chargées via Turbo
-document.addEventListener("DOMContentLoaded", function() {
   initializeWomenEmploymentMap();
   initializeWomenEmploymentRateMap();
   initializeWomenPartTimeMap();

@@ -1,1 +1,50 @@
 @import "tailwindcss";
+
+/* Onglets - styles personnalisés pour une meilleure UX */
+.tab-content {
+  min-height: 500px;
+}
+
+/* Smooth transitions pour les onglets */
+[data-tabs-target="tab"] {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Animation de fade-in pour les panneaux */
+[data-tabs-target="panel"]:not(.hidden) {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive - scroll horizontal pour les onglets sur mobile */
+@media (max-width: 768px) {
+  nav {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  nav::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Forcer les cartes à se redimensionner correctement */
+[id*="map"] {
+  transition: none !important;
+}
+
+/* S'assurer que les cartes gardent leur taille */
+.leaflet-container {
+  width: 100% !important;
+  height: 500px !important;
+}

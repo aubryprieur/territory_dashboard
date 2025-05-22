@@ -11,6 +11,12 @@ function initializeBirthsCountMap() {
     return;
   }
 
+  // ✅ Vérification simple pour éviter la double initialisation
+  if (mapElement._leaflet_id) {
+    console.log("Carte des naissances déjà initialisée");
+    return;
+  }
+
   try {
     const geojsonData = JSON.parse(geojsonElement.textContent);
     const values = geojsonData.features.map(f => f.properties.births_count).filter(v => v > 0).sort((a, b) => a - b);
@@ -56,9 +62,21 @@ function initializeBirthsCountMap() {
     }).addTo(map);
 
     const layer = L.geoJSON(geojsonData, { style, onEachFeature }).addTo(map);
-    map.fitBounds(layer.getBounds());
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
 
     createLegend(breaks, "births-count-legend", colors);
+
+    // ✅ Stocker l'instance de carte ET ses bounds initiaux
+    if (!window.leafletMaps) {
+      window.leafletMaps = new Map();
+    }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
+    window.leafletMaps.set(mapElement.id, map);
+    window.mapBounds.set(mapElement.id, bounds); // ✅ Stocker les bounds corrects
 
     console.log("✅ Carte des naissances initialisée avec succès");
   } catch (e) {
@@ -68,9 +86,6 @@ function initializeBirthsCountMap() {
 
 /**
  * Crée une légende pour une carte choroplèthe
- * @param {Array} breaks - Les points de rupture pour la discrétisation
- * @param {string} containerId - L'ID du conteneur HTML pour la légende
- * @param {Array} colors - Les couleurs à utiliser pour la légende
  */
 function createLegend(breaks, containerId, colors) {
   const container = document.getElementById(containerId);
@@ -107,18 +122,9 @@ function createLegend(breaks, containerId, colors) {
   container.appendChild(legend);
 }
 
-// Initialiser la carte au chargement de la page
+// ✅ N'initialiser qu'une seule fois, seulement sur turbo:load
 document.addEventListener("turbo:load", function() {
   initializeBirthsCountMap();
-});
-
-// Également initialiser au chargement initial pour les pages non chargées via Turbo
-document.addEventListener("DOMContentLoaded", function() {
-  // Vérifier si la page a déjà été chargée par Turbo pour éviter une double initialisation
-  if (!window.birthsMapInitialized) {
-    initializeBirthsCountMap();
-    window.birthsMapInitialized = true;
-  }
 });
 
 // Exporter les fonctions pour les rendre disponibles

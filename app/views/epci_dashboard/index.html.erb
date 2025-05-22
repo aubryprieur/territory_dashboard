@@ -1,21 +1,199 @@
-<div class="py-6">
+<div class="py-6" data-controller="tabs" data-tabs-default-tab-value="population">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- En-tête du dashboard -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-semibold text-gray-900">Dashboard EPCI: <%= @epci_name %></h1>
       <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
         Code EPCI: <%= @epci_code %>
       </span>
     </div>
-    <%= render "epci_dashboard/population" %>
-    <%= render "epci_dashboard/communes_births" %>
-    <%= render "epci_dashboard/families" %>
-    <%= render "epci_dashboard/communes_children" %>
-    <%= render "epci_dashboard/schooling" %>
-    <%= render "epci_dashboard/economic_data" %>
-    <%= render "epci_dashboard/childcare" %>
-    <%= render "epci_dashboard/family_employment" %>
-    <%= render "epci_dashboard/women_employment" %>
-    <%= render "epci_dashboard/domestic_violence" %>
 
+    <!-- Navigation par onglets -->
+    <div class="border-b border-gray-200 mb-6">
+      <nav class="-mb-px flex space-x-8 overflow-x-auto">
+        <!-- Onglet Population -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="population"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            Population
+          </span>
+        </button>
+
+        <!-- Onglet Naissances -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="births"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+            Naissances
+          </span>
+        </button>
+
+        <!-- Onglet Familles -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="families"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V9a5 5 0 0110 0v8m0 0v4m0-4H3m18 0v4m0-4V9a5 5 0 00-10 0v8m0 0H21"></path>
+            </svg>
+            Familles
+          </span>
+        </button>
+
+        <!-- Onglet Enfants -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="children"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1M9 16v-2a2 2 0 012-2h2a2 2 0 012 2v2"></path>
+            </svg>
+            Enfants
+          </span>
+        </button>
+
+        <!-- Onglet Scolarisation -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="schooling"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            Scolarisation
+          </span>
+        </button>
+
+        <!-- Onglet Économie -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="economy"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+            Économie
+          </span>
+        </button>
+
+        <!-- Onglet Petite Enfance -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="childcare"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            Petite Enfance
+          </span>
+        </button>
+
+        <!-- Onglet Emploi Familles -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="family-employment"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"></path>
+            </svg>
+            Emploi Familles
+          </span>
+        </button>
+
+        <!-- Onglet Emploi Femmes -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="women-employment"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Emploi Femmes
+          </span>
+        </button>
+
+        <!-- Onglet Violences -->
+        <button data-tabs-target="tab"
+                data-action="click->tabs#switch"
+                data-tab-id="violence"
+                class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-gray-700">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            Violences
+          </span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Panneaux de contenu -->
+    <div class="tab-content">
+      <!-- Panel Population -->
+      <div data-tabs-target="panel" data-tab-id="population" class="hidden">
+        <%= render "epci_dashboard/population" %>
+      </div>
+
+      <!-- Panel Naissances -->
+      <div data-tabs-target="panel" data-tab-id="births" class="hidden">
+        <%= render "epci_dashboard/communes_births" %>
+      </div>
+
+      <!-- Panel Familles -->
+      <div data-tabs-target="panel" data-tab-id="families" class="hidden">
+        <%= render "epci_dashboard/families" %>
+      </div>
+
+      <!-- Panel Enfants -->
+      <div data-tabs-target="panel" data-tab-id="children" class="hidden">
+        <%= render "epci_dashboard/communes_children" %>
+      </div>
+
+      <!-- Panel Scolarisation -->
+      <div data-tabs-target="panel" data-tab-id="schooling" class="hidden">
+        <%= render "epci_dashboard/schooling" %>
+      </div>
+
+      <!-- Panel Économie -->
+      <div data-tabs-target="panel" data-tab-id="economy" class="hidden">
+        <%= render "epci_dashboard/economic_data" %>
+      </div>
+
+      <!-- Panel Petite Enfance -->
+      <div data-tabs-target="panel" data-tab-id="childcare" class="hidden">
+        <%= render "epci_dashboard/childcare" %>
+      </div>
+
+      <!-- Panel Emploi Familles -->
+      <div data-tabs-target="panel" data-tab-id="family-employment" class="hidden">
+        <%= render "epci_dashboard/family_employment" %>
+      </div>
+
+      <!-- Panel Emploi Femmes -->
+      <div data-tabs-target="panel" data-tab-id="women-employment" class="hidden">
+        <%= render "epci_dashboard/women_employment" %>
+      </div>
+
+      <!-- Panel Violences -->
+      <div data-tabs-target="panel" data-tab-id="violence" class="hidden">
+        <%= render "epci_dashboard/domestic_violence" %>
+      </div>
+    </div>
   </div>
 </div>
