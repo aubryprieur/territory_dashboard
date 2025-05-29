@@ -71,10 +71,29 @@
       </div>
     </div>
 
-    <!-- Navigation par onglets avec design moderne -->
-    <div class="bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 mb-8 overflow-hidden">
-      <div class="p-2">
-        <nav class="flex space-x-1 overflow-x-auto scrollbar-hide">
+<!-- Navigation par onglets avec design moderne -->
+<div class="bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 mb-8 overflow-hidden">
+  <div class="p-2 relative">
+    <!-- Flèche gauche -->
+    <button id="scroll-left"
+            class="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg border border-white/50 hover:bg-white/90 transition-all duration-300 hover:scale-110 opacity-0">
+      <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+
+    <!-- Flèche droite -->
+    <button id="scroll-right"
+            class="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg border border-white/50 hover:bg-white/90 transition-all duration-300 hover:scale-110">
+      <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+    </button>
+
+    <!-- Gradients pour indiquer le défilement -->
+    <div class="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white/60 to-transparent pointer-events-none z-5 opacity-0" id="gradient-left"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white/60 to-transparent pointer-events-none z-5" id="gradient-right"></div>
+        <nav class="flex space-x-1 overflow-x-auto scrollbar-hide scroll-smooth" id="tabs-container">
           <!-- Onglet Population -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
@@ -258,6 +277,66 @@
       </div>
     </div>
 
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const tabsContainer = document.getElementById('tabs-container');
+        const scrollLeftBtn = document.getElementById('scroll-left');
+        const scrollRightBtn = document.getElementById('scroll-right');
+        const gradientLeft = document.getElementById('gradient-left');
+        const gradientRight = document.getElementById('gradient-right');
+
+        // Fonction pour vérifier la position de défilement
+        function checkScroll() {
+          const scrollLeft = tabsContainer.scrollLeft;
+          const scrollWidth = tabsContainer.scrollWidth;
+          const clientWidth = tabsContainer.clientWidth;
+          const maxScroll = scrollWidth - clientWidth;
+
+          // Afficher/masquer la flèche gauche
+          if (scrollLeft > 10) {
+            scrollLeftBtn.classList.remove('opacity-0');
+            scrollLeftBtn.classList.add('opacity-100');
+            gradientLeft.classList.remove('opacity-0');
+            gradientLeft.classList.add('opacity-100');
+          } else {
+            scrollLeftBtn.classList.remove('opacity-100');
+            scrollLeftBtn.classList.add('opacity-0');
+            gradientLeft.classList.remove('opacity-100');
+            gradientLeft.classList.add('opacity-0');
+          }
+
+          // Afficher/masquer la flèche droite
+          if (scrollLeft < maxScroll - 10) {
+            scrollRightBtn.classList.remove('opacity-0');
+            scrollRightBtn.classList.add('opacity-100');
+            gradientRight.classList.remove('opacity-0');
+            gradientRight.classList.add('opacity-100');
+          } else {
+            scrollRightBtn.classList.remove('opacity-100');
+            scrollRightBtn.classList.add('opacity-0');
+            gradientRight.classList.remove('opacity-100');
+            gradientRight.classList.add('opacity-0');
+          }
+        }
+
+        // Défilement avec les flèches
+        scrollLeftBtn.addEventListener('click', function() {
+          tabsContainer.scrollBy({ left: -200, behavior: 'smooth' });
+        });
+
+        scrollRightBtn.addEventListener('click', function() {
+          tabsContainer.scrollBy({ left: 200, behavior: 'smooth' });
+        });
+
+        // Vérifier le défilement lors du chargement et lors du scroll
+        tabsContainer.addEventListener('scroll', checkScroll);
+        window.addEventListener('resize', checkScroll);
+
+        // Vérification initiale
+        setTimeout(checkScroll, 100);
+      });
+    </script>
+
     <!-- Panneaux de contenu avec animation -->
     <div class="tab-content">
       <!-- Panel Population -->
@@ -331,6 +410,143 @@
       </div>
     </div>
   </div>
+  <style>
+    /* Animations personnalisées */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Masquer la scrollbar pour les onglets */
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Effet de glassmorphism amélioré */
+    .backdrop-blur-md {
+      backdrop-filter: blur(12px);
+    }
+
+    .backdrop-blur-sm {
+      backdrop-filter: blur(6px);
+    }
+
+    /* Transitions fluides pour les onglets */
+    [data-tabs-target="tab"] {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+    }
+
+    [data-tabs-target="tab"]:hover {
+      transform: translateY(-1px);
+    }
+
+    [data-tabs-target="tab"].active {
+      transform: scale(1.02) translateY(-2px);
+    }
+
+    /* Effet de survol pour les onglets inactifs */
+    [data-tabs-target="tab"]:not(.bg-indigo-100):hover {
+      background-color: rgb(238 242 255) !important; /* Bleu très clair */
+      transform: translateY(-1px);
+    }
+
+    /* Effet de survol amélioré pour les icônes */
+    [data-tabs-target="tab"]:not(.bg-indigo-100):hover .p-2 {
+      background: linear-gradient(to right, rgb(224 231 255), rgb(221 214 254)) !important;
+    }
+
+    /* Curseur pointer sur tous les onglets */
+    [data-tabs-target="tab"] {
+      cursor: pointer;
+    }
+
+    /* Forcer le style des onglets actifs */
+    [data-tabs-target="tab"].bg-indigo-100 {
+      background-color: rgb(224 231 255) !important;
+      color: rgb(67 56 202) !important;
+    }
+
+    /* S'assurer que les onglets ont position relative */
+    [data-tabs-target="tab"] {
+      position: relative;
+    }
+
+    /* Améliorer le contraste */
+    [data-tabs-target="tab"].bg-indigo-100 .p-2 {
+      background: linear-gradient(to right, rgb(199 210 254), rgb(196 181 253)) !important;
+    }
+
+    /* Animation de transition pour l'onglet actif */
+    [data-tabs-target="tab"].bg-indigo-100 {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Amélioration du focus pour l'accessibilité */
+    input:focus, button:focus {
+      outline: 2px solid #3B82F6;
+      outline-offset: 2px;
+    }
+
+    /* Animation pour les cartes */
+    .hover\:shadow-xl:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Gradient de fond amélioré */
+    .bg-gradient-to-br {
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Style pour les boutons d'accès rapide */
+    .inline-flex:hover {
+      transform: translateY(-1px) scale(1.02);
+    }
+
+    /* Animation de chargement pour les résultats de recherche */
+    .loading {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Option alternative avec un bleu plus visible pour le survol */
+    /* Décommentez les lignes suivantes si vous préférez un survol plus marqué */
+    /*
+    [data-tabs-target="tab"]:not(.bg-indigo-100):hover {
+      background-color: rgb(199 210 254) !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    */
+  </style>
 </div>
 
 <script>

@@ -24,35 +24,39 @@ export default class extends Controller {
   showTab(tabId) {
     // Désactiver tous les onglets
     this.tabTargets.forEach(tab => {
-      tab.classList.remove("bg-indigo-100", "text-indigo-700", "border-indigo-500")
-      tab.classList.add("text-gray-500", "hover:text-gray-700", "border-transparent")
-    })
+      // Retirer TOUTES les classes d'état actif
+      tab.classList.remove("bg-indigo-100", "text-indigo-700", "border-indigo-500", "bg-white", "shadow-lg", "text-gray-900", "scale-105");
+      // Ajouter les classes d'état inactif
+      tab.classList.add("text-gray-500", "hover:text-gray-700", "border-transparent");
+    });
 
     // Masquer tous les panneaux
     this.panelTargets.forEach(panel => {
-      panel.classList.add("hidden")
-    })
+      panel.classList.add("hidden");
+    });
 
     // Activer l'onglet sélectionné
-    const activeTab = this.tabTargets.find(tab => tab.dataset.tabId === tabId)
+    const activeTab = this.tabTargets.find(tab => tab.dataset.tabId === tabId);
     if (activeTab) {
-      activeTab.classList.remove("text-gray-500", "hover:text-gray-700", "border-transparent")
-      activeTab.classList.add("bg-indigo-100", "text-indigo-700", "border-indigo-500")
+      // Retirer les classes d'état inactif
+      activeTab.classList.remove("text-gray-500", "hover:text-gray-700", "border-transparent");
+      // Ajouter les classes d'état actif (garder le style bleuté original)
+      activeTab.classList.add("bg-indigo-100", "text-indigo-700", "border-indigo-500");
     }
 
     // Afficher le panneau correspondant
-    const activePanel = this.panelTargets.find(panel => panel.dataset.tabId === tabId)
+    const activePanel = this.panelTargets.find(panel => panel.dataset.tabId === tabId);
     if (activePanel) {
-      activePanel.classList.remove("hidden")
+      activePanel.classList.remove("hidden");
 
       // Solution simple : redimensionnement direct après un délai
       setTimeout(() => {
-        this.resizeAllMaps()
-      }, 100)
+        this.resizeAllMaps();
+      }, 100);
     }
 
     // Sauvegarder l'onglet actif dans le localStorage
-    localStorage.setItem('epci-dashboard-active-tab', tabId)
+    localStorage.setItem('epci-dashboard-active-tab', tabId);
   }
 
   resizeAllMaps() {
