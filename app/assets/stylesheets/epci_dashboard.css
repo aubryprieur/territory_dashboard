@@ -37,52 +37,42 @@
 [data-tabs-target="tab"] {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center;
+  position: relative;
+  cursor: pointer;
 }
 
+/* Effet de survol pour TOUS les onglets */
 [data-tabs-target="tab"]:hover {
   transform: translateY(-1px);
 }
 
-[data-tabs-target="tab"].active {
-  transform: scale(1.02) translateY(-2px);
+/* Effet de survol pour les onglets INACTIFS seulement - Haute spécificité */
+nav [data-tabs-target="tab"]:not(.tab-active):hover {
+  background-color: rgba(238, 242, 255, 0.8) !important;
 }
 
-/* Effet de survol pour les onglets inactifs */
-[data-tabs-target="tab"]:not(.bg-indigo-100):hover {
-  background-color: rgb(238 242 255) !important; /* Bleu très clair */
-  transform: translateY(-1px);
-}
-
-/* Effet de survol amélioré pour les icônes */
-[data-tabs-target="tab"]:not(.bg-indigo-100):hover .p-2 {
+/* Effet de survol amélioré pour les icônes des onglets inactifs - Haute spécificité */
+nav [data-tabs-target="tab"]:not(.tab-active):hover .p-2 {
   background: linear-gradient(to right, rgb(224 231 255), rgb(221 214 254)) !important;
 }
 
-/* Curseur pointer sur tous les onglets */
-[data-tabs-target="tab"] {
-  cursor: pointer;
-}
-
-/* Forcer le style des onglets actifs */
-[data-tabs-target="tab"].bg-indigo-100 {
+/* Style pour l'onglet ACTIF */
+[data-tabs-target="tab"].tab-active {
   background-color: rgb(224 231 255) !important;
   color: rgb(67 56 202) !important;
+  border-color: rgb(129 140 248) !important;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* S'assurer que les onglets ont position relative */
-[data-tabs-target="tab"] {
-  position: relative;
-}
-
-/* Améliorer le contraste */
-[data-tabs-target="tab"].bg-indigo-100 .p-2 {
+/* Améliorer le contraste pour l'onglet actif */
+[data-tabs-target="tab"].tab-active .p-2 {
   background: linear-gradient(to right, rgb(199 210 254), rgb(196 181 253)) !important;
 }
 
-/* Animation de transition pour l'onglet actif */
-[data-tabs-target="tab"].bg-indigo-100 {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* Empêcher l'effet de survol sur l'onglet actif */
+[data-tabs-target="tab"].tab-active:hover {
+  transform: translateY(-1px) scale(1.02); /* Maintenir la transformation de l'état actif */
 }
 
 /* Amélioration du focus pour l'accessibilité */

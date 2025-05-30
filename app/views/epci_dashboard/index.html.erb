@@ -602,40 +602,4 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Animation pour les onglets actifs (séparé de la recherche)
-document.addEventListener('DOMContentLoaded', function() {
-  const tabs = document.querySelectorAll('[data-tabs-target="tab"]');
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      // Retirer les styles actifs de tous les onglets
-      tabs.forEach(t => {
-        t.classList.remove('bg-white', 'shadow-lg', 'text-gray-900', 'scale-105');
-        t.classList.add('text-gray-600', 'hover:text-gray-800');
-      });
-
-      // Ajouter les styles actifs à l'onglet cliqué
-      this.classList.remove('text-gray-600', 'hover:text-gray-800');
-      this.classList.add('bg-white', 'shadow-lg', 'text-gray-900', 'scale-105');
-
-      // Animation de pulsation sur l'icône
-      const icon = this.querySelector('svg');
-      if (icon) {
-        icon.classList.add('animate-pulse');
-        setTimeout(() => {
-          icon.classList.remove('animate-pulse');
-        }, 1000);
-      }
-    });
-  });
-
-  // Activer l'onglet par défaut (basé sur le contrôleur Stimulus)
-  setTimeout(() => {
-    const activeTab = document.querySelector('[data-tabs-target="tab"].bg-indigo-100');
-    if (activeTab) {
-      activeTab.classList.remove('bg-indigo-100', 'text-indigo-700', 'border-indigo-500');
-      activeTab.classList.add('bg-white', 'shadow-lg', 'text-gray-900');
-    }
-  }, 100);
-});
 </script>

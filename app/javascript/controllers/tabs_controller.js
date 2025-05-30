@@ -24,10 +24,10 @@ export default class extends Controller {
   showTab(tabId) {
     // Désactiver tous les onglets
     this.tabTargets.forEach(tab => {
-      // Retirer TOUTES les classes d'état actif
-      tab.classList.remove("bg-indigo-100", "text-indigo-700", "border-indigo-500", "bg-white", "shadow-lg", "text-gray-900", "scale-105");
-      // Ajouter les classes d'état inactif
-      tab.classList.add("text-gray-500", "hover:text-gray-700", "border-transparent");
+      // Retirer la classe d'état actif personnalisée
+      tab.classList.remove("tab-active");
+      // Ajouter les classes d'état inactif SANS hover:text-gray-700
+      tab.classList.add("text-gray-500", "border-transparent");
     });
 
     // Masquer tous les panneaux
@@ -39,9 +39,9 @@ export default class extends Controller {
     const activeTab = this.tabTargets.find(tab => tab.dataset.tabId === tabId);
     if (activeTab) {
       // Retirer les classes d'état inactif
-      activeTab.classList.remove("text-gray-500", "hover:text-gray-700", "border-transparent");
-      // Ajouter les classes d'état actif (garder le style bleuté original)
-      activeTab.classList.add("bg-indigo-100", "text-indigo-700", "border-indigo-500");
+      activeTab.classList.remove("text-gray-500", "border-transparent");
+      // Ajouter la classe d'état actif personnalisée
+      activeTab.classList.add("tab-active");
     }
 
     // Afficher le panneau correspondant
