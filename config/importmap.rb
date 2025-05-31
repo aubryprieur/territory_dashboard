@@ -30,6 +30,7 @@ pin "charts/family_employment_chart", to: "charts/family_employment_chart.js"
 pin "charts/age_pyramid_chart", to: "charts/age_pyramid_chart.js"
 
 # EPCI Dashboard
+
 # Charts
 pin "charts/epci_communes_chart", to: "charts/epci_communes_chart.js"
 pin "charts/epci_age_pyramid_chart", to: "charts/epci_age_pyramid_chart.js"
@@ -47,3 +48,9 @@ pin "maps/epci_economic_maps", to: "maps/epci_economic_maps.js"
 pin "maps/epci_families_maps", to: "maps/epci_families_maps.js"
 pin "maps/epci_schooling_maps", to: "maps/epci_schooling_maps.js"
 pin "maps/epci_women_employment_maps", to: "maps/epci_women_employment_maps.js"
+
+# EPCI Dashboard
+pin "epci/dashboard_init", to: "epci/dashboard_init.js"
+pin "epci/commune_search", to: "epci/commune_search.js"
+pin "epci/tabs_scroll", to: "epci/tabs_scroll.js"
+
