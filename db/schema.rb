@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_08_123510) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_31_131633) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -34,6 +34,104 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_08_123510) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["epci"], name: "index_epcis_on_epci", unique: true
+  end
+
+  create_table "question_options", force: :cascade do |t|
+    t.bigint "question_id", null: false
+    t.string "text", null: false
+    t.string "value"
+    t.integer "position", null: false
+    t.boolean "has_other_option", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["question_id", "position"], name: "index_question_options_on_question_id_and_position"
+    t.index ["question_id"], name: "index_question_options_on_question_id"
+  end
+
+  create_table "question_responses", force: :cascade do |t|
+    t.bigint "survey_response_id", null: false
+    t.bigint "question_id", null: false
+    t.text "answer_text"
+    t.json "answer_data"
+    t.boolean "skipped", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["question_id"], name: "index_question_responses_on_question_id"
+    t.index ["survey_response_id", "question_id"], name: "index_question_responses_on_survey_response_and_question", unique: true
+    t.index ["survey_response_id"], name: "index_question_responses_on_survey_response_id"
+  end
+
+  create_table "questions", force: :cascade do |t|
+    t.bigint "survey_section_id", null: false
+    t.string "title", null: false
+    t.text "description"
+    t.string "question_type", null: false
+    t.integer "position", null: false
+    t.boolean "required", default: false
+    t.json "options"
+    t.json "validation_rules"
+    t.json "conditional_logic"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["question_type"], name: "index_questions_on_question_type"
+    t.index ["survey_section_id", "position"], name: "index_questions_on_survey_section_id_and_position"
+    t.index ["survey_section_id"], name: "index_questions_on_survey_section_id"
+  end
+
+  create_table "survey_responses", force: :cascade do |t|
+    t.bigint "survey_id", null: false
+    t.bigint "user_id"
+    t.string "session_id"
+    t.boolean "completed", default: false
+    t.datetime "started_at"
+    t.datetime "completed_at"
+    t.string "ip_address"
+    t.string "user_agent"
+    t.json "metadata"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["completed"], name: "index_survey_responses_on_completed"
+    t.index ["completed_at"], name: "index_survey_responses_on_completed_at"
+    t.index ["session_id"], name: "index_survey_responses_on_session_id"
+    t.index ["started_at"], name: "index_survey_responses_on_started_at"
+    t.index ["survey_id", "completed"], name: "index_survey_responses_on_survey_and_completed"
+    t.index ["survey_id"], name: "index_survey_responses_on_survey_id"
+    t.index ["user_id"], name: "index_survey_responses_on_user_id"
+  end
+
+  create_table "survey_sections", force: :cascade do |t|
+    t.bigint "survey_id", null: false
+    t.string "title", null: false
+    t.text "description"
+    t.integer "position", null: false
+    t.boolean "required", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["survey_id", "position"], name: "index_survey_sections_on_survey_id_and_position"
+    t.index ["survey_id"], name: "index_survey_sections_on_survey_id"
+  end
+
+  create_table "surveys", force: :cascade do |t|
+    t.string "title", null: false
+    t.text "description"
+    t.boolean "is_template", default: false
+    t.boolean "published", default: false
+    t.bigint "created_by_id", null: false
+    t.datetime "published_at"
+    t.datetime "expires_at"
+    t.text "welcome_message"
+    t.text "thank_you_message"
+    t.boolean "allow_anonymous", default: true
+    t.boolean "show_progress_bar", default: true
+    t.json "settings"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_surveys_on_created_by_id"
+    t.index ["expires_at"], name: "index_surveys_on_expires_at"
+    t.index ["is_template"], name: "index_surveys_on_is_template"
+    t.index ["published", "expires_at"], name: "index_surveys_on_published_and_expires_at"
+    t.index ["published"], name: "index_surveys_on_published"
+    t.index ["published_at"], name: "index_surveys_on_published_at"
   end
 
   create_table "territories", force: :cascade do |t|
@@ -65,4 +163,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_08_123510) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["territory_type", "territory_code"], name: "index_users_on_territory_type_and_territory_code"
   end
+
+  add_foreign_key "question_options", "questions"
+  add_foreign_key "question_responses", "questions"
+  add_foreign_key "question_responses", "survey_responses"
+  add_foreign_key "questions", "survey_sections"
+  add_foreign_key "survey_responses", "surveys"
+  add_foreign_key "survey_responses", "users"
+  add_foreign_key "survey_sections", "surveys"
+  add_foreign_key "surveys", "users", column: "created_by_id"
 end
