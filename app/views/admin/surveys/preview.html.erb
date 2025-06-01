@@ -1,0 +1,183 @@
+<!-- app/views/admin/surveys/preview.html.erb -->
+<div class="min-h-screen bg-gray-50 py-12">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Message de prévisualisation -->
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-yellow-700">
+            Mode prévisualisation - Cette enquête n'est pas encore publiée
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulaire de l'enquête -->
+    <div class="bg-white shadow-lg rounded-lg">
+      <!-- En-tête -->
+      <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-t-lg">
+        <h1 class="text-2xl font-bold"><%= @survey.title %></h1>
+        <% if @survey.description.present? %>
+          <p class="mt-2 text-indigo-100"><%= @survey.description %></p>
+        <% end %>
+      </div>
+
+      <!-- Message d'accueil -->
+      <% if @survey.welcome_message.present? %>
+        <div class="p-6 border-b bg-blue-50">
+          <div class="flex items-start">
+            <svg class="h-5 w-5 text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="ml-3 text-gray-700"><%= @survey.welcome_message %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Barre de progression -->
+      <% if @survey.show_progress_bar? %>
+        <div class="px-6 pt-6">
+          <div class="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Progression</span>
+            <span>0%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-indigo-600 h-2 rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Questions -->
+      <div class="p-6 space-y-8">
+        <% question_counter = 0 %>
+        <% @sections.each_with_index do |section, section_index| %>
+          <div class="space-y-6">
+            <!-- Titre de section -->
+            <div class="border-b pb-4">
+              <h2 class="text-xl font-semibold text-gray-900">
+                <%= section.title %>
+                <% if section.required? %>
+                  <span class="text-sm text-red-500 ml-2">*Section obligatoire</span>
+                <% end %>
+              </h2>
+              <% if section.description.present? %>
+                <p class="mt-2 text-gray-600"><%= section.description %></p>
+              <% end %>
+            </div>
+
+            <!-- Questions de la section -->
+            <% section.questions.each do |question| %>
+              <% question_counter += 1 %>
+              <div class="space-y-3">
+                <label class="block">
+                  <span class="text-gray-700 font-medium">
+                    <%= question_counter %>. <%= question.title %>
+                    <% if question.required? %>
+                      <span class="text-red-500">*</span>
+                    <% end %>
+                  </span>
+                  <% if question.description.present? %>
+                    <p class="text-sm text-gray-500 mt-1"><%= question.description %></p>
+                  <% end %>
+                </label>
+
+                <!-- Affichage selon le type de question -->
+                <% case question.question_type %>
+                <% when 'single_choice' %>
+                  <div class="space-y-2">
+                    <% question.question_options.each do |option| %>
+                      <label class="flex items-center">
+                        <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300">
+                        <span class="ml-2"><%= option.text %></span>
+                      </label>
+                    <% end %>
+                  </div>
+
+                <% when 'multiple_choice' %>
+                  <div class="space-y-2">
+                    <% question.question_options.each do |option| %>
+                      <label class="flex items-center">
+                        <input type="checkbox" name="question_<%= question.id %>[]" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        <span class="ml-2"><%= option.text %></span>
+                      </label>
+                    <% end %>
+                  </div>
+
+                <% when 'scale' %>
+                  <div class="flex items-center justify-between">
+                    <% if question.options && question.options['scale_min_label'] %>
+                      <span class="text-sm text-gray-500"><%= question.options['scale_min_label'] %></span>
+                    <% end %>
+                    <div class="flex space-x-3">
+                      <% question.question_options.each do |option| %>
+                        <label class="flex flex-col items-center cursor-pointer">
+                          <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300">
+                          <span class="mt-1 text-sm"><%= option.text %></span>
+                        </label>
+                      <% end %>
+                    </div>
+                    <% if question.options && question.options['scale_max_label'] %>
+                      <span class="text-sm text-gray-500"><%= question.options['scale_max_label'] %></span>
+                    <% end %>
+                  </div>
+
+                <% when 'text' %>
+                  <input type="text" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Votre réponse">
+
+                <% when 'long_text' %>
+                  <textarea name="question_<%= question.id %>" rows="4" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Votre réponse"></textarea>
+
+                <% when 'email' %>
+                  <input type="email" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="exemple@email.com">
+
+                <% when 'phone' %>
+                  <input type="tel" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="06 12 34 56 78">
+
+                <% when 'date' %>
+                  <input type="date" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+
+                <% when 'numeric' %>
+                  <input type="number" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="0">
+
+                <% when 'yes_no' %>
+                  <div class="flex space-x-4">
+                    <label class="flex items-center">
+                      <input type="radio" name="question_<%= question.id %>" value="yes" class="h-4 w-4 text-indigo-600 border-gray-300">
+                      <span class="ml-2">Oui</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="question_<%= question.id %>" value="no" class="h-4 w-4 text-indigo-600 border-gray-300">
+                      <span class="ml-2">Non</span>
+                    </label>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Message de fin de prévisualisation -->
+        <div class="bg-gray-50 rounded-lg p-4 text-center">
+          <p class="text-gray-600">Fin de la prévisualisation</p>
+          <% if @survey.thank_you_message.present? %>
+            <div class="mt-4 p-4 bg-green-50 rounded">
+              <p class="text-green-800"><%= @survey.thank_you_message %></p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="flex justify-center space-x-4 pt-6">
+          <button type="button" onclick="window.close()" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Fermer la prévisualisation
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

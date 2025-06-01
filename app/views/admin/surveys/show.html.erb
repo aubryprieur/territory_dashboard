@@ -1,0 +1,237 @@
+<!-- app/views/admin/surveys/show.html.erb -->
+<div class="py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900"><%= @survey.title %></h1>
+        <% if @survey.description.present? %>
+          <p class="text-gray-600 mt-1"><%= @survey.description %></p>
+        <% end %>
+      </div>
+
+      <div class="flex space-x-3">
+        <%= link_to "Retour", admin_surveys_path, class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+
+        <% unless @survey.published? %>
+          <%= link_to "Éditer", edit_admin_survey_path(@survey), class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700" %>
+        <% end %>
+
+        <%= link_to "Prévisualiser", preview_admin_survey_path(@survey), target: "_blank", class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700" %>
+
+        <% if @survey.published? %>
+          <%= button_to "Fermer", unpublish_admin_survey_path(@survey), method: :patch, class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700" %>
+        <% else %>
+          <% if @sections.any? && @survey.total_questions > 0 %>
+            <%= button_to "Publier", publish_admin_survey_path(@survey), method: :patch, class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700" %>
+          <% else %>
+            <span class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-400 bg-gray-200 cursor-not-allowed">
+              Publier
+            </span>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Questions</dt>
+                <dd class="text-lg font-medium text-gray-900"><%= @survey.total_questions %></dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Réponses</dt>
+                <dd class="text-lg font-medium text-gray-900"><%= @response_count %></dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <% if @survey.published? %>
+                <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                  <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                </div>
+              <% else %>
+                <div class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
+                  <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                </div>
+              <% end %>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Statut</dt>
+                <dd class="text-lg font-medium text-gray-900">
+                  <%= @survey.published? ? 'Publiée' : 'Brouillon' %>
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Créé le</dt>
+                <dd class="text-sm font-medium text-gray-900">
+                  <%= @survey.created_at.strftime('%d/%m/%Y') %>
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="bg-white shadow sm:rounded-lg mb-8">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Actions rapides</h3>
+        <div class="flex flex-wrap gap-3">
+          <% unless @survey.published? %>
+            <%= link_to new_admin_survey_survey_section_path(@survey), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" do %>
+              <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Ajouter une section
+            <% end %>
+          <% end %>
+
+          <% if @response_count > 0 %>
+            <%= link_to results_admin_survey_path(@survey), class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+              <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Voir les résultats
+            <% end %>
+          <% end %>
+
+          <%= button_to duplicate_admin_survey_path(@survey), method: :post, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+            <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Dupliquer comme modèle
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Structure de l'enquête -->
+    <div class="bg-white shadow sm:rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-6">Structure de l'enquête</h3>
+
+        <% if @sections.any? %>
+          <div class="space-y-6">
+            <% @sections.each_with_index do |section, section_index| %>
+              <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 class="text-md font-medium text-gray-900">
+                      Section <%= section_index + 1 %>: <%= section.title %>
+                    </h4>
+                    <% if section.description.present? %>
+                      <p class="text-sm text-gray-600 mt-1"><%= section.description %></p>
+                    <% end %>
+                  </div>
+
+                  <% unless @survey.published? %>
+                    <div class="flex space-x-2">
+                      <%= link_to edit_admin_survey_survey_section_path(@survey, section), class: "text-sm text-indigo-600 hover:text-indigo-500" do %>
+                        Éditer
+                      <% end %>
+                      <%= link_to new_admin_survey_survey_section_question_path(@survey, section), class: "text-sm text-green-600 hover:text-green-500" do %>
+                        + Question
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+
+                <% if section.questions.any? %>
+                  <div class="pl-4 space-y-3">
+                    <% section.questions.each_with_index do |question, question_index| %>
+                      <div class="flex justify-between items-start py-2 border-l-2 border-gray-100 pl-3">
+                        <div class="flex-1">
+                          <p class="text-sm font-medium text-gray-800">
+                            <%= question_index + 1 %>. <%= question.title %>
+                            <% if question.required? %>
+                              <span class="text-red-500">*</span>
+                            <% end %>
+                          </p>
+                          <p class="text-xs text-gray-500 mt-1">
+                            Type: <%= question.question_type.humanize %>
+                            <% if question.question_options.any? %>
+                              • <%= question.question_options.count %> options
+                            <% end %>
+                          </p>
+                        </div>
+
+                        <% unless @survey.published? %>
+                          <%= link_to edit_admin_survey_survey_section_question_path(@survey, section, question), class: "text-xs text-indigo-600 hover:text-indigo-500" do %>
+                            Éditer
+                          <% end %>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <p class="text-sm text-gray-500 italic pl-4">Aucune question dans cette section</p>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-8">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune section</h3>
+            <p class="mt-1 text-sm text-gray-500">Commencez par créer une section pour organiser vos questions.</p>
+            <div class="mt-6">
+              <%= link_to new_admin_survey_survey_section_path(@survey), class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" do %>
+                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Créer la première section
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

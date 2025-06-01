@@ -1,0 +1,132 @@
+<!-- app/views/admin/surveys/new.html.erb -->
+<div class="py-6">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Nouvelle enquête</h1>
+      <%= link_to "Retour à la liste", admin_surveys_path, class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <%= form_with(model: [:admin, @survey], class: "space-y-6") do |form| %>
+          <% if @survey.errors.any? %>
+            <div class="bg-red-50 p-4 rounded-md">
+              <h3 class="text-red-800 font-medium mb-2">
+                <%= pluralize(@survey.errors.count, "erreur") %> ont empêché la création de l'enquête:
+              </h3>
+              <ul class="list-disc pl-5 text-red-700">
+                <% @survey.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <!-- Choix du modèle -->
+          <% if @templates.any? %>
+            <div class="space-y-4">
+              <h3 class="text-lg font-medium text-gray-900">Créer à partir d'un modèle</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <% @templates.each do |template| %>
+                  <div class="border rounded-lg p-4 hover:border-indigo-500 cursor-pointer template-option">
+                    <input type="radio" name="template_id" value="<%= template.id %>" class="sr-only">
+                    <h4 class="font-medium text-gray-900"><%= template.title %></h4>
+                    <% if template.description.present? %>
+                      <p class="text-sm text-gray-500 mt-1"><%= template.description %></p>
+                    <% end %>
+                    <p class="text-xs text-gray-400 mt-2"><%= template.total_questions %> questions</p>
+                  </div>
+                <% end %>
+              </div>
+
+              <div class="border-t pt-4">
+                <label class="flex items-center">
+                  <input type="radio" name="template_id" value="" checked class="h-4 w-4 text-indigo-600 border-gray-300">
+                  <span class="ml-2 text-sm text-gray-700">Créer une enquête vierge</span>
+                </label>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Informations de base -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-medium text-gray-900">Informations générales</h3>
+
+            <div>
+              <%= form.label :title, "Titre de l'enquête", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.text_field :title, class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500", required: true %>
+            </div>
+
+            <div>
+              <%= form.label :description, class: "block text-sm font-medium text-gray-700" %>
+              <%= form.text_area :description, rows: 3, class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <%= form.label :welcome_message, "Message d'accueil", class: "block text-sm font-medium text-gray-700" %>
+                <%= form.text_area :welcome_message, rows: 3, class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+              </div>
+
+              <div>
+                <%= form.label :thank_you_message, "Message de remerciement", class: "block text-sm font-medium text-gray-700" %>
+                <%= form.text_area :thank_you_message, rows: 3, class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Options -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-medium text-gray-900">Options</h3>
+
+            <div class="space-y-3">
+              <label class="flex items-center">
+                <%= form.check_box :is_template, class: "h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
+                <span class="ml-2 text-sm text-gray-700">Créer comme modèle réutilisable</span>
+              </label>
+
+              <label class="flex items-center">
+                <%= form.check_box :allow_anonymous, class: "h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
+                <span class="ml-2 text-sm text-gray-700">Autoriser les réponses anonymes</span>
+              </label>
+
+              <label class="flex items-center">
+                <%= form.check_box :show_progress_bar, class: "h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
+                <span class="ml-2 text-sm text-gray-700">Afficher la barre de progression</span>
+              </label>
+            </div>
+
+            <div>
+              <%= form.label :expires_at, "Date d'expiration (optionnelle)", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.datetime_local_field :expires_at, class: "mt-1 w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3">
+            <%= link_to "Annuler", admin_surveys_path, class: "py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+            <%= form.submit "Créer l'enquête", class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const templateOptions = document.querySelectorAll('.template-option');
+    const templateRadios = document.querySelectorAll('input[name="template_id"]');
+
+    templateOptions.forEach(option => {
+      option.addEventListener('click', function() {
+        // Réinitialiser toutes les options
+        templateOptions.forEach(opt => opt.classList.remove('border-indigo-500', 'bg-indigo-50'));
+        templateRadios.forEach(radio => radio.checked = false);
+
+        // Activer l'option sélectionnée
+        this.classList.add('border-indigo-500', 'bg-indigo-50');
+        this.querySelector('input[type="radio"]').checked = true;
+      });
+    });
+  });
+</script>

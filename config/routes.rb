@@ -7,6 +7,33 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resources :users
+
+    # Routes pour la gestion des enquêtes (super admin uniquement)
+    resources :surveys do
+      member do
+        patch :publish
+        patch :unpublish
+        get :preview
+        post :duplicate
+        get :results
+        get :export_results
+      end
+
+      resources :survey_sections, except: [:index, :show] do
+        resources :questions, except: [:index, :show] do
+          resources :question_options, except: [:index, :show]
+        end
+      end
+    end
+  end
+
+  # Routes publiques pour répondre aux enquêtes (pour plus tard)
+  resources :surveys, only: [:show] do
+    member do
+      get :participate
+      post :submit_response
+    end
+    resources :survey_responses, only: [:create, :update]
   end
 
   # Route pour l'autocomplétion des territoires

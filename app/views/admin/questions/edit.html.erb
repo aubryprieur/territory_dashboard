@@ -1,0 +1,207 @@
+<!-- app/views/admin/questions/edit.html.erb -->
+<div class="py-6">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Modifier la question</h1>
+        <p class="text-gray-600">Section: <%= @section.title %></p>
+      </div>
+      <%= link_to "Retour à l'enquête", admin_survey_path(@survey), class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <%= form_with(model: [:admin, @survey, @section, @question],
+                      class: "space-y-6",
+                      id: "question-form",
+                      data: {
+                        controller: "question-form",
+                        turbo_permanent: true
+                      }) do |form| %>
+          <% if @question.errors.any? %>
+            <div class="bg-red-50 p-4 rounded-md">
+              <h3 class="text-red-800 font-medium mb-2">
+                <%= pluralize(@question.errors.count, "erreur") %> ont empêché la mise à jour de la question:
+              </h3>
+              <ul class="list-disc pl-5 text-red-700">
+                <% @question.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <!-- Informations de base -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div>
+                <%= form.label :title, "Question", class: "block text-sm font-medium text-gray-700" %>
+                <%= form.text_area :title,
+                    rows: 2,
+                    class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                    required: true,
+                    data: {
+                      question_form_target: "title",
+                      action: "input->question-form#updatePreview"
+                    } %>
+              </div>
+
+              <div>
+                <%= form.label :description, "Description/aide (optionnelle)", class: "block text-sm font-medium text-gray-700" %>
+                <%= form.text_area :description,
+                    rows: 2,
+                    class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                    data: {
+                      question_form_target: "description",
+                      action: "input->question-form#updatePreview"
+                    } %>
+              </div>
+
+              <div>
+                <%= form.label :question_type, "Type de question", class: "block text-sm font-medium text-gray-700" %>
+                <%= form.select :question_type, options_for_select([
+                  ['Choix unique', 'single_choice'],
+                  ['Choix multiple', 'multiple_choice'],
+                  ['Échelle (1-5, 1-10...)', 'scale'],
+                  ['Nombre', 'numeric'],
+                  ['Texte court', 'text'],
+                  ['Texte long', 'long_text'],
+                  ['Email', 'email'],
+                  ['Téléphone', 'phone'],
+                  ['Date', 'date'],
+                  ['Oui/Non', 'yes_no']
+                ], @question.question_type),
+                { prompt: 'Sélectionnez un type' },
+                { class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                  data: {
+                    question_form_target: "typeSelect",
+                    action: "change->question-form#typeChanged"
+                  }
+                } %>
+              </div>
+
+              <div>
+                <label class="flex items-center">
+                  <%= form.check_box :required,
+                      class: "h-4 w-4 text-indigo-600 border-gray-300 rounded",
+                      data: {
+                        question_form_target: "required",
+                        action: "change->question-form#updatePreview"
+                      } %>
+                  <span class="ml-2 text-sm text-gray-700">Question obligatoire</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Prévisualisation -->
+            <div class="lg:border-l lg:pl-6">
+              <h3 class="text-sm font-medium text-gray-700 mb-3">Prévisualisation</h3>
+              <div class="border rounded-lg p-4 bg-gray-50 min-h-32" data-question-form-target="preview">
+                <p class="text-gray-500 italic">Sélectionnez un type de question pour voir la prévisualisation</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Options pour les questions à choix -->
+          <div class="hidden space-y-4" data-question-form-target="optionsSection">
+            <h3 class="text-lg font-medium text-gray-900">Options de réponse</h3>
+
+            <div data-question-form-target="optionsContainer">
+              <%= form.fields_for :question_options do |option_form| %>
+                <div class="flex items-center space-x-2 option-field mb-2">
+                  <%= option_form.text_field :text,
+                      placeholder: "Texte de l'option",
+                      class: "flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                      required: true,
+                      data: { action: "input->question-form#updatePreview" } %>
+                  <%= option_form.hidden_field :position %>
+                  <%= option_form.hidden_field :id if option_form.object.persisted? %>
+                  <button type="button"
+                          data-action="click->question-form#removeOption"
+                          class="text-red-600 hover:text-red-500">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              <% end %>
+            </div>
+
+            <button type="button"
+                    data-action="click->question-form#addOption"
+                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+              <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Ajouter une option
+            </button>
+          </div>
+
+          <!-- Configuration pour les échelles -->
+          <div class="hidden space-y-4" data-question-form-target="scaleSection">
+            <h3 class="text-lg font-medium text-gray-900">Configuration de l'échelle</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Valeur minimum</label>
+                <input type="number"
+                       id="scale_min"
+                       name="scale_min"
+                       value="<%= @question.options&.dig('scale_min') || 1 %>"
+                       class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                       data-action="input->question-form#updatePreview">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Valeur maximum</label>
+                <input type="number"
+                       id="scale_max"
+                       name="scale_max"
+                       value="<%= @question.options&.dig('scale_max') || 5 %>"
+                       class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                       data-action="input->question-form#updatePreview">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Pas</label>
+                <input type="number"
+                       id="scale_step"
+                       name="scale_step"
+                       value="<%= @question.options&.dig('scale_step') || 1 %>"
+                       min="1"
+                       class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                       data-action="input->question-form#updatePreview">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Label minimum (optionnel)</label>
+                <input type="text"
+                       id="scale_min_label"
+                       name="scale_min_label"
+                       value="<%= @question.options&.dig('scale_min_label') %>"
+                       placeholder="ex: Pas du tout d'accord"
+                       class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                       data-action="input->question-form#updatePreview">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Label maximum (optionnel)</label>
+                <input type="text"
+                       id="scale_max_label"
+                       name="scale_max_label"
+                       value="<%= @question.options&.dig('scale_max_label') %>"
+                       placeholder="ex: Tout à fait d'accord"
+                       class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                       data-action="input->question-form#updatePreview">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3">
+            <%= link_to "Annuler", admin_survey_path(@survey), class: "py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+            <%= form.submit "Mettre à jour la question", class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
