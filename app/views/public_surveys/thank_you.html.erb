@@ -54,13 +54,31 @@
         </div>
 
         <div class="mt-8 text-center">
-          <p class="text-sm text-gray-600 mb-4">
-            Vous pouvez maintenant fermer cette fenêtre.
+          <p class="text-sm text-gray-600 mb-6">
+            Votre participation est terminée. Vous pouvez maintenant :
           </p>
-          <button onclick="window.close()"
-                  class="px-6 py-3 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
-            Fermer cette page
-          </button>
+
+          <div class="space-y-3">
+            <!-- Option 1 : Retourner au site de la collectivité (si disponible) -->
+            <% if @user_survey.user.territory_type == 'commune' %>
+              <a href="https://www.google.com/search?q=<%= CGI.escape(@user_survey.user.territory_name + ' site officiel') %>"
+                 target="_blank"
+                 class="inline-block px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                Visiter le site de <%= @user_survey.user.territory_name %>
+              </a>
+            <% end %>
+
+            <!-- Option 2 : Message pour fermer manuellement -->
+            <div class="mt-4">
+              <button onclick="tryToClose()"
+                      class="inline-block px-6 py-3 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                Terminer
+              </button>
+              <p class="mt-2 text-xs text-gray-500">
+                Vous pouvez fermer cet onglet manuellement
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -71,3 +89,29 @@
     </div>
   </div>
 </div>
+
+<script>
+  function tryToClose() {
+    // Essayer de fermer la fenêtre (ne fonctionnera que si elle a été ouverte par JS)
+    window.close();
+
+    // Si la fenêtre n'est pas fermée après 100ms, afficher un message
+    setTimeout(function() {
+      // Remplacer le contenu par un message de confirmation
+      document.body.innerHTML = `
+        <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+            <svg class="mx-auto h-16 w-16 text-green-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">C'est terminé !</h2>
+            <p class="text-gray-600">
+              Merci pour votre participation.<br>
+              Vous pouvez maintenant fermer cet onglet.
+            </p>
+          </div>
+        </div>
+      `;
+    }, 100);
+  }
+</script>

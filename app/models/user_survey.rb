@@ -1,3 +1,4 @@
+# app/models/user_survey.rb
 class UserSurvey < ApplicationRecord
   belongs_to :user
   belongs_to :survey
@@ -66,7 +67,20 @@ class UserSurvey < ApplicationRecord
   end
 
   def public_url
-    Rails.application.routes.url_helpers.public_survey_url(public_token, host: Rails.application.config.action_mailer.default_url_options[:host])
+    # En développement, utiliser localhost:3000
+    # En production, utiliser le domaine configuré
+    if Rails.env.development?
+      Rails.application.routes.url_helpers.public_survey_url(
+        public_token,
+        host: 'localhost',
+        port: 3000
+      )
+    else
+      Rails.application.routes.url_helpers.public_survey_url(
+        public_token,
+        host: Rails.application.config.action_mailer.default_url_options[:host]
+      )
+    end
   end
 
   def welcome_message

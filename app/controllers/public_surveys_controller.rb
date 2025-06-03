@@ -1,5 +1,4 @@
 class PublicSurveysController < ApplicationController
-  skip_before_action :authenticate_user!
   before_action :set_user_survey_by_token
   before_action :check_survey_active, except: [:thank_you]
   layout 'public_survey'

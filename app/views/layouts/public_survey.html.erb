@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= @user_survey&.survey&.title || "Enquête" %></title>
+    <title><%= @user_survey&.survey&.title || "Enquête" %> | Territory Dashboard</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <!-- CSS -->
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-    <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
+
+    <!-- JavaScript -->
+    <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="bg-gray-50">
     <main>
       <%= yield %>
     </main>
