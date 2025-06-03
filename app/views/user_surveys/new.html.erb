@@ -1,0 +1,137 @@
+<div class="py-6">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Lancer une enquête</h1>
+        <p class="mt-1 text-sm text-gray-600">Configurez votre enquête "<%= @survey.title %>"</p>
+      </div>
+      <%= link_to "Annuler", available_user_surveys_path, class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg">
+      <div class="px-4 py-5 sm:p-6">
+        <%= form_with(model: @user_survey, url: user_surveys_path, class: "space-y-6") do |form| %>
+          <%= form.hidden_field :survey_id, value: @survey.id %>
+
+          <% if @user_survey.errors.any? %>
+            <div class="bg-red-50 p-4 rounded-md">
+              <h3 class="text-red-800 font-medium mb-2">
+                <%= pluralize(@user_survey.errors.count, "erreur") %> ont empêché la création:
+              </h3>
+              <ul class="list-disc pl-5 text-red-700">
+                <% @user_survey.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <!-- Informations sur l'enquête -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-medium text-gray-900 mb-3">Enquête sélectionnée</h3>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Titre</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= @survey.title %></dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Questions</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= @survey.total_questions %></dd>
+              </div>
+              <% if @survey.description.present? %>
+                <div class="sm:col-span-2">
+                  <dt class="text-sm font-medium text-gray-500">Description</dt>
+                  <dd class="mt-1 text-sm text-gray-900"><%= @survey.description %></dd>
+                </div>
+              <% end %>
+            </dl>
+          </div>
+
+          <!-- Configuration de base -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-medium text-gray-900">Configuration</h3>
+
+            <div>
+              <%= form.label :year, "Année de l'enquête", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.select :year,
+                  options_for_select((2020..Date.current.year + 1).to_a.reverse, @user_survey.year),
+                  {},
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+              <p class="mt-1 text-xs text-gray-500">
+                L'année permet de comparer les résultats d'une année sur l'autre
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <%= form.label :starts_at, "Date de début", class: "block text-sm font-medium text-gray-700" %>
+                <%= form.datetime_local_field :starts_at,
+                    value: @user_survey.starts_at&.strftime('%Y-%m-%dT%H:%M'),
+                    class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+              </div>
+
+              <div>
+                <%= form.label :ends_at, "Date de fin", class: "block text-sm font-medium text-gray-700" %>
+                <%= form.datetime_local_field :ends_at,
+                    value: @user_survey.ends_at&.strftime('%Y-%m-%dT%H:%M'),
+                    class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Personnalisation des messages -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-medium text-gray-900">Personnalisation (optionnel)</h3>
+            <p class="text-sm text-gray-600">
+              Vous pouvez personnaliser les messages pour votre territoire.
+              Si vous laissez ces champs vides, les messages par défaut de l'enquête seront utilisés.
+            </p>
+
+            <div>
+              <%= form.label :custom_welcome_message, "Message d'accueil personnalisé", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.text_area :custom_welcome_message,
+                  rows: 3,
+                  placeholder: @survey.welcome_message || "Message d'accueil par défaut de l'enquête",
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+              <% if @survey.welcome_message.present? %>
+                <details class="mt-2">
+                  <summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                    Voir le message par défaut
+                  </summary>
+                  <div class="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                    <%= @survey.welcome_message %>
+                  </div>
+                </details>
+              <% end %>
+            </div>
+
+            <div>
+              <%= form.label :custom_thank_you_message, "Message de remerciement personnalisé", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.text_area :custom_thank_you_message,
+                  rows: 3,
+                  placeholder: @survey.thank_you_message || "Message de remerciement par défaut de l'enquête",
+                  class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+              <% if @survey.thank_you_message.present? %>
+                <details class="mt-2">
+                  <summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                    Voir le message par défaut
+                  </summary>
+                  <div class="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                    <%= @survey.thank_you_message %>
+                  </div>
+                </details>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="pt-5 border-t border-gray-200">
+            <div class="flex justify-end space-x-3">
+              <%= link_to "Annuler", available_user_surveys_path, class: "py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+              <%= form.submit "Lancer l'enquête", class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

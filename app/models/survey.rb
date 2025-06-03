@@ -3,6 +3,7 @@ class Survey < ApplicationRecord
   has_many :survey_sections, -> { order(:position) }, dependent: :destroy
   has_many :questions, through: :survey_sections
   has_many :survey_responses, dependent: :destroy
+  has_many :user_surveys, dependent: :restrict_with_error
 
   validates :title, presence: true
   validates :created_by, presence: true
@@ -58,5 +59,17 @@ class Survey < ApplicationRecord
     end
 
     new_survey
+  end
+
+  def available_for_users?
+    published? && !expired? && !is_template?
+  end
+
+  def active_user_surveys_count
+    user_surveys.active.count
+  end
+
+  def total_responses_across_all_instances
+    survey_responses.completed.count + user_surveys.sum(:response_count)
   end
 end

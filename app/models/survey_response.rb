@@ -2,9 +2,11 @@ class SurveyResponse < ApplicationRecord
   belongs_to :survey
   belongs_to :user, optional: true
   has_many :question_responses, dependent: :destroy
+  belongs_to :user_survey, optional: true
 
-  validates :survey, presence: true
+  validates :survey, presence: true, unless: -> { user_survey.present? }
   validates :session_id, presence: true, if: -> { user.blank? }
+  validate :ensure_survey_association
 
   scope :completed, -> { where(completed: true) }
   scope :in_progress, -> { where(completed: false) }
@@ -33,5 +35,13 @@ class SurveyResponse < ApplicationRecord
 
   def set_started_at
     self.started_at ||= Time.current
+  end
+
+  def ensure_survey_association
+    if user_survey.present?
+      self.survey ||= user_survey.survey
+    elsif survey.blank?
+      errors.add(:base, "Doit être associé à une enquête ou une instance d'enquête")
+    end
   end
 end

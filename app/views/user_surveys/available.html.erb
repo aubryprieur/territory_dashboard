@@ -1,0 +1,86 @@
+<!-- app/views/user_surveys/available.html.erb -->
+<div class="py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Enquêtes disponibles</h1>
+        <p class="mt-1 text-sm text-gray-600">Sélectionnez une enquête à lancer pour votre territoire</p>
+      </div>
+      <%= link_to "Retour à mes enquêtes", user_surveys_path, class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    </div>
+
+    <% if @available_surveys.any? %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% @available_surveys.each do |survey| %>
+          <div class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                <%= survey.title %>
+              </h3>
+
+              <% if survey.description.present? %>
+                <p class="text-sm text-gray-600 mb-4">
+                  <%= truncate(survey.description, length: 150) %>
+                </p>
+              <% end %>
+
+              <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-500">
+                  <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <%= survey.total_questions %> questions
+                </div>
+
+                <div class="flex items-center text-sm text-gray-500">
+                  <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <%= survey.survey_sections.count %> sections
+                </div>
+
+                <% if survey.show_progress_bar? %>
+                  <div class="flex items-center text-sm text-gray-500">
+                    <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Barre de progression
+                  </div>
+                <% end %>
+              </div>
+
+              <div class="pt-4 border-t">
+                <div class="flex items-center justify-between">
+                  <%= link_to preview_admin_survey_path(survey), target: "_blank", class: "text-sm text-indigo-600 hover:text-indigo-500" do %>
+                    Aperçu
+                    <svg class="inline-block ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  <% end %>
+
+                  <%= link_to new_user_survey_path(survey_id: survey.id), class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" do %>
+                    Lancer l'enquête
+                    <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="bg-white rounded-lg shadow-sm p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">Aucune enquête disponible</h3>
+        <p class="mt-2 text-sm text-gray-500">
+          Aucune enquête n'est actuellement disponible pour votre territoire.
+          Les enquêtes créées par les administrateurs apparaîtront ici.
+        </p>
+      </div>
+    <% end %>
+  </div>
+</div>

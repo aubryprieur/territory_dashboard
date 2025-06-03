@@ -26,6 +26,10 @@ gem 'roo', '~> 2.10.0'
 gem 'jquery-rails'
 # http
 gem 'http'
+# Pagination
+gem 'kaminari'
+# Date
+gem 'groupdate'
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"

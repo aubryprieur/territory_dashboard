@@ -1,0 +1,337 @@
+<!-- app/views/user_surveys/results.html.erb -->
+<div class="py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">
+          Résultats - <%= @user_survey.survey.title %>
+        </h1>
+        <p class="mt-1 text-sm text-gray-600">
+          <%= @user_survey.year %> - <%= @user_survey.response_count %> réponses
+        </p>
+      </div>
+      <div class="flex space-x-3">
+        <%= link_to "Retour", @user_survey, class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+        <%= link_to export_results_user_survey_path(@user_survey, format: :csv), class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700" do %>
+          <svg class="mr-2 h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Exporter CSV
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Graphique d'évolution des réponses -->
+    <% if @responses_by_day.any? %>
+      <div class="bg-white shadow sm:rounded-lg mb-8">
+        <div class="px-4 py-5 sm:p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Évolution des réponses</h3>
+          <div class="h-64">
+            <canvas id="responses-chart"></canvas>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Résultats par question -->
+    <div class="space-y-8">
+      <% @user_survey.survey.survey_sections.includes(questions: :question_options).each do |section| %>
+        <div class="bg-white shadow sm:rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+              <%= section.title %>
+            </h2>
+
+            <div class="space-y-8">
+              <% section.questions.each do |question| %>
+                <div class="border-b pb-6 last:border-b-0 last:pb-0">
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">
+                    <%= question.title %>
+                    <% if question.required? %>
+                      <span class="text-red-500">*</span>
+                    <% end %>
+                  </h3>
+
+                  <% stats = @statistics[question.id] %>
+                  <% if stats %>
+                    <% case question.question_type %>
+                    <% when 'single_choice', 'yes_no' %>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <% if stats.is_a?(Hash) && stats.any? %>
+                            <% total_responses = stats.values.sum %>
+                            <% stats.sort_by { |_, count| -count }.each do |answer, count| %>
+                              <% percentage = (count.to_f / total_responses * 100).round(1) %>
+                              <div class="mb-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                  <span class="text-gray-700">
+                                    <%= question.question_options.find { |o| o.value == answer }&.text || answer %>
+                                  </span>
+                                  <span class="text-gray-500">
+                                    <%= count %> (<%= percentage %>%)
+                                  </span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                  <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= percentage %>%"></div>
+                                </div>
+                              </div>
+                            <% end %>
+                          <% else %>
+                            <p class="text-gray-500">Aucune réponse</p>
+                          <% end %>
+                        </div>
+                        <div>
+                          <canvas id="chart-<%= question.id %>" class="max-h-64"></canvas>
+                        </div>
+                      </div>
+
+                    <% when 'multiple_choice' %>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <% if stats.is_a?(Hash) && stats.any? %>
+                            <% total_responses = @user_survey.response_count %>
+                            <% stats.sort_by { |_, count| -count }.each do |answer, count| %>
+                              <% percentage = (count.to_f / total_responses * 100).round(1) %>
+                              <div class="mb-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                  <span class="text-gray-700">
+                                    <%= question.question_options.find { |o| o.value == answer }&.text || answer %>
+                                  </span>
+                                  <span class="text-gray-500">
+                                    <%= count %> (<%= percentage %>%)
+                                  </span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                  <div class="bg-purple-600 h-2 rounded-full" style="width: <%= percentage %>%"></div>
+                                </div>
+                              </div>
+                            <% end %>
+                          <% else %>
+                            <p class="text-gray-500">Aucune réponse</p>
+                          <% end %>
+                        </div>
+                        <div>
+                          <canvas id="chart-<%= question.id %>" class="max-h-64"></canvas>
+                        </div>
+                      </div>
+
+                    <% when 'scale', 'numeric' %>
+                      <% if stats.is_a?(Hash) && stats[:count] > 0 %>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <dl class="grid grid-cols-2 gap-4">
+                              <div class="bg-gray-50 rounded-lg p-4">
+                                <dt class="text-sm font-medium text-gray-500">Moyenne</dt>
+                                <dd class="mt-1 text-2xl font-semibold text-indigo-600">
+                                  <%= stats[:average] %>
+                                </dd>
+                              </div>
+                              <div class="bg-gray-50 rounded-lg p-4">
+                                <dt class="text-sm font-medium text-gray-500">Réponses</dt>
+                                <dd class="mt-1 text-2xl font-semibold text-gray-900">
+                                  <%= stats[:count] %>
+                                </dd>
+                              </div>
+                              <div class="bg-gray-50 rounded-lg p-4">
+                                <dt class="text-sm font-medium text-gray-500">Min</dt>
+                                <dd class="mt-1 text-2xl font-semibold text-gray-900">
+                                  <%= stats[:min] %>
+                                </dd>
+                              </div>
+                              <div class="bg-gray-50 rounded-lg p-4">
+                                <dt class="text-sm font-medium text-gray-500">Max</dt>
+                                <dd class="mt-1 text-2xl font-semibold text-gray-900">
+                                  <%= stats[:max] %>
+                                </dd>
+                              </div>
+                            </dl>
+                          </div>
+                          <div>
+                            <canvas id="chart-<%= question.id %>" class="max-h-64"></canvas>
+                          </div>
+                        </div>
+                      <% else %>
+                        <p class="text-gray-500">Aucune réponse</p>
+                      <% end %>
+
+                    <% else %>
+                      <% if stats[:total_responses] > 0 %>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                          <p class="text-sm text-gray-600 mb-2">
+                            <%= stats[:total_responses] %> réponses
+                          </p>
+                          <% if stats[:sample_responses].any? %>
+                            <p class="text-xs text-gray-500 mb-2">Exemples de réponses :</p>
+                            <ul class="space-y-2">
+                              <% stats[:sample_responses].each do |response| %>
+                                <li class="text-sm text-gray-700 italic">
+                                  "<%= truncate(response, length: 100) %>"
+                                </li>
+                              <% end %>
+                            </ul>
+                          <% end %>
+                        </div>
+                      <% else %>
+                        <p class="text-gray-500">Aucune réponse</p>
+                      <% end %>
+                    <% end %>
+                  <% else %>
+                    <p class="text-gray-500">Aucune donnée disponible</p>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Graphique d'évolution des réponses
+    <% if @responses_by_day.any? %>
+      const ctx = document.getElementById('responses-chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: <%= @responses_by_day.keys.map { |d| d.strftime('%d/%m') }.to_json.html_safe %>,
+          datasets: [{
+            label: 'Réponses par jour',
+            data: <%= @responses_by_day.values.to_json %>,
+            borderColor: 'rgb(79, 70, 229)',
+            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1
+              }
+            }
+          }
+        }
+      });
+    <% end %>
+
+    // Graphiques pour les questions
+    <% @user_survey.survey.questions.each do |question| %>
+      <% stats = @statistics[question.id] %>
+      <% if stats %>
+        <% case question.question_type %>
+        <% when 'single_choice', 'yes_no' %>
+          <% if stats.is_a?(Hash) && stats.any? %>
+            const ctx<%= question.id %> = document.getElementById('chart-<%= question.id %>').getContext('2d');
+            new Chart(ctx<%= question.id %>, {
+              type: 'doughnut',
+              data: {
+                labels: <%= stats.map { |answer, _| question.question_options.find { |o| o.value == answer }&.text || answer }.to_json.html_safe %>,
+                datasets: [{
+                  data: <%= stats.values.to_json %>,
+                  backgroundColor: [
+                    'rgba(79, 70, 229, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(239, 68, 68, 0.8)',
+                    'rgba(139, 92, 246, 0.8)'
+                  ]
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: 'bottom',
+                    labels: {
+                      padding: 15,
+                      boxWidth: 12
+                    }
+                  }
+                }
+              }
+            });
+          <% end %>
+
+        <% when 'multiple_choice' %>
+          <% if stats.is_a?(Hash) && stats.any? %>
+            const ctx<%= question.id %> = document.getElementById('chart-<%= question.id %>').getContext('2d');
+            new Chart(ctx<%= question.id %>, {
+              type: 'bar',
+              data: {
+                labels: <%= stats.map { |answer, _| question.question_options.find { |o| o.value == answer }&.text || answer }.to_json.html_safe %>,
+                datasets: [{
+                  label: 'Nombre de sélections',
+                  data: <%= stats.values.to_json %>,
+                  backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                  borderColor: 'rgba(139, 92, 246, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      stepSize: 1
+                    }
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: false
+                  }
+                }
+              }
+            });
+          <% end %>
+
+        <% when 'scale' %>
+          <% if stats.is_a?(Hash) && stats[:distribution] %>
+            const ctx<%= question.id %> = document.getElementById('chart-<%= question.id %>').getContext('2d');
+            new Chart(ctx<%= question.id %>, {
+              type: 'bar',
+              data: {
+                labels: <%= stats[:distribution].keys.sort.to_json %>,
+                datasets: [{
+                  label: 'Distribution des réponses',
+                  data: <%= stats[:distribution].sort.map(&:last).to_json %>,
+                  backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                  borderColor: 'rgba(79, 70, 229, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      stepSize: 1
+                    }
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: false
+                  }
+                }
+              }
+            });
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+  });
+</script>

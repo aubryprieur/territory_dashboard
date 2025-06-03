@@ -1,0 +1,73 @@
+<!-- app/views/public_surveys/thank_you.html.erb -->
+<div class="min-h-screen bg-gray-50 py-12">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <!-- En-tête avec succès -->
+      <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-8 text-center">
+        <div class="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
+          <svg class="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold">Merci !</h1>
+        <p class="mt-2 text-green-100">Votre participation a été enregistrée avec succès</p>
+      </div>
+
+      <!-- Message de remerciement -->
+      <div class="p-8">
+        <% if @user_survey.thank_you_message.present? %>
+          <div class="prose max-w-none text-center">
+            <p class="text-lg text-gray-700">
+              <%= @user_survey.thank_you_message %>
+            </p>
+          </div>
+        <% else %>
+          <p class="text-lg text-gray-700 text-center">
+            Nous vous remercions d'avoir pris le temps de répondre à cette enquête.
+            Vos réponses nous aideront à améliorer nos services.
+          </p>
+        <% end %>
+
+        <div class="mt-8 bg-gray-50 rounded-lg p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-3">Informations sur l'enquête</h2>
+          <dl class="space-y-2">
+            <div class="flex justify-between text-sm">
+              <dt class="text-gray-500">Enquête :</dt>
+              <dd class="text-gray-900 font-medium"><%= @survey.title %></dd>
+            </div>
+            <div class="flex justify-between text-sm">
+              <dt class="text-gray-500">Organisateur :</dt>
+              <dd class="text-gray-900">
+                <%= @user_survey.user.territory_name %>
+                <% if @user_survey.user.territory_type == 'commune' %>
+                  <span class="text-xs text-gray-500">(Commune)</span>
+                <% elsif @user_survey.user.territory_type == 'epci' %>
+                  <span class="text-xs text-gray-500">(EPCI)</span>
+                <% end %>
+              </dd>
+            </div>
+            <div class="flex justify-between text-sm">
+              <dt class="text-gray-500">Année :</dt>
+              <dd class="text-gray-900"><%= @user_survey.year %></dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="mt-8 text-center">
+          <p class="text-sm text-gray-600 mb-4">
+            Vous pouvez maintenant fermer cette fenêtre.
+          </p>
+          <button onclick="window.close()"
+                  class="px-6 py-3 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+            Fermer cette page
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-6 text-center text-xs text-gray-500">
+      <p>Si vous avez des questions concernant cette enquête, veuillez contacter l'organisateur.</p>
+    </div>
+  </div>
+</div>
