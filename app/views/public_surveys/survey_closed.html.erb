@@ -1,0 +1,60 @@
+<!-- app/views/public_surveys/survey_closed.html.erb -->
+<div class="min-h-screen bg-gray-50 py-12">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <!-- En-tête -->
+      <div class="bg-gradient-to-r from-gray-500 to-gray-600 text-white p-8 text-center">
+        <div class="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
+          <svg class="w-10 h-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold">Enquête fermée</h1>
+      </div>
+
+      <!-- Message -->
+      <div class="p-8">
+        <div class="text-center">
+          <p class="text-lg text-gray-700 mb-6">
+            Nous sommes désolés, cette enquête n'est plus disponible.
+          </p>
+
+          <div class="bg-gray-50 rounded-lg p-6 mb-6">
+            <% if @user_survey.past? %>
+              <p class="text-gray-600">
+                Cette enquête s'est terminée le <strong><%= l(@user_survey.ends_at, format: :long) %></strong>.
+              </p>
+            <% elsif @user_survey.upcoming? %>
+              <p class="text-gray-600">
+                Cette enquête n'est pas encore ouverte. Elle débutera le <strong><%= l(@user_survey.starts_at, format: :long) %></strong>.
+              </p>
+            <% else %>
+              <p class="text-gray-600">
+                Cette enquête a été fermée par l'organisateur.
+              </p>
+            <% end %>
+          </div>
+
+          <div class="space-y-4">
+            <p class="text-sm text-gray-600">
+              Si vous pensez qu'il s'agit d'une erreur, veuillez contacter l'organisateur :
+            </p>
+            <div class="inline-flex items-center px-4 py-2 bg-blue-50 rounded-lg">
+              <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" />
+              </svg>
+              <span class="text-blue-900 font-medium">
+                <%= @user_survey.user.territory_name %>
+                <% if @user_survey.user.territory_type == 'commune' %>
+                  <span class="text-sm text-blue-700">(Commune)</span>
+                <% elsif @user_survey.user.territory_type == 'epci' %>
+                  <span class="text-sm text-blue-700">(EPCI)</span>
+                <% end %>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

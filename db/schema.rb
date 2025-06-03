@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_31_131633) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_02_142034) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -90,6 +90,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_31_131633) do
     t.json "metadata"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "user_survey_id", null: false
     t.index ["completed"], name: "index_survey_responses_on_completed"
     t.index ["completed_at"], name: "index_survey_responses_on_completed_at"
     t.index ["session_id"], name: "index_survey_responses_on_session_id"
@@ -97,6 +98,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_31_131633) do
     t.index ["survey_id", "completed"], name: "index_survey_responses_on_survey_and_completed"
     t.index ["survey_id"], name: "index_survey_responses_on_survey_id"
     t.index ["user_id"], name: "index_survey_responses_on_user_id"
+    t.index ["user_survey_id"], name: "index_survey_responses_on_user_survey_id"
   end
 
   create_table "survey_sections", force: :cascade do |t|
@@ -145,6 +147,28 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_31_131633) do
     t.index ["libgeo"], name: "index_territories_on_libgeo"
   end
 
+  create_table "user_surveys", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "survey_id", null: false
+    t.integer "year", null: false
+    t.text "custom_welcome_message"
+    t.text "custom_thank_you_message"
+    t.datetime "starts_at", null: false
+    t.datetime "ends_at", null: false
+    t.integer "status", default: 0, null: false
+    t.string "public_token", null: false
+    t.integer "response_count", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["public_token"], name: "index_user_surveys_on_public_token", unique: true
+    t.index ["starts_at", "ends_at"], name: "index_user_surveys_on_starts_at_and_ends_at"
+    t.index ["status"], name: "index_user_surveys_on_status"
+    t.index ["survey_id", "year"], name: "index_user_surveys_on_survey_id_and_year"
+    t.index ["survey_id"], name: "index_user_surveys_on_survey_id"
+    t.index ["user_id", "year"], name: "index_user_surveys_on_user_id_and_year"
+    t.index ["user_id"], name: "index_user_surveys_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -169,7 +193,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_05_31_131633) do
   add_foreign_key "question_responses", "survey_responses"
   add_foreign_key "questions", "survey_sections"
   add_foreign_key "survey_responses", "surveys"
+  add_foreign_key "survey_responses", "user_surveys"
   add_foreign_key "survey_responses", "users"
   add_foreign_key "survey_sections", "surveys"
   add_foreign_key "surveys", "users", column: "created_by_id"
+  add_foreign_key "user_surveys", "surveys"
+  add_foreign_key "user_surveys", "users"
 end

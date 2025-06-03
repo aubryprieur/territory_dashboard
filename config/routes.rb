@@ -27,6 +27,24 @@ Rails.application.routes.draw do
     end
   end
 
+  # Routes pour les enquêtes utilisateurs (communes/EPCI)
+  resources :user_surveys do
+    collection do
+      get :available
+    end
+    member do
+      get :results
+      get :export_results
+      patch :close
+      post :duplicate
+    end
+  end
+
+  # Routes publiques pour répondre aux enquêtes via token
+  get 'survey/:token', to: 'public_surveys#show', as: :public_survey
+  post 'survey/:token/submit', to: 'public_surveys#submit_section', as: :submit_section_public_survey
+  get 'survey/:token/thank-you', to: 'public_surveys#thank_you', as: :thank_you_public_survey
+
   # Routes publiques pour répondre aux enquêtes (pour plus tard)
   resources :surveys, only: [:show] do
     member do

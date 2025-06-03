@@ -1,0 +1,202 @@
+<!-- app/views/user_surveys/compare.html.erb -->
+<div class="py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">
+          Comparaison inter-annuelle
+        </h1>
+        <p class="mt-1 text-sm text-gray-600">
+          <%= @survey.title %> - Années <%= @years.join(', ') %>
+        </p>
+      </div>
+      <%= link_to "Retour", user_surveys_path, class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+    </div>
+
+    <!-- Taux de réponse par année -->
+    <div class="bg-white shadow sm:rounded-lg mb-8">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Évolution du nombre de réponses</h3>
+        <div class="h-64">
+          <canvas id="response-rates-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparaison par question -->
+    <div class="space-y-8">
+      <% @comparison[:questions].each do |question_id, question_data| %>
+        <div class="bg-white shadow sm:rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">
+              <%= question_data[:title] %>
+            </h3>
+
+            <% case question_data[:type] %>
+            <% when 'single_choice', 'yes_no' %>
+              <div class="h-64">
+                <canvas id="trend-chart-<%= question_id %>"></canvas>
+              </div>
+
+            <% when 'scale', 'numeric' %>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="h-64">
+                  <canvas id="average-chart-<%= question_id %>"></canvas>
+                </div>
+                <div>
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Année</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Moyenne</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Réponses</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                      <% question_data[:data].each do |year, stats| %>
+                        <% if stats && stats[:count] > 0 %>
+                          <tr>
+                            <td class="px-4 py-2 text-sm text-gray-900"><%= year %></td>
+                            <td class="px-4 py-2 text-sm text-gray-900"><%= stats[:average] %></td>
+                            <td class="px-4 py-2 text-sm text-gray-500"><%= stats[:count] %></td>
+                          </tr>
+                        <% end %>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            <% when 'multiple_choice' %>
+              <div class="space-y-4">
+                <% question = @survey.questions.find(question_id) %>
+                <% question.question_options.each do |option| %>
+                  <div>
+                    <h4 class="text-sm font-medium text-gray-700 mb-2"><%= option.text %></h4>
+                    <div class="flex items-center space-x-4">
+                      <% @years.each do |year| %>
+                        <% data = question_data[:data][year] %>
+                        <% if data %>
+                          <% count = data[option.value] || 0 %>
+                          <% total = @user_surveys_by_year[year]&.response_count || 1 %>
+                          <% percentage = (count.to_f / total * 100).round(1) %>
+                          <div class="text-center">
+                            <div class="text-xs text-gray-500"><%= year %></div>
+                            <div class="text-lg font-semibold text-gray-900"><%= percentage %>%</div>
+                            <div class="text-xs text-gray-500">(<%= count %>)</div>
+                          </div>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+
+            <% else %>
+              <p class="text-gray-500">
+                Comparaison non disponible pour ce type de question.
+              </p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Graphique des taux de réponse
+    const responseCtx = document.getElementById('response-rates-chart').getContext('2d');
+    new Chart(responseCtx, {
+      type: 'bar',
+      data: {
+        labels: <%= @response_rates.map { |r| r[:year] }.to_json.html_safe %>,
+        datasets: [{
+          label: 'Nombre de réponses',
+          data: <%= @response_rates.map { |r| r[:response_count] }.to_json.html_safe %>,
+          backgroundColor: 'rgba(79, 70, 229, 0.8)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // Graphiques de tendance pour les questions à choix
+    <% @comparison[:questions].each do |question_id, question_data| %>
+      <% if ['single_choice', 'yes_no'].include?(question_data[:type]) %>
+        <% question = @survey.questions.find(question_id) %>
+        <% trends = @comparison_service.trends_for_question(question_id) %>
+
+        const trendCtx_<%= question_id %> = document.getElementById('trend-chart-<%= question_id %>').getContext('2d');
+        new Chart(trendCtx_<%= question_id %>, {
+          type: 'line',
+          data: {
+            labels: <%= @years.to_json.html_safe %>,
+            datasets: [
+              <% question.question_options.each_with_index do |option, index| %>
+                {
+                  label: '<%= option.text %>',
+                  data: <%= trends[option.value]&.map { |t| t[:percentage] }.to_json || '[]' %>,
+                  borderColor: <%= chart_colors(question.question_options.count)[index].to_json.html_safe %>,
+                  backgroundColor: <%= chart_colors(question.question_options.count)[index].gsub('0.8', '0.2').to_json.html_safe %>,
+                  tension: 0.1
+                }<%= ',' unless index == question.question_options.count - 1 %>
+              <% end %>
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                  callback: function(value) {
+                    return value + '%';
+                  }
+                }
+              }
+            }
+          }
+        });
+
+      <% elsif ['scale', 'numeric'].include?(question_data[:type]) %>
+        <% trends = @comparison_service.trends_for_question(question_id) %>
+
+        const avgCtx_<%= question_id %> = document.getElementById('average-chart-<%= question_id %>').getContext('2d');
+        new Chart(avgCtx_<%= question_id %>, {
+          type: 'line',
+          data: {
+            labels: <%= trends.map { |t| t[:year] }.to_json.html_safe %>,
+            datasets: [{
+              label: 'Moyenne',
+              data: <%= trends.map { |t| t[:average] }.to_json.html_safe %>,
+              borderColor: 'rgba(79, 70, 229, 1)',
+              backgroundColor: 'rgba(79, 70, 229, 0.2)',
+              tension: 0.1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      <% end %>
+    <% end %>
+  });
+</script>
