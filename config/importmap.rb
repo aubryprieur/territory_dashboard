@@ -57,3 +57,4 @@ pin "epci/tabs_scroll", to: "epci/tabs_scroll.js"
 # Contrôleurs pour les enquêtes
 pin "controllers/survey_tabs_controller", to: "controllers/survey_tabs_controller.js"
 pin "controllers/survey_results_controller", to: "controllers/survey_results_controller.js"
+pin "controllers/accordion_controller", to: "controllers/accordion_controller.js"

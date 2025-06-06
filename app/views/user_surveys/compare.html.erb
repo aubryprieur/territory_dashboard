@@ -1,101 +1,231 @@
 <!-- app/views/user_surveys/compare.html.erb -->
-<div class="py-6">
+<div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center mb-6">
-      <div>
-        <h1 class="text-2xl font-semibold text-gray-900">
-          Comparaison inter-annuelle
-        </h1>
-        <p class="mt-1 text-sm text-gray-600">
-          <%= @survey.title %> - Années <%= @years.join(', ') %>
-        </p>
+    <!-- Header avec gradient -->
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-xl p-8 mb-8 text-white">
+      <div class="flex justify-between items-start">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">
+            Évolution : <%= @survey.title %>
+          </h1>
+          <p class="text-purple-100 text-lg">
+            Comparaison des résultats sur <%= @years.size %> années (<%= @years.join(', ') %>)
+          </p>
+          <div class="flex items-center space-x-6 mt-4">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="font-semibold text-xl"><%= @user_surveys.sum(&:response_count) %></span>
+              <span class="ml-1 text-purple-100">réponses totales</span>
+            </div>
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+              </svg>
+              <span><%= @survey.total_questions %> questions analysées</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col space-y-2">
+          <%= link_to user_surveys_path, class: "inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur border border-white/30 rounded-lg text-white hover:bg-white/30 transition-all" do %>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Retour
+          <% end %>
+        </div>
       </div>
-      <%= link_to "Retour", user_surveys_path, class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
     </div>
 
-    <!-- Taux de réponse par année -->
-    <div class="bg-white shadow sm:rounded-lg mb-8">
-      <div class="px-4 py-5 sm:p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Évolution du nombre de réponses</h3>
-        <div class="h-64">
-          <canvas id="response-rates-chart"></canvas>
+    <!-- Évolution du nombre de réponses -->
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+      <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+        </svg>
+        Évolution de la participation
+      </h3>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="h-80">
+          <canvas id="response-evolution-chart"></canvas>
+        </div>
+        <div>
+          <div class="space-y-3">
+            <% @response_evolution.each do |data| %>
+              <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <h4 class="text-lg font-semibold text-gray-900">Année <%= data[:year] %></h4>
+                    <p class="text-sm text-gray-600"><%= data[:duration_days] %> jours d'enquête</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-2xl font-bold text-indigo-600"><%= data[:response_count] %></p>
+                    <p class="text-xs text-gray-500"><%= data[:completion_rate] %>% complétées</p>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Comparaison par question -->
     <div class="space-y-8">
-      <% @comparison[:questions].each do |question_id, question_data| %>
-        <div class="bg-white shadow sm:rounded-lg">
-          <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">
-              <%= question_data[:title] %>
-            </h3>
+      <% @survey.survey_sections.includes(questions: :question_options).each_with_index do |section, section_index| %>
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+          <!-- Header de section -->
+          <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white p-6">
+            <h2 class="text-2xl font-bold flex items-center">
+              <span class="flex items-center justify-center w-10 h-10 bg-white/20 rounded-full mr-3 text-lg">
+                <%= section_index + 1 %>
+              </span>
+              <%= section.title %>
+            </h2>
+            <% if section.description.present? %>
+              <p class="mt-2 text-gray-300"><%= section.description %></p>
+            <% end %>
+          </div>
 
-            <% case question_data[:type] %>
-            <% when 'single_choice', 'yes_no' %>
-              <div class="h-64">
-                <canvas id="trend-chart-<%= question_id %>"></canvas>
-              </div>
+          <div class="p-8 space-y-12">
+            <% section.questions.each_with_index do |question, q_index| %>
+              <% question_data = @comparison_data[:questions][question.id] %>
+              <% next unless question_data && question_data[:data].any? %>
 
-            <% when 'scale', 'numeric' %>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="h-64">
-                  <canvas id="average-chart-<%= question_id %>"></canvas>
-                </div>
-                <div>
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
-                      <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Année</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Moyenne</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Réponses</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                      <% question_data[:data].each do |year, stats| %>
-                        <% if stats && stats[:count] > 0 %>
-                          <tr>
-                            <td class="px-4 py-2 text-sm text-gray-900"><%= year %></td>
-                            <td class="px-4 py-2 text-sm text-gray-900"><%= stats[:average] %></td>
-                            <td class="px-4 py-2 text-sm text-gray-500"><%= stats[:count] %></td>
-                          </tr>
-                        <% end %>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <div class="border-b border-gray-200 pb-12 last:border-b-0 last:pb-0">
+                <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-start">
+                  <span class="inline-flex items-center justify-center min-w-[2rem] h-8 bg-indigo-100 text-indigo-700 rounded-full mr-3 text-sm font-bold">
+                    <%= q_index + 1 %>
+                  </span>
+                  <span class="flex-1">
+                    <%= question.title %>
+                    <% if question.description.present? %>
+                      <span class="block text-sm font-normal text-gray-500 mt-1"><%= question.description %></span>
+                    <% end %>
+                  </span>
+                </h3>
 
-            <% when 'multiple_choice' %>
-              <div class="space-y-4">
-                <% question = @survey.questions.find(question_id) %>
-                <% question.question_options.each do |option| %>
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-700 mb-2"><%= option.text %></h4>
-                    <div class="flex items-center space-x-4">
-                      <% @years.each do |year| %>
-                        <% data = question_data[:data][year] %>
-                        <% if data %>
-                          <% count = data[option.value] || 0 %>
-                          <% total = @user_surveys_by_year[year]&.response_count || 1 %>
-                          <% percentage = (count.to_f / total * 100).round(1) %>
-                          <div class="text-center">
-                            <div class="text-xs text-gray-500"><%= year %></div>
-                            <div class="text-lg font-semibold text-gray-900"><%= percentage %>%</div>
-                            <div class="text-xs text-gray-500">(<%= count %>)</div>
+                <% case question.question_type %>
+                <% when 'single_choice', 'yes_no' %>
+                  <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <!-- Graphique d'évolution par réponse -->
+                    <div>
+                      <h4 class="text-base font-medium text-gray-700 mb-4">Évolution de chaque réponse dans le temps (%)</h4>
+                      <div class="h-80">
+                        <canvas id="question-<%= question.id %>-chart"></canvas>
+                      </div>
+                    </div>
+
+                    <!-- Données par réponse -->
+                    <div>
+                      <h4 class="text-base font-medium text-gray-700 mb-4">Évolution détaillée</h4>
+                      <div class="space-y-4">
+                        <% options = question.question_type == 'yes_no' ? [['yes', 'Oui'], ['no', 'Non']] : question.question_options.map { |o| [o.value, o.text] } %>
+                        <% options.each_with_index do |(option_value, option_text), index| %>
+                          <div class="bg-gray-50 rounded-lg p-4">
+                            <h5 class="font-medium text-gray-900 mb-3"><%= option_text %></h5>
+                            <div class="flex items-center space-x-4">
+                              <% @years.each do |year| %>
+                                <% year_data = question_data[:data][year] %>
+                                <% percentage = year_data && year_data[:percentages] ? year_data[:percentages][option_value] || 0 : 0 %>
+                                <div class="text-center">
+                                  <div class="text-xs text-gray-500"><%= year %></div>
+                                  <div class="text-lg font-bold" style="color: <%= ['#4F46E5', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'][index] %>">
+                                    <%= percentage %>%
+                                  </div>
+                                </div>
+                              <% end %>
+                            </div>
                           </div>
                         <% end %>
+                      </div>
+                    </div>
+                  </div>
+
+                <% when 'scale', 'numeric' %>
+                  <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <!-- Graphique moyennes -->
+                    <div>
+                      <h4 class="text-base font-medium text-gray-700 mb-4">Évolution de la moyenne</h4>
+                      <div class="h-80">
+                        <canvas id="question-<%= question.id %>-chart"></canvas>
+                      </div>
+                    </div>
+
+                    <!-- Statistiques -->
+                    <div>
+                      <h4 class="text-base font-medium text-gray-700 mb-4">Statistiques par année</h4>
+                      <div class="space-y-4">
+                        <% @years.each do |year| %>
+                          <% year_data = question_data[:data][year] %>
+                          <% if year_data %>
+                            <div class="bg-indigo-50 rounded-lg p-4">
+                              <h5 class="font-medium text-gray-900 mb-2">Année <%= year %></h5>
+                              <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span class="text-gray-600">Moyenne:</span>
+                                  <span class="font-bold text-indigo-600 ml-1"><%= year_data[:average] %></span>
+                                </div>
+                                <div>
+                                  <span class="text-gray-600">Réponses:</span>
+                                  <span class="font-bold ml-1"><%= year_data[:count] %></span>
+                                </div>
+                                <div>
+                                  <span class="text-gray-600">Min:</span>
+                                  <span class="font-bold ml-1"><%= year_data[:min] %></span>
+                                </div>
+                                <div>
+                                  <span class="text-gray-600">Max:</span>
+                                  <span class="font-bold ml-1"><%= year_data[:max] %></span>
+                                </div>
+                              </div>
+                            </div>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+
+                <% when 'multiple_choice' %>
+                  <div>
+                    <h4 class="text-base font-medium text-gray-700 mb-4">Évolution de chaque option dans le temps (%)</h4>
+                    <div class="h-80 mb-6">
+                      <canvas id="question-<%= question.id %>-chart"></canvas>
+                    </div>
+
+                    <!-- Données détaillées par option -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <% question.question_options.each_with_index do |option, index| %>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                          <h5 class="font-medium text-gray-900 mb-3"><%= option.text %></h5>
+                          <div class="flex items-center space-x-4">
+                            <% @years.each do |year| %>
+                              <% year_data = question_data[:data][year] %>
+                              <% percentage = year_data && year_data[:percentages] ? year_data[:percentages][option.value] || 0 : 0 %>
+                              <div class="text-center">
+                                <div class="text-xs text-gray-500"><%= year %></div>
+                                <div class="text-lg font-bold" style="color: <%= ['#4F46E5', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#22C55E'][index] %>">
+                                  <%= percentage %>%
+                                </div>
+                              </div>
+                            <% end %>
+                          </div>
+                        </div>
                       <% end %>
+                    </div>
+                  </div>
+
+                <% else %>
+                  <!-- Questions texte -->
+                  <div class="bg-gray-50 rounded-xl p-6">
+                    <h4 class="text-base font-medium text-gray-700 mb-4">Évolution du nombre de réponses</h4>
+                    <div class="h-80">
+                      <canvas id="question-<%= question.id %>-chart"></canvas>
                     </div>
                   </div>
                 <% end %>
               </div>
-
-            <% else %>
-              <p class="text-gray-500">
-                Comparaison non disponible pour ce type de question.
-              </p>
             <% end %>
           </div>
         </div>
@@ -104,54 +234,101 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chargement de Chart.js avec gestion du cache -->
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Graphique des taux de réponse
-    const responseCtx = document.getElementById('response-rates-chart').getContext('2d');
-    new Chart(responseCtx, {
-      type: 'bar',
+// Fonction pour charger Chart.js dynamiquement
+function loadChartJS() {
+  return new Promise((resolve, reject) => {
+    if (window.Chart) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js?v=${Date.now()}`;
+    script.onload = () => {
+      console.log('Chart.js chargé');
+      resolve();
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+// Initialisation des graphiques
+loadChartJS().then(() => {
+  console.log('Initialisation des graphiques de comparaison');
+
+  // Configuration des couleurs
+  const colors = [
+    '#4F46E5', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#22C55E'
+  ];
+
+  // Graphique d'évolution des réponses
+  const responseCtx = document.getElementById('response-evolution-chart');
+  if (responseCtx) {
+    new Chart(responseCtx.getContext('2d'), {
+      type: 'line',
       data: {
-        labels: <%= @response_rates.map { |r| r[:year] }.to_json.html_safe %>,
+        labels: <%= @years.to_json.html_safe %>,
         datasets: [{
           label: 'Nombre de réponses',
-          data: <%= @response_rates.map { |r| r[:response_count] }.to_json.html_safe %>,
-          backgroundColor: 'rgba(79, 70, 229, 0.8)'
+          data: <%= @response_evolution.map { |r| r[:response_count] }.to_json.html_safe %>,
+          backgroundColor: '#4F46E5',
+          borderColor: '#4F46E5',
+          borderWidth: 3,
+          tension: 0.1,
+          pointRadius: 6,
+          pointBackgroundColor: '#4F46E5'
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
         scales: {
-          y: {
-            beginAtZero: true
-          }
+          y: { beginAtZero: true }
         }
       }
     });
+  }
 
-    // Graphiques de tendance pour les questions à choix
-    <% @comparison[:questions].each do |question_id, question_data| %>
-      <% if ['single_choice', 'yes_no'].include?(question_data[:type]) %>
-        <% question = @survey.questions.find(question_id) %>
-        <% trends = @comparison_service.trends_for_question(question_id) %>
+  // Graphiques par question - ORGANISATION PAR RÉPONSE
+  <% @comparison_data[:questions].each do |question_id, question_data| %>
+    <% question = @survey.questions.find(question_id) %>
 
-        const trendCtx_<%= question_id %> = document.getElementById('trend-chart-<%= question_id %>').getContext('2d');
-        new Chart(trendCtx_<%= question_id %>, {
+    const ctx_<%= question_id %> = document.getElementById('question-<%= question_id %>-chart');
+    if (ctx_<%= question_id %>) {
+
+      <% case question.question_type %>
+      <% when 'single_choice', 'yes_no' %>
+        // Graphique en lignes : chaque réponse est une ligne qui évolue dans le temps
+        const datasets_<%= question_id %> = [];
+        <% options = question.question_type == 'yes_no' ? [['yes', 'Oui'], ['no', 'Non']] : question.question_options.map { |o| [o.value, o.text] } %>
+        <% options.each_with_index do |(option_value, option_text), index| %>
+          datasets_<%= question_id %>.push({
+            label: '<%= option_text %>',
+            data: <%= @years.map { |year|
+              year_data = question_data[:data][year]
+              year_data && year_data[:percentages] ? year_data[:percentages][option_value] || 0 : 0
+            }.to_json.html_safe %>,
+            backgroundColor: colors[<%= index %>],
+            borderColor: colors[<%= index %>],
+            borderWidth: 3,
+            tension: 0.1,
+            pointRadius: 6,
+            pointBackgroundColor: colors[<%= index %>],
+            fill: false
+          });
+        <% end %>
+
+        new Chart(ctx_<%= question_id %>.getContext('2d'), {
           type: 'line',
           data: {
             labels: <%= @years.to_json.html_safe %>,
-            datasets: [
-              <% question.question_options.each_with_index do |option, index| %>
-                {
-                  label: '<%= option.text %>',
-                  data: <%= trends[option.value]&.map { |t| t[:percentage] }.to_json || '[]' %>,
-                  borderColor: <%= chart_colors(question.question_options.count)[index].to_json.html_safe %>,
-                  backgroundColor: <%= chart_colors(question.question_options.count)[index].gsub('0.8', '0.2').to_json.html_safe %>,
-                  tension: 0.1
-                }<%= ',' unless index == question.question_options.count - 1 %>
-              <% end %>
-            ]
+            datasets: datasets_<%= question_id %>
           },
           options: {
             responsive: true,
@@ -166,37 +343,147 @@
                   }
                 }
               }
+            },
+            plugins: {
+              legend: {
+                position: 'bottom'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return context.dataset.label + ': ' + context.parsed.y + '%';
+                  }
+                }
+              }
             }
           }
         });
 
-      <% elsif ['scale', 'numeric'].include?(question_data[:type]) %>
-        <% trends = @comparison_service.trends_for_question(question_id) %>
-
-        const avgCtx_<%= question_id %> = document.getElementById('average-chart-<%= question_id %>').getContext('2d');
-        new Chart(avgCtx_<%= question_id %>, {
+      <% when 'scale', 'numeric' %>
+        // Graphique en ligne pour l'évolution de la moyenne
+        new Chart(ctx_<%= question_id %>.getContext('2d'), {
           type: 'line',
           data: {
-            labels: <%= trends.map { |t| t[:year] }.to_json.html_safe %>,
+            labels: <%= @years.to_json.html_safe %>,
             datasets: [{
               label: 'Moyenne',
-              data: <%= trends.map { |t| t[:average] }.to_json.html_safe %>,
-              borderColor: 'rgba(79, 70, 229, 1)',
-              backgroundColor: 'rgba(79, 70, 229, 0.2)',
-              tension: 0.1
+              data: <%= @years.map { |year|
+                year_data = question_data[:data][year]
+                year_data ? year_data[:average] : null
+              }.to_json.html_safe %>,
+              backgroundColor: '#4F46E5',
+              borderColor: '#4F46E5',
+              borderWidth: 3,
+              tension: 0.1,
+              pointRadius: 6,
+              pointBackgroundColor: '#4F46E5',
+              fill: false
             }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
+
+      <% when 'multiple_choice' %>
+        // Graphique en lignes : chaque option est une ligne qui évolue dans le temps
+        const multiDatasets_<%= question_id %> = [];
+        <% question.question_options.each_with_index do |option, index| %>
+          multiDatasets_<%= question_id %>.push({
+            label: '<%= option.text %>',
+            data: <%= @years.map { |year|
+              year_data = question_data[:data][year]
+              year_data && year_data[:percentages] ? year_data[:percentages][option.value] || 0 : 0
+            }.to_json.html_safe %>,
+            backgroundColor: colors[<%= index %>],
+            borderColor: colors[<%= index %>],
+            borderWidth: 2,
+            tension: 0.1,
+            pointRadius: 4,
+            pointBackgroundColor: colors[<%= index %>],
+            fill: false
+          });
+        <% end %>
+
+        new Chart(ctx_<%= question_id %>.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: <%= @years.to_json.html_safe %>,
+            datasets: multiDatasets_<%= question_id %>
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
               y: {
-                beginAtZero: true
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return value + '%';
+                  }
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'bottom'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return context.dataset.label + ': ' + context.parsed.y + '%';
+                  }
+                }
               }
             }
           }
         });
+
+      <% else %>
+        // Questions texte - évolution du nombre de réponses
+        new Chart(ctx_<%= question_id %>.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: <%= @years.to_json.html_safe %>,
+            datasets: [{
+              label: 'Nombre de réponses',
+              data: <%= @years.map { |year|
+                year_data = question_data[:data][year]
+                year_data ? year_data[:total_responses] || 0 : 0
+              }.to_json.html_safe %>,
+              backgroundColor: '#4F46E5',
+              borderColor: '#4F46E5',
+              borderWidth: 3,
+              tension: 0.1,
+              pointRadius: 6,
+              pointBackgroundColor: '#4F46E5',
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
       <% end %>
-    <% end %>
-  });
+    }
+  <% end %>
+
+  console.log('Graphiques de comparaison initialisés');
+}).catch(error => {
+  console.error('Erreur lors du chargement de Chart.js:', error);
+});
 </script>

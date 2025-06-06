@@ -98,7 +98,7 @@
         </nav>
       </div>
 
-      <!-- Contenu des onglets -->
+      <!-- En cours -->
       <div id="active-content" data-survey-tabs-target="content">
         <% if @active_surveys.any? %>
           <div class="bg-white shadow overflow-hidden sm:rounded-md">
@@ -153,6 +153,7 @@
         <% end %>
       </div>
 
+      <!-- À venir -->
       <div id="upcoming-content" data-survey-tabs-target="content" class="hidden">
         <% if @upcoming_surveys.any? %>
           <div class="bg-white shadow overflow-hidden sm:rounded-md">
@@ -189,50 +190,102 @@
         <% end %>
       </div>
 
+      <!-- Terminées avec accordéon -->
       <div id="past-content" data-survey-tabs-target="content" class="hidden">
-        <% if @past_surveys.any? %>
-          <div class="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul class="divide-y divide-gray-200">
-              <% @past_surveys.each do |user_survey| %>
-                <li>
-                  <div class="px-4 py-4 sm:px-6">
-                    <div class="flex items-center justify-between">
-                      <div class="flex-1">
-                        <h3 class="text-lg font-medium text-gray-900">
-                          <%= link_to user_survey.survey.title, user_survey, class: "hover:text-indigo-600" %>
-                          <span class="ml-2 text-sm text-gray-500">(<%= user_survey.year %>)</span>
-                        </h3>
-                        <div class="mt-2 text-sm text-gray-500">
-                          Terminée le <%= l(user_survey.ends_at, format: :long) %>
-                          <span class="mx-2">•</span>
-                          <%= user_survey.response_count %> réponses
-                        </div>
-                      </div>
-                      <div class="flex space-x-2">
-                        <%= link_to results_user_survey_path(user_survey), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200" do %>
-                          <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <% if @past_surveys_grouped.any? %>
+          <div class="space-y-4" data-controller="accordion">
+            <% @past_surveys_grouped.each_with_index do |(survey_title, user_surveys), index| %>
+              <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <!-- Header de l'accordéon -->
+                <div class="bg-gray-50 px-4 py-5 sm:px-6 cursor-pointer"
+                     data-action="click->accordion#toggle"
+                     data-accordion-target="header"
+                     data-accordion-index="<%= index %>">
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <svg class="w-5 h-5 mr-2 transform transition-transform duration-200"
+                             data-accordion-target="arrow"
+                             data-accordion-index="<%= index %>">
+                          <path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                        </svg>
+                        <%= survey_title %>
+                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          <%= user_surveys.count %> années
+                        </span>
+                      </h3>
+                      <p class="mt-1 text-sm text-gray-600">
+                        De <%= user_surveys.last.year %> à <%= user_surveys.first.year %> •
+                        <%= user_surveys.sum(&:response_count) %> réponses au total
+                      </p>
+                    </div>
+                    <div class="flex space-x-3">
+                      <% if user_surveys.count > 1 %>
+                        <%= link_to compare_user_surveys_path(survey_title: survey_title),
+                            class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 transition-colors" do %>
+                          <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                           </svg>
-                          Résultats
+                          Voir l'évolution
                         <% end %>
-                        <%= link_to export_results_user_survey_path(user_survey, format: :csv), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200" do %>
-                          <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          Exporter CSV
-                        <% end %>
-                        <%= button_to duplicate_user_survey_path(user_survey), method: :post, params: { year: user_survey.year + 1 }, class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200" do %>
-                          <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          Dupliquer
-                        <% end %>
-                      </div>
+                      <% end %>
                     </div>
                   </div>
-                </li>
-              <% end %>
-            </ul>
+                </div>
+
+                <!-- Contenu de l'accordéon -->
+                <div class="hidden px-4 py-5 sm:px-6 border-t border-gray-200"
+                     data-accordion-target="content"
+                     data-accordion-index="<%= index %>">
+                  <div class="space-y-3">
+                    <% user_surveys.each do |user_survey| %>
+                      <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex-1">
+                          <div class="flex items-center">
+                            <h4 class="text-base font-medium text-gray-900">
+                              <%= link_to user_survey, class: "hover:text-indigo-600" do %>
+                                Année <%= user_survey.year %>
+                              <% end %>
+                            </h4>
+                            <span class="ml-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-800">
+                              <%= user_survey.response_count %> réponses
+                            </span>
+                          </div>
+                          <p class="mt-1 text-sm text-gray-500">
+                            Du <%= l(user_survey.starts_at, format: :short) %> au <%= l(user_survey.ends_at, format: :short) %>
+                          </p>
+                        </div>
+                        <div class="flex space-x-2">
+                          <%= link_to results_user_survey_path(user_survey),
+                              class: "inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200" do %>
+                            <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Résultats
+                          <% end %>
+                          <%= link_to export_results_user_survey_path(user_survey, format: :csv),
+                              class: "inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200" do %>
+                            <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            CSV
+                          <% end %>
+                          <%= button_to duplicate_user_survey_path(user_survey),
+                              method: :post,
+                              params: { year: user_survey.year + 1 },
+                              class: "inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200" do %>
+                            <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Dupliquer
+                          <% end %>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
           </div>
         <% else %>
           <div class="text-center py-12 bg-white rounded-lg">
@@ -251,12 +304,10 @@
   // Fonction pour copier le lien
   function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(function() {
-      // Afficher une notification
       const notification = document.createElement('div');
       notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
       notification.textContent = 'Lien copié !';
       document.body.appendChild(notification);
-
       setTimeout(() => notification.remove(), 3000);
     });
   }

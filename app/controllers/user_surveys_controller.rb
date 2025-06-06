@@ -1,3 +1,4 @@
+# app/controllers/user_surveys_controller.rb
 class UserSurveysController < ApplicationController
   include UserAuthorization
   before_action :check_can_launch_surveys
@@ -7,11 +8,14 @@ class UserSurveysController < ApplicationController
     @user_surveys = UserSurvey.accessible_by_user(current_user)
                               .includes(:survey, :user)
                               .order(created_at: :desc)
-                              .page(params[:page])
 
     @active_surveys = @user_surveys.active
     @upcoming_surveys = @user_surveys.upcoming
     @past_surveys = @user_surveys.past
+
+    # Grouper les enquêtes terminées par titre d'enquête
+    @past_surveys_grouped = @past_surveys.group_by { |us| us.survey.title }
+                                        .transform_values { |surveys| surveys.sort_by(&:year).reverse }
   end
 
   def available
@@ -20,6 +24,28 @@ class UserSurveysController < ApplicationController
                               .where('expires_at IS NULL OR expires_at > ?', Time.current)
                               .includes(:created_by)
                               .order(title: :asc)
+  end
+
+  def compare
+    @survey_title = params[:survey_title]
+    return redirect_to user_surveys_path, alert: "Titre d'enquête requis" if @survey_title.blank?
+
+    # Récupérer toutes les enquêtes de ce titre pour cet utilisateur
+    @user_surveys = UserSurvey.accessible_by_user(current_user)
+                              .joins(:survey)
+                              .where(surveys: { title: @survey_title })
+                              .where(status: :closed) # Seulement les enquêtes terminées
+                              .includes(:survey, survey_responses: :question_responses)
+                              .order(:year)
+
+    return redirect_to user_surveys_path, alert: "Aucune enquête trouvée pour cette série" if @user_surveys.empty?
+
+    @survey = @user_surveys.first.survey
+    @years = @user_surveys.pluck(:year).uniq.sort
+
+    # Calculer les statistiques de comparaison
+    @comparison_data = calculate_comparison_data_for_surveys(@user_surveys)
+    @response_evolution = calculate_response_evolution(@user_surveys)
   end
 
   def new
@@ -88,9 +114,6 @@ class UserSurveysController < ApplicationController
                                    .completed
                                    .group_by_day(:completed_at)
                                    .count
-
-    # Calculer les statistiques pour les autres années pour la comparaison
-    @comparison_data = calculate_comparison_data
   end
 
   def export_results
@@ -141,6 +164,116 @@ class UserSurveysController < ApplicationController
   def user_survey_params
     params.require(:user_survey).permit(:survey_id, :year, :custom_welcome_message,
                                        :custom_thank_you_message, :starts_at, :ends_at)
+  end
+
+  def calculate_comparison_data_for_surveys(user_surveys)
+    comparison_data = {
+      questions: {}
+    }
+
+    # Pour chaque question de l'enquête
+    user_surveys.first.survey.questions.each do |question|
+      comparison_data[:questions][question.id] = {
+        title: question.title,
+        type: question.question_type,
+        data: {}
+      }
+
+      # Pour chaque année
+      user_surveys.each do |user_survey|
+        year = user_survey.year
+        completed_responses = user_survey.survey_responses.completed
+
+        question_responses = completed_responses.joins(:question_responses)
+                                              .where(question_responses: { question: question })
+                                              .where.not(question_responses: { answer_text: [nil, ''] })
+
+        case question.question_type
+        when 'single_choice', 'yes_no'
+          year_stats = question_responses.joins(:question_responses)
+                                       .group('question_responses.answer_text')
+                                       .count
+          total = year_stats.values.sum
+
+          # Calculer les pourcentages
+          percentages = {}
+          year_stats.each do |answer, count|
+            percentages[answer] = total > 0 ? (count.to_f / total * 100).round(1) : 0
+          end
+
+          comparison_data[:questions][question.id][:data][year] = {
+            counts: year_stats,
+            percentages: percentages,
+            total: total
+          }
+
+        when 'scale', 'numeric'
+          values = question_responses.joins(:question_responses)
+                                   .pluck('question_responses.answer_text')
+                                   .map(&:to_f)
+                                   .reject(&:zero?)
+
+          if values.any?
+            comparison_data[:questions][question.id][:data][year] = {
+              average: (values.sum / values.count.to_f).round(2),
+              count: values.count,
+              min: values.min,
+              max: values.max,
+              median: calculate_median(values)
+            }
+          end
+
+        when 'multiple_choice'
+          all_answers = question_responses.joins(:question_responses)
+                                        .pluck('question_responses.answer_data')
+          answer_counts = Hash.new(0)
+          all_answers.each do |answers_array|
+            next unless answers_array.is_a?(Array)
+            answers_array.each { |answer| answer_counts[answer] += 1 }
+          end
+
+          total_responses = user_survey.response_count
+          percentages = {}
+          answer_counts.each do |answer, count|
+            percentages[answer] = total_responses > 0 ? (count.to_f / total_responses * 100).round(1) : 0
+          end
+
+          comparison_data[:questions][question.id][:data][year] = {
+            counts: answer_counts,
+            percentages: percentages,
+            total_responses: total_responses
+          }
+        end
+      end
+    end
+
+    comparison_data
+  end
+
+  def calculate_response_evolution(user_surveys)
+    user_surveys.map do |user_survey|
+      {
+        year: user_survey.year,
+        response_count: user_survey.response_count,
+        duration_days: (user_survey.ends_at.to_date - user_survey.starts_at.to_date).to_i,
+        completion_rate: calculate_completion_rate(user_survey)
+      }
+    end
+  end
+
+  def calculate_completion_rate(user_survey)
+    total_started = user_survey.survey_responses.count
+    completed = user_survey.survey_responses.completed.count
+    return 0 if total_started.zero?
+    (completed.to_f / total_started * 100).round(1)
+  end
+
+  def calculate_median(values)
+    return 0 if values.empty?
+    sorted = values.sort
+    len = sorted.length
+    return sorted[len / 2] if len.odd?
+    (sorted[(len - 1) / 2] + sorted[len / 2]) / 2.0
   end
 
   def calculate_statistics
@@ -195,80 +328,14 @@ class UserSurveysController < ApplicationController
     stats
   end
 
-  def calculate_comparison_data
-    # Récupérer toutes les autres enquêtes de la même série (même enquête, même utilisateur)
-    other_surveys = UserSurvey.where(
-      survey: @user_survey.survey,
-      user: @user_survey.user
-    ).where.not(id: @user_survey.id)
-    .includes(:survey_responses => :question_responses)
-    .order(:year)
-
-    return {} if other_surveys.empty?
-
-    comparison_data = {}
-    all_surveys = (other_surveys + [@user_survey]).sort_by(&:year)
-
-    @user_survey.survey.questions.each do |question|
-      comparison_data[question.id] = {
-        question: question,
-        years_data: {}
-      }
-
-      all_surveys.each do |survey|
-        year = survey.year
-        completed_responses = survey.survey_responses.completed
-
-        question_responses = completed_responses.joins(:question_responses)
-                                              .where(question_responses: { question: question })
-                                              .where.not(question_responses: { answer_text: [nil, ''] })
-
-        case question.question_type
-        when 'single_choice', 'yes_no'
-          year_stats = question_responses.joins(:question_responses)
-                                       .group('question_responses.answer_text')
-                                       .count
-          comparison_data[question.id][:years_data][year] = year_stats
-
-        when 'scale', 'numeric'
-          values = question_responses.joins(:question_responses)
-                                   .pluck('question_responses.answer_text')
-                                   .map(&:to_f)
-                                   .reject(&:zero?)
-
-          if values.any?
-            comparison_data[question.id][:years_data][year] = {
-              average: (values.sum / values.count.to_f).round(2),
-              count: values.count
-            }
-          end
-
-        when 'multiple_choice'
-          all_answers = question_responses.joins(:question_responses)
-                                        .pluck('question_responses.answer_data')
-          answer_counts = Hash.new(0)
-          all_answers.each do |answers_array|
-            next unless answers_array.is_a?(Array)
-            answers_array.each { |answer| answer_counts[answer] += 1 }
-          end
-          comparison_data[question.id][:years_data][year] = answer_counts
-        end
-      end
-    end
-
-    comparison_data
-  end
-
   def export_to_csv
     require 'csv'
 
     CSV.generate(headers: true) do |csv|
-      # En-têtes
       headers = ['ID Réponse', 'Date de début', 'Date de fin', 'Durée (minutes)']
       @user_survey.survey.questions.each { |q| headers << q.title }
       csv << headers
 
-      # Données
       @user_survey.survey_responses.completed.includes(:question_responses).find_each do |response|
         duration = ((response.completed_at - response.started_at) / 60).round if response.completed_at && response.started_at
 

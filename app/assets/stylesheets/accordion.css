@@ -1,0 +1,58 @@
+/* Animations pour l'accordéon */
+.accordion-content {
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+  overflow: hidden;
+}
+
+.accordion-arrow {
+  transition: transform 0.3s ease;
+}
+
+/* Effet hover pour les headers d'accordéon */
+.accordion-header:hover {
+  background-color: rgba(249, 250, 251, 0.8);
+}
+
+/* Animation pour les boutons "Voir l'évolution" */
+.evolution-button {
+  transition: all 0.2s ease;
+}
+
+.evolution-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* Styles pour les graphiques de comparaison */
+.comparison-chart {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Animation d'apparition pour les sections */
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Styles responsifs pour les tableaux de comparaison */
+@media (max-width: 768px) {
+  .comparison-table {
+    font-size: 0.875rem;
+  }
+
+  .comparison-table th,
+  .comparison-table td {
+    padding: 0.5rem 0.25rem;
+  }
+}
