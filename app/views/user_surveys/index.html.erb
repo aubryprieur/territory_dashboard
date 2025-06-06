@@ -71,208 +71,189 @@
     </div>
 
     <!-- Onglets -->
-    <div class="mb-6">
-      <nav class="flex space-x-8">
-        <a href="#active" class="border-indigo-500 text-indigo-600 border-b-2 py-2 px-1 text-sm font-medium" data-tab="active">
-          En cours (<%= @active_surveys.count %>)
-        </a>
-        <a href="#upcoming" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-2 px-1 text-sm font-medium" data-tab="upcoming">
-          À venir (<%= @upcoming_surveys.count %>)
-        </a>
-        <a href="#past" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-2 px-1 text-sm font-medium" data-tab="past">
-          Terminées (<%= @past_surveys.count %>)
-        </a>
-      </nav>
-    </div>
+    <div data-controller="survey-tabs">
+      <div class="mb-6">
+        <nav class="flex space-x-8">
+          <a href="#active"
+             data-survey-tabs-target="tab"
+             data-tab="active"
+             data-action="click->survey-tabs#switchTab"
+             class="border-indigo-500 text-indigo-600 border-b-2 py-2 px-1 text-sm font-medium">
+            En cours (<%= @active_surveys.count %>)
+          </a>
+          <a href="#upcoming"
+             data-survey-tabs-target="tab"
+             data-tab="upcoming"
+             data-action="click->survey-tabs#switchTab"
+             class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-2 px-1 text-sm font-medium">
+            À venir (<%= @upcoming_surveys.count %>)
+          </a>
+          <a href="#past"
+             data-survey-tabs-target="tab"
+             data-tab="past"
+             data-action="click->survey-tabs#switchTab"
+             class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-2 px-1 text-sm font-medium">
+            Terminées (<%= @past_surveys.count %>)
+          </a>
+        </nav>
+      </div>
 
-    <!-- Contenu des onglets -->
-    <div id="active-content">
-      <% if @active_surveys.any? %>
-        <div class="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul class="divide-y divide-gray-200">
-            <% @active_surveys.each do |user_survey| %>
-              <li>
-                <div class="px-4 py-4 sm:px-6">
-                  <div class="flex items-center justify-between">
-                    <div class="flex-1">
-                      <h3 class="text-lg font-medium text-gray-900">
-                        <%= link_to user_survey.survey.title, user_survey, class: "hover:text-indigo-600" %>
-                        <span class="ml-2 text-sm text-gray-500">(<%= user_survey.year %>)</span>
-                      </h3>
-                      <div class="mt-2 flex items-center text-sm text-gray-500">
-                        <svg class="mr-1.5 h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                          <circle cx="4" cy="4" r="3" />
-                        </svg>
-                        En cours jusqu'au <%= l(user_survey.ends_at, format: :long) %>
-                        <span class="mx-2">•</span>
-                        <%= user_survey.response_count %> réponses
+      <!-- Contenu des onglets -->
+      <div id="active-content" data-survey-tabs-target="content">
+        <% if @active_surveys.any? %>
+          <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul class="divide-y divide-gray-200">
+              <% @active_surveys.each do |user_survey| %>
+                <li>
+                  <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                      <div class="flex-1">
+                        <h3 class="text-lg font-medium text-gray-900">
+                          <%= link_to user_survey.survey.title, user_survey, class: "hover:text-indigo-600" %>
+                          <span class="ml-2 text-sm text-gray-500">(<%= user_survey.year %>)</span>
+                        </h3>
+                        <div class="mt-2 flex items-center text-sm text-gray-500">
+                          <svg class="mr-1.5 h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 8 8">
+                            <circle cx="4" cy="4" r="3" />
+                          </svg>
+                          En cours jusqu'au <%= l(user_survey.ends_at, format: :long) %>
+                          <span class="mx-2">•</span>
+                          <%= user_survey.response_count %> réponses
+                        </div>
+                      </div>
+                      <div class="flex space-x-2">
+                        <button onclick="copyToClipboard('<%= user_survey.public_url %>')"
+                                class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                          <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copier le lien
+                        </button>
+                        <%= link_to results_user_survey_path(user_survey), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200" do %>
+                          <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          Résultats
+                        <% end %>
                       </div>
                     </div>
-                    <div class="flex space-x-2">
-                      <button onclick="copyToClipboard('<%= user_survey.public_url %>')"
-                              class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
-                        <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        Copier le lien
-                      </button>
-                      <%= link_to results_user_survey_path(user_survey), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200" do %>
-                        <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        Résultats
-                      <% end %>
-                    </div>
                   </div>
-                </div>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      <% else %>
-        <div class="text-center py-12 bg-white rounded-lg">
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune enquête en cours</h3>
-          <p class="mt-1 text-sm text-gray-500">Lancez une nouvelle enquête pour commencer à collecter des réponses.</p>
-        </div>
-      <% end %>
-    </div>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% else %>
+          <div class="text-center py-12 bg-white rounded-lg">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune enquête en cours</h3>
+            <p class="mt-1 text-sm text-gray-500">Lancez une nouvelle enquête pour commencer à collecter des réponses.</p>
+          </div>
+        <% end %>
+      </div>
 
-    <div id="upcoming-content" class="hidden">
-      <% if @upcoming_surveys.any? %>
-        <div class="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul class="divide-y divide-gray-200">
-            <% @upcoming_surveys.each do |user_survey| %>
-              <li>
-                <div class="px-4 py-4 sm:px-6">
-                  <div class="flex items-center justify-between">
-                    <div class="flex-1">
-                      <h3 class="text-lg font-medium text-gray-900">
-                        <%= link_to user_survey.survey.title, user_survey, class: "hover:text-indigo-600" %>
-                        <span class="ml-2 text-sm text-gray-500">(<%= user_survey.year %>)</span>
-                      </h3>
-                      <div class="mt-2 text-sm text-gray-500">
-                        Commence le <%= l(user_survey.starts_at, format: :long) %>
+      <div id="upcoming-content" data-survey-tabs-target="content" class="hidden">
+        <% if @upcoming_surveys.any? %>
+          <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul class="divide-y divide-gray-200">
+              <% @upcoming_surveys.each do |user_survey| %>
+                <li>
+                  <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                      <div class="flex-1">
+                        <h3 class="text-lg font-medium text-gray-900">
+                          <%= link_to user_survey.survey.title, user_survey, class: "hover:text-indigo-600" %>
+                          <span class="ml-2 text-sm text-gray-500">(<%= user_survey.year %>)</span>
+                        </h3>
+                        <div class="mt-2 text-sm text-gray-500">
+                          Commence le <%= l(user_survey.starts_at, format: :long) %>
+                        </div>
+                      </div>
+                      <div class="flex space-x-2">
+                        <%= link_to "Modifier", edit_user_survey_path(user_survey), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200" %>
                       </div>
                     </div>
-                    <div class="flex space-x-2">
-                      <%= link_to "Modifier", edit_user_survey_path(user_survey), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200" %>
-                    </div>
                   </div>
-                </div>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      <% else %>
-        <div class="text-center py-12 bg-white rounded-lg">
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune enquête programmée</h3>
-        </div>
-      <% end %>
-    </div>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% else %>
+          <div class="text-center py-12 bg-white rounded-lg">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune enquête programmée</h3>
+          </div>
+        <% end %>
+      </div>
 
-    <div id="past-content" class="hidden">
-      <% if @past_surveys.any? %>
-        <div class="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul class="divide-y divide-gray-200">
-            <% @past_surveys.each do |user_survey| %>
-              <li>
-                <div class="px-4 py-4 sm:px-6">
-                  <div class="flex items-center justify-between">
-                    <div class="flex-1">
-                      <h3 class="text-lg font-medium text-gray-900">
-                        <%= link_to user_survey.survey.title, user_survey, class: "hover:text-indigo-600" %>
-                        <span class="ml-2 text-sm text-gray-500">(<%= user_survey.year %>)</span>
-                      </h3>
-                      <div class="mt-2 text-sm text-gray-500">
-                        Terminée le <%= l(user_survey.ends_at, format: :long) %>
-                        <span class="mx-2">•</span>
-                        <%= user_survey.response_count %> réponses
+      <div id="past-content" data-survey-tabs-target="content" class="hidden">
+        <% if @past_surveys.any? %>
+          <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul class="divide-y divide-gray-200">
+              <% @past_surveys.each do |user_survey| %>
+                <li>
+                  <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                      <div class="flex-1">
+                        <h3 class="text-lg font-medium text-gray-900">
+                          <%= link_to user_survey.survey.title, user_survey, class: "hover:text-indigo-600" %>
+                          <span class="ml-2 text-sm text-gray-500">(<%= user_survey.year %>)</span>
+                        </h3>
+                        <div class="mt-2 text-sm text-gray-500">
+                          Terminée le <%= l(user_survey.ends_at, format: :long) %>
+                          <span class="mx-2">•</span>
+                          <%= user_survey.response_count %> réponses
+                        </div>
+                      </div>
+                      <div class="flex space-x-2">
+                        <%= link_to results_user_survey_path(user_survey), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200" do %>
+                          <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          Résultats
+                        <% end %>
+                        <%= link_to export_results_user_survey_path(user_survey, format: :csv), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200" do %>
+                          <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Exporter CSV
+                        <% end %>
+                        <%= button_to duplicate_user_survey_path(user_survey), method: :post, params: { year: user_survey.year + 1 }, class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200" do %>
+                          <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Dupliquer
+                        <% end %>
                       </div>
                     </div>
-                    <div class="flex space-x-2">
-                      <%= link_to results_user_survey_path(user_survey), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200" do %>
-                        <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        Résultats
-                      <% end %>
-                      <%= link_to export_results_user_survey_path(user_survey, format: :csv), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200" do %>
-                        <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Exporter CSV
-                      <% end %>
-                      <%= button_to duplicate_user_survey_path(user_survey), method: :post, params: { year: user_survey.year + 1 }, class: "inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200" do %>
-                        <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        Dupliquer
-                      <% end %>
-                    </div>
                   </div>
-                </div>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      <% else %>
-        <div class="text-center py-12 bg-white rounded-lg">
-          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune enquête terminée</h3>
-        </div>
-      <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% else %>
+          <div class="text-center py-12 bg-white rounded-lg">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune enquête terminée</h3>
+          </div>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-  // Gestion des onglets
-  document.addEventListener('DOMContentLoaded', function() {
-    const tabs = document.querySelectorAll('[data-tab]');
-    const contents = {
-      'active': document.getElementById('active-content'),
-      'upcoming': document.getElementById('upcoming-content'),
-      'past': document.getElementById('past-content')
-    };
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', function(e) {
-        e.preventDefault();
-        const targetTab = this.dataset.tab;
-
-        // Réinitialiser tous les onglets
-        tabs.forEach(t => {
-          t.classList.remove('border-indigo-500', 'text-indigo-600');
-          t.classList.add('border-transparent', 'text-gray-500');
-        });
-
-        // Masquer tous les contenus
-        Object.values(contents).forEach(content => content.classList.add('hidden'));
-
-        // Activer l'onglet sélectionné
-        this.classList.remove('border-transparent', 'text-gray-500');
-        this.classList.add('border-indigo-500', 'text-indigo-600');
-
-        // Afficher le contenu correspondant
-        contents[targetTab].classList.remove('hidden');
-      });
-    });
-  });
-
   // Fonction pour copier le lien
   function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(function() {
       // Afficher une notification
       const notification = document.createElement('div');
-      notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg';
+      notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
       notification.textContent = 'Lien copié !';
       document.body.appendChild(notification);
 

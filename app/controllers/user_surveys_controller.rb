@@ -88,6 +88,9 @@ class UserSurveysController < ApplicationController
                                    .completed
                                    .group_by_day(:completed_at)
                                    .count
+
+    # Calculer les statistiques pour les autres années pour la comparaison
+    @comparison_data = calculate_comparison_data
   end
 
   def export_results
@@ -147,7 +150,7 @@ class UserSurveysController < ApplicationController
     @user_survey.survey.questions.each do |question|
       question_responses = responses.joins(:question_responses)
                                   .where(question_responses: { question: question })
-                                  .where.not(question_responses: { answer_text: nil })
+                                  .where.not(question_responses: { answer_text: [nil, ''] })
 
       case question.question_type
       when 'single_choice', 'yes_no'
@@ -167,6 +170,7 @@ class UserSurveysController < ApplicationController
         values = question_responses.joins(:question_responses)
                                  .pluck('question_responses.answer_text')
                                  .map(&:to_f)
+                                 .reject(&:zero?)
         if values.any?
           stats[question.id] = {
             average: (values.sum / values.count.to_f).round(2),
@@ -182,11 +186,77 @@ class UserSurveysController < ApplicationController
           sample_responses: question_responses.joins(:question_responses)
                                             .limit(5)
                                             .pluck('question_responses.answer_text')
+                                            .compact
+                                            .reject(&:blank?)
         }
       end
     end
 
     stats
+  end
+
+  def calculate_comparison_data
+    # Récupérer toutes les autres enquêtes de la même série (même enquête, même utilisateur)
+    other_surveys = UserSurvey.where(
+      survey: @user_survey.survey,
+      user: @user_survey.user
+    ).where.not(id: @user_survey.id)
+    .includes(:survey_responses => :question_responses)
+    .order(:year)
+
+    return {} if other_surveys.empty?
+
+    comparison_data = {}
+    all_surveys = (other_surveys + [@user_survey]).sort_by(&:year)
+
+    @user_survey.survey.questions.each do |question|
+      comparison_data[question.id] = {
+        question: question,
+        years_data: {}
+      }
+
+      all_surveys.each do |survey|
+        year = survey.year
+        completed_responses = survey.survey_responses.completed
+
+        question_responses = completed_responses.joins(:question_responses)
+                                              .where(question_responses: { question: question })
+                                              .where.not(question_responses: { answer_text: [nil, ''] })
+
+        case question.question_type
+        when 'single_choice', 'yes_no'
+          year_stats = question_responses.joins(:question_responses)
+                                       .group('question_responses.answer_text')
+                                       .count
+          comparison_data[question.id][:years_data][year] = year_stats
+
+        when 'scale', 'numeric'
+          values = question_responses.joins(:question_responses)
+                                   .pluck('question_responses.answer_text')
+                                   .map(&:to_f)
+                                   .reject(&:zero?)
+
+          if values.any?
+            comparison_data[question.id][:years_data][year] = {
+              average: (values.sum / values.count.to_f).round(2),
+              count: values.count
+            }
+          end
+
+        when 'multiple_choice'
+          all_answers = question_responses.joins(:question_responses)
+                                        .pluck('question_responses.answer_data')
+          answer_counts = Hash.new(0)
+          all_answers.each do |answers_array|
+            next unless answers_array.is_a?(Array)
+            answers_array.each { |answer| answer_counts[answer] += 1 }
+          end
+          comparison_data[question.id][:years_data][year] = answer_counts
+        end
+      end
+    end
+
+    comparison_data
   end
 
   def export_to_csv

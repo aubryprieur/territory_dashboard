@@ -1,337 +1,437 @@
 <!-- app/views/user_surveys/results.html.erb -->
-<div class="py-6">
+<div class="min-h-screen bg-gray-50 py-8"
+     data-controller="survey-results"
+     data-survey-results-statistics-value="<%= @statistics.to_json %>"
+     data-survey-results-responses-by-day-value="<%= @responses_by_day.to_json %>"
+     data-survey-results-comparison-data-value="<%= (@comparison_data || {}).to_json %>">
+
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center mb-6">
-      <div>
-        <h1 class="text-2xl font-semibold text-gray-900">
-          Résultats - <%= @user_survey.survey.title %>
-        </h1>
-        <p class="mt-1 text-sm text-gray-600">
-          <%= @user_survey.year %> - <%= @user_survey.response_count %> réponses
-        </p>
+    <!-- Header avec gradient moderne -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-xl p-8 mb-8 text-white">
+      <div class="flex justify-between items-start">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">
+            <%= @user_survey.survey.title %>
+          </h1>
+          <p class="text-indigo-100 text-lg">
+            Résultats pour l'année <%= @user_survey.year %>
+          </p>
+          <div class="flex items-center space-x-6 mt-4">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+              </svg>
+              <span class="font-semibold text-xl"><%= @user_survey.response_count %></span>
+              <span class="ml-1 text-indigo-100">réponses</span>
+            </div>
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 8h12v8H4V8z" clip-rule="evenodd"/>
+              </svg>
+              <span>Du <%= l(@user_survey.starts_at, format: :short) %> au <%= l(@user_survey.ends_at, format: :short) %></span>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col space-y-2">
+          <%= link_to user_surveys_path, class: "inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur border border-white/30 rounded-lg text-white hover:bg-white/30 transition-all" do %>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Retour
+          <% end %>
+          <%= link_to export_results_user_survey_path(@user_survey, format: :csv), class: "inline-flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all shadow-lg" do %>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Exporter CSV
+          <% end %>
+        </div>
       </div>
-      <div class="flex space-x-3">
-        <%= link_to "Retour", @user_survey, class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
-        <%= link_to export_results_user_survey_path(@user_survey, format: :csv), class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700" do %>
-          <svg class="mr-2 h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Exporter CSV
-        <% end %>
+    </div>
+
+    <!-- Statistiques clés avec comparaison -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-transform">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 font-medium">Taux de complétion</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">
+              <%= (@user_survey.survey_responses.completed.count.to_f / [@user_survey.survey_responses.count, 1].max * 100).round(1) %>%
+            </p>
+            <% # Comparaison avec l'année précédente si disponible %>
+            <% previous_survey = UserSurvey.where(survey: @user_survey.survey, user: @user_survey.user, year: @user_survey.year - 1).first %>
+            <% if previous_survey %>
+              <p class="text-xs text-gray-500 mt-1">
+                Année précédente :
+                <% prev_rate = (previous_survey.survey_responses.completed.count.to_f / [previous_survey.survey_responses.count, 1].max * 100).round(1) %>
+                <%= prev_rate %>%
+              </p>
+            <% end %>
+          </div>
+          <div class="p-3 bg-blue-100 rounded-full">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-transform">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 font-medium">Temps moyen</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">
+              <% avg_time = @user_survey.survey_responses.completed.average("EXTRACT(EPOCH FROM (completed_at - started_at))/60") %>
+              <%= avg_time ? avg_time.round : 0 %> min
+            </p>
+          </div>
+          <div class="p-3 bg-purple-100 rounded-full">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-transform">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 font-medium">Questions</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1"><%= @user_survey.survey.total_questions %></p>
+          </div>
+          <div class="p-3 bg-green-100 rounded-full">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-transform">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 font-medium">Période active</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">
+              <%= distance_of_time_in_words(@user_survey.starts_at, @user_survey.ends_at).gsub('environ', '').strip %>
+            </p>
+          </div>
+          <div class="p-3 bg-orange-100 rounded-full">
+            <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Graphique d'évolution des réponses -->
     <% if @responses_by_day.any? %>
-      <div class="bg-white shadow sm:rounded-lg mb-8">
-        <div class="px-4 py-5 sm:p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Évolution des réponses</h3>
-          <div class="h-64">
-            <canvas id="responses-chart"></canvas>
-          </div>
+      <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+        <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v16"/>
+          </svg>
+          Évolution des réponses dans le temps
+        </h3>
+        <div class="h-80">
+          <canvas data-survey-results-target="chart"
+                  data-chart-type="line"
+                  data-chart-data="<%= {
+                    labels: @responses_by_day.keys.map { |d| d.strftime('%d/%m') },
+                    values: @responses_by_day.values,
+                    type: 'responses',
+                    label: 'Réponses par jour'
+                  }.to_json %>"
+                  id="responses-chart"></canvas>
         </div>
       </div>
     <% end %>
 
-    <!-- Résultats par question -->
+    <!-- Résultats par section -->
     <div class="space-y-8">
-      <% @user_survey.survey.survey_sections.includes(questions: :question_options).each do |section| %>
-        <div class="bg-white shadow sm:rounded-lg">
-          <div class="px-4 py-5 sm:p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+      <% @user_survey.survey.survey_sections.includes(questions: :question_options).each_with_index do |section, section_index| %>
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+          <!-- Header de section avec gradient -->
+          <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white p-6">
+            <h2 class="text-2xl font-bold flex items-center">
+              <span class="flex items-center justify-center w-10 h-10 bg-white/20 rounded-full mr-3 text-lg">
+                <%= section_index + 1 %>
+              </span>
               <%= section.title %>
             </h2>
+            <% if section.description.present? %>
+              <p class="mt-2 text-gray-300"><%= section.description %></p>
+            <% end %>
+          </div>
 
-            <div class="space-y-8">
-              <% section.questions.each do |question| %>
-                <div class="border-b pb-6 last:border-b-0 last:pb-0">
-                  <h3 class="text-lg font-medium text-gray-900 mb-4">
+          <div class="p-8 space-y-8">
+            <% section.questions.each_with_index do |question, q_index| %>
+              <div class="border-b border-gray-200 pb-8 last:border-b-0 last:pb-0">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-start">
+                  <span class="inline-flex items-center justify-center min-w-[2rem] h-8 bg-indigo-100 text-indigo-700 rounded-full mr-3 text-sm font-bold">
+                    <%= q_index + 1 %>
+                  </span>
+                  <span class="flex-1">
                     <%= question.title %>
                     <% if question.required? %>
-                      <span class="text-red-500">*</span>
+                      <span class="text-red-500 ml-1">*</span>
                     <% end %>
-                  </h3>
+                    <% if question.description.present? %>
+                      <span class="block text-sm font-normal text-gray-500 mt-1"><%= question.description %></span>
+                    <% end %>
+                  </span>
+                </h3>
 
-                  <% stats = @statistics[question.id] %>
-                  <% if stats %>
-                    <% case question.question_type %>
-                    <% when 'single_choice', 'yes_no' %>
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <% if stats.is_a?(Hash) && stats.any? %>
-                            <% total_responses = stats.values.sum %>
+                <% stats = @statistics[question.id] %>
+                <% if stats %>
+                  <% case question.question_type %>
+                  <% when 'single_choice', 'yes_no' %>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      <div>
+                        <% if stats.is_a?(Hash) && stats.any? %>
+                          <% total_responses = stats.values.sum %>
+                          <div class="space-y-3">
                             <% stats.sort_by { |_, count| -count }.each do |answer, count| %>
                               <% percentage = (count.to_f / total_responses * 100).round(1) %>
-                              <div class="mb-3">
-                                <div class="flex justify-between text-sm mb-1">
-                                  <span class="text-gray-700">
-                                    <%= question.question_options.find { |o| o.value == answer }&.text || answer %>
+                              <div class="relative">
+                                <div class="flex justify-between items-center mb-1">
+                                  <span class="text-sm font-medium text-gray-700">
+                                    <% if question.question_type == 'yes_no' %>
+                                      <%= answer == 'yes' ? 'Oui' : 'Non' %>
+                                    <% else %>
+                                      <%= question.question_options.find { |o| o.value == answer }&.text || answer %>
+                                    <% end %>
                                   </span>
-                                  <span class="text-gray-500">
+                                  <span class="text-sm text-gray-600">
                                     <%= count %> (<%= percentage %>%)
                                   </span>
                                 </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                  <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= percentage %>%"></div>
+                                <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                                  <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-end pr-3 transition-all duration-500"
+                                       style="width: <%= percentage %>%">
+                                    <span class="text-white text-xs font-medium"><%= percentage %>%</span>
+                                  </div>
                                 </div>
                               </div>
                             <% end %>
-                          <% else %>
-                            <p class="text-gray-500">Aucune réponse</p>
-                          <% end %>
-                        </div>
-                        <div>
-                          <canvas id="chart-<%= question.id %>" class="max-h-64"></canvas>
+                          </div>
+                        <% else %>
+                          <p class="text-gray-500 italic">Aucune réponse</p>
+                        <% end %>
+                      </div>
+                      <div class="flex items-center justify-center">
+                        <div class="w-full max-w-xs">
+                          <canvas data-survey-results-target="chart"
+                                  data-chart-type="doughnut"
+                                  data-question-id="<%= question.id %>"
+                                  data-chart-data="<%= {
+                                    labels: stats.map { |answer, _|
+                                      if question.question_type == 'yes_no'
+                                        answer == 'yes' ? 'Oui' : 'Non'
+                                      else
+                                        question.question_options.find { |o| o.value == answer }&.text || answer
+                                      end
+                                    },
+                                    values: stats.values
+                                  }.to_json %>"
+                                  class="max-h-64"></canvas>
                         </div>
                       </div>
+                    </div>
 
-                    <% when 'multiple_choice' %>
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <% if stats.is_a?(Hash) && stats.any? %>
-                            <% total_responses = @user_survey.response_count %>
+                  <% when 'multiple_choice' %>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      <div>
+                        <% if stats.is_a?(Hash) && stats.any? %>
+                          <% total_responses = @user_survey.response_count %>
+                          <div class="space-y-3">
                             <% stats.sort_by { |_, count| -count }.each do |answer, count| %>
                               <% percentage = (count.to_f / total_responses * 100).round(1) %>
-                              <div class="mb-3">
-                                <div class="flex justify-between text-sm mb-1">
-                                  <span class="text-gray-700">
+                              <div class="relative">
+                                <div class="flex justify-between items-center mb-1">
+                                  <span class="text-sm font-medium text-gray-700">
                                     <%= question.question_options.find { |o| o.value == answer }&.text || answer %>
                                   </span>
-                                  <span class="text-gray-500">
+                                  <span class="text-sm text-gray-600">
                                     <%= count %> (<%= percentage %>%)
                                   </span>
                                 </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                  <div class="bg-purple-600 h-2 rounded-full" style="width: <%= percentage %>%"></div>
+                                <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                                  <div class="h-full bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-end pr-3 transition-all duration-500"
+                                       style="width: <%= percentage %>%">
+                                    <span class="text-white text-xs font-medium"><%= percentage %>%</span>
+                                  </div>
                                 </div>
                               </div>
                             <% end %>
-                          <% else %>
-                            <p class="text-gray-500">Aucune réponse</p>
-                          <% end %>
-                        </div>
-                        <div>
-                          <canvas id="chart-<%= question.id %>" class="max-h-64"></canvas>
+                          </div>
+                        <% else %>
+                          <p class="text-gray-500 italic">Aucune réponse</p>
+                        <% end %>
+                      </div>
+                      <div class="flex items-center justify-center">
+                        <div class="w-full">
+                          <canvas data-survey-results-target="chart"
+                                  data-chart-type="bar"
+                                  data-question-id="<%= question.id %>"
+                                  data-chart-data="<%= {
+                                    labels: stats.map { |answer, _| question.question_options.find { |o| o.value == answer }&.text || answer },
+                                    values: stats.values,
+                                    type: 'multiple_choice',
+                                    label: 'Nombre de sélections'
+                                  }.to_json %>"
+                                  class="max-h-64"></canvas>
                         </div>
                       </div>
+                    </div>
 
-                    <% when 'scale', 'numeric' %>
-                      <% if stats.is_a?(Hash) && stats[:count] > 0 %>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <dl class="grid grid-cols-2 gap-4">
-                              <div class="bg-gray-50 rounded-lg p-4">
-                                <dt class="text-sm font-medium text-gray-500">Moyenne</dt>
-                                <dd class="mt-1 text-2xl font-semibold text-indigo-600">
-                                  <%= stats[:average] %>
-                                </dd>
-                              </div>
-                              <div class="bg-gray-50 rounded-lg p-4">
-                                <dt class="text-sm font-medium text-gray-500">Réponses</dt>
-                                <dd class="mt-1 text-2xl font-semibold text-gray-900">
-                                  <%= stats[:count] %>
-                                </dd>
-                              </div>
-                              <div class="bg-gray-50 rounded-lg p-4">
-                                <dt class="text-sm font-medium text-gray-500">Min</dt>
-                                <dd class="mt-1 text-2xl font-semibold text-gray-900">
-                                  <%= stats[:min] %>
-                                </dd>
-                              </div>
-                              <div class="bg-gray-50 rounded-lg p-4">
-                                <dt class="text-sm font-medium text-gray-500">Max</dt>
-                                <dd class="mt-1 text-2xl font-semibold text-gray-900">
-                                  <%= stats[:max] %>
-                                </dd>
-                              </div>
-                            </dl>
-                          </div>
-                          <div>
-                            <canvas id="chart-<%= question.id %>" class="max-h-64"></canvas>
+                  <% when 'scale', 'numeric' %>
+                    <% if stats.is_a?(Hash) && stats[:count] > 0 %>
+                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                          <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-6 text-center">
+                              <p class="text-sm font-medium text-gray-600 mb-1">Moyenne</p>
+                              <p class="text-4xl font-bold text-indigo-700"><%= stats[:average] %></p>
+                              <% if question.question_type == 'scale' && question.options %>
+                                <p class="text-xs text-gray-500 mt-1">sur <%= question.options['scale_max'] %></p>
+                              <% end %>
+                            </div>
+                            <div class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl p-6 text-center">
+                              <p class="text-sm font-medium text-gray-600 mb-1">Réponses</p>
+                              <p class="text-4xl font-bold text-emerald-700"><%= stats[:count] %></p>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 text-center">
+                              <p class="text-sm font-medium text-gray-600 mb-1">Minimum</p>
+                              <p class="text-4xl font-bold text-purple-700"><%= stats[:min] %></p>
+                            </div>
+                            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 text-center">
+                              <p class="text-sm font-medium text-gray-600 mb-1">Maximum</p>
+                              <p class="text-4xl font-bold text-orange-700"><%= stats[:max] %></p>
+                            </div>
                           </div>
                         </div>
-                      <% else %>
-                        <p class="text-gray-500">Aucune réponse</p>
-                      <% end %>
-
+                        <div class="flex items-center justify-center">
+                          <div class="w-full">
+                            <canvas data-survey-results-target="chart"
+                                    data-chart-type="bar"
+                                    data-question-id="<%= question.id %>"
+                                    data-chart-data="<%= {
+                                      labels: stats[:distribution].keys.sort,
+                                      values: stats[:distribution].sort.map(&:last),
+                                      label: 'Distribution des réponses'
+                                    }.to_json %>"
+                                    class="max-h-64"></canvas>
+                          </div>
+                        </div>
+                      </div>
                     <% else %>
-                      <% if stats[:total_responses] > 0 %>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                          <p class="text-sm text-gray-600 mb-2">
-                            <%= stats[:total_responses] %> réponses
+                      <p class="text-gray-500 italic">Aucune réponse</p>
+                    <% end %>
+
+                  <% else %>
+                    <!-- Questions texte, email, phone, date -->
+                    <% if stats[:total_responses] > 0 %>
+                      <div class="bg-gray-50 rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                          <p class="text-sm font-medium text-gray-600">
+                            <span class="text-2xl font-bold text-gray-900"><%= stats[:total_responses] %></span> réponses
                           </p>
                           <% if stats[:sample_responses].any? %>
-                            <p class="text-xs text-gray-500 mb-2">Exemples de réponses :</p>
-                            <ul class="space-y-2">
-                              <% stats[:sample_responses].each do |response| %>
-                                <li class="text-sm text-gray-700 italic">
-                                  "<%= truncate(response, length: 100) %>"
-                                </li>
-                              <% end %>
-                            </ul>
+                            <span class="text-xs text-gray-500">Échantillon des réponses</span>
                           <% end %>
                         </div>
-                      <% else %>
-                        <p class="text-gray-500">Aucune réponse</p>
-                      <% end %>
+                        <% if stats[:sample_responses].any? %>
+                          <div class="space-y-3">
+                            <% stats[:sample_responses].each do |response| %>
+                              <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                                <p class="text-sm text-gray-700 italic">
+                                  <svg class="w-4 h-4 inline-block mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                  </svg>
+                                  <%= truncate(response, length: 150) %>
+                                </p>
+                              </div>
+                            <% end %>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% else %>
+                      <p class="text-gray-500 italic">Aucune réponse</p>
                     <% end %>
-                  <% else %>
-                    <p class="text-gray-500">Aucune donnée disponible</p>
                   <% end %>
-                </div>
-              <% end %>
-            </div>
+                <% else %>
+                  <p class="text-gray-500 italic">Aucune donnée disponible</p>
+                <% end %>
+              </div>
+            <% end %>
           </div>
         </div>
       <% end %>
     </div>
+
+    <!-- Boutons d'action en bas -->
+    <div class="mt-12 flex justify-center space-x-4">
+      <%= link_to export_results_user_survey_path(@user_survey, format: :csv),
+          class: "inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg transform hover:scale-105" do %>
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Exporter les données (CSV)
+      <% end %>
+
+      <button onclick="window.print()"
+              class="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all shadow-lg transform hover:scale-105">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        Imprimer le rapport
+      </button>
+    </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Styles pour l'impression -->
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    body { background: white !important; }
+    .bg-gradient-to-r { background: #f3f4f6 !important; print-color-adjust: exact; }
+    .shadow-lg, .shadow-xl { box-shadow: none !important; }
+    .transform { transform: none !important; }
+  }
+
+  /* Animation pour les barres de progression */
+  @keyframes slideIn {
+    from { width: 0; }
+  }
+
+  .bg-gradient-to-r {
+    animation: slideIn 1s ease-out;
+  }
+</style>
+
+<!-- Ajoutez ce script temporaire à la fin de results.html.erb pour debug -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Graphique d'évolution des réponses
-    <% if @responses_by_day.any? %>
-      const ctx = document.getElementById('responses-chart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: <%= @responses_by_day.keys.map { |d| d.strftime('%d/%m') }.to_json.html_safe %>,
-          datasets: [{
-            label: 'Réponses par jour',
-            data: <%= @responses_by_day.values.to_json %>,
-            borderColor: 'rgb(79, 70, 229)',
-            backgroundColor: 'rgba(79, 70, 229, 0.1)',
-            tension: 0.1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                stepSize: 1
-              }
-            }
-          }
-        }
+    console.log('DOM loaded');
+    console.log('Chart.js available:', !!window.Chart);
+    console.log('Stimulus controllers:', window.application?.controllers);
+
+    // Vérifier les éléments avec data-controller
+    const elements = document.querySelectorAll('[data-controller*="survey-results"]');
+    console.log('Elements with survey-results controller:', elements.length);
+
+    // Vérifier les canvas
+    const canvases = document.querySelectorAll('canvas[data-survey-results-target="chart"]');
+    console.log('Canvas elements found:', canvases.length);
+
+    canvases.forEach((canvas, index) => {
+      console.log(`Canvas ${index}:`, {
+        chartType: canvas.dataset.chartType,
+        hasData: !!canvas.dataset.chartData,
+        dataLength: canvas.dataset.chartData?.length
       });
-    <% end %>
-
-    // Graphiques pour les questions
-    <% @user_survey.survey.questions.each do |question| %>
-      <% stats = @statistics[question.id] %>
-      <% if stats %>
-        <% case question.question_type %>
-        <% when 'single_choice', 'yes_no' %>
-          <% if stats.is_a?(Hash) && stats.any? %>
-            const ctx<%= question.id %> = document.getElementById('chart-<%= question.id %>').getContext('2d');
-            new Chart(ctx<%= question.id %>, {
-              type: 'doughnut',
-              data: {
-                labels: <%= stats.map { |answer, _| question.question_options.find { |o| o.value == answer }&.text || answer }.to_json.html_safe %>,
-                datasets: [{
-                  data: <%= stats.values.to_json %>,
-                  backgroundColor: [
-                    'rgba(79, 70, 229, 0.8)',
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(245, 158, 11, 0.8)',
-                    'rgba(239, 68, 68, 0.8)',
-                    'rgba(139, 92, 246, 0.8)'
-                  ]
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: 'bottom',
-                    labels: {
-                      padding: 15,
-                      boxWidth: 12
-                    }
-                  }
-                }
-              }
-            });
-          <% end %>
-
-        <% when 'multiple_choice' %>
-          <% if stats.is_a?(Hash) && stats.any? %>
-            const ctx<%= question.id %> = document.getElementById('chart-<%= question.id %>').getContext('2d');
-            new Chart(ctx<%= question.id %>, {
-              type: 'bar',
-              data: {
-                labels: <%= stats.map { |answer, _| question.question_options.find { |o| o.value == answer }&.text || answer }.to_json.html_safe %>,
-                datasets: [{
-                  label: 'Nombre de sélections',
-                  data: <%= stats.values.to_json %>,
-                  backgroundColor: 'rgba(139, 92, 246, 0.8)',
-                  borderColor: 'rgba(139, 92, 246, 1)',
-                  borderWidth: 1
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      stepSize: 1
-                    }
-                  }
-                },
-                plugins: {
-                  legend: {
-                    display: false
-                  }
-                }
-              }
-            });
-          <% end %>
-
-        <% when 'scale' %>
-          <% if stats.is_a?(Hash) && stats[:distribution] %>
-            const ctx<%= question.id %> = document.getElementById('chart-<%= question.id %>').getContext('2d');
-            new Chart(ctx<%= question.id %>, {
-              type: 'bar',
-              data: {
-                labels: <%= stats[:distribution].keys.sort.to_json %>,
-                datasets: [{
-                  label: 'Distribution des réponses',
-                  data: <%= stats[:distribution].sort.map(&:last).to_json %>,
-                  backgroundColor: 'rgba(79, 70, 229, 0.8)',
-                  borderColor: 'rgba(79, 70, 229, 1)',
-                  borderWidth: 1
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      stepSize: 1
-                    }
-                  }
-                },
-                plugins: {
-                  legend: {
-                    display: false
-                  }
-                }
-              }
-            });
-          <% end %>
-        <% end %>
-      <% end %>
-    <% end %>
+    });
   });
 </script>

@@ -54,3 +54,6 @@ pin "epci/dashboard_init", to: "epci/dashboard_init.js"
 pin "epci/commune_search", to: "epci/commune_search.js"
 pin "epci/tabs_scroll", to: "epci/tabs_scroll.js"
 
+# Contrôleurs pour les enquêtes
+pin "controllers/survey_tabs_controller", to: "controllers/survey_tabs_controller.js"
+pin "controllers/survey_results_controller", to: "controllers/survey_results_controller.js"

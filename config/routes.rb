@@ -31,6 +31,7 @@ Rails.application.routes.draw do
   resources :user_surveys do
     collection do
       get :available
+      get :compare
     end
     member do
       get :results
