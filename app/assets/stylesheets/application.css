@@ -13,5 +13,6 @@
  *= link_tree ../builds
  *= require_self
  *= require epci_dashboard
-*= require accordion
+ *= require accordion
+ *= require sortable
  */

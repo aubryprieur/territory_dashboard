@@ -1,0 +1,73 @@
+/* app/assets/stylesheets/sortable.css */
+
+/* Styles pour le drag & drop des enquêtes */
+.sortable-ghost {
+  @apply opacity-50 bg-indigo-50 border-2 border-dashed border-indigo-300;
+}
+
+.sortable-chosen {
+  @apply shadow-lg;
+}
+
+.sortable-drag {
+  @apply rotate-3 shadow-2xl;
+}
+
+.drag-handle {
+  @apply cursor-grab text-gray-400 hover:text-gray-600;
+  transition: color 0.2s ease;
+}
+
+.drag-handle:active {
+  @apply cursor-grabbing;
+}
+
+.sortable-item {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.sortable-item:hover {
+  @apply shadow-md;
+}
+
+/* Animation pour les éléments qui bougent */
+.sortable-fallback {
+  @apply opacity-0;
+}
+
+/* Styles pour les toasts de notification */
+.toast-success {
+  @apply fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.toast-error {
+  @apply fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Amélioration de l'accessibilité pour les poignées de drag */
+.drag-handle:focus {
+  @apply outline-none ring-2 ring-indigo-500 ring-offset-2;
+}
+
+/* Style pour indiquer qu'un élément est en cours de drag */
+.is-dragging {
+  @apply cursor-grabbing select-none;
+}
+
+/* Zone de drop active */
+.drop-zone-active {
+  @apply bg-indigo-50 border-indigo-300;
+}

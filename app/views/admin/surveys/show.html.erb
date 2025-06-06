@@ -153,20 +153,43 @@
     <!-- Structure de l'enquête -->
     <div class="bg-white shadow sm:rounded-lg">
       <div class="px-4 py-5 sm:p-6">
-        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-6">Structure de l'enquête</h3>
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">Structure de l'enquête</h3>
+          <% unless @survey.published? %>
+            <div class="text-sm text-gray-600 flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+              </svg>
+              Glissez-déposez pour réorganiser
+            </div>
+          <% end %>
+        </div>
 
         <% if @sections.any? %>
-          <div class="space-y-6">
+          <div class="space-y-6"
+               data-controller="sortable"
+               data-sortable-url-value="<%= reorder_admin_survey_path(@survey) %>"
+               data-sortable-type-value="sections">
             <% @sections.each_with_index do |section, section_index| %>
-              <div class="border border-gray-200 rounded-lg p-4">
+              <div class="border border-gray-200 rounded-lg p-4 sortable-item"
+                   data-id="<%= section.id %>">
                 <div class="flex justify-between items-start mb-4">
-                  <div>
-                    <h4 class="text-md font-medium text-gray-900">
-                      Section <%= section_index + 1 %>: <%= section.title %>
-                    </h4>
-                    <% if section.description.present? %>
-                      <p class="text-sm text-gray-600 mt-1"><%= section.description %></p>
+                  <div class="flex items-start">
+                    <% unless @survey.published? %>
+                      <div class="drag-handle mr-3 mt-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                        </svg>
+                      </div>
                     <% end %>
+                    <div>
+                      <h4 class="text-md font-medium text-gray-900">
+                        Section <%= section_index + 1 %>: <%= section.title %>
+                      </h4>
+                      <% if section.description.present? %>
+                        <p class="text-sm text-gray-600 mt-1"><%= section.description %></p>
+                      <% end %>
+                    </div>
                   </div>
 
                   <% unless @survey.published? %>
@@ -182,22 +205,35 @@
                 </div>
 
                 <% if section.questions.any? %>
-                  <div class="pl-4 space-y-3">
+                  <div class="pl-4 space-y-3"
+                       data-controller="sortable"
+                       data-sortable-url-value="<%= reorder_admin_survey_path(@survey) %>"
+                       data-sortable-type-value="questions">
                     <% section.questions.each_with_index do |question, question_index| %>
-                      <div class="flex justify-between items-start py-2 border-l-2 border-gray-100 pl-3">
-                        <div class="flex-1">
-                          <p class="text-sm font-medium text-gray-800">
-                            <%= question_index + 1 %>. <%= question.title %>
-                            <% if question.required? %>
-                              <span class="text-red-500">*</span>
-                            <% end %>
-                          </p>
-                          <p class="text-xs text-gray-500 mt-1">
-                            Type: <%= question.question_type.humanize %>
-                            <% if question.question_options.any? %>
-                              • <%= question.question_options.count %> options
-                            <% end %>
-                          </p>
+                      <div class="flex justify-between items-start py-2 border-l-2 border-gray-100 pl-3 sortable-item"
+                           data-id="<%= question.id %>">
+                        <div class="flex items-start flex-1">
+                          <% unless @survey.published? %>
+                            <div class="drag-handle mr-2 mt-1">
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                              </svg>
+                            </div>
+                          <% end %>
+                          <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-800">
+                              <%= question_index + 1 %>. <%= question.title %>
+                              <% if question.required? %>
+                                <span class="text-red-500">*</span>
+                              <% end %>
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                              Type: <%= question.question_type.humanize %>
+                              <% if question.question_options.any? %>
+                                • <%= question.question_options.count %> options
+                              <% end %>
+                            </p>
+                          </div>
                         </div>
 
                         <% unless @survey.published? %>

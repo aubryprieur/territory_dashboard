@@ -17,6 +17,7 @@ Rails.application.routes.draw do
         post :duplicate
         get :results
         get :export_results
+        patch :reorder
       end
 
       resources :survey_sections, except: [:index, :show] do
