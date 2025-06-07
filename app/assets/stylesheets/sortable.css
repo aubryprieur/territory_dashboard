@@ -145,3 +145,53 @@
   outline: none;
   box-shadow: 0 0 0 2px rgb(79 70 229), 0 0 0 4px rgba(79, 70, 229, 0.2);
 }
+
+/* Amélioration du feedback visuel pour les sections */
+.section-item {
+  transition: all 0.3s ease;
+}
+
+.section-item.sortable-ghost {
+  opacity: 0.4;
+  background-color: #E0E7FF !important;
+  border: 2px dashed #6366F1 !important;
+}
+
+.section-item.sortable-chosen {
+  background-color: #F5F3FF;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02);
+}
+
+/* Amélioration pour les questions */
+.question-item {
+  transition: all 0.2s ease;
+}
+
+.question-item.sortable-ghost {
+  opacity: 0.4;
+  background-color: #D1FAE5 !important;
+  border-left: 4px solid #10B981 !important;
+}
+
+.question-item.sortable-chosen {
+  background-color: #F0FDF4;
+  transform: translateX(5px);
+}
+
+/* Handles plus visibles au hover */
+.section-drag-handle:hover {
+  background-color: #DBEAFE;
+  transform: scale(1.1);
+}
+
+.question-drag-handle:hover {
+  background-color: #D1FAE5;
+  transform: scale(1.1);
+}
+
+/* Indicateur de zone de drop */
+.sections-container.drop-zone-active {
+  background-color: #F3F4F6;
+  border-radius: 0.5rem;
+}

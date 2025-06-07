@@ -166,20 +166,20 @@
         </div>
 
         <% if @sections.any? %>
-          <!-- Conteneur pour les sections avec contrôleur Sortable -->
-          <div class="space-y-6 sections-sortable"
-               data-controller="sortable"
-               data-sortable-url-value="<%= reorder_admin_survey_path(@survey) %>"
-               data-sortable-type-value="sections">
+          <!-- Conteneur principal pour les sections avec contrôleur dédié -->
+          <div id="sections-container"
+               class="space-y-6"
+               data-controller="sections-sortable"
+               data-sections-sortable-url-value="<%= reorder_admin_survey_path(@survey) %>">
             <% @sections.each_with_index do |section, section_index| %>
-              <div class="border border-gray-200 rounded-lg p-4 sortable-item section-item"
+              <div class="section-item border border-gray-200 rounded-lg p-4 bg-white hover:shadow-sm transition-shadow"
                    data-id="<%= section.id %>">
                 <div class="flex justify-between items-start mb-4">
                   <div class="flex items-start">
                     <% unless @survey.published? %>
-                      <div class="drag-handle mr-3 mt-1 section-drag-handle" title="Glisser pour réorganiser les sections">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                      <div class="section-drag-handle mr-3 mt-1 cursor-move hover:bg-blue-50 p-1 rounded transition-colors" title="Glisser pour réorganiser les sections">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                       </div>
                     <% end %>
@@ -218,19 +218,19 @@
                 </div>
 
                 <% if section.questions.any? %>
-                  <!-- Conteneur pour les questions avec contrôleur Sortable séparé -->
-                  <div class="pl-4 space-y-3 questions-sortable"
-                       data-controller="sortable"
-                       data-sortable-url-value="<%= reorder_admin_survey_path(@survey) %>"
-                       data-sortable-type-value="questions">
+                  <!-- Conteneur séparé pour les questions avec contrôleur dédié -->
+                  <div class="questions-container pl-4 space-y-3"
+                       data-controller="questions-sortable"
+                       data-questions-sortable-url-value="<%= reorder_admin_survey_path(@survey) %>"
+                       data-questions-sortable-section-value="<%= section.id %>">
                     <% section.questions.each_with_index do |question, question_index| %>
-                      <div class="flex justify-between items-start py-2 border-l-2 border-gray-100 pl-3 sortable-item question-item"
+                      <div class="question-item flex justify-between items-start py-2 border-l-2 border-gray-100 pl-3 hover:border-gray-300 transition-colors"
                            data-id="<%= question.id %>">
                         <div class="flex items-start flex-1">
                           <% unless @survey.published? %>
-                            <div class="drag-handle mr-2 mt-1 question-drag-handle" title="Glisser pour réorganiser les questions">
-                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                            <div class="question-drag-handle mr-2 mt-1 cursor-move hover:bg-green-50 p-1 rounded transition-colors" title="Glisser pour réorganiser les questions">
+                              <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                               </svg>
                             </div>
                           <% end %>
