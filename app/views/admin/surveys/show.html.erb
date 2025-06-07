@@ -166,17 +166,18 @@
         </div>
 
         <% if @sections.any? %>
-          <div class="space-y-6"
+          <!-- Conteneur pour les sections avec contrôleur Sortable -->
+          <div class="space-y-6 sections-sortable"
                data-controller="sortable"
                data-sortable-url-value="<%= reorder_admin_survey_path(@survey) %>"
                data-sortable-type-value="sections">
             <% @sections.each_with_index do |section, section_index| %>
-              <div class="border border-gray-200 rounded-lg p-4 sortable-item"
+              <div class="border border-gray-200 rounded-lg p-4 sortable-item section-item"
                    data-id="<%= section.id %>">
                 <div class="flex justify-between items-start mb-4">
                   <div class="flex items-start">
                     <% unless @survey.published? %>
-                      <div class="drag-handle mr-3 mt-1">
+                      <div class="drag-handle mr-3 mt-1 section-drag-handle" title="Glisser pour réorganiser les sections">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
                         </svg>
@@ -185,10 +186,16 @@
                     <div>
                       <h4 class="text-md font-medium text-gray-900">
                         Section <%= section_index + 1 %>: <%= section.title %>
+                        <% if section.required? %>
+                          <span class="text-red-500 text-sm">*</span>
+                        <% end %>
                       </h4>
                       <% if section.description.present? %>
                         <p class="text-sm text-gray-600 mt-1"><%= section.description %></p>
                       <% end %>
+                      <p class="text-xs text-gray-500 mt-1">
+                        <%= pluralize(section.questions.count, 'question') %>
+                      </p>
                     </div>
                   </div>
 
@@ -200,21 +207,28 @@
                       <%= link_to new_admin_survey_survey_section_question_path(@survey, section), class: "text-sm text-green-600 hover:text-green-500" do %>
                         + Question
                       <% end %>
+                      <%= link_to admin_survey_survey_section_path(@survey, section),
+                          method: :delete,
+                          data: { confirm: "Êtes-vous sûr de vouloir supprimer cette section et toutes ses questions ?" },
+                          class: "text-sm text-red-600 hover:text-red-500" do %>
+                        Supprimer
+                      <% end %>
                     </div>
                   <% end %>
                 </div>
 
                 <% if section.questions.any? %>
-                  <div class="pl-4 space-y-3"
+                  <!-- Conteneur pour les questions avec contrôleur Sortable séparé -->
+                  <div class="pl-4 space-y-3 questions-sortable"
                        data-controller="sortable"
                        data-sortable-url-value="<%= reorder_admin_survey_path(@survey) %>"
                        data-sortable-type-value="questions">
                     <% section.questions.each_with_index do |question, question_index| %>
-                      <div class="flex justify-between items-start py-2 border-l-2 border-gray-100 pl-3 sortable-item"
+                      <div class="flex justify-between items-start py-2 border-l-2 border-gray-100 pl-3 sortable-item question-item"
                            data-id="<%= question.id %>">
                         <div class="flex items-start flex-1">
                           <% unless @survey.published? %>
-                            <div class="drag-handle mr-2 mt-1">
+                            <div class="drag-handle mr-2 mt-1 question-drag-handle" title="Glisser pour réorganiser les questions">
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
                               </svg>
@@ -230,22 +244,42 @@
                             <p class="text-xs text-gray-500 mt-1">
                               Type: <%= question.question_type.humanize %>
                               <% if question.question_options.any? %>
-                                • <%= question.question_options.count %> options
+                                • <%= pluralize(question.question_options.count, 'option') %>
+                              <% end %>
+                              <% if question.description.present? %>
+                                • <%= truncate(question.description, length: 50) %>
                               <% end %>
                             </p>
                           </div>
                         </div>
 
                         <% unless @survey.published? %>
-                          <%= link_to edit_admin_survey_survey_section_question_path(@survey, section, question), class: "text-xs text-indigo-600 hover:text-indigo-500" do %>
-                            Éditer
-                          <% end %>
+                          <div class="flex space-x-2">
+                            <%= link_to edit_admin_survey_survey_section_question_path(@survey, section, question), class: "text-xs text-indigo-600 hover:text-indigo-500" do %>
+                              Éditer
+                            <% end %>
+                            <%= link_to admin_survey_survey_section_question_path(@survey, section, question),
+                                method: :delete,
+                                data: { confirm: "Êtes-vous sûr de vouloir supprimer cette question ?" },
+                                class: "text-xs text-red-600 hover:text-red-500" do %>
+                              Supprimer
+                            <% end %>
+                          </div>
                         <% end %>
                       </div>
                     <% end %>
                   </div>
                 <% else %>
-                  <p class="text-sm text-gray-500 italic pl-4">Aucune question dans cette section</p>
+                  <div class="pl-4">
+                    <p class="text-sm text-gray-500 italic">Aucune question dans cette section</p>
+                    <% unless @survey.published? %>
+                      <div class="mt-2">
+                        <%= link_to new_admin_survey_survey_section_question_path(@survey, section), class: "text-sm text-green-600 hover:text-green-500" do %>
+                          + Ajouter la première question
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
                 <% end %>
               </div>
             <% end %>
