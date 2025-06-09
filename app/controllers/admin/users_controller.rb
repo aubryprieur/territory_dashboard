@@ -1,13 +1,26 @@
 class Admin::UsersController < ApplicationController
   include UserAuthorization
-  before_action :set_user, only: [:show, :edit, :update, :destroy]
+  before_action :set_user, only: [:show, :edit, :update, :destroy, :suspend, :reactivate]
 
   def requires_super_admin?
     true
   end
 
   def index
-    @users = User.all
+    @users = User.all.order(:email)
+
+    # Filtrage par statut si demandé
+    case params[:status]
+    when 'suspended'
+      @users = @users.suspended
+    when 'active'
+      @users = @users.active
+    end
+
+    # Statistiques pour l'affichage
+    @total_users = User.count
+    @suspended_users = User.suspended.count
+    @active_users = User.active.count
   end
 
   def show
@@ -69,6 +82,24 @@ class Admin::UsersController < ApplicationController
   def destroy
     @user.destroy
     redirect_to admin_users_path, notice: "L'utilisateur a été supprimé avec succès."
+  end
+
+  def suspend
+    reason = params[:reason].presence || "Suspension administrateur"
+
+    if @user.suspend!(reason)
+      redirect_to admin_users_path, notice: "L'utilisateur #{@user.email} a été suspendu avec succès."
+    else
+      redirect_to admin_users_path, alert: "Erreur lors de la suspension de l'utilisateur."
+    end
+  end
+
+  def reactivate
+    if @user.reactivate!
+      redirect_to admin_users_path, notice: "L'utilisateur #{@user.email} a été réactivé avec succès."
+    else
+      redirect_to admin_users_path, alert: "Erreur lors de la réactivation de l'utilisateur."
+    end
   end
 
   private

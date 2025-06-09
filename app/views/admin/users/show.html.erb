@@ -4,8 +4,33 @@
       <h1 class="text-2xl font-semibold text-gray-900">Détails de l'utilisateur</h1>
       <div class="flex space-x-2">
         <%= link_to "Retour à la liste", admin_users_path, class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
-        <%= link_to "Éditer", edit_admin_user_path(@user), class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500" %>
-        <%= button_to "Supprimer", admin_user_path(@user), method: :delete, data: { confirm: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?" }, class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
+
+        <% unless @user.super_admin? %>
+          <%= link_to "Éditer", edit_admin_user_path(@user), class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500" %>
+
+          <% if @user.suspended? %>
+            <%= button_to "Réactiver", reactivate_admin_user_path(@user),
+                method: :patch,
+                data: { confirm: "Êtes-vous sûr de vouloir réactiver cet utilisateur ?" },
+                class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" %>
+          <% else %>
+            <%= button_to "Suspendre", suspend_admin_user_path(@user),
+                method: :patch,
+                params: { reason: "Défaut de paiement" },
+                data: { confirm: "Êtes-vous sûr de vouloir suspendre cet utilisateur ? Il n'aura plus accès à ses données." },
+                class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500" %>
+          <% end %>
+
+          <%= button_to "Supprimer", admin_user_path(@user),
+              method: :delete,
+              data: { confirm: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?" },
+              class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
+        <% else %>
+          <%= button_to "Supprimer", admin_user_path(@user),
+              method: :delete,
+              data: { confirm: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?" },
+              class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
+        <% end %>
       </div>
     </div>
 
@@ -30,12 +55,48 @@
               <% end %>
             </dd>
           </div>
+
+          <!-- Section Statut du compte -->
           <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            <dt class="text-sm font-medium text-gray-500">Statut du compte</dt>
+            <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+              <% if @user.suspended? %>
+                <div class="flex items-center">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                    <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="3"/>
+                    </svg>
+                    Suspendu
+                  </span>
+                  <% if @user.suspended_at %>
+                    <span class="ml-2 text-xs text-gray-500">
+                      depuis le <%= @user.suspended_at.strftime("%d/%m/%Y") %>
+                      (<%= pluralize(@user.suspension_duration_in_days, 'jour') %>)
+                    </span>
+                  <% end %>
+                </div>
+                <% if @user.suspension_reason.present? %>
+                  <div class="mt-2 p-2 bg-red-50 rounded text-sm text-red-700">
+                    <strong>Raison :</strong> <%= @user.suspension_reason %>
+                  </div>
+                <% end %>
+              <% else %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 8 8">
+                    <circle cx="4" cy="4" r="3"/>
+                  </svg>
+                  Actif
+                </span>
+              <% end %>
+            </dd>
+          </div>
+
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">Type de territoire</dt>
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><%= @user.territory_type&.humanize || "Non défini" %></dd>
           </div>
 
-          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">Territoire</dt>
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
               <% if @user.territory_code.present? %>
@@ -106,11 +167,11 @@
             </dd>
           </div>
 
-          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">Créé le</dt>
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><%= @user.created_at.strftime("%d/%m/%Y à %H:%M") %></dd>
           </div>
-          <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+          <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">Dernière mise à jour</dt>
             <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"><%= @user.updated_at.strftime("%d/%m/%Y à %H:%M") %></dd>
           </div>

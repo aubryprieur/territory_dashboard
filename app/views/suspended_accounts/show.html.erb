@@ -1,0 +1,101 @@
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+      <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+      </svg>
+    </div>
+    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+      Compte suspendu
+    </h2>
+    <p class="mt-2 text-center text-sm text-gray-600">
+      Votre accès aux services est temporairement indisponible
+    </p>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <div class="space-y-6">
+        <!-- Informations sur la suspension -->
+        <div class="rounded-md bg-red-50 p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">
+                Compte suspendu
+              </h3>
+              <div class="mt-2 text-sm text-red-700">
+                <p><strong>Raison :</strong> <%= @suspension_reason %></p>
+                <% if @suspended_since %>
+                  <p class="mt-1"><strong>Depuis le :</strong> <%= @suspended_since.strftime("%d/%m/%Y à %H:%M") %></p>
+                  <p class="mt-1"><strong>Durée :</strong> <%= pluralize(@suspension_duration, 'jour') %></p>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message d'explication -->
+        <div class="text-sm text-gray-600">
+          <h4 class="font-medium text-gray-900 mb-2">Pourquoi mon compte est-il suspendu ?</h4>
+          <p class="mb-3">
+            Votre compte a été temporairement suspendu en raison d'un impayé.
+            Pendant cette période, vous n'avez plus accès à vos données et enquêtes.
+          </p>
+
+          <h4 class="font-medium text-gray-900 mb-2">Comment réactiver mon compte ?</h4>
+          <ul class="list-disc list-inside space-y-1 text-gray-600">
+            <li>Régularisez votre situation de paiement</li>
+            <li>Contactez notre service client</li>
+            <li>Votre compte sera réactivé dès réception du paiement</li>
+          </ul>
+        </div>
+
+        <!-- Informations de contact -->
+        <div class="rounded-md bg-blue-50 p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-blue-800">
+                Besoin d'aide ?
+              </h3>
+              <div class="mt-2 text-sm text-blue-700">
+                <p>Contactez notre équipe :</p>
+                <p class="mt-1">
+                  <strong>Email :</strong> support@votre-plateforme.fr<br>
+                  <strong>Téléphone :</strong> 01 23 45 67 89
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bouton de déconnexion -->
+        <div class="flex justify-between items-center pt-4">
+          <div></div>
+          <%= button_to "Se déconnecter", destroy_user_session_path,
+              method: :delete,
+              form: { data: { turbo: false } },
+              class: "inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informations supplémentaires -->
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="text-center text-xs text-gray-500">
+      <p>Vos données et enquêtes sont conservées en sécurité</p>
+      <p class="mt-1">Elles seront à nouveau accessibles dès la réactivation de votre compte</p>
+    </div>
+  </div>
+</div>

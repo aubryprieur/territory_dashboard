@@ -3,6 +3,12 @@ class DashboardController < ApplicationController
   before_action :check_user_territory
 
   def index
+    # Vérifier si l'utilisateur est suspendu
+    if current_user.suspended?
+      redirect_to suspended_account_path
+      return
+    end
+
     # Déterminer le code territoire à utiliser
     if params[:commune_code].present?
       # Si un code commune est fourni en paramètre

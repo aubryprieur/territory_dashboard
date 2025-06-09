@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_02_142034) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_09_145456) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -183,8 +183,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_02_142034) do
     t.string "territory_name"
     t.text "commune_codes"
     t.text "commune_names"
+    t.boolean "suspended", default: false, null: false
+    t.datetime "suspended_at", precision: nil
+    t.text "suspension_reason"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["suspended"], name: "index_users_on_suspended"
+    t.index ["suspended_at"], name: "index_users_on_suspended_at"
     t.index ["territory_type", "territory_code"], name: "index_users_on_territory_type_and_territory_code"
   end
 
