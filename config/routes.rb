@@ -6,7 +6,12 @@ Rails.application.routes.draw do
   }
 
   namespace :admin do
-    resources :users
+    resources :users do
+      member do
+        patch :suspend
+        patch :reactivate
+      end
+    end
 
     # Routes pour la gestion des enquêtes (super admin uniquement)
     resources :surveys do
@@ -27,6 +32,9 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # Route pour la page de compte suspendu
+  get 'suspended_account', to: 'suspended_accounts#show'
 
   # Routes pour les enquêtes utilisateurs (communes/EPCI)
   resources :user_surveys do

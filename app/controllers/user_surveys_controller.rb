@@ -150,14 +150,22 @@ class UserSurveysController < ApplicationController
 
   def check_can_launch_surveys
     unless current_user.can_launch_surveys?
-      redirect_to root_path, alert: "Vous n'avez pas accès à cette fonctionnalité."
+      if current_user.suspended?
+        redirect_to suspended_account_path
+      else
+        redirect_to root_path, alert: "Vous n'avez pas accès à cette fonctionnalité."
+      end
     end
   end
 
   def set_user_survey
     @user_survey = UserSurvey.find(params[:id])
     unless current_user.can_view_user_survey?(@user_survey)
-      redirect_to user_surveys_path, alert: "Vous n'avez pas accès à cette enquête."
+      if current_user.suspended?
+        redirect_to suspended_account_path
+      else
+        redirect_to user_surveys_path, alert: "Vous n'avez pas accès à cette enquête."
+      end
     end
   end
 
