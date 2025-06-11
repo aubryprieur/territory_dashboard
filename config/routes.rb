@@ -2,14 +2,22 @@ Rails.application.routes.draw do
   get "epci_dashboard/index"
   devise_for :users, controllers: {
     sessions: 'users/sessions',
-    registrations: 'users/registrations'
+    registrations: 'users/registrations',
+    confirmations: 'users/confirmations'
+
   }
+
+  # Routes pour la configuration du mot de passe
+  namespace :users do
+    resource :password_setup, only: [:show, :update]
+  end
 
   namespace :admin do
     resources :users do
       member do
         patch :suspend
         patch :reactivate
+        patch :resend_welcome_email
       end
     end
 

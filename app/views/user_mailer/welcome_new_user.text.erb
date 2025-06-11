@@ -1,0 +1,38 @@
+Bienvenue sur Territory Dashboard !
+
+Bonjour <%= @user.email %>,
+
+Un administrateur vous a créé un compte sur Territory Dashboard pour accéder aux données de <%= @territory_name %> (<%= @territory_type %>).
+
+VOS IDENTIFIANTS TEMPORAIRES :
+Email : <%= @user.email %>
+Mot de passe temporaire : <%= @temporary_password %>
+
+CONNEXION :
+Rendez-vous sur : <%= @login_url %>
+
+SÉCURITÉ IMPORTANTE :
+Vous devez changer ce mot de passe lors de votre première connexion.
+
+Votre nouveau mot de passe doit respecter ces critères :
+- Au moins 12 caractères
+- Au moins une lettre minuscule
+- Au moins une lettre majuscule
+- Au moins un chiffre
+- Au moins un caractère spécial (@$!%*?&)
+- Ne doit pas être un mot de passe courant
+
+QUE POUVEZ-VOUS FAIRE ?
+- Consulter les données démographiques de votre territoire
+- Analyser les indicateurs économiques et sociaux
+- Créer et gérer des enquêtes personnalisées
+- Comparer votre territoire avec d'autres échelles géographiques
+
+Si vous avez des questions, n'hésitez pas à contacter notre équipe de support.
+
+Bonne découverte !
+L'équipe Territory Dashboard
+
+---
+Cet email a été envoyé automatiquement. Merci de ne pas y répondre.
+© <%= Date.current.year %> Territory Dashboard. Tous droits réservés.
