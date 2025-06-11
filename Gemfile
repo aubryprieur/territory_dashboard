@@ -21,15 +21,18 @@ gem "jbuilder"
 # Auth
 gem "devise"
 # Pour lire les fichiers Excel
-gem 'roo', '~> 2.10.0'
+gem "roo", '~> 2.10.0'
  # Pour l'autocomplétion
-gem 'jquery-rails'
+gem "jquery-rails"
 # http
-gem 'http'
+gem "http"
 # Pagination
-gem 'kaminari'
+gem "kaminari"
 # Date
-gem 'groupdate'
+gem "groupdate"
+# Pour la validation avancée des mots de passe
+gem "zxcvbn-ruby"
+
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
@@ -68,6 +71,8 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+  # Pour la gestion des emails en développement (optionnel)
+  gem "letter_opener"
 end
 
 group :test do

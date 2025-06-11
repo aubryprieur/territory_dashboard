@@ -7,29 +7,34 @@
           <span>Total: <strong><%= @total_users %></strong></span>
           <span>Actifs: <strong class="text-green-600"><%= @active_users %></strong></span>
           <span>Suspendus: <strong class="text-red-600"><%= @suspended_users %></strong></span>
+          <span>Mot de passe à configurer: <strong class="text-orange-600"><%= @needs_password_setup %></strong></span>
         </div>
       </div>
       <%= link_to "Nouvel utilisateur", new_admin_user_path, class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
     </div>
 
     <!-- Filtres -->
-    <div class="mb-4 flex space-x-2">
+    <div class="mb-4 flex flex-wrap gap-2">
       <%= link_to "Tous", admin_users_path,
           class: "px-3 py-2 text-sm font-medium rounded-md #{'bg-indigo-100 text-indigo-700' if params[:status].blank?} #{'text-gray-500 hover:text-gray-700' unless params[:status].blank?}" %>
       <%= link_to "Actifs", admin_users_path(status: 'active'),
           class: "px-3 py-2 text-sm font-medium rounded-md #{'bg-green-100 text-green-700' if params[:status] == 'active'} #{'text-gray-500 hover:text-gray-700' unless params[:status] == 'active'}" %>
       <%= link_to "Suspendus", admin_users_path(status: 'suspended'),
           class: "px-3 py-2 text-sm font-medium rounded-md #{'bg-red-100 text-red-700' if params[:status] == 'suspended'} #{'text-gray-500 hover:text-gray-700' unless params[:status] == 'suspended'}" %>
+      <%= link_to "MDP à configurer", admin_users_path(status: 'needs_password_setup'),
+          class: "px-3 py-2 text-sm font-medium rounded-md #{'bg-orange-100 text-orange-700' if params[:status] == 'needs_password_setup'} #{'text-gray-500 hover:text-gray-700' unless params[:status] == 'needs_password_setup'}" %>
     </div>
 
     <div class="bg-white shadow overflow-hidden sm:rounded-md">
       <ul class="divide-y divide-gray-200">
         <% @users.each do |user| %>
-          <li class="<%= 'bg-red-50' if user.suspended? %>">
+          <li class="<%= 'bg-red-50' if user.suspended? %><%= ' bg-orange-50' if !user.password_set? && !user.suspended? %>">
             <div class="px-4 py-4 sm:px-6 flex items-center justify-between">
               <div>
                 <h3 class="text-lg font-medium text-gray-900">
                   <%= user.email %>
+
+                  <!-- Badge de statut -->
                   <% if user.suspended? %>
                     <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                       <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 8 8">
@@ -37,8 +42,23 @@
                       </svg>
                       Suspendu
                     </span>
+                  <% elsif !user.password_set? %>
+                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3"/>
+                      </svg>
+                      MDP à configurer
+                    </span>
+                  <% else %>
+                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3"/>
+                      </svg>
+                      Actif
+                    </span>
                   <% end %>
                 </h3>
+
                 <div class="mt-1 flex items-center text-sm text-gray-500">
                   <% if user.super_admin? %>
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Super Admin</span>
@@ -49,23 +69,41 @@
                     <span class="ml-2"><%= "#{user.territory_type.humanize}: #{user.territory_name}" %></span>
                   <% end %>
                 </div>
+
+                <!-- Informations de statut détaillées -->
                 <% if user.suspended? && user.suspension_reason.present? %>
                   <div class="mt-1 text-sm text-red-600">
                     <strong>Raison:</strong> <%= user.suspension_reason %>
                   </div>
                 <% end %>
+
                 <% if user.suspended? && user.suspended_at %>
                   <div class="mt-1 text-xs text-gray-500">
                     Suspendu le <%= user.suspended_at.strftime("%d/%m/%Y à %H:%M") %>
                     (<%= pluralize(user.suspension_duration_in_days, 'jour') %>)
                   </div>
                 <% end %>
+
+                <% if !user.password_set? %>
+                  <div class="mt-1 text-xs text-orange-600">
+                    <strong>Mot de passe temporaire non configuré</strong>
+                  </div>
+                <% end %>
               </div>
-              <div class="flex space-x-2">
+
+              <div class="flex flex-wrap gap-2">
                 <%= link_to "Voir", admin_user_path(user), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
 
                 <% unless user.super_admin? %>
                   <%= link_to "Éditer", edit_admin_user_path(user), class: "inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500" %>
+
+                  <!-- Bouton pour renvoyer l'email de bienvenue si le mot de passe n'est pas configuré -->
+                  <% if !user.password_set? %>
+                    <%= button_to "Renvoyer email", resend_welcome_email_admin_user_path(user),
+                        method: :patch,
+                        data: { confirm: "Voulez-vous renvoyer l'email de bienvenue ?" },
+                        class: "inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" %>
+                  <% end %>
 
                   <% if user.suspended? %>
                     <%= button_to "Réactiver", reactivate_admin_user_path(user),

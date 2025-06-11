@@ -1,30 +1,21 @@
-# frozen_string_literal: true
-
 class Users::ConfirmationsController < Devise::ConfirmationsController
-  # GET /resource/confirmation/new
-  # def new
-  #   super
-  # end
+  protected
 
-  # POST /resource/confirmation
-  # def create
-  #   super
-  # end
+  # Rediriger après confirmation vers la configuration du mot de passe
+  def after_confirmation_path_for(resource_name, resource)
+    if resource.needs_password_setup?
+      users_password_setup_path
+    else
+      authenticated_root_path
+    end
+  end
 
-  # GET /resource/confirmation?confirmation_token=abcdef
-  # def show
-  #   super
-  # end
-
-  # protected
-
-  # The path used after resending confirmation instructions.
-  # def after_resending_confirmation_instructions_path_for(resource_name)
-  #   super(resource_name)
-  # end
-
-  # The path used after confirmation.
-  # def after_confirmation_path_for(resource_name, resource)
-  #   super(resource_name, resource)
-  # end
+  # Personnaliser le message après confirmation
+  def set_flash_message(key, kind, options = {})
+    if kind == :confirmed && resource.needs_password_setup?
+      flash[:notice] = "Votre email a été confirmé. Veuillez maintenant configurer votre mot de passe."
+    else
+      super
+    end
+  end
 end
