@@ -1,11 +1,12 @@
 class ApplicationController < ActionController::Base
-  include SuspensionCheck  # Ajouter cette ligne
+  include SuspensionCheck
 
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
   before_action :check_password_setup_required
 
+  # Redirection vers la page d'accueil avec les cards
   def dashboard_router
     redirect_to home_dashboard_path
   end

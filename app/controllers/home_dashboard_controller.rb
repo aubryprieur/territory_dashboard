@@ -2,9 +2,14 @@ class HomeDashboardController < ApplicationController
   before_action :authenticate_user!
 
   def index
-    # Logique pour déterminer quel type de dashboard afficher
-    @dashboard_path = determine_dashboard_path
-    @dashboard_title = determine_dashboard_title
+    # Logique différente selon le type d'utilisateur
+    if current_user.super_admin?
+      render :admin_index
+    else
+      # Logique pour déterminer quel type de dashboard afficher
+      @dashboard_path = determine_dashboard_path
+      @dashboard_title = determine_dashboard_title
+    end
   end
 
   private
