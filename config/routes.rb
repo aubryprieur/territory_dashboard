@@ -78,6 +78,7 @@ Rails.application.routes.draw do
   get 'epcis/autocomplete', to: 'epcis#autocomplete'
 
   # Routes pour les dashboards
+  get 'home_dashboard', to: 'home_dashboard#index'
   get 'dashboard', to: 'dashboard#index'
   get 'epci_dashboard', to: 'epci_dashboard#index'
 

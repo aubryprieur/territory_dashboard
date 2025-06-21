@@ -1,0 +1,141 @@
+<!-- app/views/home_dashboard/index.html.erb -->
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <!-- En-tête de la page -->
+    <div class="px-4 py-6 sm:px-0">
+      <div class="border-4 border-dashed border-gray-200 rounded-lg p-6 bg-white">
+        <div class="text-center">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            Bienvenue, <%= current_user.email %>
+          </h1>
+          <p class="text-lg text-gray-600">
+            Choisissez l'action que vous souhaitez effectuer
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards principales -->
+    <div class="px-4 py-6 sm:px-0">
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Card Dashboard -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <!-- Icône Dashboard -->
+                <svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">
+                  <%= @dashboard_title %>
+                </h3>
+                <p class="text-sm text-gray-500">
+                  Accédez à vos données et statistiques territoriales
+                </p>
+              </div>
+            </div>
+            <div class="mt-6">
+              <a href="<%= @dashboard_path %>"
+                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+                Accéder au Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Enquêtes -->
+        <% if current_user.can_launch_surveys? %>
+          <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <!-- Icône Enquêtes -->
+                  <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-lg font-medium text-gray-900">
+                    Gestion des Enquêtes
+                  </h3>
+                  <p class="text-sm text-gray-500">
+                    Créez, gérez et suivez vos enquêtes territoriales
+                  </p>
+                </div>
+              </div>
+              <div class="mt-6">
+                <a href="<%= user_surveys_path %>"
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+                  <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  Gérer les Enquêtes
+                </a>
+              </div>
+            </div>
+          </div>
+        <% else %>
+          <!-- Card alternative si l'utilisateur ne peut pas lancer d'enquêtes -->
+          <div class="bg-gray-100 overflow-hidden shadow-lg rounded-lg">
+            <div class="p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-lg font-medium text-gray-500">
+                    Enquêtes
+                  </h3>
+                  <p class="text-sm text-gray-400">
+                    Fonctionnalité non disponible pour votre profil
+                  </p>
+                </div>
+              </div>
+              <div class="mt-6">
+                <button disabled
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-200 cursor-not-allowed">
+                  <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                  </svg>
+                  Accès non autorisé
+                </button>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Section informations supplémentaires (optionnelle) -->
+    <div class="px-4 py-6 sm:px-0">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">
+              Information
+            </h3>
+            <div class="mt-2 text-sm text-blue-700">
+              <p>
+                Cette page vous donne accès aux principales fonctionnalités de votre espace territorial.
+                Utilisez le dashboard pour consulter vos données et la section enquêtes pour vos sondages.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

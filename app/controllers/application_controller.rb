@@ -6,13 +6,8 @@ class ApplicationController < ActionController::Base
 
   before_action :check_password_setup_required
 
-  # Dans app/controllers/application_controller.rb, ajoutez cette méthode:
   def dashboard_router
-    if current_user.territory_type == 'epci'
-      redirect_to epci_dashboard_path
-    else
-      redirect_to dashboard_path
-    end
+    redirect_to home_dashboard_path
   end
 
   private
@@ -22,6 +17,7 @@ class ApplicationController < ActionController::Base
     return if current_user.super_admin?
     return if controller_name == 'password_setups' || devise_controller?
     return if controller_name == 'sessions' && action_name == 'destroy'
+    return if controller_name == 'home_dashboard' # Permet l'accès à la page d'accueil
 
     if current_user.needs_password_setup?
       redirect_to users_password_setup_path, alert: "Vous devez configurer votre mot de passe pour continuer."
