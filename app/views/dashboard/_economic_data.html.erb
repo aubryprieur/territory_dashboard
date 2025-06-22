@@ -9,7 +9,7 @@
         <canvas id="revenue-chart"></canvas>
       </div>
     </div>
-    <!-- Tableau comparatif des revenus médians avec évolution des écarts -->
+    <!-- Tableau comparatif des revenus médians avec évolution des écarts améliorée -->
     <div>
       <h3 class="text-sm font-medium text-gray-700 mb-2">Comparaison des revenus médians (€)</h3>
       <%
@@ -37,7 +37,7 @@
               Revenu médian (<%= latest_year || 'N/A' %>)
             </th>
             <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Évolution des écarts (<%= oldest_year || 'N/A' %> - <%= latest_year || 'N/A' %>)
+              Évolution comparative (<%= oldest_year || 'N/A' %> - <%= latest_year || 'N/A' %>)
             </th>
           </tr>
         </thead>
@@ -54,42 +54,32 @@
               Référence
             </td>
           </tr>
+
           <!-- Ligne pour l'EPCI si disponible -->
           <% if @epci_revenue_data.present? %>
             <%
               epci_latest = @epci_revenue_data&.dig("median_revenues", latest_year)
               epci_oldest = @epci_revenue_data&.dig("median_revenues", oldest_year)
+              epci_name = @epci_revenue_data&.dig("name") || "EPCI"
 
-              # Calcul des écarts
-              if commune_latest && epci_latest && commune_oldest && epci_oldest
-                latest_gap = commune_latest - epci_latest
-                oldest_gap = commune_oldest - epci_oldest
-                gap_evolution = latest_gap - oldest_gap
-
-                # Si la valeur est négative, la commune s'éloigne (creusement de l'écart)
-                # Si la valeur est positive, la commune se rapproche (réduction de l'écart)
-                gap_text = if gap_evolution < 0
-                             "S'éloigne de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
-                           elsif gap_evolution > 0
-                             "Se rapproche de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
-                           else
-                             "Stable"
-                           end
-              else
-                gap_text = "Données insuffisantes"
-              end
+              # Utilisation du nouveau service d'analyse
+              analysis_result = analyze_revenue_gap(
+                @territory_name,
+                commune_oldest,
+                commune_latest,
+                epci_oldest,
+                epci_latest,
+                epci_name
+              )
             %>
             <tr>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= @epci_revenue_data&.dig("name") || "EPCI" %>
+                <%= epci_name %>
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                 <%= number_to_currency(epci_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
               </td>
-              <td class="px-4 py-2 whitespace-nowrap text-sm
-                  <%= gap_evolution && gap_evolution < 0 ? "text-red-600" : (gap_evolution && gap_evolution > 0 ? "text-green-600" : "text-gray-500") %>">
-                <%= gap_text %>
-              </td>
+              <%= format_revenue_analysis_cell(analysis_result) %>
             </tr>
           <% end %>
 
@@ -98,37 +88,26 @@
             <%
               dept_latest = @department_revenue_data&.dig("median_revenues", latest_year)
               dept_oldest = @department_revenue_data&.dig("median_revenues", oldest_year)
+              dept_name = @department_revenue_data&.dig("name") || "Département"
 
-              # Calcul des écarts
-              if commune_latest && dept_latest && commune_oldest && dept_oldest
-                latest_gap = commune_latest - dept_latest
-                oldest_gap = commune_oldest - dept_oldest
-                gap_evolution = latest_gap - oldest_gap
-
-                # Si la valeur est négative, la commune s'éloigne (creusement de l'écart)
-                # Si la valeur est positive, la commune se rapproche (réduction de l'écart)
-                gap_text = if gap_evolution < 0
-                             "S'éloigne de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
-                           elsif gap_evolution > 0
-                             "Se rapproche de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
-                           else
-                             "Stable"
-                           end
-              else
-                gap_text = "Données insuffisantes"
-              end
+              # Utilisation du nouveau service d'analyse
+              analysis_result = analyze_revenue_gap(
+                @territory_name,
+                commune_oldest,
+                commune_latest,
+                dept_oldest,
+                dept_latest,
+                dept_name
+              )
             %>
             <tr>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= @department_revenue_data&.dig("name") || "Département" %>
+                <%= dept_name %>
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                 <%= number_to_currency(dept_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
               </td>
-              <td class="px-4 py-2 whitespace-nowrap text-sm
-                  <%= gap_evolution && gap_evolution < 0 ? "text-red-600" : (gap_evolution && gap_evolution > 0 ? "text-green-600" : "text-gray-500") %>">
-                <%= gap_text %>
-              </td>
+              <%= format_revenue_analysis_cell(analysis_result) %>
             </tr>
           <% end %>
 
@@ -137,37 +116,26 @@
             <%
               region_latest = @region_revenue_data&.dig("median_revenues", latest_year)
               region_oldest = @region_revenue_data&.dig("median_revenues", oldest_year)
+              region_name = @region_revenue_data&.dig("name") || "Région"
 
-              # Calcul des écarts
-              if commune_latest && region_latest && commune_oldest && region_oldest
-                latest_gap = commune_latest - region_latest
-                oldest_gap = commune_oldest - region_oldest
-                gap_evolution = latest_gap - oldest_gap
-
-                # Si la valeur est négative, la commune s'éloigne (creusement de l'écart)
-                # Si la valeur est positive, la commune se rapproche (réduction de l'écart)
-                gap_text = if gap_evolution < 0
-                             "S'éloigne de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
-                           elsif gap_evolution > 0
-                             "Se rapproche de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
-                           else
-                             "Stable"
-                           end
-              else
-                gap_text = "Données insuffisantes"
-              end
+              # Utilisation du nouveau service d'analyse
+              analysis_result = analyze_revenue_gap(
+                @territory_name,
+                commune_oldest,
+                commune_latest,
+                region_oldest,
+                region_latest,
+                region_name
+              )
             %>
             <tr>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= @region_revenue_data&.dig("name") || "Région" %>
+                <%= region_name %>
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                 <%= number_to_currency(region_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
               </td>
-              <td class="px-4 py-2 whitespace-nowrap text-sm
-                  <%= gap_evolution && gap_evolution < 0 ? "text-red-600" : (gap_evolution && gap_evolution > 0 ? "text-green-600" : "text-gray-500") %>">
-                <%= gap_text %>
-              </td>
+              <%= format_revenue_analysis_cell(analysis_result) %>
             </tr>
           <% end %>
 
@@ -177,40 +145,44 @@
               france_latest = @france_revenue_data&.dig("median_revenues", latest_year)
               france_oldest = @france_revenue_data&.dig("median_revenues", oldest_year)
 
-              # Calcul des écarts
-              if commune_latest && france_latest && commune_oldest && france_oldest
-                latest_gap = commune_latest - france_latest
-                oldest_gap = commune_oldest - france_oldest
-                gap_evolution = latest_gap - oldest_gap
-
-                # Si la valeur est négative, la commune s'éloigne (creusement de l'écart)
-                # Si la valeur est positive, la commune se rapproche (réduction de l'écart)
-                gap_text = if gap_evolution < 0
-                             "S'éloigne de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
-                           elsif gap_evolution > 0
-                             "Se rapproche de #{number_to_currency(gap_evolution.abs, unit: "€", precision: 0, separator: ",", delimiter: " ", format: "%n %u")}"
-                           else
-                             "Stable"
-                           end
-              else
-                gap_text = "Données insuffisantes"
-              end
+              # Utilisation du nouveau service d'analyse
+              analysis_result = analyze_revenue_gap(
+                @territory_name,
+                commune_oldest,
+                commune_latest,
+                france_oldest,
+                france_latest,
+                "France"
+              )
             %>
             <tr>
-              <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                 France
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                 <%= number_to_currency(france_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
               </td>
-              <td class="px-4 py-2 whitespace-nowrap text-sm
-                  <%= gap_evolution && gap_evolution < 0 ? "text-red-600" : (gap_evolution && gap_evolution > 0 ? "text-green-600" : "text-gray-500") %>">
-                <%= gap_text %>
-              </td>
+              <%= format_revenue_analysis_cell(analysis_result) %>
             </tr>
           <% end %>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Section explicative améliorée -->
+  <div class="mt-4 mb-8 bg-blue-50 p-4 rounded-md">
+    <h4 class="text-sm font-medium text-blue-900 mb-2">
+      <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      Interprétation de l'évolution comparative
+    </h4>
+    <div class="text-sm text-blue-800 space-y-1">
+      <p><span class="font-medium text-green-600">• Rattrapage en cours / Avantage renforcé :</span> Évolution favorable pour la commune</p>
+      <p><span class="font-medium text-orange-500">• Avantage réduit :</span> La commune maintient son avance mais celle-ci diminue</p>
+      <p><span class="font-medium text-red-600">• Retard accentué / Retournement défavorable :</span> Évolution défavorable pour la commune</p>
+      <p class="mt-2 text-xs">💡 Survolez les indicateurs pour voir les détails (taux de croissance, interprétation)</p>
     </div>
   </div>
 

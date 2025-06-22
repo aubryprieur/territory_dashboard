@@ -1,5 +1,7 @@
 class DashboardController < ApplicationController
   include UserAuthorization
+  include RevenueAnalysisHelper
+
   before_action :check_user_territory
 
   def index
