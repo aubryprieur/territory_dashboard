@@ -32,7 +32,7 @@
             <% if @epci_children_data.present? %>
               <tr>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= @epci_revenue_data&.dig("name") || "EPCI" %>
+                  <%= epci_display_name %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% epci_rate = @epci_children_data["under_3_rate"] rescue 0 %>
@@ -44,7 +44,7 @@
             <% if @department_children_data.present? %>
               <tr>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  Département <%= @department_children_data["department"] rescue "" %>
+                  <%= department_display_name %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% dept_rate = @department_children_data["under_3_rate"] rescue 0 %>
@@ -56,7 +56,7 @@
             <% if @region_children_data.present? %>
               <tr>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  Région <%= @region_children_data["region"] rescue "" %>
+                  <%= region_display_name %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% region_rate = @region_children_data["under_3_rate"] rescue 0 %>
@@ -67,7 +67,7 @@
 
             <% if @france_children_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   France
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
@@ -110,7 +110,7 @@
             <% if @epci_children_data.present? %>
               <tr>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= @epci_revenue_data&.dig("name") || "EPCI" %>
+                  <%= epci_display_name %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% epci_rate = @epci_children_data["three_to_five_rate"] rescue 0 %>
@@ -122,7 +122,7 @@
             <% if @department_children_data.present? %>
               <tr>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  Département <%= @department_children_data["department"] rescue "" %>
+                  <%= department_display_name %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% dept_rate = @department_children_data["three_to_five_rate"] rescue 0 %>
@@ -134,7 +134,7 @@
             <% if @region_children_data.present? %>
               <tr>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  Région <%= @region_children_data["region"] rescue "" %>
+                  <%= region_display_name %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% region_rate = @region_children_data["three_to_five_rate"] rescue 0 %>
@@ -145,7 +145,7 @@
 
             <% if @france_children_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   France
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">

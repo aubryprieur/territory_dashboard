@@ -29,144 +29,156 @@
         commune_oldest = @revenue_data&.dig("median_revenues", oldest_year)
       %>
 
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead>
-          <tr>
-            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
-            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Revenu médian (<%= latest_year || 'N/A' %>)
-            </th>
-            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Évolution comparative (<%= oldest_year || 'N/A' %> - <%= latest_year || 'N/A' %>)
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <!-- Ligne pour la commune -->
-          <tr>
-            <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-              <%= @territory_name %>
-            </td>
-            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_currency(commune_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
-            </td>
-            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-              Référence
-            </td>
-          </tr>
-
-          <!-- Ligne pour l'EPCI si disponible -->
-          <% if @epci_revenue_data.present? %>
-            <%
-              epci_latest = @epci_revenue_data&.dig("median_revenues", latest_year)
-              epci_oldest = @epci_revenue_data&.dig("median_revenues", oldest_year)
-              epci_name = @epci_revenue_data&.dig("name") || "EPCI"
-
-              # Utilisation du nouveau service d'analyse
-              analysis_result = analyze_revenue_gap(
-                @territory_name,
-                commune_oldest,
-                commune_latest,
-                epci_oldest,
-                epci_latest,
-                epci_name
-              )
-            %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
             <tr>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= epci_name %>
-              </td>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= number_to_currency(epci_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
-              </td>
-              <%= format_revenue_analysis_cell(analysis_result) %>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Territoire</th>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+                Revenu médian (<%= latest_year || 'N/A' %>)
+              </th>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+                Évolution comparative (<%= oldest_year || 'N/A' %> - <%= latest_year || 'N/A' %>)
+              </th>
             </tr>
-          <% end %>
-
-          <!-- Ligne pour le département si disponible -->
-          <% if @department_revenue_data.present? %>
-            <%
-              dept_latest = @department_revenue_data&.dig("median_revenues", latest_year)
-              dept_oldest = @department_revenue_data&.dig("median_revenues", oldest_year)
-              dept_name = @department_revenue_data&.dig("name") || "Département"
-
-              # Utilisation du nouveau service d'analyse
-              analysis_result = analyze_revenue_gap(
-                @territory_name,
-                commune_oldest,
-                commune_latest,
-                dept_oldest,
-                dept_latest,
-                dept_name
-              )
-            %>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour la commune -->
             <tr>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= dept_name %>
+              <td class="px-4 py-2 text-sm font-medium text-gray-900 max-w-xs">
+                <div class="truncate" title="<%= @territory_name %>">
+                  <%= @territory_name %>
+                </div>
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= number_to_currency(dept_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                <%= number_to_currency(commune_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
               </td>
-              <%= format_revenue_analysis_cell(analysis_result) %>
+              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                Référence
+              </td>
             </tr>
-          <% end %>
 
-          <!-- Ligne pour la région si disponible -->
-          <% if @region_revenue_data.present? %>
-            <%
-              region_latest = @region_revenue_data&.dig("median_revenues", latest_year)
-              region_oldest = @region_revenue_data&.dig("median_revenues", oldest_year)
-              region_name = @region_revenue_data&.dig("name") || "Région"
+            <!-- Ligne pour l'EPCI si disponible -->
+            <% if @epci_revenue_data.present? %>
+              <%
+                epci_latest = @epci_revenue_data&.dig("median_revenues", latest_year)
+                epci_oldest = @epci_revenue_data&.dig("median_revenues", oldest_year)
+                epci_name = epci_display_name
 
-              # Utilisation du nouveau service d'analyse
-              analysis_result = analyze_revenue_gap(
-                @territory_name,
-                commune_oldest,
-                commune_latest,
-                region_oldest,
-                region_latest,
-                region_name
-              )
-            %>
-            <tr>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= region_name %>
-              </td>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= number_to_currency(region_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
-              </td>
-              <%= format_revenue_analysis_cell(analysis_result) %>
-            </tr>
-          <% end %>
+                # Utilisation du nouveau service d'analyse
+                analysis_result = analyze_revenue_gap(
+                  @territory_name,
+                  commune_oldest,
+                  commune_latest,
+                  epci_oldest,
+                  epci_latest,
+                  epci_name
+                )
+              %>
+              <tr>
+                <td class="px-4 py-2 text-sm text-gray-900 max-w-xs" title="<%= epci_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(epci_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_currency(epci_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                </td>
+                <%= format_revenue_analysis_cell(analysis_result) %>
+              </tr>
+            <% end %>
 
-          <!-- Ligne pour la France -->
-          <% if @france_revenue_data.present? %>
-            <%
-              france_latest = @france_revenue_data&.dig("median_revenues", latest_year)
-              france_oldest = @france_revenue_data&.dig("median_revenues", oldest_year)
+            <!-- Ligne pour le département si disponible -->
+            <% if @department_revenue_data.present? %>
+              <%
+                dept_latest = @department_revenue_data&.dig("median_revenues", latest_year)
+                dept_oldest = @department_revenue_data&.dig("median_revenues", oldest_year)
+                dept_name = department_display_name
 
-              # Utilisation du nouveau service d'analyse
-              analysis_result = analyze_revenue_gap(
-                @territory_name,
-                commune_oldest,
-                commune_latest,
-                france_oldest,
-                france_latest,
-                "France"
-              )
-            %>
-            <tr>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                France
-              </td>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= number_to_currency(france_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
-              </td>
-              <%= format_revenue_analysis_cell(analysis_result) %>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+                # Utilisation du nouveau service d'analyse
+                analysis_result = analyze_revenue_gap(
+                  @territory_name,
+                  commune_oldest,
+                  commune_latest,
+                  dept_oldest,
+                  dept_latest,
+                  dept_name
+                )
+              %>
+              <tr>
+                <td class="px-4 py-2 text-sm text-gray-900 max-w-xs" title="<%= dept_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(dept_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_currency(dept_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                </td>
+                <%= format_revenue_analysis_cell(analysis_result) %>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région si disponible -->
+            <% if @region_revenue_data.present? %>
+              <%
+                region_latest = @region_revenue_data&.dig("median_revenues", latest_year)
+                region_oldest = @region_revenue_data&.dig("median_revenues", oldest_year)
+                region_name = region_display_name
+
+                # Utilisation du nouveau service d'analyse
+                analysis_result = analyze_revenue_gap(
+                  @territory_name,
+                  commune_oldest,
+                  commune_latest,
+                  region_oldest,
+                  region_latest,
+                  region_name
+                )
+              %>
+              <tr>
+                <td class="px-4 py-2 text-sm text-gray-900 max-w-xs" title="<%= region_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(region_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_currency(region_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                </td>
+                <%= format_revenue_analysis_cell(analysis_result) %>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la France -->
+            <% if @france_revenue_data.present? %>
+              <%
+                france_latest = @france_revenue_data&.dig("median_revenues", latest_year)
+                france_oldest = @france_revenue_data&.dig("median_revenues", oldest_year)
+
+                # Utilisation du nouveau service d'analyse
+                analysis_result = analyze_revenue_gap(
+                  @territory_name,
+                  commune_oldest,
+                  commune_latest,
+                  france_oldest,
+                  france_latest,
+                  "France"
+                )
+              %>
+              <tr>
+                <td class="px-4 py-2 text-sm font-medium text-gray-900 max-w-xs">
+                  <div class="truncate" title="France">
+                    France
+                  </div>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_currency(france_latest || 'N/A', unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                </td>
+                <%= format_revenue_analysis_cell(analysis_result) %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -211,73 +223,85 @@
         latest_poverty_year = all_poverty_years.sort.last
       %>
 
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead>
-          <tr>
-            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
-            <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Taux de pauvreté (<%= latest_poverty_year || 'N/A' %>)
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <!-- Ligne pour la commune -->
-          <tr>
-            <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-              <%= @territory_name %>
-            </td>
-            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
-            </td>
-          </tr>
-
-          <!-- Ligne pour l'EPCI si disponible -->
-          <% if @epci_revenue_data.present? %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
             <tr>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= @epci_revenue_data&.dig("name") || "EPCI" %>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Territoire</th>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
+                Taux de pauvreté (<%= latest_poverty_year || 'N/A' %>)
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour la commune -->
+            <tr>
+              <td class="px-4 py-2 text-sm font-medium text-gray-900 max-w-xs">
+                <div class="truncate" title="<%= @territory_name %>">
+                  <%= @territory_name %>
+                </div>
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= number_to_percentage(@epci_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
+                <%= number_to_percentage(@revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
               </td>
             </tr>
-          <% end %>
 
-          <!-- Ligne pour le département si disponible -->
-          <% if @department_revenue_data.present? %>
+            <!-- Ligne pour l'EPCI si disponible -->
+            <% if @epci_revenue_data.present? %>
+              <tr>
+                <td class="px-4 py-2 text-sm text-gray-900 max-w-xs" title="<%= epci_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(epci_display_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_percentage(@epci_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour le département si disponible -->
+            <% if @department_revenue_data.present? %>
+              <tr>
+                <td class="px-4 py-2 text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(department_display_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_percentage(@department_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région si disponible -->
+            <% if @region_revenue_data.present? %>
+              <tr>
+                <td class="px-4 py-2 text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(region_display_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <%= number_to_percentage(@region_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la France -->
             <tr>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= @department_revenue_data&.dig("name") || "Département" %>
+              <td class="px-4 py-2 text-sm font-medium text-gray-900 max-w-xs">
+                <div class="truncate" title="France">
+                  France
+                </div>
               </td>
               <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= number_to_percentage(@department_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
+                <%= number_to_percentage(@france_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
               </td>
             </tr>
-          <% end %>
-
-          <!-- Ligne pour la région si disponible -->
-          <% if @region_revenue_data.present? %>
-            <tr>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= @region_revenue_data&.dig("name") || "Région" %>
-              </td>
-              <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                <%= number_to_percentage(@region_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
-              </td>
-            </tr>
-          <% end %>
-
-          <!-- Ligne pour la France -->
-          <tr>
-            <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-              France
-            </td>
-            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@france_revenue_data&.dig("poverty_rates", latest_poverty_year) || 'N/A', precision: 1) %>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

@@ -17,9 +17,9 @@
   window.economicData.regionPovertyData = <%= raw (@region_revenue_data&.dig("poverty_rates") || {}).to_json %>;
   window.economicData.francePovertyData = <%= raw (@france_revenue_data&.dig("poverty_rates") || {}).to_json %>;
 
-  // Noms des territoires
-  window.economicData.communeName = "<%= @territory_name %>";
-  window.economicData.epciName = "<%= @epci_revenue_data&.dig('name') || 'EPCI' %>";
-  window.economicData.departmentName = "<%= @department_revenue_data&.dig('name') || 'Département' %>";
-  window.economicData.regionName = "<%= @region_revenue_data&.dig('name') || 'Région' %>";
+  // Noms des territoires - UTILISATION DES HELPERS avec échappement HTML correct
+  window.economicData.communeName = <%= raw @territory_name.to_json %>;
+  window.economicData.epciName = <%= raw display_territory_name(epci_display_name).to_json %>;
+  window.economicData.departmentName = <%= raw display_territory_name(department_display_name).to_json %>;
+  window.economicData.regionName = <%= raw display_territory_name(region_display_name).to_json %>;
 </script>
