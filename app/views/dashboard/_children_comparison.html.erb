@@ -31,8 +31,10 @@
 
             <% if @epci_children_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= epci_display_name %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= epci_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(epci_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% epci_rate = @epci_children_data["under_3_rate"] rescue 0 %>
@@ -43,8 +45,10 @@
 
             <% if @department_children_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= department_display_name %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(department_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% dept_rate = @department_children_data["under_3_rate"] rescue 0 %>
@@ -55,8 +59,10 @@
 
             <% if @region_children_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= region_display_name %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(region_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% region_rate = @region_children_data["under_3_rate"] rescue 0 %>
@@ -109,8 +115,10 @@
 
             <% if @epci_children_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= epci_display_name %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= epci_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(epci_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% epci_rate = @epci_children_data["three_to_five_rate"] rescue 0 %>
@@ -121,8 +129,10 @@
 
             <% if @department_children_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= department_display_name %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(department_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% dept_rate = @department_children_data["three_to_five_rate"] rescue 0 %>
@@ -133,8 +143,10 @@
 
             <% if @region_children_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= region_display_name %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(region_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% region_rate = @region_children_data["three_to_five_rate"] rescue 0 %>
