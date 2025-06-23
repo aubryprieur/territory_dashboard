@@ -102,10 +102,10 @@
             <!-- Ligne pour l'EPCI si disponible -->
             <% if epci_childcare %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                  <%= @epci_childcare_data&.dig("coverage_data", reference_year, "epci", "name") ||
-                      @childcare_data&.dig("coverage_data", reference_year, "epci", "name") ||
-                      @epci_revenue_data&.dig("name") || "EPCI" %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= epci_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(epci_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <%= format_rate(epci_childcare["eaje_total"]) %>
@@ -125,9 +125,10 @@
             <!-- Ligne pour le département si disponible -->
             <% if department_childcare %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                  <%= @department_childcare_data&.dig("coverage_data", reference_year, "territory_name") ||
-                      @department_revenue_data&.dig("name") || "Département" %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(department_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <%= format_rate(department_childcare["eaje_total"]) %>
@@ -147,10 +148,10 @@
             <!-- Ligne pour la région si disponible -->
             <% if region_childcare %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                  <%= @region_childcare_data&.dig("coverage_data", reference_year, "territory_name") ||
-                      @region_childcare_data&.dig("coverage_data", reference_year, "region", "name") ||
-                      @region_revenue_data&.dig("name") || "Région" %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(region_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <%= format_rate(region_childcare["eaje_total"]) %>
@@ -170,7 +171,9 @@
             <!-- Ligne pour la France si disponible -->
             <% if france_childcare %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">France</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  France
+                </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <%= format_rate(france_childcare["eaje_total"]) %>
                 </td>
@@ -187,18 +190,6 @@
             <% end %>
           </tbody>
         </table>
-      </div>
-
-      <!-- Note explicative -->
-      <div class="mt-4 bg-gray-50 p-4 rounded-md">
-        <h4 class="text-sm font-medium text-gray-700 mb-2">À propos des données</h4>
-        <ul class="text-xs text-gray-600 space-y-1">
-          <li><strong>Accueil collectif :</strong> Établissements d'accueil du jeune enfant (crèches, haltes-garderies, etc.)</li>
-          <li><strong>Assistantes maternelles :</strong> Accueil au domicile d'une assistante maternelle agréée</li>
-          <li><strong>Préscolarisation :</strong> Accueil en école maternelle des enfants de moins de 3 ans</li>
-          <li><strong>Couverture globale :</strong> Capacité théorique d'accueil pour 100 enfants de moins de 3 ans</li>
-          <li><strong>Note :</strong> N.C. = Non Communiqué (donnée non disponible)</li>
-        </ul>
       </div>
     </div>
   <% end %>

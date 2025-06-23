@@ -37,9 +37,8 @@
 
         # Trouver l'année la plus récente commune à tous les territoires
         all_years = (commune_years + epci_years + department_years + region_years + france_years).uniq
-        latest_year = all_years.sort.last
+        reference_year = all_years.sort.last || latest_year
       %>
-
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -60,7 +59,7 @@
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                 <%
-                  commune_rate = @schooling_data&.dig("data", latest_year, "schooling_rate_2y")
+                  commune_rate = @schooling_data&.dig("data", reference_year, "schooling_rate_2y")
                   commune_rate_formatted = commune_rate ? number_to_percentage(commune_rate, precision: 2) : 'N/A'
                 %>
                 <div class="flex items-center">
@@ -79,12 +78,14 @@
             <!-- Ligne pour l'EPCI si disponible -->
             <% if @epci_schooling_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= @epci_revenue_data&.dig("name") || "EPCI" %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= epci_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(epci_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <%
-                    epci_rate = @epci_schooling_data&.dig("data", latest_year, "schooling_rate_2y")
+                    epci_rate = @epci_schooling_data&.dig("data", reference_year, "schooling_rate_2y")
                     epci_rate_formatted = epci_rate ? number_to_percentage(epci_rate, precision: 2) : 'N/A'
                   %>
                   <div class="flex items-center">
@@ -104,12 +105,14 @@
             <!-- Ligne pour le département si disponible -->
             <% if @department_schooling_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= @department_revenue_data&.dig("name") || "Département" %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(department_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <%
-                    dept_rate = @department_schooling_data&.dig("data", latest_year, "schooling_rate_2y")
+                    dept_rate = @department_schooling_data&.dig("data", reference_year, "schooling_rate_2y")
                     dept_rate_formatted = dept_rate ? number_to_percentage(dept_rate, precision: 2) : 'N/A'
                   %>
                   <div class="flex items-center">
@@ -118,7 +121,7 @@
                     </span>
                     <% if dept_rate && dept_rate > 0 %>
                       <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                        <div class="bg-purple-600 h-2 rounded-full" style="width: <%= [dept_rate, 100].min %>%"></div>
+                        <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= [dept_rate, 100].min %>%"></div>
                       </div>
                     <% end %>
                   </div>
@@ -129,12 +132,14 @@
             <!-- Ligne pour la région si disponible -->
             <% if @region_schooling_data.present? %>
               <tr>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= @region_revenue_data&.dig("name") || "Région" %>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(region_display_name) %>
+                  </div>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <%
-                    region_rate = @region_schooling_data&.dig("data", latest_year, "schooling_rate_2y")
+                    region_rate = @region_schooling_data&.dig("data", reference_year, "schooling_rate_2y")
                     region_rate_formatted = region_rate ? number_to_percentage(region_rate, precision: 2) : 'N/A'
                   %>
                   <div class="flex items-center">
@@ -152,27 +157,29 @@
             <% end %>
 
             <!-- Ligne pour la France -->
-            <tr>
-              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                France
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%
-                  france_rate = @france_schooling_data&.dig("data", latest_year, "schooling_rate_2y")
-                  france_rate_formatted = france_rate ? number_to_percentage(france_rate, precision: 2) : 'N/A'
-                %>
-                <div class="flex items-center">
-                  <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
-                    <%= france_rate_formatted %>
-                  </span>
-                  <% if france_rate && france_rate > 0 %>
-                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                      <div class="bg-red-600 h-2 rounded-full" style="width: <%= [france_rate, 100].min %>%"></div>
-                    </div>
-                  <% end %>
-                </div>
-              </td>
-            </tr>
+            <% if @france_schooling_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  France
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    france_rate = @france_schooling_data&.dig("data", reference_year, "schooling_rate_2y")
+                    france_rate_formatted = france_rate ? number_to_percentage(france_rate, precision: 2) : 'N/A'
+                  %>
+                  <div class="flex items-center">
+                    <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
+                      <%= france_rate_formatted %>
+                    </span>
+                    <% if france_rate && france_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-red-600 h-2 rounded-full" style="width: <%= [france_rate, 100].min %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
           </tbody>
         </table>
       </div>
@@ -182,170 +189,178 @@
     </div>
   </div>
 
-<!-- Section pour les enfants de 3 à 5 ans - même organisation que pour les 2 ans -->
-<h3 class="text-sm font-medium text-gray-700 mb-4 mt-6">Taux de scolarisation des enfants de 3 à 5 ans (Année: <%= @schooling_data&.dig("data")&.keys&.sort&.last || "N/A" %>)</h3>
+  <!-- Section pour les enfants de 3 à 5 ans - même organisation que pour les 2 ans -->
+  <h3 class="text-sm font-medium text-gray-700 mb-4 mt-6">Taux de scolarisation des enfants de 3 à 5 ans (Année: <%= @schooling_data&.dig("data")&.keys&.sort&.last || "N/A" %>)</h3>
 
-<!-- Disposition en grille pour carte orange + tableau -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-  <!-- Carte de synthèse orange (1 colonne sur les petits écrans, 1 colonne sur 3 sur les écrans moyens et larges) -->
-  <div class="md:col-span-1">
-    <%
-      latest_year = @schooling_data&.dig("data")&.keys&.sort&.last
-      latest_data = @schooling_data&.dig("data", latest_year) if latest_year
-    %>
-    <div class="bg-orange-50 p-4 rounded-md h-full">
-      <h4 class="font-medium text-orange-800">Enfants de 3 à 5 ans</h4>
-      <p class="text-xl font-bold text-orange-900 mt-2">
-        <%= number_to_percentage(latest_data&.dig("schooling_rate_3_5y") || 0, precision: 2) %>
-      </p>
-      <p class="text-sm text-orange-700 mt-1">
-        <%= number_with_delimiter(latest_data&.dig("schooled_children_3_5y")&.round || 0) %>
-        sur <%= number_with_delimiter(latest_data&.dig("total_children_3_5y")&.round || 0) %> enfants
-      </p>
+  <!-- Disposition en grille pour carte orange + tableau -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Carte de synthèse orange (1 colonne sur les petits écrans, 1 colonne sur 3 sur les écrans moyens et larges) -->
+    <div class="md:col-span-1">
+      <%
+        latest_year = @schooling_data&.dig("data")&.keys&.sort&.last
+        latest_data = @schooling_data&.dig("data", latest_year) if latest_year
+      %>
+      <div class="bg-orange-50 p-4 rounded-md h-full">
+        <h4 class="font-medium text-orange-800">Enfants de 3 à 5 ans</h4>
+        <p class="text-xl font-bold text-orange-900 mt-2">
+          <%= number_to_percentage(latest_data&.dig("schooling_rate_3_5y") || 0, precision: 2) %>
+        </p>
+        <p class="text-sm text-orange-700 mt-1">
+          <%= number_with_delimiter(latest_data&.dig("schooled_children_3_5y")&.round || 0) %>
+          sur <%= number_with_delimiter(latest_data&.dig("total_children_3_5y")&.round || 0) %> enfants
+        </p>
+      </div>
+    </div>
+
+    <!-- Tableau comparatif pour les enfants de 3 à 5 ans (2 colonnes sur 3 sur les écrans moyens et larges) -->
+    <div class="md:col-span-2">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Territoire
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Taux
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour la commune -->
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                <%= @territory_name %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%
+                  commune_rate = @schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
+                  commune_rate_formatted = commune_rate ? number_to_percentage(commune_rate, precision: 2) : 'N/A'
+                %>
+                <div class="flex items-center">
+                  <span class="<%= commune_rate && commune_rate > 0 ? "font-semibold" : "" %>">
+                    <%= commune_rate_formatted %>
+                  </span>
+                  <% if commune_rate && commune_rate > 0 %>
+                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                      <div class="bg-orange-600 h-2 rounded-full" style="width: <%= [commune_rate * 100 / 100, 100].min %>%"></div>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Ligne pour l'EPCI si disponible -->
+            <% if @epci_schooling_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= epci_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(epci_display_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    epci_rate = @epci_schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
+                    epci_rate_formatted = epci_rate ? number_to_percentage(epci_rate, precision: 2) : 'N/A'
+                  %>
+                  <div class="flex items-center">
+                    <span class="<%= epci_rate && epci_rate > 0 ? "font-semibold" : "" %>">
+                      <%= epci_rate_formatted %>
+                    </span>
+                    <% if epci_rate && epci_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: <%= [epci_rate * 100 / 100, 100].min %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour le département si disponible -->
+            <% if @department_schooling_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(department_display_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    dept_rate = @department_schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
+                    dept_rate_formatted = dept_rate ? number_to_percentage(dept_rate, precision: 2) : 'N/A'
+                  %>
+                  <div class="flex items-center">
+                    <span class="<%= dept_rate && dept_rate > 0 ? "font-semibold" : "" %>">
+                      <%= dept_rate_formatted %>
+                    </span>
+                    <% if dept_rate && dept_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= [dept_rate * 100 / 100, 100].min %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région si disponible -->
+            <% if @region_schooling_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(region_display_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    region_rate = @region_schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
+                    region_rate_formatted = region_rate ? number_to_percentage(region_rate, precision: 2) : 'N/A'
+                  %>
+                  <div class="flex items-center">
+                    <span class="<%= region_rate && region_rate > 0 ? "font-semibold" : "" %>">
+                      <%= region_rate_formatted %>
+                    </span>
+                    <% if region_rate && region_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-orange-600 h-2 rounded-full" style="width: <%= [region_rate * 100 / 100, 100].min %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la France -->
+            <% if @france_schooling_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  France
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    france_rate = @france_schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
+                    france_rate_formatted = france_rate ? number_to_percentage(france_rate, precision: 2) : 'N/A'
+                  %>
+                  <div class="flex items-center">
+                    <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
+                      <%= france_rate_formatted %>
+                    </span>
+                    <% if france_rate && france_rate > 0 %>
+                      <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                        <div class="bg-red-600 h-2 rounded-full" style="width: <%= [france_rate * 100 / 100, 100].min %>%"></div>
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-3 text-xs text-gray-500">
+        <p>Note: Les taux de scolarisation pour les enfants de 3 à 5 ans étant généralement élevés, les barres de progression sont calibrées sur 100%.</p>
+      </div>
     </div>
   </div>
-
-  <!-- Tableau comparatif pour les enfants de 3 à 5 ans (2 colonnes sur 3 sur les écrans moyens et larges) -->
-  <div class="md:col-span-2">
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Territoire
-            </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Taux
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <!-- Ligne pour la commune -->
-          <tr>
-            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-              <%= @territory_name %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%
-                commune_rate = @schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
-                commune_rate_formatted = commune_rate ? number_to_percentage(commune_rate, precision: 2) : 'N/A'
-              %>
-              <div class="flex items-center">
-                <span class="<%= commune_rate && commune_rate > 0 ? "font-semibold" : "" %>">
-                  <%= commune_rate_formatted %>
-                </span>
-                <% if commune_rate && commune_rate > 0 %>
-                  <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                    <div class="bg-orange-600 h-2 rounded-full" style="width: <%= [commune_rate * 100 / 100, 100].min %>%"></div>
-                  </div>
-                <% end %>
-              </div>
-            </td>
-          </tr>
-
-          <!-- Ligne pour l'EPCI si disponible -->
-          <% if @epci_schooling_data.present? %>
-            <tr>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%= @epci_revenue_data&.dig("name") || "EPCI" %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%
-                  epci_rate = @epci_schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
-                  epci_rate_formatted = epci_rate ? number_to_percentage(epci_rate, precision: 2) : 'N/A'
-                %>
-                <div class="flex items-center">
-                  <span class="<%= epci_rate && epci_rate > 0 ? "font-semibold" : "" %>">
-                    <%= epci_rate_formatted %>
-                  </span>
-                  <% if epci_rate && epci_rate > 0 %>
-                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                      <div class="bg-blue-600 h-2 rounded-full" style="width: <%= [epci_rate * 100 / 100, 100].min %>%"></div>
-                    </div>
-                  <% end %>
-                </div>
-              </td>
-            </tr>
-          <% end %>
-
-          <!-- Ligne pour le département si disponible -->
-          <% if @department_schooling_data.present? %>
-            <tr>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%= @department_revenue_data&.dig("name") || "Département" %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%
-                  dept_rate = @department_schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
-                  dept_rate_formatted = dept_rate ? number_to_percentage(dept_rate, precision: 2) : 'N/A'
-                %>
-                <div class="flex items-center">
-                  <span class="<%= dept_rate && dept_rate > 0 ? "font-semibold" : "" %>">
-                    <%= dept_rate_formatted %>
-                  </span>
-                  <% if dept_rate && dept_rate > 0 %>
-                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                      <div class="bg-purple-600 h-2 rounded-full" style="width: <%= [dept_rate * 100 / 100, 100].min %>%"></div>
-                    </div>
-                  <% end %>
-                </div>
-              </td>
-            </tr>
-          <% end %>
-
-          <!-- Ligne pour la région si disponible -->
-          <% if @region_schooling_data.present? %>
-            <tr>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%= @region_revenue_data&.dig("name") || "Région" %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%
-                  region_rate = @region_schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
-                  region_rate_formatted = region_rate ? number_to_percentage(region_rate, precision: 2) : 'N/A'
-                %>
-                <div class="flex items-center">
-                  <span class="<%= region_rate && region_rate > 0 ? "font-semibold" : "" %>">
-                    <%= region_rate_formatted %>
-                  </span>
-                  <% if region_rate && region_rate > 0 %>
-                    <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                      <div class="bg-orange-600 h-2 rounded-full" style="width: <%= [region_rate * 100 / 100, 100].min %>%"></div>
-                    </div>
-                  <% end %>
-                </div>
-              </td>
-            </tr>
-          <% end %>
-
-          <!-- Ligne pour la France -->
-          <tr>
-            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-              France
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%
-                france_rate = @france_schooling_data&.dig("data", latest_year, "schooling_rate_3_5y")
-                france_rate_formatted = france_rate ? number_to_percentage(france_rate, precision: 2) : 'N/A'
-              %>
-              <div class="flex items-center">
-                <span class="<%= france_rate && france_rate > 0 ? "font-semibold" : "" %>">
-                  <%= france_rate_formatted %>
-                </span>
-                <% if france_rate && france_rate > 0 %>
-                  <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                    <div class="bg-red-600 h-2 rounded-full" style="width: <%= [france_rate * 100 / 100, 100].min %>%"></div>
-                  </div>
-                <% end %>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="mt-3 text-xs text-gray-500">
-      <p>Note: Les barres de progression sont calibrées pour un maximum de 100%.</p>
-    </div>
-  </div>
-</div>
 </div>

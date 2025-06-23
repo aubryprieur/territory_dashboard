@@ -99,9 +99,9 @@
       {
         "categories": <%= raw chart_categories.to_json %>,
         "commune": { "name": "<%= @territory_name %>", "data": <%= raw commune_percentages.to_json %> },
-        "epci": { "name": "<%= @epci_revenue_data&.dig("name") || "EPCI" %>", "data": <%= raw epci_percentages.to_json %> },
-        "department": { "name": "<%= @department_revenue_data&.dig("name") || "Département" %>", "data": <%= raw department_percentages.to_json %> },
-        "region": { "name": "<%= @region_revenue_data&.dig("name") || "Région" %>", "data": <%= raw region_percentages.to_json %> },
+        "epci": { "name": "<%= display_territory_name(epci_display_name) %>", "data": <%= raw epci_percentages.to_json %> },
+        "department": { "name": "<%= display_territory_name(department_display_name) %>", "data": <%= raw department_percentages.to_json %> },
+        "region": { "name": "<%= display_territory_name(region_display_name) %>", "data": <%= raw region_percentages.to_json %> },
         "france": { "name": "France", "data": <%= raw france_percentages.to_json %> },
         "colors": <%= raw category_colors.to_json %>
       }
@@ -117,9 +117,9 @@
       {
         "categories": <%= raw chart_categories_3to5.to_json %>,
         "commune": { "name": "<%= @territory_name %>", "data": <%= raw commune_percentages_3to5.to_json %> },
-        "epci": { "name": "<%= @epci_revenue_data&.dig("name") || "EPCI" %>", "data": <%= raw epci_percentages_3to5.to_json %> },
-        "department": { "name": "<%= @department_revenue_data&.dig("name") || "Département" %>", "data": <%= raw department_percentages_3to5.to_json %> },
-        "region": { "name": "<%= @region_revenue_data&.dig("name") || "Région" %>", "data": <%= raw region_percentages_3to5.to_json %> },
+        "epci": { "name": "<%= display_territory_name(epci_display_name) %>", "data": <%= raw epci_percentages_3to5.to_json %> },
+        "department": { "name": "<%= display_territory_name(department_display_name) %>", "data": <%= raw department_percentages_3to5.to_json %> },
+        "region": { "name": "<%= display_territory_name(region_display_name) %>", "data": <%= raw region_percentages_3to5.to_json %> },
         "france": { "name": "France", "data": <%= raw france_percentages_3to5.to_json %> },
         "colors": <%= raw category_colors.to_json %>
       }
@@ -129,12 +129,12 @@
   <div class="mt-6 bg-gray-50 p-4 rounded-md">
     <h3 class="text-sm font-medium text-gray-700 mb-2">À propos des données</h3>
     <p class="text-sm text-gray-600 mb-2">
-      Ces données présentent la répartition des situations d'emploi des parents selon l’âge des enfants.
+      Ces données présentent la répartition des situations d'emploi des parents selon l'âge des enfants.
     </p>
     <p class="text-sm text-gray-600 italic">
-      La tranche 0–3 ans est souvent associée à la garde d’enfants à domicile ou en crèche.
+      La tranche 0–3 ans est souvent associée à la garde d'enfants à domicile ou en crèche.
       Celle de 3–5 ans correspond généralement à la scolarisation en maternelle,
-      ce qui peut influencer l’organisation familiale et les choix professionnels.
+      ce qui peut influencer l'organisation familiale et les choix professionnels.
     </p>
   </div>
 </div>
