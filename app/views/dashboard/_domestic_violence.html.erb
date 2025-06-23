@@ -71,11 +71,13 @@
             </td>
           </tr>
 
-          <!-- Ligne pour le département -->
-          <% if department_data.present? %>
+          <!-- Ligne pour le département si disponible -->
+          <% if @department_safety_data.present? %>
             <tr>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%= @department_safety_data&.dig("department", "name") || "Département" %>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
+                <div class="truncate">
+                  <%= display_territory_name(department_display_name) %>
+                </div>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                 <% latest_dept_rate = department_data[latest_year] %>
@@ -107,11 +109,13 @@
             </tr>
           <% end %>
 
-          <!-- Ligne pour la région -->
-          <% if region_data.present? %>
+          <!-- Ligne pour la région si disponible -->
+          <% if @region_safety_data.present? %>
             <tr>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%= @region_safety_data&.dig("region", "name") || "Région" %>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
+                <div class="truncate">
+                  <%= display_territory_name(region_display_name) %>
+                </div>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                 <% latest_region_rate = region_data[latest_year] %>
@@ -166,8 +170,8 @@
     regionData: [<%= all_years.map { |year| region_data[year] || 'null' }.join(',') %>],
     territoryNames: {
       commune: "<%= @territory_name %>",
-      department: "<%= @department_safety_data&.dig("department", "name") || "Département" %>",
-      region: "<%= @region_safety_data&.dig("region", "name") || "Région" %>"
+      department: "<%= display_territory_name(department_display_name) %>",
+      region: "<%= display_territory_name(region_display_name) %>"
     }
   };
 </script>
