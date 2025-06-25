@@ -61,7 +61,7 @@
           <!-- Ligne pour l'EPCI -->
           <tr>
             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-              <%= @epci_name %>
+              <%= display_territory_name(epci_display_name) %>
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
               <div class="flex items-center">
@@ -82,7 +82,7 @@
           <% if @department_schooling_data.present? %>
             <tr>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%= @department_name || "Département" %>
+                <%= department_display_name %>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                 <div class="flex items-center">
@@ -108,7 +108,7 @@
           <% if @region_schooling_data.present? %>
             <tr>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%= @region_name || "Région" %>
+                <%= region_display_name %>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                 <div class="flex items-center">
@@ -260,7 +260,7 @@
           <!-- Ligne pour l'EPCI -->
           <tr>
             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-              <%= @epci_name %>
+              <%= display_territory_name(epci_display_name) %>
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
               <div class="flex items-center">
@@ -281,7 +281,7 @@
           <% if @department_schooling_data.present? %>
             <tr>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%= @department_name || "Département" %>
+                <%= department_display_name %>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                 <div class="flex items-center">
@@ -307,7 +307,7 @@
           <% if @region_schooling_data.present? %>
             <tr>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%= @region_name || "Région" %>
+                <%= region_display_name %>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                 <div class="flex items-center">

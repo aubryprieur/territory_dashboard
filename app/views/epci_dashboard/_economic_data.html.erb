@@ -29,7 +29,7 @@
             <!-- Ligne pour l'EPCI -->
             <tr>
               <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                <%= @epci_name %>
+                <%= display_territory_name(epci_display_name) %>
               </td>
               <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                 <%
@@ -54,7 +54,7 @@
             <% if @department_revenue_data.present? %>
               <tr>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= @department_name %>
+                  <%= department_display_name %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% dept_rate = @department_revenue_data&.dig("median_revenues", latest_year) %>
@@ -76,7 +76,7 @@
             <% if @region_revenue_data.present? %>
               <tr>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                  <%= @region_name %>
+                  <%= region_display_name %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <% region_rate = @region_revenue_data&.dig("median_revenues", latest_year) %>
@@ -235,7 +235,7 @@
               <!-- Ligne pour l'EPCI -->
               <tr>
                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                  <%= @epci_name %>
+                  <%= display_territory_name(epci_display_name) %>
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   <%
@@ -260,7 +260,7 @@
               <% if @department_revenue_data.present? %>
                 <tr>
                   <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                    <%= @department_name %>
+                    <%= department_display_name %>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                     <%
@@ -284,7 +284,7 @@
               <% if @region_revenue_data.present? %>
                 <tr>
                   <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                    <%= @region_name %>
+                    <%= region_display_name %>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                     <%

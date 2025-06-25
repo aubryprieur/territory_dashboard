@@ -1,5 +1,7 @@
 class EpciDashboardController < ApplicationController
   include UserAuthorization
+  include TerritoryNamesHelper
+
   before_action :check_epci_user
 
   def index

@@ -62,6 +62,10 @@
     <script type="application/json" id="epci-population-history-data">
       <%= raw(@epci_historical_data["epci_population_history"].to_json) %>
     </script>
+    <!-- Données pour le nom de l'EPCI -->
+    <script type="application/json" id="epci-name-data">
+      <%= raw(epci_display_name.to_json) %>
+    </script>
   </div>
 
   <!-- Ajouter après l'information de la pyramide des âges -->

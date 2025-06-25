@@ -89,9 +89,9 @@
     <script type="application/json" id="family-employment-under3-data-epci">
       {
         "categories": <%= raw chart_categories.to_json %>,
-        "epci": { "name": "<%= @epci_name %>", "data": <%= raw epci_percentages.to_json %> },
-        "department": { "name": "<%= @department_name || "Département" %>", "data": <%= raw department_percentages.to_json %> },
-        "region": { "name": "<%= @region_name || "Région" %>", "data": <%= raw region_percentages.to_json %> },
+        "epci": { "name": "<%= display_territory_name(epci_display_name) %>", "data": <%= raw epci_percentages.to_json %> },
+        "department": { "name": "<%= department_display_name %>", "data": <%= raw department_percentages.to_json %> },
+        "region": { "name": "<%= region_display_name %>", "data": <%= raw region_percentages.to_json %> },
         "france": { "name": "France", "data": <%= raw france_percentages.to_json %> },
         "colors": <%= raw category_colors.to_json %>
       }
@@ -106,9 +106,9 @@
     <script type="application/json" id="family-employment-3to5-data-epci">
       {
         "categories": <%= raw chart_categories_3to5.to_json %>,
-        "epci": { "name": "<%= @epci_name %>", "data": <%= raw epci_percentages_3to5.to_json %> },
-        "department": { "name": "<%= @department_name || "Département" %>", "data": <%= raw department_percentages_3to5.to_json %> },
-        "region": { "name": "<%= @region_name || "Région" %>", "data": <%= raw region_percentages_3to5.to_json %> },
+        "epci": { "name": "<%= display_territory_name(epci_display_name) %>", "data": <%= raw epci_percentages_3to5.to_json %> },
+        "department": { "name": "<%= department_display_name %>", "data": <%= raw department_percentages_3to5.to_json %> },
+        "region": { "name": "<%= region_display_name %>", "data": <%= raw region_percentages_3to5.to_json %> },
         "france": { "name": "France", "data": <%= raw france_percentages_3to5.to_json %> },
         "colors": <%= raw category_colors.to_json %>
       }

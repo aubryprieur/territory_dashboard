@@ -5,6 +5,12 @@
 function initializeEpciPopulationHistoryChart() {
   const chartElement = document.getElementById("epci-population-history-chart");
   const dataElement = document.getElementById("epci-population-history-data");
+  const epciNameElement = document.getElementById("epci-name-data");
+
+  console.log("=== DEBUG EPCI NAME ===");
+  console.log("chartElement:", chartElement);
+  console.log("dataElement:", dataElement);
+  console.log("epciNameElement:", epciNameElement);
 
   if (!chartElement || !dataElement || typeof Chart === "undefined") {
     console.warn("Éléments nécessaires pour le graphique d'évolution de la population EPCI manquants");
@@ -25,6 +31,30 @@ function initializeEpciPopulationHistoryChart() {
   try {
     const populationData = JSON.parse(dataElement.textContent);
 
+    // ✅ Debug - Récupérer le nom de l'EPCI depuis les données HTML
+    let epciName = "Population EPCI"; // Valeur par défaut
+
+    console.log("epciNameElement présent:", !!epciNameElement);
+
+    if (epciNameElement) {
+      console.log("Contenu brut de epciNameElement:", epciNameElement.textContent);
+      try {
+        epciName = JSON.parse(epciNameElement.textContent);
+        console.log("✅ Nom EPCI récupéré avec succès:", epciName);
+      } catch (e) {
+        console.warn("❌ Erreur lors du parsing JSON du nom EPCI:", e);
+        console.log("Contenu qui a causé l'erreur:", epciNameElement.textContent);
+      }
+    } else {
+      console.warn("❌ Élément #epci-name-data non trouvé dans le DOM");
+      // Essayons de voir tous les éléments script
+      const allScripts = document.querySelectorAll('script[type="application/json"]');
+      console.log("Tous les scripts JSON trouvés:", allScripts);
+      allScripts.forEach((script, index) => {
+        console.log(`Script ${index}: id="${script.id}", contenu="${script.textContent.substring(0, 100)}..."`);
+      });
+    }
+
     // Extraire les années et les valeurs
     const years = Object.keys(populationData).sort();
     const populations = years.map(year => populationData[year]);
@@ -42,14 +72,16 @@ function initializeEpciPopulationHistoryChart() {
     const overallGrowth = ((lastPop - firstPop) / firstPop * 100);
     const isGrowing = overallGrowth > 0;
 
+    console.log("📊 Nom final utilisé pour la légende:", epciName);
+
     const chart = new Chart(chartElement, {
       type: 'line',
       data: {
         labels: years,
         datasets: [{
-          label: 'Population EPCI',
+          label: epciName, // ✅ Utilisation du vrai nom de l'EPCI
           data: populations,
-          borderColor: isGrowing ? 'rgba(34, 197, 94, 1)' : 'rgba(239, 68, 68, 1)', // Vert si croissance, rouge si déclin
+          borderColor: isGrowing ? 'rgba(34, 197, 94, 1)' : 'rgba(239, 68, 68, 1)',
           backgroundColor: isGrowing ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
           borderWidth: 3,
           tension: 0.3,
@@ -147,7 +179,6 @@ function initializeEpciPopulationHistoryChart() {
 
                 let tooltip = [`👥 Population: ${new Intl.NumberFormat('fr-FR').format(population)}`];
 
-                // Ajouter la variation par rapport à l'année précédente si disponible
                 if (yearIndex > 0 && variations[yearIndex] !== null) {
                   const variation = variations[yearIndex];
                   const sign = variation >= 0 ? '+' : '';
@@ -207,7 +238,6 @@ function addEnhancedPopulationStats(populations, years, variations) {
   const lastPop = populations[populations.length - 1];
   const totalVariation = ((lastPop - firstPop) / firstPop * 100);
 
-  // Trouver la période de plus forte croissance et décroissance
   let maxGrowth = -Infinity;
   let maxGrowthPeriod = '';
   let maxDecline = Infinity;
@@ -226,10 +256,7 @@ function addEnhancedPopulationStats(populations, years, variations) {
     }
   });
 
-  // Calculer la variation moyenne annuelle
   const avgAnnualGrowth = totalVariation / (years.length - 1);
-
-  // Tendance récente (5 dernières années)
   const recentYears = Math.min(5, years.length);
   const recentStart = populations[populations.length - recentYears];
   const recentVariation = ((lastPop - recentStart) / recentStart * 100);
@@ -244,10 +271,8 @@ function addEnhancedPopulationStats(populations, years, variations) {
     - 🏘️ Population initiale: ${new Intl.NumberFormat('fr-FR').format(firstPop)}`);
 }
 
-// ✅ Initialiser le graphique au chargement de la page (une seule fois sur turbo:load)
 document.addEventListener("turbo:load", function() {
   initializeEpciPopulationHistoryChart();
 });
 
-// Exporter la fonction pour la rendre disponible
 export { initializeEpciPopulationHistoryChart };

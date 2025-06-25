@@ -136,8 +136,8 @@ window.domesticViolenceData = {
     yearly_rates: <%= raw(extract_domestic_violence_data(@region_domestic_violence_data["region"]).to_json) %>
   },
   territoryNames: {
-    department: "<%= @department_name %>",
-    region: "<%= @region_name %>"
+    department: "<%= department_display_name %>",
+    region: "<%= region_display_name %>"
   }
 };
 </script>
