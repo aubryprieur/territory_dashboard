@@ -46,6 +46,10 @@ function initDomesticViolenceChart(epciCode) {
   // Récupérer les données depuis la variable globale
   const data = window.domesticViolenceData || {};
 
+  // Décoder les noms de territoires une seule fois
+  const deptName = data.territoryNames ? decodeHTMLEntities(data.territoryNames.department) : '';
+  const regionName = data.territoryNames ? decodeHTMLEntities(data.territoryNames.region) : '';
+
   if (data.communes && data.communes.length > 0) {
     const communesWithData = [];
 
@@ -198,12 +202,12 @@ function initDomesticViolenceChart(epciCode) {
   }
   window.chartInstances.set(ctx.id, chart);
 
-  // Configurer les contrôles pour le graphique
-  setupChartControls(epciCode, chart, allDatasets, years);
+  // Configurer les contrôles pour le graphique avec les noms de territoires
+  setupChartControls(epciCode, chart, allDatasets, years, deptName, regionName);
 }
 
 // Fonction pour paramétrer les contrôles du graphique
-function setupChartControls(epciCode, chart, allDatasets, years) {
+function setupChartControls(epciCode, chart, allDatasets, years, deptName, regionName) {
   const controlsId = `chart-controls-${epciCode}`;
   const controlsContainer = document.getElementById(controlsId);
 
@@ -237,9 +241,14 @@ function setupChartControls(epciCode, chart, allDatasets, years) {
   showAllButton.addEventListener('click', function() {
     // Afficher toutes les communes
     allDatasets.forEach((dataset, index) => {
-      if (!dataset.label.includes('Moyenne') &&
-          !dataset.label.includes('Département') &&
-          !dataset.label.includes('Région')) {
+      // Exclure les moyennes territoriales en vérifiant les vrais noms ET les noms génériques
+      const isAverage = dataset.label.includes('Moyenne') ||
+        dataset.label.includes('Département') ||
+        dataset.label.includes('Région') ||
+        (deptName && dataset.label.includes(deptName)) ||
+        (regionName && dataset.label.includes(regionName));
+
+      if (!isAverage) {
         chart.setDatasetVisibility(index, true);
       }
     });
@@ -249,9 +258,13 @@ function setupChartControls(epciCode, chart, allDatasets, years) {
   showHighRateButton.addEventListener('click', function() {
     // D'abord masquer toutes les communes
     allDatasets.forEach((dataset, index) => {
-      if (!dataset.label.includes('Moyenne') &&
-          !dataset.label.includes('Département') &&
-          !dataset.label.includes('Région')) {
+      const isAverage = dataset.label.includes('Moyenne') ||
+        dataset.label.includes('Département') ||
+        dataset.label.includes('Région') ||
+        (deptName && dataset.label.includes(deptName)) ||
+        (regionName && dataset.label.includes(regionName));
+
+      if (!isAverage) {
         chart.setDatasetVisibility(index, false);
       }
     });
@@ -260,8 +273,12 @@ function setupChartControls(epciCode, chart, allDatasets, years) {
     let lastYearIndex = years.length - 1;
     while (lastYearIndex >= 0) {
       // Vérifier si les données départementales ou régionales existent pour cette année
-      const deptDataset = allDatasets.find(d => d.label.includes('Département'));
-      const regionDataset = allDatasets.find(d => d.label.includes('Région'));
+      const deptDataset = allDatasets.find(d =>
+        (deptName && d.label.includes(deptName)) || d.label.includes('Département')
+      );
+      const regionDataset = allDatasets.find(d =>
+        (regionName && d.label.includes(regionName)) || d.label.includes('Région')
+      );
 
       const deptValue = deptDataset ? deptDataset.data[lastYearIndex] : null;
       const regionValue = regionDataset ? regionDataset.data[lastYearIndex] : null;
@@ -275,8 +292,12 @@ function setupChartControls(epciCode, chart, allDatasets, years) {
 
     if (lastYearIndex >= 0) {
       // Déterminer le seuil (max entre département et région)
-      const deptDataset = allDatasets.find(d => d.label.includes('Département'));
-      const regionDataset = allDatasets.find(d => d.label.includes('Région'));
+      const deptDataset = allDatasets.find(d =>
+        (deptName && d.label.includes(deptName)) || d.label.includes('Département')
+      );
+      const regionDataset = allDatasets.find(d =>
+        (regionName && d.label.includes(regionName)) || d.label.includes('Région')
+      );
 
       const deptValue = deptDataset ? deptDataset.data[lastYearIndex] : -Infinity;
       const regionValue = regionDataset ? regionDataset.data[lastYearIndex] : -Infinity;
@@ -288,10 +309,13 @@ function setupChartControls(epciCode, chart, allDatasets, years) {
 
       // Afficher les communes dont la valeur pour la dernière année dépasse le seuil
       allDatasets.forEach((dataset, index) => {
-        if (!dataset.label.includes('Moyenne') &&
-            !dataset.label.includes('Département') &&
-            !dataset.label.includes('Région')) {
+        const isAverage = dataset.label.includes('Moyenne') ||
+          dataset.label.includes('Département') ||
+          dataset.label.includes('Région') ||
+          (deptName && dataset.label.includes(deptName)) ||
+          (regionName && dataset.label.includes(regionName));
 
+        if (!isAverage) {
           const communeValue = dataset.data[lastYearIndex];
           if (communeValue !== null && communeValue > threshold) {
             chart.setDatasetVisibility(index, true);
@@ -328,9 +352,13 @@ function setupChartControls(epciCode, chart, allDatasets, years) {
   hideAllButton.addEventListener('click', function() {
     // Masquer toutes les communes mais garder les moyennes
     allDatasets.forEach((dataset, index) => {
-      if (!dataset.label.includes('Moyenne') &&
-          !dataset.label.includes('Département') &&
-          !dataset.label.includes('Région')) {
+      const isAverage = dataset.label.includes('Moyenne') ||
+        dataset.label.includes('Département') ||
+        dataset.label.includes('Région') ||
+        (deptName && dataset.label.includes(deptName)) ||
+        (regionName && dataset.label.includes(regionName));
+
+      if (!isAverage) {
         chart.setDatasetVisibility(index, false);
       }
     });
