@@ -152,6 +152,9 @@
                       placeholder: "0",
                       required: question.required? %>
 
+                <% when 'commune_location' %>
+                  <%= render 'commune_location_question', question: question %>
+
                 <% when 'yes_no' %>
                   <div class="flex space-x-4">
                     <label class="flex items-center">

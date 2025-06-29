@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["typeSelect", "optionsSection", "scaleSection", "preview", "optionsContainer", "title", "description", "required"]
+  static targets = ["typeSelect", "optionsSection", "scaleSection", "preview", "optionsContainer", "title", "description", "required", "communeLocationInfo"]
 
   connect() {
     this.optionCounter = this.optionsContainerTarget.querySelectorAll('.option-field').length
@@ -25,6 +25,11 @@ export default class extends Controller {
     this.optionsSectionTarget.classList.add('hidden')
     this.scaleSectionTarget.classList.add('hidden')
 
+    // Cacher la section commune_location si elle existe
+    if (this.hasCommuneLocationInfoTarget) {
+      this.communeLocationInfoTarget.classList.add('hidden')
+    }
+
     // Show appropriate sections
     switch(type) {
       case 'single_choice':
@@ -33,6 +38,11 @@ export default class extends Controller {
         break
       case 'scale':
         this.scaleSectionTarget.classList.remove('hidden')
+        break
+      case 'commune_location':
+        if (this.hasCommuneLocationInfoTarget) {
+          this.communeLocationInfoTarget.classList.remove('hidden')
+        }
         break
     }
   }
@@ -130,6 +140,8 @@ export default class extends Controller {
             </label>
           </div>
         `
+      case 'commune_location':
+        return this.generateCommuneLocationPreview()
       default:
         return ''
     }
@@ -193,5 +205,41 @@ export default class extends Controller {
     html += `</div>`
 
     return html
+  }
+
+  generateCommuneLocationPreview() {
+    return `
+      <div class="space-y-2">
+        <p class="text-sm text-gray-600 italic">
+          Cette question s'adaptera automatiquement selon le territoire du répondant.
+        </p>
+        <div class="border-l-4 border-blue-400 pl-4 space-y-4">
+          <div>
+            <p class="text-xs font-medium text-gray-700 mb-2">Exemple pour une commune :</p>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="radio" name="preview_commune" disabled class="h-4 w-4 text-indigo-600">
+                <span class="ml-2 text-sm">Oui, j'habite à [Nom de la commune]</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="preview_commune" disabled class="h-4 w-4 text-indigo-600">
+                <span class="ml-2 text-sm">Non, j'habite dans une autre commune</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <p class="text-xs font-medium text-gray-700 mb-2">Exemple pour un EPCI :</p>
+            <select disabled class="w-full rounded-md border-gray-300 shadow-sm text-sm">
+              <option>-- Sélectionnez votre commune --</option>
+              <option>Commune 1</option>
+              <option>Commune 2</option>
+              <option>...</option>
+              <option>Autre commune (hors EPCI)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `
   }
 }

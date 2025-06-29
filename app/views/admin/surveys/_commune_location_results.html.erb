@@ -1,0 +1,98 @@
+<!-- app/views/admin/surveys/_commune_location_results.html.erb -->
+<% if stats.present? && stats.any? %>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div>
+      <h4 class="text-lg font-semibold text-gray-900 mb-4">Répartition par commune</h4>
+
+      <% # Séparer les communes du territoire et les autres %>
+      <% territory_communes = {} %>
+      <% other_communes = {} %>
+      <% total_responses = stats.values.sum %>
+
+      <% stats.each do |commune_name, count| %>
+        <% if commune_name.to_s.start_with?('Autre:') %>
+          <% other_communes[commune_name] = count %>
+        <% else %>
+          <% territory_communes[commune_name] = count %>
+        <% end %>
+      <% end %>
+
+      <!-- Communes du territoire -->
+      <% if territory_communes.any? %>
+        <div class="space-y-3 mb-6">
+          <% territory_communes.sort_by { |_, count| -count }.each do |commune_name, count| %>
+            <% percentage = (count.to_f / total_responses * 100).round(1) %>
+            <div class="relative">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-sm font-medium text-gray-700"><%= commune_name %></span>
+                <span class="text-sm text-gray-600"><%= count %> (<%= percentage %>%)</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-end pr-3 transition-all duration-500"
+                     style="width: <%= percentage %>%">
+                  <span class="text-white text-xs font-medium"><%= percentage %>%</span>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Autres communes -->
+      <% if other_communes.any? %>
+        <div class="border-t border-gray-200 pt-4">
+          <h5 class="text-md font-semibold text-gray-700 mb-3">
+            Autres communes mentionnées (<%= other_communes.values.sum %> réponses)
+          </h5>
+          <div class="flex flex-wrap gap-2">
+            <% other_communes.each do |commune_name, count| %>
+              <% display_name = commune_name.to_s.gsub('Autre: ', '') %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                <%= display_name %> (<%= count %>)
+              </span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Statistiques rapides -->
+      <div class="mt-6 bg-gray-50 rounded-lg p-4">
+        <h5 class="font-semibold text-gray-900 mb-2">Résumé</h5>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span class="text-gray-600">Communes distinctes</span>
+            <div class="text-xl font-bold text-gray-900"><%= stats.keys.count %></div>
+          </div>
+          <% if other_communes.any? %>
+            <div>
+              <span class="text-gray-600">Hors territoire</span>
+              <div class="text-xl font-bold text-orange-600">
+                <%= (other_communes.values.sum.to_f / total_responses * 100).round(1) %>%
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphique -->
+    <div class="flex items-center justify-center">
+      <div class="w-full">
+        <canvas data-survey-results-target="chart"
+                data-chart-type="doughnut"
+                data-question-id="<%= question.id %>"
+                data-chart-data="<%= {
+                  labels: stats.map { |commune_name, _|
+                    commune_name.to_s.start_with?('Autre:') ?
+                      commune_name.to_s.gsub('Autre: ', '') :
+                      commune_name
+                  },
+                  values: stats.values
+                }.to_json %>"
+                class="max-h-64"></canvas>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <p class="text-gray-500 italic">Aucune réponse de localisation</p>
+<% end %>

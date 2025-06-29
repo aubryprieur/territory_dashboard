@@ -69,7 +69,8 @@
                   ['Email', 'email'],
                   ['Téléphone', 'phone'],
                   ['Date', 'date'],
-                  ['Oui/Non', 'yes_no']
+                  ['Oui/Non', 'yes_no'],
+                  ['Commune d\'habitation', 'commune_location']  # AJOUTER CETTE LIGNE
                 ], @question.question_type),
                 { prompt: 'Sélectionnez un type' },
                 { class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
@@ -79,6 +80,8 @@
                   }
                 } %>
               </div>
+
+              <%= render 'commune_location_info' %>
 
               <div>
                 <label class="flex items-center">
