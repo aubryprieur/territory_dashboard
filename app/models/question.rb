@@ -19,6 +19,7 @@ class Question < ApplicationRecord
     phone
     date
     yes_no
+    commune_location
   ].freeze
 
   validates :question_type, inclusion: { in: QUESTION_TYPES }
@@ -26,8 +27,12 @@ class Question < ApplicationRecord
   before_validation :set_position, on: :create
   accepts_nested_attributes_for :question_options, allow_destroy: true
 
+  def commune_location_question?
+    question_type == 'commune_location'
+  end
+
   def requires_options?
-    %w[single_choice multiple_choice scale].include?(question_type)
+    %w[single_choice multiple_choice scale commune_location].include?(question_type)
   end
 
   def is_choice_question?
@@ -40,6 +45,14 @@ class Question < ApplicationRecord
 
   def is_text_question?
     %w[text long_text email phone].include?(question_type)
+  end
+
+  def multiple_choice?
+    question_type == 'multiple_choice'
+  end
+
+  def single_choice?
+    question_type == 'single_choice'
   end
 
   def validation_errors_for(answer)

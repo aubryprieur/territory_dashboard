@@ -57,17 +57,18 @@ class PublicSurveysController < ApplicationController
   end
 
   def find_or_create_response
-    session_id = session[:survey_response_id] || SecureRandom.hex(16)
+    # Générer un nouveau session_id à chaque fois pour permettre les réponses multiples
+    session_id = SecureRandom.hex(16)
     session[:survey_response_id] = session_id
 
-    @user_survey.survey_responses.find_or_create_by(
+    # Créer toujours une nouvelle réponse
+    @user_survey.survey_responses.create!(
       session_id: session_id,
-      survey: @user_survey.survey
-    ) do |response|
-      response.started_at = Time.current
-      response.ip_address = request.remote_ip
-      response.user_agent = request.user_agent
-    end
+      survey: @user_survey.survey,
+      started_at: Time.current,
+      ip_address: request.remote_ip,
+      user_agent: request.user_agent
+    )
   end
 
   def find_response
@@ -82,6 +83,15 @@ class PublicSurveysController < ApplicationController
 
     section.questions.each do |question|
       response_value = params[:responses][question.id.to_s]
+
+      # Gérer le cas spécial de commune_location avec "other"
+      if question.commune_location_question? && response_value == 'other'
+        other_value = params[:responses]["#{question.id}_other"]
+        if other_value.blank? && question.required?
+          errors << "Veuillez préciser votre commune"
+          next
+        end
+      end
 
       # Vérifier si la question est obligatoire
       if question.required? && response_value.blank?
@@ -98,12 +108,38 @@ class PublicSurveysController < ApplicationController
       case question.question_type
       when 'multiple_choice'
         question_response.answer = response_value.values.select(&:present?)
+      when 'commune_location'
+        Rails.logger.info "===== COMMUNE LOCATION DEBUG ====="
+        Rails.logger.info "response_value: #{response_value}"
+        Rails.logger.info "other value: #{params[:responses]["#{question.id}_other"]}"
+        Rails.logger.info "all params: #{params[:responses].inspect}"
+
+        # Traitement spécial pour commune_location
+        if response_value == 'other'
+          other_commune = params[:responses]["#{question.id}_other"]
+          question_response.answer_text = 'other'
+          question_response.answer_data = {
+            'type' => 'other',
+            'commune_code' => 'other',
+            'commune_name' => other_commune  # Stocker la valeur saisie
+          }
+        else
+          # C'est un code INSEE
+          territory = Territory.find_by(codgeo: response_value)
+          question_response.answer_text = response_value
+          question_response.answer_data = {
+            'type' => 'commune',
+            'commune_code' => response_value,
+            'commune_name' => territory&.libgeo || response_value
+          }
+        end
       else
         question_response.answer = response_value
       end
 
       unless question_response.save
         errors << "Erreur pour la question '#{question.title}'"
+        Rails.logger.error "Erreur sauvegarde question_response: #{question_response.errors.full_messages}"
       end
     end
 

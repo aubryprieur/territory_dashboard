@@ -1,0 +1,123 @@
+<!-- app/views/user_surveys/_commune_location_results.html.erb -->
+<% if stats.present? && stats.any? %>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div>
+      <h4 class="text-lg font-semibold text-gray-900 mb-4">Répartition par commune</h4>
+
+      <% # Séparer les communes du territoire et les autres %>
+      <% territory_communes = {} %>
+      <% autres_communes_count = 0 %>
+      <% autres_communes_detail = {} %>
+
+      <% # Calculer le total en excluant les métadonnées %>
+      <% total_responses = stats.reject { |k, v| k.to_s.start_with?('_') }.values.sum %>
+
+      <% stats.each do |commune_name, count| %>
+        <% case commune_name.to_s %>
+        <% when 'Autres communes' %>
+          <% autres_communes_count = count %>
+        <% when '_autres_detail' %>
+          <% autres_communes_detail = count %>
+        <% else %>
+          <% territory_communes[commune_name] = count %>
+        <% end %>
+      <% end %>
+
+      <!-- Communes du territoire -->
+      <% if territory_communes.any? %>
+        <div class="space-y-3 mb-6">
+          <% territory_communes.sort_by { |_, count| -count }.each do |commune_name, count| %>
+            <% percentage = (count.to_f / total_responses * 100).round(1) %>
+            <div class="relative">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-sm font-medium text-gray-700"><%= commune_name %></span>
+                <span class="text-sm text-gray-600"><%= count %> (<%= percentage %>%)</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-end pr-3 transition-all duration-500"
+                     style="width: <%= percentage %>%">
+                  <span class="text-white text-xs font-medium"><%= percentage %>%</span>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Autres communes avec une section dédiée -->
+      <% if autres_communes_count > 0 %>
+        <!-- D'abord, ajouter "Autres communes" comme une entrée consolidée -->
+        <% percentage_autres = (autres_communes_count.to_f / total_responses * 100).round(1) %>
+
+        <div class="relative border-t border-gray-200 pt-4">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-sm font-medium text-gray-700">Autres communes</span>
+            <span class="text-sm text-gray-600"><%= autres_communes_count %> (<%= percentage_autres %>%)</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-end pr-3 transition-all duration-500"
+                 style="width: <%= percentage_autres %>%">
+              <span class="text-white text-xs font-medium"><%= percentage_autres %>%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Puis, détailler les communes mentionnées -->
+        <% if autres_communes_detail.any? %>
+          <div class="mt-4 bg-orange-50 rounded-lg p-4">
+            <h5 class="text-sm font-semibold text-gray-700 mb-3">
+              <svg class="w-4 h-4 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+              </svg>
+              Détail des autres communes mentionnées :
+            </h5>
+            <div class="flex flex-wrap gap-2">
+              <% autres_communes_detail.sort_by { |_, count| -count }.each do |commune_name, count| %>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white border border-orange-200 text-orange-800">
+                  <%= commune_name %> (<%= count %>)
+                </span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+
+      <!-- Statistiques rapides -->
+      <div class="mt-6 bg-gray-50 rounded-lg p-4">
+        <h5 class="font-semibold text-gray-900 mb-2">Résumé</h5>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span class="text-gray-600">Communes distinctes</span>
+            <div class="text-xl font-bold text-gray-900">
+              <%= territory_communes.keys.count + (autres_communes_count > 0 ? 1 : 0) %>
+            </div>
+          </div>
+          <% if autres_communes_count > 0 %>
+            <div>
+              <span class="text-gray-600">Hors territoire</span>
+              <div class="text-xl font-bold text-orange-600">
+                <%= (autres_communes_count.to_f / total_responses * 100).round(1) %>%
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphique -->
+    <div class="flex items-center justify-center">
+      <div class="w-full">
+        <canvas data-survey-results-target="chart"
+                data-chart-type="doughnut"
+                data-question-id="<%= question.id %>"
+                data-chart-data="<%= {
+                  labels: territory_communes.keys + (autres_communes_count > 0 ? ['Autres communes'] : []),
+                  values: territory_communes.values + (autres_communes_count > 0 ? [autres_communes_count] : [])
+                }.to_json %>"
+                class="max-h-64"></canvas>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <p class="text-gray-500 italic">Aucune réponse de localisation</p>
+<% end %>

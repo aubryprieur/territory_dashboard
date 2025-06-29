@@ -1,4 +1,3 @@
-# app/controllers/user_surveys_controller.rb
 class UserSurveysController < ApplicationController
   include UserAuthorization
   before_action :check_can_launch_surveys
@@ -285,33 +284,94 @@ class UserSurveysController < ApplicationController
   end
 
   def calculate_statistics
+    # IMPORTANT: Ne récupérer que les réponses de CETTE user_survey spécifique
     responses = @user_survey.survey_responses.completed
     stats = {}
 
     @user_survey.survey.questions.each do |question|
-      question_responses = responses.joins(:question_responses)
-                                  .where(question_responses: { question: question })
-                                  .where.not(question_responses: { answer_text: [nil, ''] })
+      # Récupérer les question_responses liées aux survey_responses de cette user_survey uniquement
+      question_responses = QuestionResponse.joins(:survey_response)
+                                          .where(survey_responses: {
+                                            id: responses.pluck(:id),
+                                            completed: true
+                                          })
+                                          .where(question: question)
 
       case question.question_type
+      when 'commune_location'
+        commune_stats = {}
+        other_communes_detail = {} # Pour garder le détail des noms
+        other_communes_count = 0   # Pour compter toutes les "autres"
+
+        question_responses.each do |qr|
+          if qr.answer_data.present? && qr.answer_data.is_a?(Hash)
+            data = qr.answer_data
+            if data['type'] == 'commune'
+              # C'est une commune connue du territoire
+              key = data['commune_name'] || data['commune_code']
+              commune_stats[key] ||= 0
+              commune_stats[key] += 1
+            elsif data['type'] == 'other'
+              # C'est une autre commune - on compte dans le total "autres"
+              other_communes_count += 1
+
+              # Et on garde le détail si le nom est renseigné
+              if data['commune_name'].present?
+                other_communes_detail[data['commune_name']] ||= 0
+                other_communes_detail[data['commune_name']] += 1
+              else
+                # Commune autre sans nom précisé
+                other_communes_detail['Non précisé'] ||= 0
+                other_communes_detail['Non précisé'] += 1
+              end
+            end
+          elsif qr.answer_text.present?
+            # Fallback pour les anciennes données
+            if qr.answer_text == 'other'
+              other_communes_count += 1
+              other_communes_detail['Non précisé'] ||= 0
+              other_communes_detail['Non précisé'] += 1
+            else
+              # C'est probablement un code INSEE, essayer de trouver la commune
+              territory = Territory.find_by(codgeo: qr.answer_text)
+              key = territory&.libgeo || qr.answer_text
+              commune_stats[key] ||= 0
+              commune_stats[key] += 1
+            end
+          end
+        end
+
+        # Ajouter le total des autres communes comme une seule entrée
+        if other_communes_count > 0
+          commune_stats['Autres communes'] = other_communes_count
+        end
+
+        # Ajouter les détails des autres communes dans une clé spéciale
+        if other_communes_detail.any?
+          commune_stats['_autres_detail'] = other_communes_detail
+        end
+
+        stats[question.id] = commune_stats
+
       when 'single_choice', 'yes_no'
-        stats[question.id] = question_responses.joins(:question_responses)
-                                             .group('question_responses.answer_text')
-                                             .count
+        stats[question.id] = question_responses.where.not(answer_text: [nil, ''])
+                                              .group(:answer_text)
+                                              .count
+
       when 'multiple_choice'
-        all_answers = question_responses.joins(:question_responses)
-                                      .pluck('question_responses.answer_data')
+        all_answers = question_responses.pluck(:answer_data)
         answer_counts = Hash.new(0)
         all_answers.each do |answers_array|
           next unless answers_array.is_a?(Array)
           answers_array.each { |answer| answer_counts[answer] += 1 }
         end
         stats[question.id] = answer_counts
+
       when 'scale', 'numeric'
-        values = question_responses.joins(:question_responses)
-                                 .pluck('question_responses.answer_text')
-                                 .map(&:to_f)
-                                 .reject(&:zero?)
+        values = question_responses.where.not(answer_text: [nil, ''])
+                                  .pluck(:answer_text)
+                                  .map(&:to_f)
+                                  .reject(&:zero?)
         if values.any?
           stats[question.id] = {
             average: (values.sum / values.count.to_f).round(2),
@@ -321,14 +381,14 @@ class UserSurveysController < ApplicationController
             distribution: values.group_by(&:itself).transform_values(&:count)
           }
         end
+
       else
+        # Questions texte
         stats[question.id] = {
-          total_responses: question_responses.count,
-          sample_responses: question_responses.joins(:question_responses)
+          total_responses: question_responses.where.not(answer_text: [nil, '']).count,
+          sample_responses: question_responses.where.not(answer_text: [nil, ''])
                                             .limit(5)
-                                            .pluck('question_responses.answer_text')
-                                            .compact
-                                            .reject(&:blank?)
+                                            .pluck(:answer_text)
         }
       end
     end
@@ -341,7 +401,16 @@ class UserSurveysController < ApplicationController
 
     CSV.generate(headers: true) do |csv|
       headers = ['ID Réponse', 'Date de début', 'Date de fin', 'Durée (minutes)']
-      @user_survey.survey.questions.each { |q| headers << q.title }
+
+      # Ajouter les en-têtes de questions
+      @user_survey.survey.questions.each do |q|
+        headers << q.title
+        # Ajouter une colonne spéciale pour les autres communes
+        if q.question_type == 'commune_location'
+          headers << "Nom des autres communes"
+        end
+      end
+
       csv << headers
 
       @user_survey.survey_responses.completed.includes(:question_responses).find_each do |response|
@@ -356,11 +425,34 @@ class UserSurveysController < ApplicationController
 
         @user_survey.survey.questions.each do |question|
           answer = response.answer_for(question)
-          row << (answer&.answer || '')
+
+          if question.question_type == 'commune_location'
+            # Pour les questions commune_location, gérer différemment
+            if answer&.answer_data&.is_a?(Hash) && answer.answer_data['type'] == 'other'
+              # Réponse "autre commune"
+              row << "Autre commune"
+              # Récupérer le nom de la commune autre (peut être nil)
+              commune_name = answer.answer_data['commune_name']
+              row << (commune_name.present? ? commune_name : '')
+            elsif answer&.answer_text == 'other'
+              # Cas où answer_data n'est pas rempli mais answer_text = 'other'
+              row << "Autre commune"
+              row << ''  # Pas de nom spécifique disponible
+            else
+              # Commune normale - utiliser le nom de la commune
+              row << (answer&.formatted_answer || '')
+              # Colonne "autres communes" vide
+              row << ''
+            end
+          else
+            # Autres types de questions - fonctionnement normal
+            row << (answer&.formatted_answer || '')
+          end
         end
 
         csv << row
       end
     end
   end
+
 end

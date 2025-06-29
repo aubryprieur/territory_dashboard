@@ -1,0 +1,81 @@
+<div class="space-y-3" data-controller="commune-location">
+  <%
+    user_territory = @user_survey&.user
+    question_options = question.options || {}
+  %>
+
+  <% if user_territory&.territory_type == 'commune' %>
+    <!-- Pour une commune : question Oui/Non avec champ texte conditionnel -->
+    <div class="space-y-2">
+      <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+        <%= radio_button_tag "responses[#{question.id}]",
+            user_territory.territory_code,
+            false,
+            class: "h-4 w-4 text-indigo-600 border-gray-300",
+            data: {
+              commune_location_target: "yesRadio",
+              action: "change->commune-location#toggleOtherField"
+            },
+            required: question.required? %>
+        <span class="ml-2">Oui, j'habite à <%= user_territory.territory_name %></span>
+      </label>
+
+      <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+        <%= radio_button_tag "responses[#{question.id}]",
+            "other",
+            false,
+            class: "h-4 w-4 text-indigo-600 border-gray-300",
+            data: {
+              commune_location_target: "noRadio",
+              action: "change->commune-location#toggleOtherField"
+            },
+            required: question.required? %>
+        <span class="ml-2">Non, j'habite dans une autre commune</span>
+      </label>
+
+      <div class="ml-6 hidden" data-commune-location-target="otherField">
+        <%= text_field_tag "responses[#{question.id}_other]",
+            nil,
+            placeholder: "Précisez votre commune",
+            class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+      </div>
+    </div>
+
+  <% elsif user_territory&.territory_type == 'epci' %>
+    <!-- Pour un EPCI : liste déroulante des communes -->
+    <div class="space-y-2">
+      <%
+        # Charger les communes de l'EPCI depuis la base de données
+        communes = Territory.where(epci: user_territory.territory_code)
+                           .order(:libgeo)
+                           .select(:codgeo, :libgeo)
+      %>
+      <%= select_tag "responses[#{question.id}]",
+          options_for_select(
+            [['-- Sélectionnez votre commune --', '']] +
+            communes.map { |c| [c.libgeo, c.codgeo] } +
+            [['Autre commune (hors EPCI)', 'other']]
+          ),
+          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+          data: {
+            commune_location_target: "communeSelect",
+            action: "change->commune-location#toggleOtherField"
+          },
+          required: question.required? %>
+
+      <div class="hidden" data-commune-location-target="otherField">
+        <%= text_field_tag "responses[#{question.id}_other]",
+            nil,
+            placeholder: "Précisez votre commune",
+            class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+      </div>
+    </div>
+  <% else %>
+    <!-- Cas par défaut si pas de territoire défini -->
+    <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+      <p class="text-sm text-yellow-800">
+        Cette question nécessite un territoire défini. Veuillez contacter l'administrateur.
+      </p>
+    </div>
+  <% end %>
+</div>
