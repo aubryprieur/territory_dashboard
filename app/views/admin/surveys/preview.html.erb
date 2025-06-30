@@ -108,6 +108,9 @@
                     <% end %>
                   </div>
 
+                <% when 'weekly_schedule' %>
+                  <%= render 'weekly_schedule_preview', question: question %>
+
                 <% when 'scale' %>
                   <div class="flex items-center justify-between">
                     <% if question.options && question.options['scale_min_label'] %>

@@ -250,6 +250,27 @@ class UserSurveysController < ApplicationController
             percentages: percentages,
             total_responses: total_responses
           }
+
+        when 'weekly_schedule'
+          all_answers = question_responses.joins(:question_responses)
+                                        .pluck('question_responses.answer_data')
+          answer_counts = Hash.new(0)
+          all_answers.each do |answers_array|
+            next unless answers_array.is_a?(Array)
+            answers_array.each { |answer| answer_counts[answer] += 1 }
+          end
+
+          total_responses = user_survey.response_count
+          percentages = {}
+          answer_counts.each do |answer, count|
+            percentages[answer] = total_responses > 0 ? (count.to_f / total_responses * 100).round(1) : 0
+          end
+
+          comparison_data[:questions][question.id][:data][year] = {
+            counts: answer_counts,
+            percentages: percentages,
+            total_responses: total_responses
+          }
         end
       end
     end
@@ -367,6 +388,15 @@ class UserSurveysController < ApplicationController
         end
         stats[question.id] = answer_counts
 
+      when 'weekly_schedule'
+        all_answers = question_responses.pluck(:answer_data)
+        answer_counts = Hash.new(0)
+        all_answers.each do |answers_array|
+          next unless answers_array.is_a?(Array)
+          answers_array.each { |answer| answer_counts[answer] += 1 }
+        end
+        stats[question.id] = answer_counts
+
       when 'scale', 'numeric'
         values = question_responses.where.not(answer_text: [nil, ''])
                                   .pluck(:answer_text)
@@ -444,15 +474,25 @@ class UserSurveysController < ApplicationController
               # Colonne "autres communes" vide
               row << ''
             end
+          elsif question.question_type == 'weekly_schedule'
+            # Pour les questions weekly_schedule, formater les créneaux sélectionnés
+            if answer&.answer_data&.is_a?(Array) && answer.answer_data.any?
+              readable_answers = answer.answer_data.map do |value|
+                day, time_slot = value.split('_', 2)
+                time_slot_readable = time_slot.humanize.gsub(/_/, ' ')
+                "#{day}: #{time_slot_readable}"
+              end
+              row << readable_answers.join(' | ')
+            else
+              row << 'Aucun créneau sélectionné'
+            end
           else
             # Autres types de questions - fonctionnement normal
             row << (answer&.formatted_answer || '')
           end
         end
-
         csv << row
       end
     end
   end
-
 end

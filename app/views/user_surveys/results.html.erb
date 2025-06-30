@@ -332,6 +332,8 @@
                   <% when 'commune_location' %>
                     <%= render 'commune_location_results', question: question, stats: stats %>
 
+                  <% when 'weekly_schedule' %>
+                    <%= render 'weekly_schedule_results', question: question %>
                   <% else %>
                     <!-- Questions texte, email, phone, date -->
                     <% if stats[:total_responses] > 0 %>

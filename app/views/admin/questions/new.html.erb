@@ -70,7 +70,8 @@
                   ['Téléphone', 'phone'],
                   ['Date', 'date'],
                   ['Oui/Non', 'yes_no'],
-                  ['Commune d\'habitation', 'commune_location']  # AJOUTER CETTE LIGNE
+                  ['Commune d\'habitation', 'commune_location'],
+                  ['Planning horaire hebdomadaire', 'weekly_schedule']
                 ], @question.question_type),
                 { prompt: 'Sélectionnez un type' },
                 { class: "mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
@@ -81,7 +82,9 @@
                 } %>
               </div>
 
-              <%= render 'commune_location_info' %>
+              <%= render 'commune_location_info' if defined?(render) %>
+
+              <%= render 'weekly_schedule_config' %>
 
               <div>
                 <label class="flex items-center">

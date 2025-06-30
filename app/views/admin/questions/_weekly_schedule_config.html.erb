@@ -1,0 +1,70 @@
+<div data-question-form-target="weeklyScheduleConfig"
+     class="hidden space-y-4 p-4 bg-blue-50 rounded-lg">
+
+  <h4 class="font-medium text-gray-900">Configuration du planning hebdomadaire</h4>
+
+  <!-- Sélection des jours -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">
+      Jours de la semaine disponibles
+    </label>
+    <div class="grid grid-cols-2 gap-2">
+      <% %w[Lundi Mardi Mercredi Jeudi Vendredi Samedi Dimanche].each do |day| %>
+        <label class="flex items-center">
+          <%= check_box_tag "weekly_schedule_days[]", day,
+              (@question.options&.dig('days')&.include?(day) || false),
+              class: "h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
+          <span class="ml-2 text-sm text-gray-700"><%= day %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Sélection des créneaux horaires -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">
+      Créneaux horaires disponibles
+    </label>
+    <div class="grid grid-cols-2 gap-2">
+      <% [
+        'Pas ce jour-là',
+        '7h-9h',
+        '9h-12h',
+        '12h-14h',
+        '14h-16h',
+        '16h-18h',
+        '18h-20h',
+        'Soirée (20h-00h)',
+        'Nuit (00h-6h)'
+      ].each do |slot| %>
+        <label class="flex items-center">
+          <%= check_box_tag "weekly_schedule_time_slots[]", slot,
+              (@question.options&.dig('time_slots')&.include?(slot) || false),
+              class: "h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
+          <span class="ml-2 text-sm text-gray-700"><%= slot %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Option choix multiple par jour -->
+  <div>
+    <label class="flex items-center">
+      <%= check_box_tag "allow_multiple_per_day", "1",
+          (@question.options&.dig('allow_multiple_per_day') != false),
+          class: "h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
+      <span class="ml-2 text-sm text-gray-700">
+        Autoriser plusieurs créneaux par jour
+      </span>
+    </label>
+  </div>
+
+  <!-- Aperçu du planning -->
+  <div class="mt-4 p-3 bg-white border rounded">
+    <h5 class="text-sm font-medium text-gray-700 mb-2">Aperçu :</h5>
+    <div class="text-xs text-gray-600">
+      Le planning sera affiché avec les jours sélectionnés en colonnes
+      et les créneaux en lignes. Les répondants pourront cocher les cases correspondantes.
+    </div>
+  </div>
+</div>

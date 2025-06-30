@@ -1,0 +1,177 @@
+<%# app/views/user_surveys/_weekly_schedule_results.html.erb %>
+<div class="weekly-schedule-results">
+  <% config = question.weekly_schedule_config %>
+  <% days = config[:days] || [] %>
+  <% time_slots = config[:time_slots] || [] %>
+
+  <%
+    # Calculer les statistiques pour la heatmap
+    total_responses = @user_survey.response_count
+    stats = {}
+
+    # SOLUTION: Utiliser Ruby pour traiter les données au lieu de SQL avec @>
+    question_responses = question.question_responses.joins(:survey_response)
+                                .where(survey_responses: {
+                                  id: @user_survey.survey_responses.completed.pluck(:id),
+                                  completed: true
+                                })
+
+    # Traiter chaque réponse avec Ruby
+    days.each do |day|
+      time_slots.each do |time_slot|
+        option_value = "#{day}_#{time_slot.parameterize.underscore}"
+
+        count = 0
+        question_responses.each do |qr|
+          if qr.answer_data.is_a?(Array) && qr.answer_data.include?(option_value)
+            count += 1
+          end
+        end
+
+        percentage = total_responses > 0 ? (count.to_f / total_responses * 100).round(2) : 0
+        stats["#{day}_#{time_slot}"] = { count: count, percentage: percentage }
+      end
+    end
+  %>
+
+  <div class="grid grid-cols-1 gap-8">
+    <!-- Tableau Heatmap -->
+    <div>
+      <h4 class="text-lg font-medium text-gray-900 mb-4">Répartition des demandes par créneaux</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-300 text-sm">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="border border-gray-300 px-3 py-2 text-left font-medium text-gray-700">
+                Créneaux
+              </th>
+              <% days.each do |day| %>
+                <th class="border border-gray-300 px-3 py-2 text-center font-medium text-gray-700">
+                  <%= day %>
+                </th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% time_slots.each_with_index do |time_slot, index| %>
+              <tr class="<%= index.even? ? 'bg-white' : 'bg-gray-50' %>">
+                <td class="border border-gray-300 px-3 py-2 font-medium text-gray-700">
+                  <%= time_slot %>
+                </td>
+                <% days.each do |day| %>
+                  <% stat = stats["#{day}_#{time_slot}"] %>
+                  <%
+                    # Calcul de l'intensité de couleur : gris → bleu (froid) → rouge (chaud)
+                    intensity = stat[:percentage]
+                    color_class = case intensity
+                    when 0
+                      "bg-gray-100 text-gray-500"
+                    when 0.1..10
+                      "bg-blue-100 text-blue-800"
+                    when 10.1..25
+                      "bg-blue-300 text-blue-900"
+                    when 25.1..50
+                      "bg-blue-600 text-white"
+                    when 50.1..75
+                      "bg-red-400 text-white"
+                    else
+                      "bg-red-600 text-white"
+                    end
+                  %>
+                  <td class="border border-gray-300 px-3 py-2 text-center <%= color_class %>">
+                    <div class="font-semibold">
+                      <%= "#{stat[:percentage]}%" %>
+                    </div>
+                    <div class="text-xs opacity-75">
+                      (<%= stat[:count] %>)
+                    </div>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Légende avec transition bleu → rouge -->
+      <div class="mt-4 flex flex-wrap items-center gap-4 text-sm">
+        <div class="flex items-center gap-2">
+          <strong>Légende :</strong>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-gray-100 border border-gray-300"></span>
+            <span>0%</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-blue-100 border border-gray-300"></span>
+            <span>1-10%</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-blue-300 border border-gray-300"></span>
+            <span>11-25%</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-blue-600 border border-gray-300"></span>
+            <span>26-50%</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-red-400 border border-gray-300"></span>
+            <span>51-75%</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-4 h-4 bg-red-600 border border-gray-300"></span>
+            <span>>75%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistiques complémentaires -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <h5 class="font-medium text-blue-900 mb-2">Jour le plus demandé</h5>
+        <%
+          day_totals = {}
+          days.each do |day|
+            total = time_slots.sum { |slot| stats["#{day}_#{slot}"][:count] }
+            day_totals[day] = total
+          end
+          most_popular_day = day_totals.max_by { |_, count| count }
+        %>
+        <p class="text-lg font-semibold text-blue-800">
+          <%= most_popular_day&.first || "N/A" %>
+        </p>
+        <p class="text-sm text-blue-600">
+          <%= most_popular_day&.last || 0 %> demandes
+        </p>
+      </div>
+
+      <div class="bg-green-50 p-4 rounded-lg">
+        <h5 class="font-medium text-green-900 mb-2">Créneau le plus demandé</h5>
+        <%
+          slot_totals = {}
+          time_slots.each do |slot|
+            total = days.sum { |day| stats["#{day}_#{slot}"][:count] }
+            slot_totals[slot] = total
+          end
+          most_popular_slot = slot_totals.max_by { |_, count| count }
+        %>
+        <p class="text-lg font-semibold text-green-800">
+          <%= most_popular_slot&.first || "N/A" %>
+        </p>
+        <p class="text-sm text-green-600">
+          <%= most_popular_slot&.last || 0 %> demandes
+        </p>
+      </div>
+
+      <div class="bg-purple-50 p-4 rounded-lg">
+        <h5 class="font-medium text-purple-900 mb-2">Total réponses</h5>
+        <p class="text-lg font-semibold text-purple-800">
+          <%= total_responses %>
+        </p>
+        <p class="text-sm text-purple-600">
+          répondants
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
