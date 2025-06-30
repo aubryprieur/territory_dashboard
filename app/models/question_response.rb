@@ -9,7 +9,7 @@ class QuestionResponse < ApplicationRecord
     case question.question_type
     when 'single_choice', 'yes_no'
       answer_text
-    when 'multiple_choice'
+    when 'multiple_choice', 'weekly_schedule'
       answer_data.is_a?(Array) ? answer_data : []
     when 'commune_location'
       # Pour les questions commune_location, retourner l'answer_text
@@ -34,6 +34,17 @@ class QuestionResponse < ApplicationRecord
   # Méthode pour formatter l'affichage de la réponse (utilisée dans l'export CSV)
   def formatted_answer
     case question.question_type
+    when 'weekly_schedule'
+      if answer_data.is_a?(Array) && answer_data.any?
+        # Transformer les réponses en format lisible
+        answer_data.map do |value|
+          day, time_slot = value.split('_', 2)
+          time_slot_readable = time_slot.humanize.gsub(/_/, ' ')
+          "#{day}: #{time_slot_readable}"
+        end.join(', ')
+      else
+        'Aucun créneau sélectionné'
+      end
     when 'single_choice', 'yes_no'
       if question.question_type == 'yes_no'
         answer_text == 'yes' ? 'Oui' : 'Non'

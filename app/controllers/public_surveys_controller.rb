@@ -106,8 +106,11 @@ class PublicSurveysController < ApplicationController
                                         .find_or_initialize_by(question: question)
 
       case question.question_type
-      when 'multiple_choice'
-        question_response.answer = response_value.values.select(&:present?)
+      when 'multiple_choice', 'weekly_schedule'  # AJOUTER weekly_schedule ici
+        # Pour weekly_schedule et multiple_choice, traiter de la même façon
+        clean_values = response_value.is_a?(Array) ? response_value.select(&:present?) : [response_value].compact
+        question_response.answer_data = clean_values
+        question_response.answer_text = clean_values.join(', ')
       when 'commune_location'
         Rails.logger.info "===== COMMUNE LOCATION DEBUG ====="
         Rails.logger.info "response_value: #{response_value}"

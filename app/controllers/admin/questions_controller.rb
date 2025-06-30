@@ -25,6 +25,10 @@ class Admin::QuestionsController < ApplicationController
       process_commune_location_options
     end
 
+    if @question.question_type == 'weekly_schedule'
+      process_weekly_schedule_options
+    end
+
     if @question.save
       if params[:commit] == "Créer et ajouter une autre"
         redirect_to new_admin_survey_survey_section_question_path(@survey, @section), notice: "Question créée. Vous pouvez en ajouter une autre."
@@ -45,6 +49,8 @@ class Admin::QuestionsController < ApplicationController
       process_scale_options
     elsif question_params[:question_type] == 'commune_location'
       process_commune_location_options
+    elsif question_params[:question_type] == 'weekly_schedule'
+      process_weekly_schedule_options
     end
 
     if @question.update(question_params)
@@ -130,6 +136,35 @@ class Admin::QuestionsController < ApplicationController
       # 2. Les communes pourraient changer
       # 3. Chaque utilisateur EPCI pourrait avoir des communes différentes
       # Les communes seront chargées dynamiquement dans la vue
+    end
+  end
+
+  def process_weekly_schedule_options
+    # Récupérer les paramètres depuis le formulaire
+    selected_days = params[:weekly_schedule_days]&.compact_blank || []
+    selected_time_slots = params[:weekly_schedule_time_slots]&.compact_blank || []
+    allow_multiple = params[:allow_multiple_per_day] == '1'
+
+    # Sauvegarder la configuration
+    @question.options ||= {}
+    @question.options['days'] = selected_days
+    @question.options['time_slots'] = selected_time_slots
+    @question.options['allow_multiple_per_day'] = allow_multiple
+
+    # Supprimer les options existantes
+    @question.question_options.destroy_all if @question.persisted?
+
+    # Créer les nouvelles options (combinaisons jour/créneau)
+    position = 1
+    selected_days.each do |day|
+      selected_time_slots.each do |time_slot|
+        @question.question_options.build(
+          text: "#{day} - #{time_slot}",
+          value: "#{day}_#{time_slot.parameterize.underscore}",
+          position: position
+        )
+        position += 1
+      end
     end
   end
 end

@@ -1,7 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["typeSelect", "optionsSection", "scaleSection", "preview", "optionsContainer", "title", "description", "required", "communeLocationInfo"]
+  static targets = [
+    "typeSelect",
+    "optionsSection",
+    "scaleSection",
+    "preview",
+    "optionsContainer",
+    "title",
+    "description",
+    "required",
+    "communeLocationInfo",
+    "weeklyScheduleConfig"  // Nouvelle target pour weekly_schedule
+  ]
 
   connect() {
     this.optionCounter = this.optionsContainerTarget.querySelectorAll('.option-field').length
@@ -22,28 +33,57 @@ export default class extends Controller {
     const type = this.typeSelectTarget.value
 
     // Hide all specific sections
-    this.optionsSectionTarget.classList.add('hidden')
-    this.scaleSectionTarget.classList.add('hidden')
-
-    // Cacher la section commune_location si elle existe
-    if (this.hasCommuneLocationInfoTarget) {
-      this.communeLocationInfoTarget.classList.add('hidden')
-    }
+    this.hideAllConfigs()
 
     // Show appropriate sections
     switch(type) {
       case 'single_choice':
       case 'multiple_choice':
-        this.optionsSectionTarget.classList.remove('hidden')
+        this.showOptionsConfig()
         break
       case 'scale':
-        this.scaleSectionTarget.classList.remove('hidden')
+        this.showScaleConfig()
         break
       case 'commune_location':
-        if (this.hasCommuneLocationInfoTarget) {
-          this.communeLocationInfoTarget.classList.remove('hidden')
-        }
+        this.showCommuneLocationConfig()
         break
+      case 'weekly_schedule':
+        this.showWeeklyScheduleConfig()
+        break
+    }
+  }
+
+  hideAllConfigs() {
+    // Cacher toutes les sections de configuration
+    this.optionsSectionTarget.classList.add('hidden')
+    this.scaleSectionTarget.classList.add('hidden')
+
+    if (this.hasCommuneLocationInfoTarget) {
+      this.communeLocationInfoTarget.classList.add('hidden')
+    }
+
+    if (this.hasWeeklyScheduleConfigTarget) {
+      this.weeklyScheduleConfigTarget.classList.add('hidden')
+    }
+  }
+
+  showOptionsConfig() {
+    this.optionsSectionTarget.classList.remove('hidden')
+  }
+
+  showScaleConfig() {
+    this.scaleSectionTarget.classList.remove('hidden')
+  }
+
+  showCommuneLocationConfig() {
+    if (this.hasCommuneLocationInfoTarget) {
+      this.communeLocationInfoTarget.classList.remove('hidden')
+    }
+  }
+
+  showWeeklyScheduleConfig() {
+    if (this.hasWeeklyScheduleConfigTarget) {
+      this.weeklyScheduleConfigTarget.classList.remove('hidden')
     }
   }
 
@@ -77,6 +117,48 @@ export default class extends Controller {
   removeOption(event) {
     event.currentTarget.closest('.option-field').remove()
     this.updatePreview()
+  }
+
+  // Méthode pour mettre à jour l'aperçu du planning hebdomadaire
+  updateWeeklySchedulePreview() {
+    if (!this.hasWeeklyScheduleConfigTarget) return
+
+    const selectedDays = Array.from(this.weeklyScheduleConfigTarget.querySelectorAll('input[name="weekly_schedule_days[]"]:checked'))
+      .map(input => input.value)
+
+    const selectedTimeSlots = Array.from(this.weeklyScheduleConfigTarget.querySelectorAll('input[name="weekly_schedule_time_slots[]"]:checked'))
+      .map(input => input.value)
+
+    if (selectedDays.length === 0 || selectedTimeSlots.length === 0) {
+      return '<p class="text-sm text-gray-500 italic">Sélectionnez au moins un jour et un créneau horaire</p>'
+    }
+
+    let tableHTML = '<div class="overflow-x-auto"><table class="min-w-full border border-gray-300 text-sm">'
+
+    // En-tête
+    tableHTML += '<thead><tr class="bg-gray-50">'
+    tableHTML += '<th class="border border-gray-300 px-2 py-1 text-left font-medium text-gray-700">Créneaux</th>'
+    selectedDays.forEach(day => {
+      tableHTML += `<th class="border border-gray-300 px-2 py-1 text-center font-medium text-gray-700">${day}</th>`
+    })
+    tableHTML += '</tr></thead>'
+
+    // Corps du tableau
+    tableHTML += '<tbody>'
+    selectedTimeSlots.forEach((timeSlot, index) => {
+      const bgClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+      tableHTML += `<tr class="${bgClass}">`
+      tableHTML += `<td class="border border-gray-300 px-2 py-1 font-medium text-gray-700">${timeSlot}</td>`
+      selectedDays.forEach(day => {
+        tableHTML += '<td class="border border-gray-300 px-2 py-1 text-center">'
+        tableHTML += '<input type="checkbox" class="h-3 w-3 text-indigo-600 border-gray-300 rounded" disabled>'
+        tableHTML += '</td>'
+      })
+      tableHTML += '</tr>'
+    })
+    tableHTML += '</tbody></table></div>'
+
+    return tableHTML
   }
 
   updatePreview() {
@@ -114,132 +196,118 @@ export default class extends Controller {
       case 'multiple_choice':
         return this.generateCheckboxOptions()
       case 'scale':
-        return this.generateScale()
+        return this.generateScalePreview()
       case 'text':
-        return `<input type="text" class="w-full rounded-md border-gray-300 shadow-sm" placeholder="Réponse courte" disabled>`
+        return '<input type="text" class="w-full rounded-md border-gray-300" placeholder="Réponse courte" disabled>'
       case 'long_text':
-        return `<textarea rows="3" class="w-full rounded-md border-gray-300 shadow-sm" placeholder="Réponse longue" disabled></textarea>`
+        return '<textarea rows="3" class="w-full rounded-md border-gray-300" placeholder="Réponse longue" disabled></textarea>'
       case 'email':
-        return `<input type="email" class="w-full rounded-md border-gray-300 shadow-sm" placeholder="exemple@email.com" disabled>`
+        return '<input type="email" class="w-full rounded-md border-gray-300" placeholder="email@exemple.com" disabled>'
       case 'phone':
-        return `<input type="tel" class="w-full rounded-md border-gray-300 shadow-sm" placeholder="06 12 34 56 78" disabled>`
+        return '<input type="tel" class="w-full rounded-md border-gray-300" placeholder="01 23 45 67 89" disabled>'
       case 'date':
-        return `<input type="date" class="w-full rounded-md border-gray-300 shadow-sm" disabled>`
+        return '<input type="date" class="w-full rounded-md border-gray-300" disabled>'
       case 'numeric':
-        return `<input type="number" class="w-full rounded-md border-gray-300 shadow-sm" placeholder="Entrez un nombre" disabled>`
+        return '<input type="number" class="w-full rounded-md border-gray-300" placeholder="123" disabled>'
       case 'yes_no':
         return `
-          <div class="flex space-x-4">
+          <div class="space-y-2">
             <label class="flex items-center">
-              <input type="radio" name="preview_yesno" value="yes" class="mr-2" disabled>
-              <span class="text-sm">Oui</span>
+              <input type="radio" name="preview_yes_no" value="yes" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+              <span class="ml-2 text-sm text-gray-700">Oui</span>
             </label>
             <label class="flex items-center">
-              <input type="radio" name="preview_yesno" value="no" class="mr-2" disabled>
-              <span class="text-sm">Non</span>
+              <input type="radio" name="preview_yes_no" value="no" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+              <span class="ml-2 text-sm text-gray-700">Non</span>
             </label>
           </div>
         `
       case 'commune_location':
-        return this.generateCommuneLocationPreview()
+        return '<p class="text-sm text-gray-500 italic">Question sur la commune d\'habitation (configuration automatique)</p>'
+      case 'weekly_schedule':
+        return this.updateWeeklySchedulePreview()
       default:
-        return ''
+        return '<p class="text-gray-500 italic">Aperçu non disponible pour ce type de question</p>'
     }
   }
 
   generateRadioOptions() {
-    const options = Array.from(this.optionsContainerTarget.querySelectorAll('.option-field input[type="text"]'))
-                        .map(input => input.value)
-                        .filter(value => value.trim() !== '')
+    const options = this.getOptionsFromForm()
+    if (options.length === 0) {
+      return '<p class="text-sm text-gray-500 italic">Ajoutez des options pour voir l\'aperçu</p>'
+    }
 
-    let html = ''
+    let html = '<div class="space-y-2">'
     options.forEach((option, index) => {
       html += `
-        <div class="flex items-center mb-2">
-          <input type="radio" name="preview_radio" id="preview_radio_${index}" class="mr-2" disabled>
-          <label for="preview_radio_${index}" class="text-sm">${option}</label>
-        </div>
+        <label class="flex items-center">
+          <input type="radio" name="preview_radio" value="${index}" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+          <span class="ml-2 text-sm text-gray-700">${option}</span>
+        </label>
       `
     })
+    html += '</div>'
     return html
   }
 
   generateCheckboxOptions() {
-    const options = Array.from(this.optionsContainerTarget.querySelectorAll('.option-field input[type="text"]'))
-                        .map(input => input.value)
-                        .filter(value => value.trim() !== '')
+    const options = this.getOptionsFromForm()
+    if (options.length === 0) {
+      return '<p class="text-sm text-gray-500 italic">Ajoutez des options pour voir l\'aperçu</p>'
+    }
 
-    let html = ''
+    let html = '<div class="space-y-2">'
     options.forEach((option, index) => {
       html += `
-        <div class="flex items-center mb-2">
-          <input type="checkbox" id="preview_check_${index}" class="mr-2" disabled>
-          <label for="preview_check_${index}" class="text-sm">${option}</label>
-        </div>
+        <label class="flex items-center">
+          <input type="checkbox" value="${index}" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" disabled>
+          <span class="ml-2 text-sm text-gray-700">${option}</span>
+        </label>
       `
     })
+    html += '</div>'
     return html
   }
 
-  generateScale() {
-    const min = document.getElementById('scale_min')?.value || 1
-    const max = document.getElementById('scale_max')?.value || 5
-    const minLabel = document.getElementById('scale_min_label')?.value || ''
-    const maxLabel = document.getElementById('scale_max_label')?.value || ''
+  generateScalePreview() {
+    if (!this.hasScaleSectionTarget) return ''
 
-    let html = `<div class="flex items-center justify-between mb-2">`
-    if (minLabel) html += `<span class="text-xs text-gray-500">${minLabel}</span>`
-    html += `<div class="flex space-x-2">`
+    const minInput = this.scaleSectionTarget.querySelector('input[name="scale_min"]')
+    const maxInput = this.scaleSectionTarget.querySelector('input[name="scale_max"]')
+    const stepInput = this.scaleSectionTarget.querySelector('input[name="scale_step"]')
 
-    for (let i = parseInt(min); i <= parseInt(max); i++) {
+    const min = parseInt(minInput?.value || '1')
+    const max = parseInt(maxInput?.value || '5')
+    const step = parseInt(stepInput?.value || '1')
+
+    let html = '<div class="flex items-center space-x-4">'
+    for (let i = min; i <= max; i += step) {
       html += `
         <label class="flex flex-col items-center">
-          <input type="radio" name="preview_scale" value="${i}" class="mb-1" disabled>
-          <span class="text-xs">${i}</span>
+          <input type="radio" name="preview_scale" value="${i}" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+          <span class="mt-1 text-sm text-gray-700">${i}</span>
         </label>
       `
     }
-
-    html += `</div>`
-    if (maxLabel) html += `<span class="text-xs text-gray-500">${maxLabel}</span>`
-    html += `</div>`
-
+    html += '</div>'
     return html
   }
 
-  generateCommuneLocationPreview() {
-    return `
-      <div class="space-y-2">
-        <p class="text-sm text-gray-600 italic">
-          Cette question s'adaptera automatiquement selon le territoire du répondant.
-        </p>
-        <div class="border-l-4 border-blue-400 pl-4 space-y-4">
-          <div>
-            <p class="text-xs font-medium text-gray-700 mb-2">Exemple pour une commune :</p>
-            <div class="space-y-2">
-              <label class="flex items-center">
-                <input type="radio" name="preview_commune" disabled class="h-4 w-4 text-indigo-600">
-                <span class="ml-2 text-sm">Oui, j'habite à [Nom de la commune]</span>
-              </label>
-              <label class="flex items-center">
-                <input type="radio" name="preview_commune" disabled class="h-4 w-4 text-indigo-600">
-                <span class="ml-2 text-sm">Non, j'habite dans une autre commune</span>
-              </label>
-            </div>
-          </div>
+  getOptionsFromForm() {
+    const options = []
+    const optionInputs = this.optionsContainerTarget.querySelectorAll('input[name*="[text]"]')
+    optionInputs.forEach(input => {
+      if (input.value.trim()) {
+        options.push(input.value.trim())
+      }
+    })
+    return options
+  }
 
-          <div>
-            <p class="text-xs font-medium text-gray-700 mb-2">Exemple pour un EPCI :</p>
-            <select disabled class="w-full rounded-md border-gray-300 shadow-sm text-sm">
-              <option>-- Sélectionnez votre commune --</option>
-              <option>Commune 1</option>
-              <option>Commune 2</option>
-              <option>...</option>
-              <option>Autre commune (hors EPCI)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    `
+  // Event listener pour mettre à jour l'aperçu du planning quand les checkboxes changent
+  weeklyScheduleConfigChanged() {
+    if (this.typeSelectTarget.value === 'weekly_schedule') {
+      this.updatePreview()
+    }
   }
 }

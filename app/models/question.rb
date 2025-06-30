@@ -20,6 +20,7 @@ class Question < ApplicationRecord
     date
     yes_no
     commune_location
+    weekly_schedule
   ].freeze
 
   validates :question_type, inclusion: { in: QUESTION_TYPES }
@@ -92,6 +93,25 @@ class Question < ApplicationRecord
     end
 
     errors
+  end
+
+  def weekly_schedule_question?
+    question_type == 'weekly_schedule'
+  end
+
+  def requires_options?
+    %w[single_choice multiple_choice scale commune_location weekly_schedule].include?(question_type)
+  end
+
+  # Méthode pour récupérer la configuration du planning
+  def weekly_schedule_config
+    return {} unless weekly_schedule_question?
+
+    {
+      days: options&.dig('days') || [],
+      time_slots: options&.dig('time_slots') || [],
+      allow_multiple_per_day: options&.dig('allow_multiple_per_day') || true
+    }
   end
 
   private
