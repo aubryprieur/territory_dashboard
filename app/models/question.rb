@@ -21,6 +21,7 @@ class Question < ApplicationRecord
     yes_no
     commune_location
     weekly_schedule
+    ranking
   ].freeze
 
   validates :question_type, inclusion: { in: QUESTION_TYPES }
@@ -54,6 +55,14 @@ class Question < ApplicationRecord
 
   def single_choice?
     question_type == 'single_choice'
+  end
+
+  def ranking_question?
+    question_type == 'ranking'
+  end
+
+  def requires_options?
+    %w[single_choice multiple_choice scale commune_location weekly_schedule ranking].include?(question_type)
   end
 
   def validation_errors_for(answer)

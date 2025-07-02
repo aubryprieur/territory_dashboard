@@ -11,7 +11,7 @@ export default class extends Controller {
     "description",
     "required",
     "communeLocationInfo",
-    "weeklyScheduleConfig"  // Nouvelle target pour weekly_schedule
+    "weeklyScheduleConfig"
   ]
 
   connect() {
@@ -39,6 +39,7 @@ export default class extends Controller {
     switch(type) {
       case 'single_choice':
       case 'multiple_choice':
+      case 'ranking':  // ← Nouveau cas ajouté
         this.showOptionsConfig()
         break
       case 'scale':
@@ -195,6 +196,8 @@ export default class extends Controller {
         return this.generateRadioOptions()
       case 'multiple_choice':
         return this.generateCheckboxOptions()
+      case 'ranking':  // ← Nouveau cas ajouté
+        return this.generateRankingPreview()
       case 'scale':
         return this.generateScalePreview()
       case 'text':
@@ -266,6 +269,46 @@ export default class extends Controller {
       `
     })
     html += '</div>'
+    return html
+  }
+
+  // ← Nouvelle méthode pour la prévisualisation du ranking
+  generateRankingPreview() {
+    const options = this.getOptionsFromForm()
+    if (options.length === 0) {
+      return '<p class="text-sm text-gray-500 italic">Ajoutez des options pour voir l\'aperçu du classement</p>'
+    }
+
+    let html = `
+      <div class="space-y-3">
+        <div class="bg-blue-50 p-3 rounded-md">
+          <p class="text-sm text-blue-700">
+            <i class="fas fa-info-circle"></i>
+            Glissez-déposez les éléments pour les classer par ordre de priorité
+          </p>
+        </div>
+
+        <div class="space-y-2 border border-gray-200 rounded-lg p-3">
+    `
+
+    options.forEach((option, index) => {
+      html += `
+        <div class="bg-white border border-gray-300 rounded-lg p-3 cursor-move hover:bg-gray-50 transition-colors">
+          <div class="flex items-center justify-between">
+            <span class="font-medium">${option}</span>
+            <div class="flex items-center space-x-2">
+              <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-bold">${index + 1}</span>
+              <i class="fas fa-grip-vertical text-gray-400"></i>
+            </div>
+          </div>
+        </div>
+      `
+    })
+
+    html += `
+        </div>
+      </div>
+    `
     return html
   }
 

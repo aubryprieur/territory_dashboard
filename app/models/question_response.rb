@@ -11,6 +11,8 @@ class QuestionResponse < ApplicationRecord
       answer_text
     when 'multiple_choice', 'weekly_schedule'
       answer_data.is_a?(Array) ? answer_data : []
+    when 'ranking'
+      answer_data.is_a?(Array) ? answer_data : []
     when 'commune_location'
       # Pour les questions commune_location, retourner l'answer_text
       answer_text
@@ -23,7 +25,7 @@ class QuestionResponse < ApplicationRecord
 
   def answer=(value)
     case question.question_type
-    when 'multiple_choice'
+    when 'multiple_choice', 'ranking'
       self.answer_data = value.is_a?(Array) ? value : [value].compact
       self.answer_text = answer_data.join(', ')
     else
@@ -52,6 +54,16 @@ class QuestionResponse < ApplicationRecord
         # Trouver l'option correspondante pour afficher le texte
         option = question.question_options.find { |opt| opt.value == answer_text }
         option&.text || answer_text
+      end
+    when 'ranking'
+      if answer_data.is_a?(Array) && answer_data.any?
+        answer_data.map.with_index(1) do |option_value, rank|
+          option = question.question_options.find { |opt| opt.value == option_value }
+          option_text = option&.text || option_value
+          "#{rank}. #{option_text}"
+        end.join(', ')
+      else
+        'Aucun classement'
       end
     when 'multiple_choice'
       if answer_data.is_a?(Array)

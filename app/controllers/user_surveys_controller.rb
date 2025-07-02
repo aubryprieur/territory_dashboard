@@ -119,7 +119,9 @@ class UserSurveysController < ApplicationController
     respond_to do |format|
       format.csv do
         send_data export_to_csv,
-                  filename: "enquete_#{@user_survey.survey.title.parameterize}_#{@user_survey.year}_#{Date.current}.csv"
+                  filename: "enquete_#{@user_survey.survey.title.parameterize}_#{@user_survey.year}_#{Date.current}.csv",
+                  type: 'text/csv; charset=utf-8',
+                  disposition: 'attachment'
       end
     end
   end
@@ -379,6 +381,74 @@ class UserSurveysController < ApplicationController
                                               .group(:answer_text)
                                               .count
 
+      when 'ranking'
+        # Récupérer toutes les réponses de ranking
+        raw_rankings = question_responses.pluck(:answer_data)
+                                        .compact
+                                        .select { |data| data.is_a?(Array) }
+
+        # Parser correctement les données (gestion du double-encodage JSON)
+        all_rankings = []
+        raw_rankings.each do |raw_ranking|
+          if raw_ranking.is_a?(Array) && raw_ranking.length == 1 && raw_ranking[0].is_a?(String)
+            # Cas de double-encodage JSON : ["[\"option1\",\"option2\"]"]
+            begin
+              parsed_ranking = JSON.parse(raw_ranking[0])
+              all_rankings << parsed_ranking if parsed_ranking.is_a?(Array)
+            rescue JSON::ParserError
+              Rails.logger.warn "Erreur parsing JSON pour ranking: #{raw_ranking[0]}"
+            end
+          elsif raw_ranking.is_a?(Array) && raw_ranking.all? { |item| item.is_a?(String) }
+            # Cas normal : ["option1", "option2"]
+            all_rankings << raw_ranking
+          end
+        end
+
+        if all_rankings.any?
+          # Calculer le score moyen pour chaque option
+          option_scores = {}
+          option_counts = {}
+
+          question.question_options.each do |option|
+            option_scores[option.value] = []
+            option_counts[option.value] = 0
+          end
+
+          all_rankings.each do |ranking|
+            ranking.each_with_index do |option_value, index|
+              position = index + 1 # Position 1 = meilleur rang
+
+              if option_scores.key?(option_value)
+                option_scores[option_value] << position
+                option_counts[option_value] += 1
+              end
+            end
+          end
+
+          # Calculer les moyennes
+          average_rankings = {}
+          option_scores.each do |option_value, positions|
+            if positions.any?
+              average_rankings[option_value] = positions.sum.to_f / positions.count
+            else
+              average_rankings[option_value] = 999
+            end
+          end
+
+          # Trier par meilleur score moyen (plus bas = mieux)
+          sorted_options = average_rankings.sort_by { |_, avg| avg }
+
+          stats[question.id] = {
+            type: 'ranking',
+            total_responses: all_rankings.count,
+            average_rankings: average_rankings,
+            sorted_options: sorted_options,
+            option_counts: option_counts
+          }
+        else
+          stats[question.id] = { type: 'ranking', total_responses: 0 }
+        end
+
       when 'multiple_choice'
         all_answers = question_responses.pluck(:answer_data)
         answer_counts = Hash.new(0)
@@ -426,18 +496,36 @@ class UserSurveysController < ApplicationController
     stats
   end
 
+  def position_to_french(position)
+    case position
+    when 1
+      "1er"
+    when 2
+      "2e"
+    else
+      "#{position}e"
+    end
+  end
+
   def export_to_csv
     require 'csv'
 
-    CSV.generate(headers: true) do |csv|
+    CSV.generate(headers: true, encoding: 'UTF-8', force_quotes: true) do |csv|
       headers = ['ID Réponse', 'Date de début', 'Date de fin', 'Durée (minutes)']
 
       # Ajouter les en-têtes de questions
       @user_survey.survey.questions.each do |q|
-        headers << q.title
-        # Ajouter une colonne spéciale pour les autres communes
-        if q.question_type == 'commune_location'
+        case q.question_type
+        when 'ranking'
+          # Pour les questions de ranking, créer une colonne par position
+          (1..q.question_options.count).each do |position|
+            headers << "#{q.title} - #{position_to_french(position)}"
+          end
+        when 'commune_location'
+          headers << q.title
           headers << "Nom des autres communes"
+        else
+          headers << q.title
         end
       end
 
@@ -456,26 +544,55 @@ class UserSurveysController < ApplicationController
         @user_survey.survey.questions.each do |question|
           answer = response.answer_for(question)
 
-          if question.question_type == 'commune_location'
-            # Pour les questions commune_location, gérer différemment
+          case question.question_type
+          when 'ranking'
+            # Traiter les réponses de ranking
+            if answer&.answer_data&.is_a?(Array)
+              # Parser les données (gestion du double-encodage)
+              ranking_data = if answer.answer_data.length == 1 && answer.answer_data[0].is_a?(String)
+                begin
+                  JSON.parse(answer.answer_data[0])
+                rescue JSON::ParserError
+                  []
+                end
+              else
+                answer.answer_data
+              end
+
+              # Créer un tableau ordonné des réponses
+              ordered_responses = Array.new(question.question_options.count, '')
+
+              ranking_data.each_with_index do |option_value, index|
+                if index < ordered_responses.length
+                  # Trouver le texte de l'option
+                  option = question.question_options.find { |opt| opt.value == option_value }
+                  ordered_responses[index] = option&.text || option_value
+                end
+              end
+
+              # Ajouter chaque position à la ligne
+              ordered_responses.each { |text| row << text }
+            else
+              # Si pas de réponse, ajouter des colonnes vides
+              question.question_options.count.times { row << '' }
+            end
+
+          when 'commune_location'
+            # Code existant pour commune_location
             if answer&.answer_data&.is_a?(Hash) && answer.answer_data['type'] == 'other'
-              # Réponse "autre commune"
               row << "Autre commune"
-              # Récupérer le nom de la commune autre (peut être nil)
               commune_name = answer.answer_data['commune_name']
               row << (commune_name.present? ? commune_name : '')
             elsif answer&.answer_text == 'other'
-              # Cas où answer_data n'est pas rempli mais answer_text = 'other'
               row << "Autre commune"
-              row << ''  # Pas de nom spécifique disponible
+              row << ''
             else
-              # Commune normale - utiliser le nom de la commune
               row << (answer&.formatted_answer || '')
-              # Colonne "autres communes" vide
               row << ''
             end
-          elsif question.question_type == 'weekly_schedule'
-            # Pour les questions weekly_schedule, formater les créneaux sélectionnés
+
+          when 'weekly_schedule'
+            # Code existant pour weekly_schedule
             if answer&.answer_data&.is_a?(Array) && answer.answer_data.any?
               readable_answers = answer.answer_data.map do |value|
                 day, time_slot = value.split('_', 2)
@@ -486,11 +603,13 @@ class UserSurveysController < ApplicationController
             else
               row << 'Aucun créneau sélectionné'
             end
+
           else
-            # Autres types de questions - fonctionnement normal
+            # Autres types de questions
             row << (answer&.formatted_answer || '')
           end
         end
+
         csv << row
       end
     end

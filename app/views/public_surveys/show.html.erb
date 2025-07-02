@@ -96,6 +96,51 @@
                     <% end %>
                   </div>
 
+                <% when 'ranking' %>
+                  <div data-controller="ranking-question" data-ranking-question-name="responses[<%= question.id %>]">
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
+                      <div class="flex items-center">
+                        <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                        </svg>
+                        <p class="text-sm text-blue-700 font-medium">
+                          Glissez-déposez les éléments pour les classer par ordre de priorité
+                        </p>
+                      </div>
+                      <p class="text-xs text-blue-600 mt-1 ml-7">1er = plus important • Dernière position = moins important</p>
+                    </div>
+
+                    <div data-ranking-question-target="sortableList" class="space-y-3 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4">
+                      <% question.question_options.each_with_index do |option, index| %>
+                        <div class="ranking-item bg-white border-2 border-gray-200 rounded-lg p-4 shadow-sm"
+                             data-option-value="<%= option.value %>"
+                             data-ranking-question-target="item">
+                          <div class="flex items-center justify-between">
+                            <div class="flex items-center flex-1">
+                              <div class="ranking-grip mr-3 text-gray-400">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                                </svg>
+                              </div>
+                              <span class="font-medium text-gray-800 flex-1"><%= option.text %></span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                              <span class="text-xs text-gray-500 font-medium">Position</span>
+                              <span class="ranking-number bg-indigo-500 text-white px-3 py-1 rounded-full text-sm font-bold min-w-[2rem] text-center"
+                                    data-ranking-question-target="rankNumber"><%= index + 1 %></span>
+                            </div>
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+
+                    <!-- Champ caché pour stocker l'ordre -->
+                    <input type="hidden"
+                           name="responses[<%= question.id %>]"
+                           data-ranking-question-target="hiddenInput"
+                           <% if question.required? %>required<% end %>>
+                  </div>
+
                 <% when 'scale' %>
                   <div class="flex items-center justify-between mt-4">
                     <% if question.options && question.options['scale_min_label'] %>
