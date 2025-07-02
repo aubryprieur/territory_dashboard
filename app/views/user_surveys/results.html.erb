@@ -239,6 +239,101 @@
                       </div>
                     </div>
 
+                  <% when 'ranking' %>
+                    <% if stats && stats[:total_responses] > 0 %>
+                      <div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Classement moyen</h4>
+
+                        <div class="space-y-3">
+                          <%
+                            # Calculer les positions avec gestion des ex-aequo
+                            previous_rank = nil
+                            visual_position = 0
+                            display_position = 0
+                          %>
+
+                          <% stats[:sorted_options].each_with_index do |(option_value, avg_rank), index| %>
+                            <% option = question.question_options.find { |o| o.value == option_value } %>
+                            <% option_text = option&.text || option_value %>
+                            <% rank_percentage = ((question.question_options.count - avg_rank + 1) / question.question_options.count.to_f * 100).round(1) %>
+
+                            <%
+                              # Gestion des positions avec ex-aequo
+                              if previous_rank != avg_rank
+                                visual_position = index
+                                display_position = index + 1
+                              end
+                              # Sinon on garde la même visual_position et display_position
+
+                              previous_rank = avg_rank
+                            %>
+
+                            <div class="flex items-center space-x-4 py-2">
+                              <!-- Médaille/Position -->
+                              <div class="flex-shrink-0 w-8">
+                                <% if visual_position == 0 %>
+                                  <span class="text-xl">🥇</span>
+                                <% elsif visual_position == 1 %>
+                                  <span class="text-xl">🥈</span>
+                                <% elsif visual_position == 2 %>
+                                  <span class="text-xl">🥉</span>
+                                <% else %>
+                                  <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-sm font-bold w-6 h-6 flex items-center justify-center">
+                                    <%= display_position %>
+                                  </span>
+                                <% end %>
+                              </div>
+
+                              <!-- Intitulé de l'option -->
+                              <div class="w-64 flex-shrink-0">
+                                <span class="font-medium text-gray-800 text-sm"><%= option_text %></span>
+                              </div>
+
+                              <!-- Barre de progression -->
+                              <div class="flex-1 min-w-0">
+                                <div class="w-full bg-gray-200 rounded-full h-4">
+                                  <%
+                                    # Couleurs selon la position visuelle (pas l'index)
+                                    if visual_position == 0
+                                      color_class = "bg-gradient-to-r from-green-400 to-green-600"
+                                    elsif visual_position == 1
+                                      color_class = "bg-gradient-to-r from-emerald-400 to-emerald-600"
+                                    elsif visual_position == 2
+                                      color_class = "bg-gradient-to-r from-yellow-400 to-yellow-600"
+                                    else
+                                      color_class = "bg-gradient-to-r from-red-400 to-red-600"
+                                    end
+                                  %>
+                                  <div class="h-full <%= color_class %> rounded-full transition-all duration-500"
+                                       style="width: <%= rank_percentage %>%">
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- Rang moyen -->
+                              <div class="flex-shrink-0 w-20 text-right">
+                                <div class="text-sm font-bold text-gray-900">
+                                  <%= avg_rank.round(1) %>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                  <%= stats[:option_counts][option_value] %> vote<%= stats[:option_counts][option_value] > 1 ? 's' : '' %>
+                                </div>
+                              </div>
+                            </div>
+                          <% end %>
+                        </div>
+
+                        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                          <p class="text-sm text-blue-700">
+                            <strong>Lecture :</strong> Rang moyen calculé sur <%= stats[:total_responses] %> réponse<%= stats[:total_responses] > 1 ? 's' : '' %>.
+                            Plus le rang est proche de 1, plus l'option est considérée comme prioritaire.
+                          </p>
+                        </div>
+                      </div>
+                    <% else %>
+                      <p class="text-gray-500 italic">Aucune réponse de classement</p>
+                    <% end %>
+
                   <% when 'multiple_choice' %>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       <div>

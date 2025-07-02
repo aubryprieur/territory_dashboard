@@ -1,4 +1,3 @@
-// app/javascript/controllers/survey_results_controller.js
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
@@ -112,6 +111,9 @@ export default class extends Controller {
         case 'bar':
           chart = this.createBarChart(canvas, chartData)
           break
+        case 'horizontalBar':
+          chart = this.createRankingChart(canvas, chartData)
+          break
         case 'line':
           chart = this.createLineChart(canvas, chartData)
           break
@@ -169,6 +171,105 @@ export default class extends Controller {
               padding: 15,
               boxWidth: 15
             }
+          }
+        }
+      }
+    })
+  }
+
+  createRankingChart(canvas, data) {
+    const ctx = canvas.getContext('2d')
+
+    // Inverser l'ordre pour que le meilleur apparaisse en haut
+    const reversedLabels = [...data.labels].reverse()
+    const reversedValues = [...data.values].reverse()
+
+    // Créer un gradient de couleur du vert au rouge
+    const backgroundColors = reversedValues.map((value, index) => {
+      const position = index / (reversedValues.length - 1)
+      if (position <= 0.33) {
+        return `rgba(34, 197, 94, 0.8)` // Vert pour les meilleurs
+      } else if (position <= 0.66) {
+        return `rgba(234, 179, 8, 0.8)` // Jaune pour les moyens
+      } else {
+        return `rgba(239, 68, 68, 0.8)` // Rouge pour les moins bons
+      }
+    })
+
+    const borderColors = backgroundColors.map(color => color.replace('0.8', '1'))
+
+    return new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: reversedLabels,
+        datasets: [{
+          label: 'Rang moyen',
+          data: reversedValues,
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y', // Barres horizontales
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Rang moyen (1 = meilleur)',
+              font: {
+                weight: 'bold'
+              }
+            },
+            min: 1,
+            max: data.total_options,
+            reverse: true, // 1 à gauche, max à droite
+            grid: {
+              color: 'rgba(0, 0, 0, 0.1)'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Options',
+              font: {
+                weight: 'bold'
+              }
+            },
+            grid: {
+              display: false
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const rank = context.parsed.x
+                const position = reversedLabels.length - context.dataIndex
+                let medal = ''
+                if (position === 1) medal = '🥇 '
+                else if (position === 2) medal = '🥈 '
+                else if (position === 3) medal = '🥉 '
+
+                return `${medal}Rang moyen: ${rank.toFixed(1)}`
+              }
+            }
+          }
+        },
+        layout: {
+          padding: {
+            left: 10,
+            right: 10,
+            top: 10,
+            bottom: 10
           }
         }
       }
