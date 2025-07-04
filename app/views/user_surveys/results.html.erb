@@ -185,59 +185,116 @@
                 <% stats = @statistics[question.id] %>
                 <% if stats %>
                   <% case question.question_type %>
-                  <% when 'single_choice', 'yes_no' %>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      <div>
-                        <% if stats.is_a?(Hash) && stats.any? %>
-                          <% total_responses = stats.values.sum %>
-                          <div class="space-y-3">
-                            <% stats.sort_by { |_, count| -count }.each do |answer, count| %>
-                              <% percentage = (count.to_f / total_responses * 100).round(1) %>
-                              <div class="relative">
-                                <div class="flex justify-between items-center mb-1">
-                                  <span class="text-sm font-medium text-gray-700">
-                                    <% if question.question_type == 'yes_no' %>
-                                      <%= answer == 'yes' ? 'Oui' : 'Non' %>
-                                    <% else %>
-                                      <%= question.question_options.find { |o| o.value == answer }&.text || answer %>
-                                    <% end %>
-                                  </span>
-                                  <span class="text-sm text-gray-600">
-                                    <%= count %> (<%= percentage %>%)
-                                  </span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
-                                  <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-end pr-3 transition-all duration-500"
-                                       style="width: <%= percentage %>%">
-                                    <span class="text-white text-xs font-medium"><%= percentage %>%</span>
+                    <% when 'single_choice', 'yes_no' %>
+                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                          <% if stats.is_a?(Hash) && stats.any? %>
+                            <% total_responses = stats.values.sum %>
+                            <div class="space-y-3">
+                              <%
+                                # Séparer les réponses "autre" des réponses normales
+                                other_count = stats['other'] || 0
+                                normal_stats = stats.except('other')
+                              %>
+
+                              <% normal_stats.sort_by { |_, count| -count }.each do |answer, count| %>
+                                <% percentage = (count.to_f / total_responses * 100).round(1) %>
+                                <div class="relative">
+                                  <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm font-medium text-gray-700">
+                                      <% if question.question_type == 'yes_no' %>
+                                        <%= answer == 'yes' ? 'Oui' : 'Non' %>
+                                      <% else %>
+                                        <%= question.question_options.find { |o| o.value == answer }&.text || answer %>
+                                      <% end %>
+                                    </span>
+                                    <span class="text-sm text-gray-600">
+                                      <%= count %> (<%= percentage %>%)
+                                    </span>
+                                  </div>
+                                  <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-end pr-3 transition-all duration-500"
+                                         style="width: <%= percentage %>%">
+                                      <span class="text-white text-xs font-medium"><%= percentage %>%</span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            <% end %>
+                              <% end %>
+
+                              <!-- Affichage des réponses "autre" si présentes -->
+                              <% if other_count > 0 %>
+                                <% other_percentage = (other_count.to_f / total_responses * 100).round(1) %>
+                                <div class="relative">
+                                  <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm font-medium text-gray-700">
+                                      <%= question.options&.dig('other_text_label') || 'Autre' %>
+                                    </span>
+                                    <span class="text-sm text-gray-600">
+                                      <%= other_count %> (<%= other_percentage %>%)
+                                    </span>
+                                  </div>
+                                  <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-end pr-3 transition-all duration-500"
+                                         style="width: <%= other_percentage %>%">
+                                      <span class="text-white text-xs font-medium"><%= other_percentage %>%</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <!-- Détail des réponses "autre" -->
+                                <%
+                                  # Récupérer les textes des réponses "autre" depuis la base de données
+                                  # CORRECTION: Utiliser une requête compatible PostgreSQL
+                                  other_responses = @user_survey.survey_responses.completed
+                                                    .joins(:question_responses)
+                                                    .where(question_responses: { question: question, answer_text: 'other' })
+                                                    .where.not(question_responses: { answer_data: nil })
+                                                    .includes(:question_responses)
+                                                    .map { |sr| sr.question_responses.find { |qr| qr.question_id == question.id } }
+                                                    .map { |qr| qr.answer_data.is_a?(Hash) ? qr.answer_data['text'] : nil }
+                                                    .compact
+                                                    .reject(&:blank?)
+                                %>
+
+                                <% if other_responses.any? %>
+                                  <div class="ml-4 mt-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                                    <h5 class="text-sm font-medium text-orange-800 mb-2">Détail des réponses "Autre" :</h5>
+                                    <div class="space-y-1">
+                                      <% other_responses.each do |response_text| %>
+                                        <div class="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded inline-block mr-1 mb-1">
+                                          "<%= truncate(response_text, length: 50) %>"
+                                        </div>
+                                      <% end %>
+                                    </div>
+                                  </div>
+                                <% end %>
+                              <% end %>
+                            </div>
+                          <% else %>
+                            <p class="text-gray-500 italic">Aucune réponse</p>
+                          <% end %>
+                        </div>
+                        <div class="flex items-center justify-center">
+                          <div class="w-full max-w-xs">
+                            <canvas data-survey-results-target="chart"
+                                    data-chart-type="doughnut"
+                                    data-question-id="<%= question.id %>"
+                                    data-chart-data="<%= {
+                                      labels: stats.map { |answer, _|
+                                        if answer == 'other'
+                                          question.options&.dig('other_text_label') || 'Autre'
+                                        elsif question.question_type == 'yes_no'
+                                          answer == 'yes' ? 'Oui' : 'Non'
+                                        else
+                                          question.question_options.find { |o| o.value == answer }&.text || answer
+                                        end
+                                      },
+                                      values: stats.values
+                                    }.to_json %>"
+                                    class="max-h-64"></canvas>
                           </div>
-                        <% else %>
-                          <p class="text-gray-500 italic">Aucune réponse</p>
-                        <% end %>
-                      </div>
-                      <div class="flex items-center justify-center">
-                        <div class="w-full max-w-xs">
-                          <canvas data-survey-results-target="chart"
-                                  data-chart-type="doughnut"
-                                  data-question-id="<%= question.id %>"
-                                  data-chart-data="<%= {
-                                    labels: stats.map { |answer, _|
-                                      if question.question_type == 'yes_no'
-                                        answer == 'yes' ? 'Oui' : 'Non'
-                                      else
-                                        question.question_options.find { |o| o.value == answer }&.text || answer
-                                      end
-                                    },
-                                    values: stats.values
-                                  }.to_json %>"
-                                  class="max-h-64"></canvas>
                         </div>
                       </div>
-                    </div>
 
                   <% when 'ranking' %>
                     <% if stats && stats[:total_responses] > 0 %>
@@ -340,7 +397,13 @@
                         <% if stats.is_a?(Hash) && stats.any? %>
                           <% total_responses = @user_survey.response_count %>
                           <div class="space-y-3">
-                            <% stats.sort_by { |_, count| -count }.each do |answer, count| %>
+                            <%
+                              # Séparer les réponses "autre" des réponses normales
+                              other_count = stats['other'] || 0
+                              normal_stats = stats.except('other')
+                            %>
+
+                            <% normal_stats.sort_by { |_, count| -count }.each do |answer, count| %>
                               <% percentage = (count.to_f / total_responses * 100).round(1) %>
                               <div class="relative">
                                 <div class="flex justify-between items-center mb-1">
@@ -359,6 +422,64 @@
                                 </div>
                               </div>
                             <% end %>
+
+                            <!-- Affichage des réponses "autre" si présentes -->
+                            <% if other_count > 0 %>
+                              <% other_percentage = (other_count.to_f / total_responses * 100).round(1) %>
+                              <div class="relative">
+                                <div class="flex justify-between items-center mb-1">
+                                  <span class="text-sm font-medium text-gray-700">
+                                    <%= question.options&.dig('other_text_label') || 'Autre' %>
+                                  </span>
+                                  <span class="text-sm text-gray-600">
+                                    <%= other_count %> (<%= other_percentage %>%)
+                                  </span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                                  <div class="h-full bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-end pr-3 transition-all duration-500"
+                                       style="width: <%= other_percentage %>%">
+                                    <span class="text-white text-xs font-medium"><%= other_percentage %>%</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- Détail des réponses "autre" pour choix multiple -->
+                              <%
+                                # Pour les choix multiples, récupérer les textes des réponses "autre"
+                                # CORRECTION: Simplifier la requête pour éviter les erreurs PostgreSQL
+                                other_responses = []
+
+                                @user_survey.survey_responses.completed
+                            .joins(:question_responses)
+                            .where(question_responses: { question: question })
+                            .includes(:question_responses)
+                            .each do |sr|
+                              qr = sr.question_responses.find { |response| response.question_id == question.id }
+                              next unless qr&.answer_data.is_a?(Array)
+
+                              qr.answer_data.each do |item|
+                                if item.is_a?(Hash) && item['type'] == 'other' && item['text'].present?
+                                  other_responses << item['text']
+                                end
+                              end
+                            end
+
+                            other_responses = other_responses.compact.reject(&:blank?)
+                              %>
+
+                              <% if other_responses.any? %>
+                                <div class="ml-4 mt-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                                  <h5 class="text-sm font-medium text-orange-800 mb-2">Détail des réponses "Autre" :</h5>
+                                  <div class="space-y-1">
+                                    <% other_responses.each do |response_text| %>
+                                      <div class="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded inline-block mr-1 mb-1">
+                                        "<%= truncate(response_text, length: 50) %>"
+                                      </div>
+                                    <% end %>
+                                  </div>
+                                </div>
+                              <% end %>
+                            <% end %>
                           </div>
                         <% else %>
                           <p class="text-gray-500 italic">Aucune réponse</p>
@@ -370,7 +491,13 @@
                                   data-chart-type="bar"
                                   data-question-id="<%= question.id %>"
                                   data-chart-data="<%= {
-                                    labels: stats.map { |answer, _| question.question_options.find { |o| o.value == answer }&.text || answer },
+                                    labels: stats.map { |answer, _|
+                                      if answer == 'other'
+                                        question.options&.dig('other_text_label') || 'Autre'
+                                      else
+                                        question.question_options.find { |o| o.value == answer }&.text || answer
+                                      end
+                                    },
                                     values: stats.values,
                                     type: 'multiple_choice',
                                     label: 'Nombre de sélections'

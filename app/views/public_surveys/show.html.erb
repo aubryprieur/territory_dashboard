@@ -1,249 +1,268 @@
 <!-- app/views/public_surveys/show.html.erb -->
-<div class="min-h-screen bg-gray-50 py-12">
+<div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-white shadow-lg rounded-lg">
-      <!-- En-tête -->
-      <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-t-lg">
-        <h1 class="text-2xl font-bold"><%= @survey.title %></h1>
-        <% if @survey.description.present? %>
-          <p class="mt-2 text-indigo-100"><%= @survey.description %></p>
-        <% end %>
+    <!-- En-tête de l'enquête -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2"><%= @survey.title %></h1>
+      <% if @survey.description.present? %>
+        <p class="text-gray-600"><%= @survey.description %></p>
+      <% end %>
+    </div>
+
+    <!-- Barre de progression -->
+    <% if @survey.show_progress_bar? %>
+      <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex justify-between text-sm text-gray-600 mb-2">
+          <span>Progression</span>
+          <span><%= @current_section_index + 1 %>/<%= @sections.count %></span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= ((@current_section_index + 1).to_f / @sections.count * 100).round %>%"></div>
+        </div>
       </div>
+    <% end %>
 
-      <!-- Message d'accueil -->
-      <% if @user_survey.welcome_message.present? %>
-        <div class="p-6 border-b bg-blue-50">
-          <div class="flex items-start">
-            <svg class="h-5 w-5 text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="ml-3 text-gray-700"><%= @user_survey.welcome_message %></p>
-          </div>
-        </div>
-      <% end %>
+    <!-- Formulaire de section -->
+    <%= form_with url: submit_section_public_survey_path(@user_survey.public_token),
+                  method: :post,
+                  local: true,
+                  class: "bg-white rounded-lg shadow-sm p-6",
+                  data: { controller: "other-option" } do |form| %>
 
-      <!-- Barre de progression -->
-      <% if @survey.show_progress_bar? %>
-        <% current_section_index = params[:section] ? @sections.find_index { |s| s.id.to_s == params[:section] } || 0 : 0 %>
-        <% progress = ((current_section_index + 1).to_f / @sections.count * 100).round %>
-        <div class="px-6 pt-6">
-          <div class="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Progression</span>
-            <span><%= progress %>%</span>
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: <%= progress %>%"></div>
-          </div>
-        </div>
-      <% end %>
+      <%= hidden_field_tag :section_id, @current_section.id %>
 
-      <!-- Formulaire -->
-      <%= form_with url: submit_section_public_survey_path(@user_survey.public_token), local: true, class: "p-6" do |form| %>
-        <% current_section = @sections[current_section_index] %>
-        <%= hidden_field_tag :section_id, current_section.id %>
-
-        <!-- Section -->
-        <div class="mb-8">
-          <h2 class="text-xl font-semibold text-gray-900 mb-2">
-            <%= current_section.title %>
-            <% if current_section.required? %>
-              <span class="text-sm text-red-500 ml-2">*Section obligatoire</span>
-            <% end %>
-          </h2>
-          <% if current_section.description.present? %>
-            <p class="text-gray-600"><%= current_section.description %></p>
+      <!-- Titre de section -->
+      <% unless @current_section.title == "Section par défaut" %>
+        <div class="mb-6 pb-4 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900"><%= @current_section.title %></h2>
+          <% if @current_section.description.present? %>
+            <p class="text-gray-600"><%= @current_section.description %></p>
           <% end %>
         </div>
+      <% end %>
 
-        <!-- Questions -->
-        <div class="space-y-6">
-          <% current_section.questions.each_with_index do |question, index| %>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <label class="block mb-3">
-                <span class="text-gray-700 font-medium">
-                  <%= index + 1 %>. <%= question.title %>
-                  <% if question.required? %>
-                    <span class="text-red-500">*</span>
-                  <% end %>
-                </span>
-                <% if question.description.present? %>
-                  <p class="text-sm text-gray-500 mt-1"><%= question.description %></p>
+      <!-- Questions -->
+      <div class="space-y-6">
+        <% @current_section.questions.each_with_index do |question, index| %>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <label class="block mb-3">
+              <span class="text-gray-700 font-medium">
+                <%= index + 1 %>. <%= question.title %>
+                <% if question.required? %>
+                  <span class="text-red-500">*</span>
                 <% end %>
-              </label>
+              </span>
+              <% if question.description.present? %>
+                <p class="text-sm text-gray-500 mt-1"><%= question.description %></p>
+              <% end %>
+            </label>
 
-              <div class="mt-3">
-                <% case question.question_type %>
-                <% when 'single_choice' %>
-                  <div class="space-y-2">
+            <div class="mt-3">
+              <% case question.question_type %>
+              <% when 'single_choice' %>
+                <div class="space-y-2">
+                  <% question.question_options.each do |option| %>
+                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                      <%= radio_button_tag "responses[#{question.id}]", option.value, false,
+                          class: "h-4 w-4 text-indigo-600 border-gray-300",
+                          required: question.required? %>
+                      <span class="ml-2"><%= option.text %></span>
+                    </label>
+                  <% end %>
+
+                  <% if question.has_other_option? %>
+                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                      <%= radio_button_tag "responses[#{question.id}]", 'other', false,
+                          class: "h-4 w-4 text-indigo-600 border-gray-300",
+                          required: question.required?,
+                          data: {
+                            other_option_target: "trigger",
+                            question_id: question.id,
+                            action: "change->other-option#toggleOtherInput"
+                          } %>
+                      <span class="ml-2"><%= question.options&.dig('other_text_label') || 'Autre (précisez)' %></span>
+                    </label>
+
+                    <div class="ml-6 mt-2" style="display: none;"
+                         data-other-option-target="input"
+                         data-question-id="<%= question.id %>">
+                      <%= text_field_tag "responses[#{question.id}_other_text]", nil,
+                          placeholder: "Veuillez préciser...",
+                          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" %>
+                    </div>
+                  <% end %>
+                </div>
+
+              <% when 'multiple_choice' %>
+                <div class="space-y-2">
+                  <% question.question_options.each do |option| %>
+                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                      <%= check_box_tag "responses[#{question.id}][]", option.value, false,
+                          class: "h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
+                      <span class="ml-2"><%= option.text %></span>
+                    </label>
+                  <% end %>
+
+                  <% if question.has_other_option? %>
+                    <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                      <%= check_box_tag "responses[#{question.id}][]", 'other', false,
+                          class: "h-4 w-4 text-indigo-600 border-gray-300 rounded",
+                          data: {
+                            other_option_target: "trigger",
+                            question_id: question.id,
+                            action: "change->other-option#toggleOtherInput"
+                          } %>
+                      <span class="ml-2"><%= question.options&.dig('other_text_label') || 'Autre (précisez)' %></span>
+                    </label>
+
+                    <div class="ml-6 mt-2" style="display: none;"
+                         data-other-option-target="input"
+                         data-question-id="<%= question.id %>">
+                      <%= text_field_tag "responses[#{question.id}_other_text]", nil,
+                          placeholder: "Veuillez préciser...",
+                          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" %>
+                    </div>
+                  <% end %>
+                </div>
+
+              <% when 'ranking' %>
+                <div data-controller="ranking-question" data-ranking-question-name="responses[<%= question.id %>]">
+                  <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
+                    <div class="flex items-center">
+                      <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p class="text-sm text-blue-700">
+                        Glissez et déposez les éléments pour les classer par ordre de priorité (1 = le plus important).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div data-ranking-question-target="container" class="space-y-2">
+                    <% question.question_options.each_with_index do |option, idx| %>
+                      <div class="ranking-item bg-white border border-gray-300 rounded-lg p-3 cursor-move hover:border-indigo-300 transition-colors"
+                           data-ranking-question-target="item"
+                           data-value="<%= option.value %>"
+                           draggable="true">
+                        <div class="flex items-center">
+                          <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                          </svg>
+                          <span class="font-medium text-gray-700 ranking-position mr-3"><%= idx + 1 %>.</span>
+                          <span class="text-gray-900"><%= option.text %></span>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <!-- Hidden inputs pour stocker l'ordre -->
+                  <div data-ranking-question-target="hiddenInputs">
+                    <!-- Les inputs seront générés dynamiquement par le controller JS -->
+                  </div>
+                </div>
+
+              <% when 'scale' %>
+                <div class="flex items-center justify-between mt-4">
+                  <% if question.options && question.options['scale_min_label'] %>
+                    <span class="text-sm text-gray-500"><%= question.options['scale_min_label'] %></span>
+                  <% end %>
+                  <div class="flex space-x-3">
                     <% question.question_options.each do |option| %>
-                      <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                      <label class="flex flex-col items-center cursor-pointer group">
                         <%= radio_button_tag "responses[#{question.id}]", option.value, false,
                             class: "h-4 w-4 text-indigo-600 border-gray-300",
                             required: question.required? %>
-                        <span class="ml-2"><%= option.text %></span>
+                        <span class="mt-1 text-sm group-hover:text-indigo-600"><%= option.text %></span>
                       </label>
                     <% end %>
                   </div>
+                  <% if question.options && question.options['scale_max_label'] %>
+                    <span class="text-sm text-gray-500"><%= question.options['scale_max_label'] %></span>
+                  <% end %>
+                </div>
 
-                <% when 'multiple_choice' %>
-                  <div class="space-y-2">
-                    <% question.question_options.each do |option| %>
-                      <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
-                        <%= check_box_tag "responses[#{question.id}][#{option.value}]", option.value, false,
-                            class: "h-4 w-4 text-indigo-600 border-gray-300 rounded" %>
-                        <span class="ml-2"><%= option.text %></span>
-                      </label>
-                    <% end %>
-                  </div>
+              <% when 'text' %>
+                <%= text_field_tag "responses[#{question.id}]", nil,
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                    placeholder: "Votre réponse",
+                    required: question.required? %>
 
-                <% when 'ranking' %>
-                  <div data-controller="ranking-question" data-ranking-question-name="responses[<%= question.id %>]">
-                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
-                      <div class="flex items-center">
-                        <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                        </svg>
-                        <p class="text-sm text-blue-700 font-medium">
-                          Glissez-déposez les éléments pour les classer par ordre de priorité
-                        </p>
-                      </div>
-                      <p class="text-xs text-blue-600 mt-1 ml-7">1er = plus important • Dernière position = moins important</p>
-                    </div>
+              <% when 'long_text' %>
+                <%= text_area_tag "responses[#{question.id}]", nil,
+                    rows: 4,
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                    placeholder: "Votre réponse",
+                    required: question.required? %>
 
-                    <div data-ranking-question-target="sortableList" class="space-y-3 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4">
-                      <% question.question_options.each_with_index do |option, index| %>
-                        <div class="ranking-item bg-white border-2 border-gray-200 rounded-lg p-4 shadow-sm"
-                             data-option-value="<%= option.value %>"
-                             data-ranking-question-target="item">
-                          <div class="flex items-center justify-between">
-                            <div class="flex items-center flex-1">
-                              <div class="ranking-grip mr-3 text-gray-400">
-                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                                </svg>
-                              </div>
-                              <span class="font-medium text-gray-800 flex-1"><%= option.text %></span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                              <span class="text-xs text-gray-500 font-medium">Position</span>
-                              <span class="ranking-number bg-indigo-500 text-white px-3 py-1 rounded-full text-sm font-bold min-w-[2rem] text-center"
-                                    data-ranking-question-target="rankNumber"><%= index + 1 %></span>
-                            </div>
-                          </div>
-                        </div>
-                      <% end %>
-                    </div>
+              <% when 'email' %>
+                <%= email_field_tag "responses[#{question.id}]", nil,
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                    placeholder: "exemple@email.com",
+                    required: question.required? %>
 
-                    <!-- Champ caché pour stocker l'ordre -->
-                    <input type="hidden"
-                           name="responses[<%= question.id %>]"
-                           data-ranking-question-target="hiddenInput"
-                           <% if question.required? %>required<% end %>>
-                  </div>
+              <% when 'phone' %>
+                <%= telephone_field_tag "responses[#{question.id}]", nil,
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                    placeholder: "06 12 34 56 78",
+                    required: question.required? %>
 
-                <% when 'scale' %>
-                  <div class="flex items-center justify-between mt-4">
-                    <% if question.options && question.options['scale_min_label'] %>
-                      <span class="text-sm text-gray-500"><%= question.options['scale_min_label'] %></span>
-                    <% end %>
-                    <div class="flex space-x-3">
-                      <% question.question_options.each do |option| %>
-                        <label class="flex flex-col items-center cursor-pointer group">
-                          <%= radio_button_tag "responses[#{question.id}]", option.value, false,
-                              class: "h-4 w-4 text-indigo-600 border-gray-300",
-                              required: question.required? %>
-                          <span class="mt-1 text-sm group-hover:text-indigo-600"><%= option.text %></span>
-                        </label>
-                      <% end %>
-                    </div>
-                    <% if question.options && question.options['scale_max_label'] %>
-                      <span class="text-sm text-gray-500"><%= question.options['scale_max_label'] %></span>
-                    <% end %>
-                  </div>
+              <% when 'date' %>
+                <%= date_field_tag "responses[#{question.id}]", nil,
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                    required: question.required? %>
 
-                <% when 'text' %>
-                  <%= text_field_tag "responses[#{question.id}]", nil,
-                      class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
-                      placeholder: "Votre réponse",
-                      required: question.required? %>
+              <% when 'numeric' %>
+                <%= number_field_tag "responses[#{question.id}]", nil,
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                    placeholder: "0",
+                    required: question.required? %>
 
-                <% when 'long_text' %>
-                  <%= text_area_tag "responses[#{question.id}]", nil,
-                      rows: 4,
-                      class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
-                      placeholder: "Votre réponse",
-                      required: question.required? %>
+              <% when 'commune_location' %>
+                <%= render 'commune_location_question', question: question %>
 
-                <% when 'email' %>
-                  <%= email_field_tag "responses[#{question.id}]", nil,
-                      class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
-                      placeholder: "exemple@email.com",
-                      required: question.required? %>
+              <% when 'weekly_schedule' %>
+                <%= render 'weekly_schedule_question', question: question %>
 
-                <% when 'phone' %>
-                  <%= telephone_field_tag "responses[#{question.id}]", nil,
-                      class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
-                      placeholder: "06 12 34 56 78",
-                      required: question.required? %>
-
-                <% when 'date' %>
-                  <%= date_field_tag "responses[#{question.id}]", nil,
-                      class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
-                      required: question.required? %>
-
-                <% when 'numeric' %>
-                  <%= number_field_tag "responses[#{question.id}]", nil,
-                      class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
-                      placeholder: "0",
-                      required: question.required? %>
-
-                <% when 'commune_location' %>
-                  <%= render 'commune_location_question', question: question %>
-
-                <% when 'weekly_schedule' %>
-                  <%= render 'weekly_schedule_question', question: question %>
-
-                <% when 'yes_no' %>
-                  <div class="flex space-x-4">
-                    <label class="flex items-center">
-                      <%= radio_button_tag "responses[#{question.id}]", "yes", false,
-                          class: "h-4 w-4 text-indigo-600 border-gray-300",
-                          required: question.required? %>
-                      <span class="ml-2">Oui</span>
-                    </label>
-                    <label class="flex items-center">
-                      <%= radio_button_tag "responses[#{question.id}]", "no", false,
-                          class: "h-4 w-4 text-indigo-600 border-gray-300",
-                          required: question.required? %>
-                      <span class="ml-2">Non</span>
-                    </label>
-                  </div>
-                <% end %>
-              </div>
+              <% when 'yes_no' %>
+                <div class="flex space-x-4">
+                  <label class="flex items-center">
+                    <%= radio_button_tag "responses[#{question.id}]", "yes", false,
+                        class: "h-4 w-4 text-indigo-600 border-gray-300",
+                        required: question.required? %>
+                    <span class="ml-2">Oui</span>
+                  </label>
+                  <label class="flex items-center">
+                    <%= radio_button_tag "responses[#{question.id}]", "no", false,
+                        class: "h-4 w-4 text-indigo-600 border-gray-300",
+                        required: question.required? %>
+                    <span class="ml-2">Non</span>
+                  </label>
+                </div>
+              <% end %>
             </div>
-          <% end %>
-        </div>
+          </div>
+        <% end %>
+      </div>
 
-        <!-- Navigation -->
-        <div class="mt-8 flex justify-between">
-          <% if current_section_index > 0 %>
-            <% prev_section = @sections[current_section_index - 1] %>
-            <%= link_to public_survey_path(@user_survey.public_token, section: prev_section.id),
-                class: "px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
-              ← Précédent
-            <% end %>
-          <% else %>
-            <div></div>
+      <!-- Navigation -->
+      <div class="mt-8 flex justify-between">
+        <% if @current_section_index > 0 %>
+          <% prev_section = @sections[@current_section_index - 1] %>
+          <%= link_to public_survey_path(@user_survey.public_token, section: prev_section.id),
+              class: "px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50" do %>
+            ← Précédent
           <% end %>
+        <% else %>
+          <div></div>
+        <% end %>
 
-          <% if current_section_index < @sections.count - 1 %>
-            <%= form.submit "Suivant →", class: "px-6 py-2 border border-transparent rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
-          <% else %>
-            <%= form.submit "Terminer", class: "px-6 py-2 border border-transparent rounded-md text-white bg-green-600 hover:bg-green-700" %>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
+        <% if @current_section_index < @sections.count - 1 %>
+          <%= form.submit "Suivant →", class: "px-6 py-2 border border-transparent rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+        <% else %>
+          <%= form.submit "Terminer", class: "px-6 py-2 border border-transparent rounded-md text-white bg-green-600 hover:bg-green-700" %>
+        <% end %>
+      </div>
+    <% end %>
 
     <!-- Footer -->
     <div class="mt-6 text-center text-sm text-gray-500">

@@ -307,194 +307,214 @@ class UserSurveysController < ApplicationController
   end
 
   def calculate_statistics
-    # IMPORTANT: Ne récupérer que les réponses de CETTE user_survey spécifique
-    responses = @user_survey.survey_responses.completed
-    stats = {}
+      # IMPORTANT: Ne récupérer que les réponses de CETTE user_survey spécifique
+      responses = @user_survey.survey_responses.completed
+      stats = {}
 
-    @user_survey.survey.questions.each do |question|
-      # Récupérer les question_responses liées aux survey_responses de cette user_survey uniquement
-      question_responses = QuestionResponse.joins(:survey_response)
-                                          .where(survey_responses: {
-                                            id: responses.pluck(:id),
-                                            completed: true
-                                          })
-                                          .where(question: question)
+      @user_survey.survey.questions.each do |question|
+        # Récupérer les question_responses liées aux survey_responses de cette user_survey uniquement
+        question_responses = QuestionResponse.joins(:survey_response)
+                                            .where(survey_responses: {
+                                              id: responses.pluck(:id),
+                                              completed: true
+                                            })
+                                            .where(question: question)
 
-      case question.question_type
-      when 'commune_location'
-        commune_stats = {}
-        other_communes_detail = {} # Pour garder le détail des noms
-        other_communes_count = 0   # Pour compter toutes les "autres"
+        case question.question_type
+        when 'commune_location'
+          commune_stats = {}
+          other_communes_detail = {} # Pour garder le détail des noms
+          other_communes_count = 0   # Pour compter toutes les "autres"
 
-        question_responses.each do |qr|
-          if qr.answer_data.present? && qr.answer_data.is_a?(Hash)
-            data = qr.answer_data
-            if data['type'] == 'commune'
-              # C'est une commune connue du territoire
-              key = data['commune_name'] || data['commune_code']
-              commune_stats[key] ||= 0
-              commune_stats[key] += 1
-            elsif data['type'] == 'other'
-              # C'est une autre commune - on compte dans le total "autres"
-              other_communes_count += 1
+          question_responses.each do |qr|
+            if qr.answer_data.present? && qr.answer_data.is_a?(Hash)
+              data = qr.answer_data
+              if data['type'] == 'commune'
+                # C'est une commune connue du territoire
+                key = data['commune_name'] || data['commune_code']
+                commune_stats[key] ||= 0
+                commune_stats[key] += 1
+              elsif data['type'] == 'other'
+                # C'est une autre commune - on compte dans le total "autres"
+                other_communes_count += 1
 
-              # Et on garde le détail si le nom est renseigné
-              if data['commune_name'].present?
-                other_communes_detail[data['commune_name']] ||= 0
-                other_communes_detail[data['commune_name']] += 1
-              else
-                # Commune autre sans nom précisé
+                # Et on garde le détail si le nom est renseigné
+                if data['commune_name'].present?
+                  other_communes_detail[data['commune_name']] ||= 0
+                  other_communes_detail[data['commune_name']] += 1
+                else
+                  # Commune autre sans nom précisé
+                  other_communes_detail['Non précisé'] ||= 0
+                  other_communes_detail['Non précisé'] += 1
+                end
+              end
+            elsif qr.answer_text.present?
+              # Fallback pour les anciennes données
+              if qr.answer_text == 'other'
+                other_communes_count += 1
                 other_communes_detail['Non précisé'] ||= 0
                 other_communes_detail['Non précisé'] += 1
-              end
-            end
-          elsif qr.answer_text.present?
-            # Fallback pour les anciennes données
-            if qr.answer_text == 'other'
-              other_communes_count += 1
-              other_communes_detail['Non précisé'] ||= 0
-              other_communes_detail['Non précisé'] += 1
-            else
-              # C'est probablement un code INSEE, essayer de trouver la commune
-              territory = Territory.find_by(codgeo: qr.answer_text)
-              key = territory&.libgeo || qr.answer_text
-              commune_stats[key] ||= 0
-              commune_stats[key] += 1
-            end
-          end
-        end
-
-        # Ajouter le total des autres communes comme une seule entrée
-        if other_communes_count > 0
-          commune_stats['Autres communes'] = other_communes_count
-        end
-
-        # Ajouter les détails des autres communes dans une clé spéciale
-        if other_communes_detail.any?
-          commune_stats['_autres_detail'] = other_communes_detail
-        end
-
-        stats[question.id] = commune_stats
-
-      when 'single_choice', 'yes_no'
-        stats[question.id] = question_responses.where.not(answer_text: [nil, ''])
-                                              .group(:answer_text)
-                                              .count
-
-      when 'ranking'
-        # Récupérer toutes les réponses de ranking
-        raw_rankings = question_responses.pluck(:answer_data)
-                                        .compact
-                                        .select { |data| data.is_a?(Array) }
-
-        # Parser correctement les données (gestion du double-encodage JSON)
-        all_rankings = []
-        raw_rankings.each do |raw_ranking|
-          if raw_ranking.is_a?(Array) && raw_ranking.length == 1 && raw_ranking[0].is_a?(String)
-            # Cas de double-encodage JSON : ["[\"option1\",\"option2\"]"]
-            begin
-              parsed_ranking = JSON.parse(raw_ranking[0])
-              all_rankings << parsed_ranking if parsed_ranking.is_a?(Array)
-            rescue JSON::ParserError
-              Rails.logger.warn "Erreur parsing JSON pour ranking: #{raw_ranking[0]}"
-            end
-          elsif raw_ranking.is_a?(Array) && raw_ranking.all? { |item| item.is_a?(String) }
-            # Cas normal : ["option1", "option2"]
-            all_rankings << raw_ranking
-          end
-        end
-
-        if all_rankings.any?
-          # Calculer le score moyen pour chaque option
-          option_scores = {}
-          option_counts = {}
-
-          question.question_options.each do |option|
-            option_scores[option.value] = []
-            option_counts[option.value] = 0
-          end
-
-          all_rankings.each do |ranking|
-            ranking.each_with_index do |option_value, index|
-              position = index + 1 # Position 1 = meilleur rang
-
-              if option_scores.key?(option_value)
-                option_scores[option_value] << position
-                option_counts[option_value] += 1
+              else
+                # C'est probablement un code INSEE, essayer de trouver la commune
+                territory = Territory.find_by(codgeo: qr.answer_text)
+                key = territory&.libgeo || qr.answer_text
+                commune_stats[key] ||= 0
+                commune_stats[key] += 1
               end
             end
           end
 
-          # Calculer les moyennes
-          average_rankings = {}
-          option_scores.each do |option_value, positions|
-            if positions.any?
-              average_rankings[option_value] = positions.sum.to_f / positions.count
+          # Ajouter le total des autres communes comme une seule entrée
+          if other_communes_count > 0
+            commune_stats['Autres communes'] = other_communes_count
+          end
+
+          # Ajouter les détails des autres communes dans une clé spéciale
+          if other_communes_detail.any?
+            commune_stats['_autres_detail'] = other_communes_detail
+          end
+
+          stats[question.id] = commune_stats
+
+        when 'single_choice', 'yes_no'
+          answer_counts = Hash.new(0)
+
+          question_responses.where.not(answer_text: [nil, '']).each do |qr|
+            if qr.answer_text == 'other' && qr.answer_data.is_a?(Hash) && qr.answer_data['type'] == 'other'
+              # C'est une réponse "autre" avec données structurées
+              answer_counts['other'] += 1
             else
-              average_rankings[option_value] = 999
+              # Réponse normale
+              answer_counts[qr.answer_text] += 1
             end
           end
 
-          # Trier par meilleur score moyen (plus bas = mieux)
-          sorted_options = average_rankings.sort_by { |_, avg| avg }
+          stats[question.id] = answer_counts
 
-          stats[question.id] = {
-            type: 'ranking',
-            total_responses: all_rankings.count,
-            average_rankings: average_rankings,
-            sorted_options: sorted_options,
-            option_counts: option_counts
-          }
+        when 'ranking'
+          # Récupérer toutes les réponses de ranking
+          raw_rankings = question_responses.pluck(:answer_data)
+                                          .compact
+                                          .select { |data| data.is_a?(Array) }
+
+          # Parser correctement les données (gestion du double-encodage JSON)
+          all_rankings = []
+          raw_rankings.each do |raw_ranking|
+            if raw_ranking.is_a?(Array) && raw_ranking.length == 1 && raw_ranking[0].is_a?(String)
+              # Cas de double-encodage JSON : ["[\"option1\",\"option2\"]"]
+              begin
+                parsed_ranking = JSON.parse(raw_ranking[0])
+                all_rankings << parsed_ranking if parsed_ranking.is_a?(Array)
+              rescue JSON::ParserError
+                Rails.logger.warn "Erreur parsing JSON pour ranking: #{raw_ranking[0]}"
+              end
+            elsif raw_ranking.is_a?(Array) && raw_ranking.all? { |item| item.is_a?(String) }
+              # Cas normal : ["option1", "option2"]
+              all_rankings << raw_ranking
+            end
+          end
+
+          if all_rankings.any?
+            # Calculer le score moyen pour chaque option
+            option_scores = {}
+            option_counts = {}
+
+            question.question_options.each do |option|
+              option_scores[option.value] = []
+              option_counts[option.value] = 0
+            end
+
+            all_rankings.each do |ranking|
+              ranking.each_with_index do |option_value, index|
+                position = index + 1 # Position 1 = meilleur rang
+
+                if option_scores.key?(option_value)
+                  option_scores[option_value] << position
+                  option_counts[option_value] += 1
+                end
+              end
+            end
+
+            # Calculer les moyennes
+            average_rankings = {}
+            option_scores.each do |option_value, positions|
+              if positions.any?
+                average_rankings[option_value] = positions.sum.to_f / positions.count
+              else
+                average_rankings[option_value] = 999
+              end
+            end
+
+            # Trier par meilleur score moyen (plus bas = mieux)
+            sorted_options = average_rankings.sort_by { |_, avg| avg }
+
+            stats[question.id] = {
+              type: 'ranking',
+              total_responses: all_rankings.count,
+              average_rankings: average_rankings,
+              sorted_options: sorted_options,
+              option_counts: option_counts
+            }
+          else
+            stats[question.id] = { type: 'ranking', total_responses: 0 }
+          end
+
+        when 'multiple_choice'
+          answer_counts = Hash.new(0)
+
+          question_responses.each do |qr|
+            next unless qr.answer_data.is_a?(Array)
+
+            qr.answer_data.each do |answer_item|
+              if answer_item.is_a?(Hash) && answer_item['type'] == 'other'
+                # C'est une réponse "autre"
+                answer_counts['other'] += 1
+              elsif answer_item.is_a?(String)
+                # Réponse normale
+                answer_counts[answer_item] += 1
+              end
+            end
+          end
+
+          stats[question.id] = answer_counts
+
+        when 'weekly_schedule'
+          all_answers = question_responses.pluck(:answer_data)
+          answer_counts = Hash.new(0)
+          all_answers.each do |answers_array|
+            next unless answers_array.is_a?(Array)
+            answers_array.each { |answer| answer_counts[answer] += 1 }
+          end
+          stats[question.id] = answer_counts
+
+        when 'scale', 'numeric'
+          values = question_responses.where.not(answer_text: [nil, ''])
+                                    .pluck(:answer_text)
+                                    .map(&:to_f)
+                                    .reject(&:zero?)
+          if values.any?
+            stats[question.id] = {
+              average: (values.sum / values.count.to_f).round(2),
+              min: values.min,
+              max: values.max,
+              count: values.count,
+              distribution: values.group_by(&:itself).transform_values(&:count)
+            }
+          end
+
         else
-          stats[question.id] = { type: 'ranking', total_responses: 0 }
-        end
-
-      when 'multiple_choice'
-        all_answers = question_responses.pluck(:answer_data)
-        answer_counts = Hash.new(0)
-        all_answers.each do |answers_array|
-          next unless answers_array.is_a?(Array)
-          answers_array.each { |answer| answer_counts[answer] += 1 }
-        end
-        stats[question.id] = answer_counts
-
-      when 'weekly_schedule'
-        all_answers = question_responses.pluck(:answer_data)
-        answer_counts = Hash.new(0)
-        all_answers.each do |answers_array|
-          next unless answers_array.is_a?(Array)
-          answers_array.each { |answer| answer_counts[answer] += 1 }
-        end
-        stats[question.id] = answer_counts
-
-      when 'scale', 'numeric'
-        values = question_responses.where.not(answer_text: [nil, ''])
-                                  .pluck(:answer_text)
-                                  .map(&:to_f)
-                                  .reject(&:zero?)
-        if values.any?
+          # Questions texte
           stats[question.id] = {
-            average: (values.sum / values.count.to_f).round(2),
-            min: values.min,
-            max: values.max,
-            count: values.count,
-            distribution: values.group_by(&:itself).transform_values(&:count)
+            total_responses: question_responses.where.not(answer_text: [nil, '']).count,
+            sample_responses: question_responses.where.not(answer_text: [nil, ''])
+                                              .limit(5)
+                                              .pluck(:answer_text)
           }
         end
-
-      else
-        # Questions texte
-        stats[question.id] = {
-          total_responses: question_responses.where.not(answer_text: [nil, '']).count,
-          sample_responses: question_responses.where.not(answer_text: [nil, ''])
-                                            .limit(5)
-                                            .pluck(:answer_text)
-        }
       end
-    end
 
-    stats
-  end
+      stats
+    end
 
   def position_to_french(position)
     case position
@@ -524,6 +544,15 @@ class UserSurveysController < ApplicationController
         when 'commune_location'
           headers << q.title
           headers << "Nom des autres communes"
+        when 'single_choice', 'multiple_choice'
+          if q.has_other_option?
+            # Questions avec option "autre" : deux colonnes
+            headers << "#{q.title}"
+            headers << "#{q.title} - Texte autre"
+          else
+            # Questions normales : une seule colonne
+            headers << q.title
+          end
         else
           headers << q.title
         end
@@ -591,6 +620,35 @@ class UserSurveysController < ApplicationController
               row << ''
             end
 
+          when 'single_choice'
+            if question.has_other_option?
+              # Question avec option "autre"
+              if answer&.has_other_response?
+                row << "Autre"
+                row << (answer.other_text || '')
+              else
+                # Réponse normale
+                row << (answer&.formatted_answer || '')
+                row << ''
+              end
+            else
+              # Question normale sans option "autre"
+              row << (answer&.formatted_answer || '')
+            end
+
+          when 'multiple_choice'
+            if question.has_other_option?
+              # Question avec option "autre"
+              normal_answers = answer&.normal_answers || []
+              other_text = answer&.other_text
+
+              row << normal_answers.join(', ')
+              row << (other_text || '')
+            else
+              # Question normale sans option "autre"
+              row << (answer&.formatted_answer || '')
+            end
+
           when 'weekly_schedule'
             # Code existant pour weekly_schedule
             if answer&.answer_data&.is_a?(Array) && answer.answer_data.any?
@@ -614,4 +672,5 @@ class UserSurveysController < ApplicationController
       end
     end
   end
+
 end

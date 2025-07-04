@@ -7,6 +7,17 @@ class PublicSurveysController < ApplicationController
     @survey = @user_survey.survey
     @sections = @survey.survey_sections.includes(questions: :question_options)
 
+    # Déterminer la section courante
+    if params[:section].present?
+      @current_section = @sections.find { |s| s.id.to_s == params[:section] }
+      @current_section ||= @sections.first # Fallback si section non trouvée
+    else
+      @current_section = @sections.first
+    end
+
+    # Calculer l'index de la section courante
+    @current_section_index = @sections.index(@current_section) || 0
+
     # Créer ou récupérer la réponse en cours
     @survey_response = find_or_create_response
   end
@@ -33,7 +44,11 @@ class PublicSurveysController < ApplicationController
     else
       @survey = @user_survey.survey
       @sections = @survey.survey_sections.includes(questions: :question_options)
+
+      # Recalculer les variables pour le rendu en cas d'erreur
       @current_section = section
+      @current_section_index = @sections.index(@current_section) || 0
+
       render :show, status: :unprocessable_entity
     end
   end
@@ -93,6 +108,21 @@ class PublicSurveysController < ApplicationController
         end
       end
 
+      # Gérer les questions avec option "autre" (single_choice et multiple_choice)
+      if question.supports_other_option? && question.has_other_option?
+        other_text_key = "#{question.id}_other_text"
+        other_text = params[:responses][other_text_key]
+
+        # Vérifier si "other" est sélectionné mais sans texte
+        if question.single_choice? && response_value == 'other' && other_text.blank? && question.required?
+          errors << "Veuillez préciser votre réponse pour '#{question.title}'"
+          next
+        elsif question.multiple_choice? && response_value.is_a?(Array) && response_value.include?('other') && other_text.blank? && question.required?
+          errors << "Veuillez préciser votre réponse pour '#{question.title}'"
+          next
+        end
+      end
+
       # Vérifier si la question est obligatoire
       if question.required? && response_value.blank?
         errors << "La question '#{question.title}' est obligatoire"
@@ -106,8 +136,39 @@ class PublicSurveysController < ApplicationController
                                         .find_or_initialize_by(question: question)
 
       case question.question_type
-      when 'multiple_choice', 'weekly_schedule'  # AJOUTER weekly_schedule ici
-        # Pour weekly_schedule et multiple_choice, traiter de la même façon
+      when 'single_choice'
+        if question.has_other_option? && response_value == 'other'
+          other_text = params[:responses]["#{question.id}_other_text"]
+          question_response.answer_text = 'other'
+          question_response.answer_data = {
+            'type' => 'other',
+            'text' => other_text
+          }
+        else
+          question_response.answer_text = response_value
+          question_response.answer_data = nil
+        end
+      when 'multiple_choice'
+        clean_values = response_value.is_a?(Array) ? response_value.select(&:present?) : [response_value].compact
+
+        if question.has_other_option? && clean_values.include?('other')
+          other_text = params[:responses]["#{question.id}_other_text"]
+          # Traiter les réponses en remplaçant 'other' par l'objet avec le texte
+          processed_values = clean_values.map do |value|
+            if value == 'other'
+              { 'type' => 'other', 'text' => other_text }
+            else
+              value
+            end
+          end
+          question_response.answer_data = processed_values
+          question_response.answer_text = processed_values.map { |v| v.is_a?(Hash) ? 'other' : v }.join(', ')
+        else
+          question_response.answer_data = clean_values
+          question_response.answer_text = clean_values.join(', ')
+        end
+      when 'weekly_schedule'
+        # Pour weekly_schedule, traiter de la même façon que multiple_choice (sans option autre)
         clean_values = response_value.is_a?(Array) ? response_value.select(&:present?) : [response_value].compact
         question_response.answer_data = clean_values
         question_response.answer_text = clean_values.join(', ')

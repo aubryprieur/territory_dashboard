@@ -16,17 +16,16 @@ class Admin::QuestionsController < ApplicationController
   def create
     @question = @section.questions.build(question_params)
 
-    # Traiter les options pour les questions à échelle
-    if @question.question_type == 'scale'
+    # Traiter les options selon le type de question
+    case @question.question_type
+    when 'scale'
       process_scale_options
-    end
-
-    if @question.question_type == 'commune_location'
+    when 'commune_location'
       process_commune_location_options
-    end
-
-    if @question.question_type == 'weekly_schedule'
+    when 'weekly_schedule'
       process_weekly_schedule_options
+    when 'single_choice', 'multiple_choice'
+      process_choice_options
     end
 
     if @question.save
@@ -44,13 +43,16 @@ class Admin::QuestionsController < ApplicationController
   end
 
   def update
-    # Traiter les options pour les questions à échelle
-    if question_params[:question_type] == 'scale'
+    # Traiter les options selon le type de question
+    case question_params[:question_type]
+    when 'scale'
       process_scale_options
-    elsif question_params[:question_type] == 'commune_location'
+    when 'commune_location'
       process_commune_location_options
-    elsif question_params[:question_type] == 'weekly_schedule'
+    when 'weekly_schedule'
       process_weekly_schedule_options
+    when 'single_choice', 'multiple_choice'
+      process_choice_options
     end
 
     if @question.update(question_params)
@@ -77,13 +79,27 @@ class Admin::QuestionsController < ApplicationController
   end
 
   def question_params
-    params.require(:question).permit(:title, :description, :question_type, :required,
-                                    question_options_attributes: [:id, :text, :value, :position, :_destroy])
+    params.require(:question).permit(
+      :title, :description, :question_type, :required,
+      question_options_attributes: [:id, :text, :value, :position, :_destroy]
+    )
   end
 
   def check_survey_not_published
     if @survey.published?
       redirect_to admin_survey_path(@survey), alert: "Cette enquête est publiée et ne peut plus être modifiée."
+    end
+  end
+
+  def process_choice_options
+    # Gérer l'option "autre" pour les questions de choix
+    if params[:has_other_option] == '1'
+      @question.options ||= {}
+      @question.options['has_other_option'] = true
+      @question.options['other_text_label'] = params[:other_text_label].presence || 'Autre (précisez)'
+    else
+      @question.options&.delete('has_other_option')
+      @question.options&.delete('other_text_label')
     end
   end
 

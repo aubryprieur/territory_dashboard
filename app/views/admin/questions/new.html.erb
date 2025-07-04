@@ -1,4 +1,3 @@
-<!-- app/views/admin/questions/new.html.erb -->
 <div class="py-6">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center mb-6">
@@ -83,7 +82,7 @@
                 } %>
               </div>
 
-              <%= render 'commune_location_info' if defined?(render) %>
+              <%= render 'commune_location_info' if defined?(@question) %>
 
               <%= render 'weekly_schedule_config' %>
 
@@ -141,6 +140,34 @@
               </svg>
               Ajouter une option
             </button>
+
+            <!-- Option "Autre" pour les questions de choix -->
+            <div data-question-form-target="otherOptionContainer" class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h4 class="font-medium text-gray-900 mb-3">Option "Autre"</h4>
+
+              <div class="flex items-center mb-3">
+                <%= check_box_tag :has_other_option, '1',
+                    @question.has_other_option?,
+                    class: "h-4 w-4 text-indigo-600 border-gray-300 rounded",
+                    data: {
+                      question_form_target: "otherOptionToggle",
+                      action: "change->question-form#toggleOtherOption"
+                    } %>
+                <%= label_tag :has_other_option, "Ajouter une option 'Autre' avec champ texte",
+                    class: "ml-2 text-sm text-gray-700" %>
+              </div>
+
+              <div data-question-form-target="otherTextLabelContainer"
+                   style="<%= @question.has_other_option? ? 'display: block;' : 'display: none;' %>">
+                <%= label_tag :other_text_label, "Libellé de l'option autre",
+                    class: "block text-sm font-medium text-gray-700 mb-1" %>
+                <%= text_field_tag :other_text_label,
+                    @question.options&.dig('other_text_label') || 'Autre (précisez)',
+                    class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+                    data: { action: "input->question-form#updatePreview" } %>
+                <p class="mt-1 text-xs text-gray-500">Ce texte apparaîtra comme option dans le questionnaire</p>
+              </div>
+            </div>
           </div>
 
           <!-- Configuration pour les échelles -->
@@ -151,23 +178,28 @@
               <div>
                 <label class="block text-sm font-medium text-gray-700">Valeur minimum</label>
                 <input type="number"
-                       id="scale_min"
+                       name="scale_min"
                        value="1"
+                       min="0"
                        class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                        data-action="input->question-form#updatePreview">
               </div>
+
               <div>
                 <label class="block text-sm font-medium text-gray-700">Valeur maximum</label>
                 <input type="number"
-                       id="scale_max"
+                       name="scale_max"
                        value="5"
+                       min="1"
+                       max="20"
                        class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                        data-action="input->question-form#updatePreview">
               </div>
+
               <div>
                 <label class="block text-sm font-medium text-gray-700">Pas</label>
                 <input type="number"
-                       id="scale_step"
+                       name="scale_step"
                        value="1"
                        min="1"
                        class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -177,18 +209,19 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700">Label minimum (optionnel)</label>
+                <label class="block text-sm font-medium text-gray-700">Libellé minimum (optionnel)</label>
                 <input type="text"
-                       id="scale_min_label"
-                       placeholder="ex: Pas du tout d'accord"
+                       name="scale_min_label"
+                       placeholder="Ex: Très insatisfait"
                        class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                        data-action="input->question-form#updatePreview">
               </div>
+
               <div>
-                <label class="block text-sm font-medium text-gray-700">Label maximum (optionnel)</label>
+                <label class="block text-sm font-medium text-gray-700">Libellé maximum (optionnel)</label>
                 <input type="text"
-                       id="scale_max_label"
-                       placeholder="ex: Tout à fait d'accord"
+                       name="scale_max_label"
+                       placeholder="Ex: Très satisfait"
                        class="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                        data-action="input->question-form#updatePreview">
               </div>
@@ -196,9 +229,9 @@
           </div>
 
           <div class="flex justify-end space-x-3">
-            <%= link_to "Annuler", admin_survey_path(@survey), class: "py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
-            <%= form.submit "Créer et ajouter une autre", name: "commit", class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700" %>
-            <%= form.submit "Créer la question", class: "py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700" %>
+            <%= link_to "Annuler", admin_survey_path(@survey), class: "py-2 px-4 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+            <%= form.submit "Créer et ajouter une autre", name: "commit", class: "py-2 px-4 bg-indigo-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700" %>
+            <%= form.submit "Créer la question", class: "py-2 px-4 bg-green-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-green-700" %>
           </div>
         <% end %>
       </div>

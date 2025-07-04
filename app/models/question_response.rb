@@ -25,7 +25,30 @@ class QuestionResponse < ApplicationRecord
 
   def answer=(value)
     case question.question_type
-    when 'multiple_choice', 'ranking'
+    when 'single_choice'
+      if value.is_a?(Hash) && value['type'] == 'other'
+        self.answer_data = value
+        self.answer_text = 'other'
+      else
+        self.answer_text = value.to_s
+        self.answer_data = nil
+      end
+    when 'multiple_choice'
+      processed_values = []
+
+      if value.is_a?(Array)
+        value.each do |v|
+          if v.is_a?(Hash) && v['type'] == 'other'
+            processed_values << v
+          else
+            processed_values << v
+          end
+        end
+      end
+
+      self.answer_data = processed_values
+      self.answer_text = processed_values.map { |v| v.is_a?(Hash) ? 'other' : v }.join(', ')
+    when 'ranking'
       self.answer_data = value.is_a?(Array) ? value : [value].compact
       self.answer_text = answer_data.join(', ')
     else
@@ -51,9 +74,14 @@ class QuestionResponse < ApplicationRecord
       if question.question_type == 'yes_no'
         answer_text == 'yes' ? 'Oui' : 'Non'
       else
-        # Trouver l'option correspondante pour afficher le texte
-        option = question.question_options.find { |opt| opt.value == answer_text }
-        option&.text || answer_text
+        # Vérifier si c'est une réponse "autre"
+        if answer_data.is_a?(Hash) && answer_data['type'] == 'other'
+          "Autre : #{answer_data['text']}"
+        else
+          # Trouver l'option correspondante pour afficher le texte
+          option = question.question_options.find { |opt| opt.value == answer_text }
+          option&.text || answer_text
+        end
       end
     when 'ranking'
       if answer_data.is_a?(Array) && answer_data.any?
@@ -68,8 +96,12 @@ class QuestionResponse < ApplicationRecord
     when 'multiple_choice'
       if answer_data.is_a?(Array)
         answer_data.map do |value|
-          option = question.question_options.find { |opt| opt.value == value }
-          option&.text || value
+          if value.is_a?(Hash) && value['type'] == 'other'
+            "Autre : #{value['text']}"
+          else
+            option = question.question_options.find { |opt| opt.value == value }
+            option&.text || value
+          end
         end.join(', ')
       else
         ''
@@ -94,6 +126,63 @@ class QuestionResponse < ApplicationRecord
       answer_text
     else
       answer_text
+    end
+  end
+
+  # Méthode pour récupérer le texte de l'option "autre" (pour l'export CSV)
+  def other_text
+    case question.question_type
+    when 'single_choice'
+      if answer_data.is_a?(Hash) && answer_data['type'] == 'other'
+        answer_data['text']
+      else
+        nil
+      end
+    when 'multiple_choice'
+      if answer_data.is_a?(Array)
+        other_responses = answer_data.select { |v| v.is_a?(Hash) && v['type'] == 'other' }
+        other_responses.map { |r| r['text'] }.join(', ') if other_responses.any?
+      else
+        nil
+      end
+    else
+      nil
+    end
+  end
+
+  # Méthode pour vérifier si la réponse contient une option "autre"
+  def has_other_response?
+    case question.question_type
+    when 'single_choice'
+      answer_data.is_a?(Hash) && answer_data['type'] == 'other'
+    when 'multiple_choice'
+      answer_data.is_a?(Array) && answer_data.any? { |v| v.is_a?(Hash) && v['type'] == 'other' }
+    else
+      false
+    end
+  end
+
+  # Méthode pour récupérer les réponses normales (sans les "autre")
+  def normal_answers
+    case question.question_type
+    when 'single_choice'
+      if answer_data.is_a?(Hash) && answer_data['type'] == 'other'
+        []
+      else
+        [answer_text]
+      end
+    when 'multiple_choice'
+      if answer_data.is_a?(Array)
+        normal_responses = answer_data.select { |v| !v.is_a?(Hash) || v['type'] != 'other' }
+        normal_responses.map do |value|
+          option = question.question_options.find { |opt| opt.value == value }
+          option&.text || value
+        end
+      else
+        []
+      end
+    else
+      [formatted_answer]
     end
   end
 
