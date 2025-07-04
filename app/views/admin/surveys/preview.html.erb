@@ -86,124 +86,162 @@
                   <% end %>
                 </label>
 
-                <!-- Affichage selon le type de question -->
-                <% case question.question_type %>
-                <% when 'single_choice' %>
-                  <div class="space-y-2">
-                    <% question.question_options.each do |option| %>
-                      <label class="flex items-center">
-                        <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300">
-                        <span class="ml-2"><%= option.text %></span>
-                      </label>
-                    <% end %>
-                  </div>
+            <!-- Affichage selon le type de question -->
+            <% case question.question_type %>
+            <% when 'single_choice' %>
+              <div class="space-y-2">
+                <% question.question_options.each do |option| %>
+                  <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                    <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                    <span class="ml-2"><%= option.text %></span>
+                  </label>
+                <% end %>
 
-                <% when 'multiple_choice' %>
-                  <div class="space-y-2">
-                    <% question.question_options.each do |option| %>
-                      <label class="flex items-center">
-                        <input type="checkbox" name="question_<%= question.id %>[]" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                        <span class="ml-2"><%= option.text %></span>
-                      </label>
-                    <% end %>
-                  </div>
-
-                <% when 'ranking' %>
-                  <div class="space-y-3">
-                    <div class="bg-blue-50 p-3 rounded-md">
-                      <p class="text-sm text-blue-700">
-                        <i class="fas fa-info-circle"></i>
-                        Glissez-déposez les éléments pour les classer par ordre de priorité (prévisualisation)
-                      </p>
-                    </div>
-
-                    <div class="space-y-2 border border-gray-200 rounded-lg p-3">
-                      <% question.question_options.each_with_index do |option, index| %>
-                        <div class="bg-white border border-gray-300 rounded-lg p-3">
-                          <div class="flex items-center justify-between">
-                            <span class="font-medium"><%= option.text %></span>
-                            <div class="flex items-center space-x-2">
-                              <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-bold"><%= index + 1 %></span>
-                              <i class="fas fa-grip-vertical text-gray-400"></i>
-                            </div>
-                          </div>
-                        </div>
-                      <% end %>
-                    </div>
-                  </div>
-
-
-                <% when 'weekly_schedule' %>
-                  <%= render 'weekly_schedule_preview', question: question %>
-
-                <% when 'scale' %>
-                  <div class="flex items-center justify-between">
-                    <% if question.options && question.options['scale_min_label'] %>
-                      <span class="text-sm text-gray-500"><%= question.options['scale_min_label'] %></span>
-                    <% end %>
-                    <div class="flex space-x-3">
-                      <% question.question_options.each do |option| %>
-                        <label class="flex flex-col items-center cursor-pointer">
-                          <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300">
-                          <span class="mt-1 text-sm"><%= option.text %></span>
-                        </label>
-                      <% end %>
-                    </div>
-                    <% if question.options && question.options['scale_max_label'] %>
-                      <span class="text-sm text-gray-500"><%= question.options['scale_max_label'] %></span>
-                    <% end %>
-                  </div>
-
-                <% when 'text' %>
-                  <input type="text" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Votre réponse">
-
-                <% when 'long_text' %>
-                  <textarea name="question_<%= question.id %>" rows="4" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Votre réponse"></textarea>
-
-                <% when 'email' %>
-                  <input type="email" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="exemple@email.com">
-
-                <% when 'phone' %>
-                  <input type="tel" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="06 12 34 56 78">
-
-                <% when 'date' %>
-                  <input type="date" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-
-                <% when 'numeric' %>
-                  <input type="number" name="question_<%= question.id %>" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="0">
-
-                <% when 'yes_no' %>
-                  <div class="flex space-x-4">
-                    <label class="flex items-center">
-                      <input type="radio" name="question_<%= question.id %>" value="yes" class="h-4 w-4 text-indigo-600 border-gray-300">
-                      <span class="ml-2">Oui</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input type="radio" name="question_<%= question.id %>" value="no" class="h-4 w-4 text-indigo-600 border-gray-300">
-                      <span class="ml-2">Non</span>
-                    </label>
+                <% if question.has_other_option? %>
+                  <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                    <input type="radio" name="question_<%= question.id %>" value="other" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                    <span class="ml-2"><%= question.options&.dig('other_text_label') || 'Autre (précisez)' %></span>
+                  </label>
+                  <div class="ml-6 mt-2">
+                    <input type="text" placeholder="Veuillez préciser..." class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
                   </div>
                 <% end %>
               </div>
+
+            <% when 'multiple_choice' %>
+              <div class="space-y-2">
+                <% question.question_options.each do |option| %>
+                  <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                    <input type="checkbox" name="question_<%= question.id %>[]" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" disabled>
+                    <span class="ml-2"><%= option.text %></span>
+                  </label>
+                <% end %>
+
+                <% if question.has_other_option? %>
+                  <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                    <input type="checkbox" name="question_<%= question.id %>[]" value="other" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" disabled>
+                    <span class="ml-2"><%= question.options&.dig('other_text_label') || 'Autre (précisez)' %></span>
+                  </label>
+                  <div class="ml-6 mt-2">
+                    <input type="text" placeholder="Veuillez préciser..." class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+                  </div>
+                <% end %>
+              </div>
+
+            <% when 'ranking' %>
+              <div class="space-y-3">
+                <div class="bg-blue-50 p-3 rounded-md">
+                  <p class="text-sm text-blue-700">
+                    <i class="fas fa-info-circle"></i>
+                    Glissez-déposez les éléments pour les classer par ordre de priorité (prévisualisation)
+                  </p>
+                </div>
+
+                <div class="space-y-2 border border-gray-200 rounded-lg p-3">
+                  <% question.question_options.each_with_index do |option, index| %>
+                    <div class="bg-white border border-gray-300 rounded-lg p-3">
+                      <div class="flex items-center justify-between">
+                        <span class="font-medium"><%= option.text %></span>
+                        <div class="flex items-center space-x-2">
+                          <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-bold"><%= index + 1 %></span>
+                          <i class="fas fa-grip-vertical text-gray-400"></i>
+                        </div>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+
+            <% when 'weekly_schedule' %>
+              <%= render 'weekly_schedule_preview', question: question %>
+
+            <% when 'scale' %>
+              <div class="flex items-center justify-between">
+                <% if question.options && question.options['scale_min_label'] %>
+                  <span class="text-sm text-gray-500"><%= question.options['scale_min_label'] %></span>
+                <% end %>
+                <div class="flex space-x-3">
+                  <% question.question_options.each do |option| %>
+                    <label class="flex flex-col items-center cursor-pointer group">
+                      <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                      <span class="mt-1 text-sm group-hover:text-indigo-600"><%= option.text %></span>
+                    </label>
+                  <% end %>
+                </div>
+                <% if question.options && question.options['scale_max_label'] %>
+                  <span class="text-sm text-gray-500"><%= question.options['scale_max_label'] %></span>
+                <% end %>
+              </div>
+
+            <% when 'text' %>
+              <input type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Votre réponse" disabled>
+
+            <% when 'long_text' %>
+              <textarea rows="4" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Votre réponse" disabled></textarea>
+
+            <% when 'email' %>
+              <input type="email" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="exemple@email.com" disabled>
+
+            <% when 'phone' %>
+              <input type="tel" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="06 12 34 56 78" disabled>
+
+            <% when 'date' %>
+              <input type="date" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" disabled>
+
+            <% when 'numeric' %>
+              <input type="number" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="0" disabled>
+
+            <% when 'yes_no' %>
+              <div class="flex space-x-4">
+                <label class="flex items-center">
+                  <input type="radio" name="question_<%= question.id %>" value="yes" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                  <span class="ml-2">Oui</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="radio" name="question_<%= question.id %>" value="no" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                  <span class="ml-2">Non</span>
+                </label>
+              </div>
+
+            <% when 'commune_location' %>
+              <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" disabled>
+                <option>Sélectionnez votre commune...</option>
+                <option>Exemple Commune 1</option>
+                <option>Exemple Commune 2</option>
+                <option>Autre commune</option>
+              </select>
+
+            <% else %>
+              <p class="text-gray-500 italic">Type de question non supporté en prévisualisation</p>
             <% end %>
           </div>
         <% end %>
+      </div>
+    <% end %>
 
-        <!-- Message de fin de prévisualisation -->
-        <div class="bg-gray-50 rounded-lg p-4 text-center">
-          <p class="text-gray-600">Fin de la prévisualisation</p>
-          <% if @survey.thank_you_message.present? %>
-            <div class="mt-4 p-4 bg-green-50 rounded">
-              <p class="text-green-800"><%= @survey.thank_you_message %></p>
-            </div>
-          <% end %>
+    <!-- Message de fin -->
+    <% if @survey.thank_you_message.present? %>
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="p-4 bg-green-50 rounded-lg">
+          <h3 class="text-green-800 font-medium mb-2">Message de remerciement</h3>
+          <p class="text-green-700"><%= @survey.thank_you_message %></p>
         </div>
+      </div>
+    <% end %>
 
-        <!-- Boutons d'action -->
-        <div class="flex justify-center space-x-4 pt-6">
-          <button type="button" onclick="window.close()" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            Fermer la prévisualisation
-          </button>
+    <!-- Actions -->
+    <div class="mt-8 text-center">
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <p class="text-gray-600 mb-4">Ceci est une prévisualisation de votre enquête.</p>
+        <div class="space-x-4">
+          <%= link_to "Retour à l'édition", admin_survey_path(@survey),
+              class: "inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+          <% unless @survey.published? %>
+            <%= link_to "Publier l'enquête", publish_admin_survey_path(@survey),
+                method: :patch,
+                data: { confirm: "Êtes-vous sûr de vouloir publier cette enquête ?" },
+                class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700" %>
+          <% end %>
         </div>
       </div>
     </div>

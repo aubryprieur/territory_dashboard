@@ -11,7 +11,10 @@ export default class extends Controller {
     "description",
     "required",
     "communeLocationInfo",
-    "weeklyScheduleConfig"
+    "weeklyScheduleConfig",
+    "otherOptionContainer",
+    "otherOptionToggle",
+    "otherTextLabelContainer"
   ]
 
   connect() {
@@ -39,17 +42,27 @@ export default class extends Controller {
     switch(type) {
       case 'single_choice':
       case 'multiple_choice':
-      case 'ranking':  // ← Nouveau cas ajouté
         this.showOptionsConfig()
+        this.showOtherOptionConfig()
+        break
+      case 'ranking':
+        this.showOptionsConfig()
+        this.hideOtherOptionConfig()
         break
       case 'scale':
         this.showScaleConfig()
+        this.hideOtherOptionConfig()
         break
       case 'commune_location':
         this.showCommuneLocationConfig()
+        this.hideOtherOptionConfig()
         break
       case 'weekly_schedule':
         this.showWeeklyScheduleConfig()
+        this.hideOtherOptionConfig()
+        break
+      default:
+        this.hideOtherOptionConfig()
         break
     }
   }
@@ -88,6 +101,38 @@ export default class extends Controller {
     }
   }
 
+  showOtherOptionConfig() {
+    if (this.hasOtherOptionContainerTarget) {
+      this.otherOptionContainerTarget.classList.remove('hidden')
+    }
+  }
+
+  hideOtherOptionConfig() {
+    if (this.hasOtherOptionContainerTarget) {
+      this.otherOptionContainerTarget.classList.add('hidden')
+      // Décocher l'option autre si on change vers un type qui ne la supporte pas
+      if (this.hasOtherOptionToggleTarget) {
+        this.otherOptionToggleTarget.checked = false
+        this.toggleOtherOption()
+      }
+    }
+  }
+
+  toggleOtherOption() {
+    if (!this.hasOtherOptionToggleTarget || !this.hasOtherTextLabelContainerTarget) return
+
+    const isChecked = this.otherOptionToggleTarget.checked
+    const container = this.otherTextLabelContainerTarget
+
+    if (isChecked) {
+      container.style.display = 'block'
+    } else {
+      container.style.display = 'none'
+    }
+
+    this.updatePreview()
+  }
+
   addOption() {
     this.optionCounter++
     const timestamp = new Date().getTime()
@@ -120,9 +165,220 @@ export default class extends Controller {
     this.updatePreview()
   }
 
-  // Méthode pour mettre à jour l'aperçu du planning hebdomadaire
-  updateWeeklySchedulePreview() {
-    if (!this.hasWeeklyScheduleConfigTarget) return
+  updatePreview() {
+    const type = this.typeSelectTarget.value
+    const title = this.titleTarget.value || "Question sans titre"
+    const description = this.descriptionTarget.value
+    const required = this.requiredTarget.checked
+
+    let previewHTML = `
+      <div class="space-y-3">
+        <label class="block">
+          <span class="text-gray-700 font-medium">
+            ${title}
+            ${required ? '<span class="text-red-500">*</span>' : ''}
+          </span>
+          ${description ? `<p class="text-sm text-gray-500 mt-1">${description}</p>` : ''}
+        </label>
+    `
+
+    switch(type) {
+      case 'single_choice':
+        previewHTML += this.renderSingleChoicePreview()
+        break
+      case 'multiple_choice':
+        previewHTML += this.renderMultipleChoicePreview()
+        break
+      case 'scale':
+        previewHTML += this.renderScalePreview()
+        break
+      case 'text':
+        previewHTML += '<input type="text" class="mt-1 w-full rounded-md border-gray-300" placeholder="Réponse...">'
+        break
+      case 'long_text':
+        previewHTML += '<textarea rows="3" class="mt-1 w-full rounded-md border-gray-300" placeholder="Votre réponse..."></textarea>'
+        break
+      case 'email':
+        previewHTML += '<input type="email" class="mt-1 w-full rounded-md border-gray-300" placeholder="votre@email.com">'
+        break
+      case 'phone':
+        previewHTML += '<input type="tel" class="mt-1 w-full rounded-md border-gray-300" placeholder="01 23 45 67 89">'
+        break
+      case 'date':
+        previewHTML += '<input type="date" class="mt-1 w-full rounded-md border-gray-300">'
+        break
+      case 'numeric':
+        previewHTML += '<input type="number" class="mt-1 w-full rounded-md border-gray-300" placeholder="0">'
+        break
+      case 'yes_no':
+        previewHTML += `
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input type="radio" name="preview_yes_no" value="yes" class="h-4 w-4 text-indigo-600 border-gray-300">
+              <span class="ml-2">Oui</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="preview_yes_no" value="no" class="h-4 w-4 text-indigo-600 border-gray-300">
+              <span class="ml-2">Non</span>
+            </label>
+          </div>
+        `
+        break
+      case 'ranking':
+        previewHTML += this.renderRankingPreview()
+        break
+      case 'commune_location':
+        previewHTML += `
+          <select class="mt-1 w-full rounded-md border-gray-300">
+            <option>Sélectionnez votre commune...</option>
+            <option>Exemple Commune 1</option>
+            <option>Exemple Commune 2</option>
+            <option>Autre commune</option>
+          </select>
+        `
+        break
+      case 'weekly_schedule':
+        previewHTML += this.renderWeeklySchedulePreview()
+        break
+      default:
+        previewHTML += '<p class="text-gray-500 italic">Sélectionnez un type de question</p>'
+    }
+
+    previewHTML += '</div>'
+    this.previewTarget.innerHTML = previewHTML
+  }
+
+  renderSingleChoicePreview() {
+    const options = this.getOptionsFromForm()
+    const hasOther = this.hasOtherOptionToggleTarget && this.otherOptionToggleTarget.checked
+    const otherLabel = this.getOtherTextLabel()
+
+    if (options.length === 0 && !hasOther) {
+      return '<p class="text-sm text-gray-500 italic">Ajoutez des options de réponse</p>'
+    }
+
+    let html = '<div class="space-y-2">'
+
+    options.forEach(option => {
+      html += `
+        <label class="flex items-center">
+          <input type="radio" name="preview_single" class="h-4 w-4 text-indigo-600 border-gray-300">
+          <span class="ml-2">${option}</span>
+        </label>
+      `
+    })
+
+    if (hasOther) {
+      html += `
+        <label class="flex items-center">
+          <input type="radio" name="preview_single" class="h-4 w-4 text-indigo-600 border-gray-300">
+          <span class="ml-2">${otherLabel}</span>
+        </label>
+        <div class="ml-6 mt-2">
+          <input type="text" placeholder="Veuillez préciser..." class="w-full rounded-md border-gray-300 text-sm">
+        </div>
+      `
+    }
+
+    html += '</div>'
+    return html
+  }
+
+  renderMultipleChoicePreview() {
+    const options = this.getOptionsFromForm()
+    const hasOther = this.hasOtherOptionToggleTarget && this.otherOptionToggleTarget.checked
+    const otherLabel = this.getOtherTextLabel()
+
+    if (options.length === 0 && !hasOther) {
+      return '<p class="text-sm text-gray-500 italic">Ajoutez des options de réponse</p>'
+    }
+
+    let html = '<div class="space-y-2">'
+
+    options.forEach(option => {
+      html += `
+        <label class="flex items-center">
+          <input type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+          <span class="ml-2">${option}</span>
+        </label>
+      `
+    })
+
+    if (hasOther) {
+      html += `
+        <label class="flex items-center">
+          <input type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+          <span class="ml-2">${otherLabel}</span>
+        </label>
+        <div class="ml-6 mt-2">
+          <input type="text" placeholder="Veuillez préciser..." class="w-full rounded-md border-gray-300 text-sm">
+        </div>
+      `
+    }
+
+    html += '</div>'
+    return html
+  }
+
+  renderRankingPreview() {
+    const options = this.getOptionsFromForm()
+
+    if (options.length === 0) {
+      return '<p class="text-sm text-gray-500 italic">Ajoutez des options à classer</p>'
+    }
+
+    let html = '<div class="space-y-2">'
+    html += '<p class="text-sm text-blue-700 bg-blue-50 p-2 rounded">Glissez-déposez pour classer par ordre de priorité</p>'
+
+    options.forEach((option, index) => {
+      html += `
+        <div class="flex items-center p-2 bg-gray-50 rounded border">
+          <svg class="h-4 w-4 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M7 2a1 1 0 011 1v2h4V3a1 1 0 112 0v2h2a2 2 0 012 2v2H3V7a2 2 0 012-2h2V3a1 1 0 011-1z"></path>
+          </svg>
+          <span>${index + 1}. ${option}</span>
+        </div>
+      `
+    })
+
+    html += '</div>'
+    return html
+  }
+
+  renderScalePreview() {
+    // Récupérer les valeurs depuis les inputs de configuration
+    const scaleMin = document.querySelector('input[name="scale_min"]')?.value || 1
+    const scaleMax = document.querySelector('input[name="scale_max"]')?.value || 5
+    const scaleMinLabel = document.querySelector('input[name="scale_min_label"]')?.value
+    const scaleMaxLabel = document.querySelector('input[name="scale_max_label"]')?.value
+
+    let html = '<div class="space-y-3">'
+
+    if (scaleMinLabel || scaleMaxLabel) {
+      html += '<div class="flex justify-between text-sm text-gray-600">'
+      html += `<span>${scaleMinLabel || ''}</span>`
+      html += `<span>${scaleMaxLabel || ''}</span>`
+      html += '</div>'
+    }
+
+    html += '<div class="flex space-x-2">'
+    for (let i = parseInt(scaleMin); i <= parseInt(scaleMax); i++) {
+      html += `
+        <label class="flex flex-col items-center">
+          <input type="radio" name="preview_scale" value="${i}" class="h-4 w-4 text-indigo-600 border-gray-300">
+          <span class="mt-1 text-sm">${i}</span>
+        </label>
+      `
+    }
+    html += '</div></div>'
+
+    return html
+  }
+
+  renderWeeklySchedulePreview() {
+    if (!this.hasWeeklyScheduleConfigTarget) {
+      return '<p class="text-sm text-gray-500 italic">Configuration du planning non disponible</p>'
+    }
 
     const selectedDays = Array.from(this.weeklyScheduleConfigTarget.querySelectorAll('input[name="weekly_schedule_days[]"]:checked'))
       .map(input => input.value)
@@ -149,11 +405,14 @@ export default class extends Controller {
     selectedTimeSlots.forEach((timeSlot, index) => {
       const bgClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
       tableHTML += `<tr class="${bgClass}">`
-      tableHTML += `<td class="border border-gray-300 px-2 py-1 font-medium text-gray-700">${timeSlot}</td>`
+      tableHTML += `<td class="border border-gray-300 px-2 py-1 font-medium">${timeSlot}</td>`
+
       selectedDays.forEach(day => {
-        tableHTML += '<td class="border border-gray-300 px-2 py-1 text-center">'
-        tableHTML += '<input type="checkbox" class="h-3 w-3 text-indigo-600 border-gray-300 rounded" disabled>'
-        tableHTML += '</td>'
+        tableHTML += `
+          <td class="border border-gray-300 px-2 py-1 text-center">
+            <input type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+          </td>
+        `
       })
       tableHTML += '</tr>'
     })
@@ -162,184 +421,9 @@ export default class extends Controller {
     return tableHTML
   }
 
-  updatePreview() {
-    const questionTitle = this.titleTarget.value
-    const questionType = this.typeSelectTarget.value
-    const questionDescription = this.descriptionTarget.value
-    const isRequired = this.requiredTarget.checked
-
-    let previewHTML = ''
-
-    if (questionTitle) {
-      previewHTML += `<div class="mb-3">`
-      previewHTML += `<label class="block text-sm font-medium text-gray-700 mb-2">`
-      previewHTML += questionTitle
-      if (isRequired) previewHTML += '<span class="text-red-500 ml-1">*</span>'
-      previewHTML += `</label>`
-
-      if (questionDescription) {
-        previewHTML += `<p class="text-xs text-gray-500 mb-2">${questionDescription}</p>`
-      }
-
-      previewHTML += this.generatePreviewForType(questionType)
-      previewHTML += `</div>`
-    } else {
-      previewHTML = '<p class="text-gray-500 italic">Entrez un titre de question pour voir la prévisualisation</p>'
-    }
-
-    this.previewTarget.innerHTML = previewHTML
-  }
-
-  generatePreviewForType(type) {
-    switch(type) {
-      case 'single_choice':
-        return this.generateRadioOptions()
-      case 'multiple_choice':
-        return this.generateCheckboxOptions()
-      case 'ranking':  // ← Nouveau cas ajouté
-        return this.generateRankingPreview()
-      case 'scale':
-        return this.generateScalePreview()
-      case 'text':
-        return '<input type="text" class="w-full rounded-md border-gray-300" placeholder="Réponse courte" disabled>'
-      case 'long_text':
-        return '<textarea rows="3" class="w-full rounded-md border-gray-300" placeholder="Réponse longue" disabled></textarea>'
-      case 'email':
-        return '<input type="email" class="w-full rounded-md border-gray-300" placeholder="email@exemple.com" disabled>'
-      case 'phone':
-        return '<input type="tel" class="w-full rounded-md border-gray-300" placeholder="01 23 45 67 89" disabled>'
-      case 'date':
-        return '<input type="date" class="w-full rounded-md border-gray-300" disabled>'
-      case 'numeric':
-        return '<input type="number" class="w-full rounded-md border-gray-300" placeholder="123" disabled>'
-      case 'yes_no':
-        return `
-          <div class="space-y-2">
-            <label class="flex items-center">
-              <input type="radio" name="preview_yes_no" value="yes" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
-              <span class="ml-2 text-sm text-gray-700">Oui</span>
-            </label>
-            <label class="flex items-center">
-              <input type="radio" name="preview_yes_no" value="no" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
-              <span class="ml-2 text-sm text-gray-700">Non</span>
-            </label>
-          </div>
-        `
-      case 'commune_location':
-        return '<p class="text-sm text-gray-500 italic">Question sur la commune d\'habitation (configuration automatique)</p>'
-      case 'weekly_schedule':
-        return this.updateWeeklySchedulePreview()
-      default:
-        return '<p class="text-gray-500 italic">Aperçu non disponible pour ce type de question</p>'
-    }
-  }
-
-  generateRadioOptions() {
-    const options = this.getOptionsFromForm()
-    if (options.length === 0) {
-      return '<p class="text-sm text-gray-500 italic">Ajoutez des options pour voir l\'aperçu</p>'
-    }
-
-    let html = '<div class="space-y-2">'
-    options.forEach((option, index) => {
-      html += `
-        <label class="flex items-center">
-          <input type="radio" name="preview_radio" value="${index}" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
-          <span class="ml-2 text-sm text-gray-700">${option}</span>
-        </label>
-      `
-    })
-    html += '</div>'
-    return html
-  }
-
-  generateCheckboxOptions() {
-    const options = this.getOptionsFromForm()
-    if (options.length === 0) {
-      return '<p class="text-sm text-gray-500 italic">Ajoutez des options pour voir l\'aperçu</p>'
-    }
-
-    let html = '<div class="space-y-2">'
-    options.forEach((option, index) => {
-      html += `
-        <label class="flex items-center">
-          <input type="checkbox" value="${index}" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" disabled>
-          <span class="ml-2 text-sm text-gray-700">${option}</span>
-        </label>
-      `
-    })
-    html += '</div>'
-    return html
-  }
-
-  // ← Nouvelle méthode pour la prévisualisation du ranking
-  generateRankingPreview() {
-    const options = this.getOptionsFromForm()
-    if (options.length === 0) {
-      return '<p class="text-sm text-gray-500 italic">Ajoutez des options pour voir l\'aperçu du classement</p>'
-    }
-
-    let html = `
-      <div class="space-y-3">
-        <div class="bg-blue-50 p-3 rounded-md">
-          <p class="text-sm text-blue-700">
-            <i class="fas fa-info-circle"></i>
-            Glissez-déposez les éléments pour les classer par ordre de priorité
-          </p>
-        </div>
-
-        <div class="space-y-2 border border-gray-200 rounded-lg p-3">
-    `
-
-    options.forEach((option, index) => {
-      html += `
-        <div class="bg-white border border-gray-300 rounded-lg p-3 cursor-move hover:bg-gray-50 transition-colors">
-          <div class="flex items-center justify-between">
-            <span class="font-medium">${option}</span>
-            <div class="flex items-center space-x-2">
-              <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-bold">${index + 1}</span>
-              <i class="fas fa-grip-vertical text-gray-400"></i>
-            </div>
-          </div>
-        </div>
-      `
-    })
-
-    html += `
-        </div>
-      </div>
-    `
-    return html
-  }
-
-  generateScalePreview() {
-    if (!this.hasScaleSectionTarget) return ''
-
-    const minInput = this.scaleSectionTarget.querySelector('input[name="scale_min"]')
-    const maxInput = this.scaleSectionTarget.querySelector('input[name="scale_max"]')
-    const stepInput = this.scaleSectionTarget.querySelector('input[name="scale_step"]')
-
-    const min = parseInt(minInput?.value || '1')
-    const max = parseInt(maxInput?.value || '5')
-    const step = parseInt(stepInput?.value || '1')
-
-    let html = '<div class="flex items-center space-x-4">'
-    for (let i = min; i <= max; i += step) {
-      html += `
-        <label class="flex flex-col items-center">
-          <input type="radio" name="preview_scale" value="${i}" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
-          <span class="mt-1 text-sm text-gray-700">${i}</span>
-        </label>
-      `
-    }
-    html += '</div>'
-    return html
-  }
-
   getOptionsFromForm() {
     const options = []
-    const optionInputs = this.optionsContainerTarget.querySelectorAll('input[name*="[text]"]')
-    optionInputs.forEach(input => {
+    this.optionsContainerTarget.querySelectorAll('.option-field input[type="text"]').forEach(input => {
       if (input.value.trim()) {
         options.push(input.value.trim())
       }
@@ -347,10 +431,11 @@ export default class extends Controller {
     return options
   }
 
-  // Event listener pour mettre à jour l'aperçu du planning quand les checkboxes changent
-  weeklyScheduleConfigChanged() {
-    if (this.typeSelectTarget.value === 'weekly_schedule') {
-      this.updatePreview()
+  getOtherTextLabel() {
+    if (this.hasOtherTextLabelContainerTarget) {
+      const input = this.otherTextLabelContainerTarget.querySelector('input[name="other_text_label"]')
+      return input ? input.value || 'Autre (précisez)' : 'Autre (précisez)'
     }
+    return 'Autre (précisez)'
   }
 }

@@ -33,10 +33,6 @@ class Question < ApplicationRecord
     question_type == 'commune_location'
   end
 
-  def requires_options?
-    %w[single_choice multiple_choice scale commune_location].include?(question_type)
-  end
-
   def is_choice_question?
     %w[single_choice multiple_choice].include?(question_type)
   end
@@ -59,6 +55,15 @@ class Question < ApplicationRecord
 
   def ranking_question?
     question_type == 'ranking'
+  end
+
+  def has_other_option?
+    return false unless is_choice_question?
+    options&.dig('has_other_option') == true
+  end
+
+  def supports_other_option?
+    %w[single_choice multiple_choice].include?(question_type)
   end
 
   def requires_options?
