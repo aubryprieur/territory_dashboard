@@ -307,214 +307,277 @@ class UserSurveysController < ApplicationController
   end
 
   def calculate_statistics
-      # IMPORTANT: Ne récupérer que les réponses de CETTE user_survey spécifique
-      responses = @user_survey.survey_responses.completed
-      stats = {}
+    # IMPORTANT: Ne récupérer que les réponses de CETTE user_survey spécifique
+    responses = @user_survey.survey_responses.completed
+    stats = {}
 
-      @user_survey.survey.questions.each do |question|
-        # Récupérer les question_responses liées aux survey_responses de cette user_survey uniquement
-        question_responses = QuestionResponse.joins(:survey_response)
-                                            .where(survey_responses: {
-                                              id: responses.pluck(:id),
-                                              completed: true
-                                            })
-                                            .where(question: question)
+    @user_survey.survey.questions.each do |question|
+      # Récupérer les question_responses liées aux survey_responses de cette user_survey uniquement
+      question_responses = QuestionResponse.joins(:survey_response)
+                                          .where(survey_responses: {
+                                            id: responses.pluck(:id),
+                                            completed: true
+                                          })
+                                          .where(question: question)
 
-        case question.question_type
-        when 'commune_location'
-          commune_stats = {}
-          other_communes_detail = {} # Pour garder le détail des noms
-          other_communes_count = 0   # Pour compter toutes les "autres"
+      case question.question_type
+      when 'commune_location'
+        commune_stats = {}
+        other_communes_detail = {} # Pour garder le détail des noms
+        other_communes_count = 0   # Pour compter toutes les "autres"
 
-          question_responses.each do |qr|
-            if qr.answer_data.present? && qr.answer_data.is_a?(Hash)
-              data = qr.answer_data
-              if data['type'] == 'commune'
-                # C'est une commune connue du territoire
-                key = data['commune_name'] || data['commune_code']
-                commune_stats[key] ||= 0
-                commune_stats[key] += 1
-              elsif data['type'] == 'other'
-                # C'est une autre commune - on compte dans le total "autres"
-                other_communes_count += 1
+        question_responses.each do |qr|
+          if qr.answer_data.present? && qr.answer_data.is_a?(Hash)
+            data = qr.answer_data
+            if data['type'] == 'commune'
+              # C'est une commune connue du territoire
+              key = data['commune_name'] || data['commune_code']
+              commune_stats[key] ||= 0
+              commune_stats[key] += 1
+            elsif data['type'] == 'other'
+              # C'est une autre commune - on compte dans le total "autres"
+              other_communes_count += 1
 
-                # Et on garde le détail si le nom est renseigné
-                if data['commune_name'].present?
-                  other_communes_detail[data['commune_name']] ||= 0
-                  other_communes_detail[data['commune_name']] += 1
-                else
-                  # Commune autre sans nom précisé
-                  other_communes_detail['Non précisé'] ||= 0
-                  other_communes_detail['Non précisé'] += 1
-                end
-              end
-            elsif qr.answer_text.present?
-              # Fallback pour les anciennes données
-              if qr.answer_text == 'other'
-                other_communes_count += 1
+              # Et on garde le détail si le nom est renseigné
+              if data['commune_name'].present?
+                other_communes_detail[data['commune_name']] ||= 0
+                other_communes_detail[data['commune_name']] += 1
+              else
+                # Commune autre sans nom précisé
                 other_communes_detail['Non précisé'] ||= 0
                 other_communes_detail['Non précisé'] += 1
-              else
-                # C'est probablement un code INSEE, essayer de trouver la commune
-                territory = Territory.find_by(codgeo: qr.answer_text)
-                key = territory&.libgeo || qr.answer_text
-                commune_stats[key] ||= 0
-                commune_stats[key] += 1
               end
             end
-          end
-
-          # Ajouter le total des autres communes comme une seule entrée
-          if other_communes_count > 0
-            commune_stats['Autres communes'] = other_communes_count
-          end
-
-          # Ajouter les détails des autres communes dans une clé spéciale
-          if other_communes_detail.any?
-            commune_stats['_autres_detail'] = other_communes_detail
-          end
-
-          stats[question.id] = commune_stats
-
-        when 'single_choice', 'yes_no'
-          answer_counts = Hash.new(0)
-
-          question_responses.where.not(answer_text: [nil, '']).each do |qr|
-            if qr.answer_text == 'other' && qr.answer_data.is_a?(Hash) && qr.answer_data['type'] == 'other'
-              # C'est une réponse "autre" avec données structurées
-              answer_counts['other'] += 1
+          elsif qr.answer_text.present?
+            # Fallback pour les anciennes données
+            if qr.answer_text == 'other'
+              other_communes_count += 1
+              other_communes_detail['Non précisé'] ||= 0
+              other_communes_detail['Non précisé'] += 1
             else
-              # Réponse normale
-              answer_counts[qr.answer_text] += 1
+              # C'est probablement un code INSEE, essayer de trouver la commune
+              territory = Territory.find_by(codgeo: qr.answer_text)
+              key = territory&.libgeo || qr.answer_text
+              commune_stats[key] ||= 0
+              commune_stats[key] += 1
             end
           end
+        end
 
-          stats[question.id] = answer_counts
+        # Ajouter le total des autres communes comme une seule entrée
+        if other_communes_count > 0
+          commune_stats['Autres communes'] = other_communes_count
+        end
 
-        when 'ranking'
-          # Récupérer toutes les réponses de ranking
-          raw_rankings = question_responses.pluck(:answer_data)
-                                          .compact
-                                          .select { |data| data.is_a?(Array) }
+        # Ajouter les détails des autres communes dans une clé spéciale
+        if other_communes_detail.any?
+          commune_stats['_autres_detail'] = other_communes_detail
+        end
 
-          # Parser correctement les données (gestion du double-encodage JSON)
-          all_rankings = []
-          raw_rankings.each do |raw_ranking|
-            if raw_ranking.is_a?(Array) && raw_ranking.length == 1 && raw_ranking[0].is_a?(String)
-              # Cas de double-encodage JSON : ["[\"option1\",\"option2\"]"]
-              begin
-                parsed_ranking = JSON.parse(raw_ranking[0])
-                all_rankings << parsed_ranking if parsed_ranking.is_a?(Array)
-              rescue JSON::ParserError
-                Rails.logger.warn "Erreur parsing JSON pour ranking: #{raw_ranking[0]}"
+        stats[question.id] = commune_stats
+
+      when 'single_choice', 'yes_no'
+        answer_counts = Hash.new(0)
+
+        question_responses.where.not(answer_text: [nil, '']).each do |qr|
+          if qr.answer_text == 'other' && qr.answer_data.is_a?(Hash) && qr.answer_data['type'] == 'other'
+            answer_counts['other'] += 1
+          else
+            answer_counts[qr.answer_text] += 1
+          end
+        end
+
+        stats_result = answer_counts
+
+        # NOUVEAU : Ajouter les commentaires si la question les supporte
+        if question.comments_enabled?
+          comments = extract_comments_from_responses(question_responses)
+          stats_result = {
+            'answers' => answer_counts,
+            'comments' => comments,
+            'comments_count' => comments.length
+          }
+        end
+
+        stats[question.id] = stats_result
+
+      when 'ranking'
+        # Récupérer toutes les réponses de ranking
+        raw_rankings = question_responses.pluck(:answer_data)
+                                        .compact
+                                        .select { |data| data.is_a?(Array) }
+
+        # Parser correctement les données (gestion du double-encodage JSON)
+        all_rankings = []
+        raw_rankings.each do |raw_ranking|
+          if raw_ranking.is_a?(Array) && raw_ranking.length == 1 && raw_ranking[0].is_a?(String)
+            # Cas de double-encodage JSON : ["[\"option1\",\"option2\"]"]
+            begin
+              parsed_ranking = JSON.parse(raw_ranking[0])
+              all_rankings << parsed_ranking if parsed_ranking.is_a?(Array)
+            rescue JSON::ParserError
+              Rails.logger.warn "Erreur parsing JSON pour ranking: #{raw_ranking[0]}"
+            end
+          elsif raw_ranking.is_a?(Array) && raw_ranking.all? { |item| item.is_a?(String) }
+            # Cas normal : ["option1", "option2"]
+            all_rankings << raw_ranking
+          end
+        end
+
+        if all_rankings.any?
+          # Calculer le score moyen pour chaque option
+          option_scores = {}
+          option_counts = {}
+
+          question.question_options.each do |option|
+            option_scores[option.value] = []
+            option_counts[option.value] = 0
+          end
+
+          all_rankings.each do |ranking|
+            ranking.each_with_index do |option_value, index|
+              position = index + 1 # Position 1 = meilleur rang
+
+              if option_scores.key?(option_value)
+                option_scores[option_value] << position
+                option_counts[option_value] += 1
               end
-            elsif raw_ranking.is_a?(Array) && raw_ranking.all? { |item| item.is_a?(String) }
-              # Cas normal : ["option1", "option2"]
-              all_rankings << raw_ranking
             end
           end
 
-          if all_rankings.any?
-            # Calculer le score moyen pour chaque option
-            option_scores = {}
-            option_counts = {}
-
-            question.question_options.each do |option|
-              option_scores[option.value] = []
-              option_counts[option.value] = 0
+          # Calculer les moyennes
+          average_rankings = {}
+          option_scores.each do |option_value, positions|
+            if positions.any?
+              average_rankings[option_value] = positions.sum.to_f / positions.count
+            else
+              average_rankings[option_value] = 999
             end
+          end
 
-            all_rankings.each do |ranking|
-              ranking.each_with_index do |option_value, index|
-                position = index + 1 # Position 1 = meilleur rang
+          # Trier par meilleur score moyen (plus bas = mieux)
+          sorted_options = average_rankings.sort_by { |_, avg| avg }
 
-                if option_scores.key?(option_value)
-                  option_scores[option_value] << position
-                  option_counts[option_value] += 1
+          stats[question.id] = {
+            type: 'ranking',
+            total_responses: all_rankings.count,
+            average_rankings: average_rankings,
+            sorted_options: sorted_options,
+            option_counts: option_counts
+          }
+        else
+          stats[question.id] = { type: 'ranking', total_responses: 0 }
+        end
+
+      when 'multiple_choice'
+        answer_counts = Hash.new(0)
+
+        question_responses.each do |qr|
+          # CORRECTION : Gestion des nouvelles structures avec commentaires
+          if qr.answer_data.is_a?(Hash) && (qr.answer_data.key?('choices') || qr.answer_data.key?('other'))
+            # Nouvelle structure avec commentaires
+            # Traiter les choix normaux
+            if qr.answer_data['choices'].is_a?(Array)
+              qr.answer_data['choices'].each do |choice|
+                if choice.is_a?(String)
+                  answer_counts[choice] += 1
                 end
               end
             end
 
-            # Calculer les moyennes
-            average_rankings = {}
-            option_scores.each do |option_value, positions|
-              if positions.any?
-                average_rankings[option_value] = positions.sum.to_f / positions.count
-              else
-                average_rankings[option_value] = 999
-              end
+            # Traiter l'option "autre" séparée
+            if qr.answer_data['other'].is_a?(Hash) && qr.answer_data['other']['type'] == 'other'
+              answer_counts['other'] += 1
             end
-
-            # Trier par meilleur score moyen (plus bas = mieux)
-            sorted_options = average_rankings.sort_by { |_, avg| avg }
-
-            stats[question.id] = {
-              type: 'ranking',
-              total_responses: all_rankings.count,
-              average_rankings: average_rankings,
-              sorted_options: sorted_options,
-              option_counts: option_counts
-            }
-          else
-            stats[question.id] = { type: 'ranking', total_responses: 0 }
-          end
-
-        when 'multiple_choice'
-          answer_counts = Hash.new(0)
-
-          question_responses.each do |qr|
-            next unless qr.answer_data.is_a?(Array)
-
+          elsif qr.answer_data.is_a?(Array)
+            # Ancienne structure sans commentaires
             qr.answer_data.each do |answer_item|
               if answer_item.is_a?(Hash) && answer_item['type'] == 'other'
-                # C'est une réponse "autre"
                 answer_counts['other'] += 1
               elsif answer_item.is_a?(String)
-                # Réponse normale
                 answer_counts[answer_item] += 1
               end
             end
           end
+        end
 
-          stats[question.id] = answer_counts
+        stats_result = answer_counts
 
-        when 'weekly_schedule'
-          all_answers = question_responses.pluck(:answer_data)
-          answer_counts = Hash.new(0)
-          all_answers.each do |answers_array|
-            next unless answers_array.is_a?(Array)
-            answers_array.each { |answer| answer_counts[answer] += 1 }
-          end
-          stats[question.id] = answer_counts
-
-        when 'scale', 'numeric'
-          values = question_responses.where.not(answer_text: [nil, ''])
-                                    .pluck(:answer_text)
-                                    .map(&:to_f)
-                                    .reject(&:zero?)
-          if values.any?
-            stats[question.id] = {
-              average: (values.sum / values.count.to_f).round(2),
-              min: values.min,
-              max: values.max,
-              count: values.count,
-              distribution: values.group_by(&:itself).transform_values(&:count)
-            }
-          end
-
-        else
-          # Questions texte
-          stats[question.id] = {
-            total_responses: question_responses.where.not(answer_text: [nil, '']).count,
-            sample_responses: question_responses.where.not(answer_text: [nil, ''])
-                                              .limit(5)
-                                              .pluck(:answer_text)
+        # NOUVEAU : Ajouter les commentaires si la question les supporte
+        if question.comments_enabled?
+          comments = extract_comments_from_responses(question_responses)
+          stats_result = {
+            'answers' => answer_counts,
+            'comments' => comments,
+            'comments_count' => comments.length
           }
         end
+
+        stats[question.id] = stats_result
+
+      when 'weekly_schedule'
+        all_answers = question_responses.pluck(:answer_data)
+        answer_counts = Hash.new(0)
+        all_answers.each do |answers_array|
+          next unless answers_array.is_a?(Array)
+          answers_array.each { |answer| answer_counts[answer] += 1 }
+        end
+        stats[question.id] = answer_counts
+
+      when 'scale', 'numeric'
+        values = question_responses.where.not(answer_text: [nil, ''])
+                                  .pluck(:answer_text)
+                                  .map(&:to_f)
+                                  .reject(&:zero?)
+        if values.any?
+          stats[question.id] = {
+            average: (values.sum / values.count.to_f).round(2),
+            min: values.min,
+            max: values.max,
+            count: values.count,
+            distribution: values.group_by(&:itself).transform_values(&:count)
+          }
+        end
+      else
+        # Questions texte
+        total_responses_count = question_responses.where.not(answer_text: [nil, '']).count
+        sample_responses_data = question_responses.where.not(answer_text: [nil, ''])
+                                                .limit(5)
+                                                .pluck(:answer_text)
+
+        stats[question.id] = {
+          total_responses: total_responses_count,
+          sample_responses: sample_responses_data
+        }
+      end
+    end
+
+    stats
+  end
+
+  def extract_comments_from_responses(question_responses)
+    comments = []
+
+    question_responses.each do |qr|
+      next unless qr.answer_data.is_a?(Hash)
+
+      comment = case qr.question.question_type
+      when 'single_choice'
+        if qr.answer_data['type'] == 'other'
+          qr.answer_data['comment']
+        else
+          qr.answer_data['comment']
+        end
+      when 'multiple_choice'
+        # CORRECTION : Gestion améliorée pour multiple_choice
+        qr.answer_data['comment']
       end
 
-      stats
+      comments << comment if comment.present?
     end
+
+    comments
+  end
 
   def position_to_french(position)
     case position
@@ -546,12 +609,17 @@ class UserSurveysController < ApplicationController
           headers << "Nom des autres communes"
         when 'single_choice', 'multiple_choice'
           if q.has_other_option?
-            # Questions avec option "autre" : deux colonnes
+            # Questions avec option "autre" : colonnes séparées
             headers << "#{q.title}"
             headers << "#{q.title} - Texte autre"
           else
             # Questions normales : une seule colonne
             headers << q.title
+          end
+
+          # NOUVEAU : Ajouter une colonne pour les commentaires si activés
+          if q.comments_enabled?
+            headers << "#{q.title} - Commentaire"
           end
         else
           headers << q.title
@@ -636,17 +704,29 @@ class UserSurveysController < ApplicationController
               row << (answer&.formatted_answer || '')
             end
 
+            # NOUVEAU : Ajouter le commentaire si activé
+            if question.comments_enabled?
+              comment_text = extract_comment_from_answer(answer)
+              row << (comment_text || '')
+            end
+
           when 'multiple_choice'
             if question.has_other_option?
               # Question avec option "autre"
-              normal_answers = answer&.normal_answers || []
-              other_text = answer&.other_text
+              normal_answers = extract_normal_answers_from_multiple_choice(answer)
+              other_text = extract_other_text_from_multiple_choice(answer)
 
               row << normal_answers.join(', ')
               row << (other_text || '')
             else
               # Question normale sans option "autre"
               row << (answer&.formatted_answer || '')
+            end
+
+            # NOUVEAU : Ajouter le commentaire si activé
+            if question.comments_enabled?
+              comment_text = extract_comment_from_answer(answer)
+              row << (comment_text || '')
             end
 
           when 'weekly_schedule'
@@ -673,4 +753,65 @@ class UserSurveysController < ApplicationController
     end
   end
 
+  # NOUVELLE méthode pour extraire les commentaires
+  def extract_comment_from_answer(answer)
+    return nil unless answer&.answer_data.is_a?(Hash)
+
+    case answer.question.question_type
+    when 'single_choice'
+      # Pour single_choice, le commentaire peut être directement dans answer_data
+      # ou dans une structure plus complexe avec "other"
+      if answer.answer_data['type'] == 'other'
+        # Cas "autre" avec commentaire
+        answer.answer_data['comment']
+      else
+        # Cas normal avec commentaire
+        answer.answer_data['comment']
+      end
+    when 'multiple_choice'
+      # CORRECTION : Gestion simplifiée pour multiple_choice
+      answer.answer_data['comment']
+    else
+      nil
+    end
+  end
+
+  # NOUVELLE méthode pour extraire les réponses normales de multiple_choice
+  def extract_normal_answers_from_multiple_choice(answer)
+    return [] unless answer&.answer_data
+
+    if answer.answer_data.is_a?(Hash) && answer.answer_data['choices'].is_a?(Array)
+      # Nouvelle structure avec commentaires
+      answer.answer_data['choices'].map do |choice|
+        if choice.is_a?(String)
+          option = answer.question.question_options.find { |opt| opt.value == choice }
+          option&.text || choice
+        end
+      end.compact
+    elsif answer.answer_data.is_a?(Array)
+      # Ancienne structure sans commentaires
+      answer.answer_data.select { |item| item.is_a?(String) }.map do |choice|
+        option = answer.question.question_options.find { |opt| opt.value == choice }
+        option&.text || choice
+      end
+    else
+      []
+    end
+  end
+
+  # NOUVELLE méthode pour extraire le texte "autre" de multiple_choice
+  def extract_other_text_from_multiple_choice(answer)
+    return nil unless answer&.answer_data
+
+    if answer.answer_data.is_a?(Hash) && answer.answer_data['other'].is_a?(Hash)
+      # Nouvelle structure avec commentaires
+      answer.answer_data['other']['text']
+    elsif answer.answer_data.is_a?(Array)
+      # Ancienne structure sans commentaires
+      other_item = answer.answer_data.find { |item| item.is_a?(Hash) && item['type'] == 'other' }
+      other_item&.dig('text')
+    else
+      nil
+    end
+  end
 end

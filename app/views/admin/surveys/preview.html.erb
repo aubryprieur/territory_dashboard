@@ -86,164 +86,222 @@
                   <% end %>
                 </label>
 
-            <!-- Affichage selon le type de question -->
-            <% case question.question_type %>
-            <% when 'single_choice' %>
-              <div class="space-y-2">
-                <% question.question_options.each do |option| %>
-                  <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                    <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
-                    <span class="ml-2"><%= option.text %></span>
-                  </label>
-                <% end %>
+                <!-- Affichage selon le type de question -->
+                <% case question.question_type %>
+                <% when 'single_choice' %>
+                  <div class="space-y-2">
+                    <% question.question_options.each do |option| %>
+                      <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                        <span class="ml-2"><%= option.text %></span>
+                      </label>
+                    <% end %>
 
-                <% if question.has_other_option? %>
-                  <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                    <input type="radio" name="question_<%= question.id %>" value="other" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
-                    <span class="ml-2"><%= question.options&.dig('other_text_label') || 'Autre (précisez)' %></span>
-                  </label>
-                  <div class="ml-6 mt-2">
-                    <input type="text" placeholder="Veuillez préciser..." class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+                    <% if question.has_other_option? %>
+                      <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <input type="radio" name="question_<%= question.id %>" value="other" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                        <span class="ml-2"><%= question.options&.dig('other_text_label') || 'Autre (précisez)' %></span>
+                      </label>
+                      <div class="ml-6 mt-2">
+                        <input type="text" placeholder="Veuillez préciser..." class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+                      </div>
+                    <% end %>
+
+                    <!-- NOUVEAU : Aperçu du champ commentaire pour single_choice -->
+                    <% if question.comments_enabled? %>
+                      <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <label class="block text-sm font-medium text-blue-900 mb-2">
+                          <%= question.comment_label %>
+                          <% if question.comment_required? %>
+                            <span class="text-red-500">*</span>
+                          <% end %>
+                        </label>
+                        <textarea placeholder="<%= question.comment_placeholder %>"
+                                  rows="3"
+                                  disabled
+                                  class="w-full rounded-md border-blue-300 shadow-sm text-sm bg-white"></textarea>
+                      </div>
+                    <% end %>
                   </div>
-                <% end %>
-              </div>
 
-            <% when 'multiple_choice' %>
-              <div class="space-y-2">
-                <% question.question_options.each do |option| %>
-                  <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                    <input type="checkbox" name="question_<%= question.id %>[]" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" disabled>
-                    <span class="ml-2"><%= option.text %></span>
-                  </label>
-                <% end %>
+                <% when 'multiple_choice' %>
+                  <div class="space-y-2">
+                    <% question.question_options.each do |option| %>
+                      <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <input type="checkbox" name="question_<%= question.id %>[]" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" disabled>
+                        <span class="ml-2"><%= option.text %></span>
+                      </label>
+                    <% end %>
 
-                <% if question.has_other_option? %>
-                  <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                    <input type="checkbox" name="question_<%= question.id %>[]" value="other" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" disabled>
-                    <span class="ml-2"><%= question.options&.dig('other_text_label') || 'Autre (précisez)' %></span>
-                  </label>
-                  <div class="ml-6 mt-2">
-                    <input type="text" placeholder="Veuillez préciser..." class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+                    <% if question.has_other_option? %>
+                      <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <input type="checkbox" name="question_<%= question.id %>[]" value="other" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" disabled>
+                        <span class="ml-2"><%= question.options&.dig('other_text_label') || 'Autre (précisez)' %></span>
+                      </label>
+                      <div class="ml-6 mt-2">
+                        <input type="text" placeholder="Veuillez préciser..." class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+                      </div>
+                    <% end %>
+
+                    <!-- NOUVEAU : Aperçu du champ commentaire pour multiple_choice -->
+                    <% if question.comments_enabled? %>
+                      <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <label class="block text-sm font-medium text-blue-900 mb-2">
+                          <%= question.comment_label %>
+                          <% if question.comment_required? %>
+                            <span class="text-red-500">*</span>
+                          <% end %>
+                        </label>
+                        <textarea placeholder="<%= question.comment_placeholder %>"
+                                  rows="3"
+                                  disabled
+                                  class="w-full rounded-md border-blue-300 shadow-sm text-sm bg-white"></textarea>
+                      </div>
+                    <% end %>
                   </div>
-                <% end %>
-              </div>
 
-            <% when 'ranking' %>
-              <div class="space-y-3">
-                <div class="bg-blue-50 p-3 rounded-md">
-                  <p class="text-sm text-blue-700">
-                    <i class="fas fa-info-circle"></i>
-                    Glissez-déposez les éléments pour les classer par ordre de priorité (prévisualisation)
-                  </p>
-                </div>
+                <% when 'ranking' %>
+                  <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
+                    <div class="flex items-center">
+                      <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p class="text-sm text-blue-700">
+                        Glissez et déposez les éléments pour les classer par ordre de priorité (1 = le plus important).
+                      </p>
+                    </div>
+                  </div>
 
-                <div class="space-y-2 border border-gray-200 rounded-lg p-3">
-                  <% question.question_options.each_with_index do |option, index| %>
-                    <div class="bg-white border border-gray-300 rounded-lg p-3">
-                      <div class="flex items-center justify-between">
-                        <span class="font-medium"><%= option.text %></span>
-                        <div class="flex items-center space-x-2">
-                          <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-bold"><%= index + 1 %></span>
-                          <i class="fas fa-grip-vertical text-gray-400"></i>
+                  <div class="space-y-2">
+                    <% question.question_options.each_with_index do |option, idx| %>
+                      <div class="bg-white border border-gray-300 rounded-lg p-3">
+                        <div class="flex items-center">
+                          <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                          </svg>
+                          <span class="font-medium text-gray-700 mr-3"><%= idx + 1 %>.</span>
+                          <span class="text-gray-900"><%= option.text %></span>
                         </div>
                       </div>
+                    <% end %>
+                  </div>
+
+                <% when 'scale' %>
+                  <div class="flex items-center justify-between mt-4">
+                    <% if question.options && question.options['scale_min_label'] %>
+                      <span class="text-sm text-gray-500"><%= question.options['scale_min_label'] %></span>
+                    <% end %>
+                    <div class="flex space-x-3">
+                      <% question.question_options.each do |option| %>
+                        <label class="flex flex-col items-center cursor-pointer group">
+                          <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                          <span class="mt-1 text-sm group-hover:text-indigo-600"><%= option.text %></span>
+                        </label>
+                      <% end %>
                     </div>
-                  <% end %>
-                </div>
-              </div>
+                    <% if question.options && question.options['scale_max_label'] %>
+                      <span class="text-sm text-gray-500"><%= question.options['scale_max_label'] %></span>
+                    <% end %>
+                  </div>
 
-            <% when 'weekly_schedule' %>
-              <%= render 'weekly_schedule_preview', question: question %>
+                <% when 'text' %>
+                  <input type="text" placeholder="Votre réponse" class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
 
-            <% when 'scale' %>
-              <div class="flex items-center justify-between">
-                <% if question.options && question.options['scale_min_label'] %>
-                  <span class="text-sm text-gray-500"><%= question.options['scale_min_label'] %></span>
-                <% end %>
-                <div class="flex space-x-3">
-                  <% question.question_options.each do |option| %>
-                    <label class="flex flex-col items-center cursor-pointer group">
-                      <input type="radio" name="question_<%= question.id %>" value="<%= option.value %>" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
-                      <span class="mt-1 text-sm group-hover:text-indigo-600"><%= option.text %></span>
+                <% when 'long_text' %>
+                  <textarea rows="4" placeholder="Votre réponse" class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled></textarea>
+
+                <% when 'email' %>
+                  <input type="email" placeholder="exemple@email.com" class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+
+                <% when 'phone' %>
+                  <input type="tel" placeholder="06 12 34 56 78" class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+
+                <% when 'date' %>
+                  <input type="date" class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+
+                <% when 'numeric' %>
+                  <input type="number" placeholder="0" class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+
+                <% when 'yes_no' %>
+                  <div class="flex space-x-4">
+                    <label class="flex items-center">
+                      <input type="radio" name="question_<%= question.id %>" value="yes" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                      <span class="ml-2">Oui</span>
                     </label>
-                  <% end %>
-                </div>
-                <% if question.options && question.options['scale_max_label'] %>
-                  <span class="text-sm text-gray-500"><%= question.options['scale_max_label'] %></span>
+                    <label class="flex items-center">
+                      <input type="radio" name="question_<%= question.id %>" value="no" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
+                      <span class="ml-2">Non</span>
+                    </label>
+                  </div>
+
+                <% when 'commune_location' %>
+                  <div class="space-y-2">
+                    <select class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+                      <option>Sélectionnez votre commune...</option>
+                      <option>Exemple: Bordeaux</option>
+                      <option>Exemple: Lyon</option>
+                      <option>Autre commune</option>
+                    </select>
+                    <div style="display: none;">
+                      <input type="text" placeholder="Nom de votre commune" class="w-full rounded-md border-gray-300 shadow-sm text-sm" disabled>
+                    </div>
+                  </div>
+
+                <% when 'weekly_schedule' %>
+                  <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600 mb-3">Sélectionnez vos créneaux disponibles :</p>
+                    <div class="grid grid-cols-7 gap-2 text-xs">
+                      <% %w[Lun Mar Mer Jeu Ven Sam Dim].each do |day| %>
+                        <div class="text-center font-medium text-gray-700"><%= day %></div>
+                      <% end %>
+                      <% 3.times do |slot| %>
+                        <% %w[Lun Mar Mer Jeu Ven Sam Dim].each do |day| %>
+                          <label class="flex items-center justify-center p-1 border rounded cursor-pointer hover:bg-blue-50">
+                            <input type="checkbox" class="h-3 w-3" disabled>
+                          </label>
+                        <% end %>
+                      <% end %>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">
+                      Créneaux : Matin (8h-12h), Après-midi (14h-18h), Soir (18h-22h)
+                    </div>
+                  </div>
+
+                <% else %>
+                  <p class="text-gray-500 italic">Type de question non supporté en prévisualisation</p>
                 <% end %>
               </div>
-
-            <% when 'text' %>
-              <input type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Votre réponse" disabled>
-
-            <% when 'long_text' %>
-              <textarea rows="4" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Votre réponse" disabled></textarea>
-
-            <% when 'email' %>
-              <input type="email" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="exemple@email.com" disabled>
-
-            <% when 'phone' %>
-              <input type="tel" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="06 12 34 56 78" disabled>
-
-            <% when 'date' %>
-              <input type="date" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" disabled>
-
-            <% when 'numeric' %>
-              <input type="number" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="0" disabled>
-
-            <% when 'yes_no' %>
-              <div class="flex space-x-4">
-                <label class="flex items-center">
-                  <input type="radio" name="question_<%= question.id %>" value="yes" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
-                  <span class="ml-2">Oui</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="radio" name="question_<%= question.id %>" value="no" class="h-4 w-4 text-indigo-600 border-gray-300" disabled>
-                  <span class="ml-2">Non</span>
-                </label>
-              </div>
-
-            <% when 'commune_location' %>
-              <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" disabled>
-                <option>Sélectionnez votre commune...</option>
-                <option>Exemple Commune 1</option>
-                <option>Exemple Commune 2</option>
-                <option>Autre commune</option>
-              </select>
-
-            <% else %>
-              <p class="text-gray-500 italic">Type de question non supporté en prévisualisation</p>
             <% end %>
           </div>
         <% end %>
       </div>
-    <% end %>
 
-    <!-- Message de fin -->
-    <% if @survey.thank_you_message.present? %>
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="p-4 bg-green-50 rounded-lg">
-          <h3 class="text-green-800 font-medium mb-2">Message de remerciement</h3>
-          <p class="text-green-700"><%= @survey.thank_you_message %></p>
+      <!-- Navigation fictive -->
+      <div class="px-6 pb-6">
+        <div class="flex justify-between items-center pt-6 border-t">
+          <button class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white" disabled>
+            ← Précédent
+          </button>
+          <button class="px-4 py-2 border border-transparent rounded-md text-white bg-indigo-600" disabled>
+            Suivant →
+          </button>
         </div>
       </div>
-    <% end %>
 
-    <!-- Actions -->
-    <div class="mt-8 text-center">
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <p class="text-gray-600 mb-4">Ceci est une prévisualisation de votre enquête.</p>
-        <div class="space-x-4">
-          <%= link_to "Retour à l'édition", admin_survey_path(@survey),
-              class: "inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
-          <% unless @survey.published? %>
-            <%= link_to "Publier l'enquête", publish_admin_survey_path(@survey),
-                method: :patch,
-                data: { confirm: "Êtes-vous sûr de vouloir publier cette enquête ?" },
-                class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700" %>
-          <% end %>
+      <!-- Message de remerciement -->
+      <% if @survey.thank_you_message.present? %>
+        <div class="border-t p-6 bg-green-50">
+          <div class="flex items-start">
+            <svg class="h-5 w-5 text-green-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-green-800">Merci pour votre participation !</h3>
+              <p class="mt-1 text-sm text-green-700"><%= @survey.thank_you_message %></p>
+            </div>
+          </div>
         </div>
-      </div>
+      <% end %>
     </div>
   </div>
 </div>
