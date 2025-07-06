@@ -98,6 +98,13 @@ class PublicSurveysController < ApplicationController
 
     section.questions.each do |question|
       response_value = params[:responses][question.id.to_s]
+      comment_value = params[:responses]["#{question.id}_comment"] if question.comments_enabled?
+
+      # Validation du commentaire obligatoire
+      if question.comments_enabled? && question.comment_required? && comment_value.blank?
+        errors << "Le commentaire pour '#{question.title}' est obligatoire"
+        next
+      end
 
       # Gérer le cas spécial de commune_location avec "other"
       if question.commune_location_question? && response_value == 'other'
@@ -129,7 +136,8 @@ class PublicSurveysController < ApplicationController
         next
       end
 
-      next if response_value.blank?
+      # Passer au suivant si pas de réponse ET pas de commentaire
+      next if response_value.blank? && comment_value.blank?
 
       # Créer ou mettre à jour la réponse
       question_response = @survey_response.question_responses
@@ -139,80 +147,117 @@ class PublicSurveysController < ApplicationController
       when 'single_choice'
         if question.has_other_option? && response_value == 'other'
           other_text = params[:responses]["#{question.id}_other_text"]
-          question_response.answer_text = 'other'
-          question_response.answer_data = {
+          data = {
             'type' => 'other',
             'text' => other_text
           }
+          # Ajouter le commentaire si présent
+          data['comment'] = comment_value if comment_value.present?
+
+          question_response.answer_text = 'other'
+          question_response.answer_data = data
         else
+          # Cas normal avec commentaire possible
+          if comment_value.present?
+            question_response.answer_data = { 'comment' => comment_value }
+          else
+            question_response.answer_data = nil
+          end
           question_response.answer_text = response_value
-          question_response.answer_data = nil
         end
+
       when 'multiple_choice'
         clean_values = response_value.is_a?(Array) ? response_value.select(&:present?) : [response_value].compact
 
         if question.has_other_option? && clean_values.include?('other')
           other_text = params[:responses]["#{question.id}_other_text"]
-          # Traiter les réponses en remplaçant 'other' par l'objet avec le texte
-          processed_values = clean_values.map do |value|
-            if value == 'other'
-              { 'type' => 'other', 'text' => other_text }
-            else
-              value
-            end
-          end
-          question_response.answer_data = processed_values
-          question_response.answer_text = processed_values.map { |v| v.is_a?(Hash) ? 'other' : v }.join(', ')
+
+          # Séparer les valeurs normales et "other"
+          normal_values = clean_values.reject { |v| v == 'other' }
+
+          data = {
+            'choices' => normal_values,
+            'other' => {
+              'type' => 'other',
+              'text' => other_text
+            }
+          }
+          # Ajouter le commentaire si présent
+          data['comment'] = comment_value if comment_value.present?
+
+          question_response.answer_data = data
+          question_response.answer_text = clean_values.join(', ')
         else
-          question_response.answer_data = clean_values
+          # Structure pour les choix multiples avec commentaire
+          if comment_value.present?
+            question_response.answer_data = {
+              'choices' => clean_values,
+              'comment' => comment_value
+            }
+          else
+            question_response.answer_data = clean_values
+          end
           question_response.answer_text = clean_values.join(', ')
         end
-      when 'weekly_schedule'
-        # Pour weekly_schedule, traiter de la même façon que multiple_choice (sans option autre)
-        clean_values = response_value.is_a?(Array) ? response_value.select(&:present?) : [response_value].compact
-        question_response.answer_data = clean_values
-        question_response.answer_text = clean_values.join(', ')
-      when 'commune_location'
-        Rails.logger.info "===== COMMUNE LOCATION DEBUG ====="
-        Rails.logger.info "response_value: #{response_value}"
-        Rails.logger.info "other value: #{params[:responses]["#{question.id}_other"]}"
-        Rails.logger.info "all params: #{params[:responses].inspect}"
 
-        # Traitement spécial pour commune_location
+      when 'commune_location'
         if response_value == 'other'
-          other_commune = params[:responses]["#{question.id}_other"]
+          other_value = params[:responses]["#{question.id}_other"]
           question_response.answer_text = 'other'
           question_response.answer_data = {
             'type' => 'other',
-            'commune_code' => 'other',
-            'commune_name' => other_commune  # Stocker la valeur saisie
+            'commune_name' => other_value
           }
         else
-          # C'est un code INSEE
-          territory = Territory.find_by(codgeo: response_value)
+          # C'est un code INSEE de commune
+          commune_name = Territory.find_by(codgeo: response_value)&.libgeo
           question_response.answer_text = response_value
           question_response.answer_data = {
             'type' => 'commune',
             'commune_code' => response_value,
-            'commune_name' => territory&.libgeo || response_value
+            'commune_name' => commune_name
           }
         end
+
+      when 'weekly_schedule'
+        clean_values = response_value.is_a?(Array) ? response_value.select(&:present?) : []
+        question_response.answer_data = clean_values
+        question_response.answer_text = clean_values.join(', ')
+
+      when 'ranking'
+        # Pour le ranking, les valeurs arrivent comme un tableau ordonné
+        if response_value.is_a?(Array)
+          question_response.answer_data = response_value.select(&:present?)
+          question_response.answer_text = response_value.select(&:present?).join(', ')
+        else
+          question_response.answer_data = []
+          question_response.answer_text = ''
+        end
+
+      when 'scale', 'numeric'
+        question_response.answer_text = response_value.to_s
+        question_response.answer_data = nil
+
+      when 'yes_no'
+        question_response.answer_text = response_value
+        question_response.answer_data = nil
+
       else
-        question_response.answer = response_value
+        # Pour tous les autres types (text, long_text, email, phone, date)
+        question_response.answer_text = response_value.to_s
+        question_response.answer_data = nil
       end
 
-      unless question_response.save
-        errors << "Erreur pour la question '#{question.title}'"
-        Rails.logger.error "Erreur sauvegarde question_response: #{question_response.errors.full_messages}"
-      end
+      question_response.skipped = false
+      question_response.save!
     end
 
     if errors.any?
-      flash.now[:alert] = errors.join(', ')
-      false
-    else
-      true
+      flash[:alert] = errors.join('<br>').html_safe
+      return false
     end
+
+    true
   end
 
   def render_404

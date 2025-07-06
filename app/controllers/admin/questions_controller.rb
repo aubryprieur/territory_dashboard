@@ -26,6 +26,7 @@ class Admin::QuestionsController < ApplicationController
       process_weekly_schedule_options
     when 'single_choice', 'multiple_choice'
       process_choice_options
+      process_comment_options  # Nouvelle ligne
     end
 
     if @question.save
@@ -53,6 +54,7 @@ class Admin::QuestionsController < ApplicationController
       process_weekly_schedule_options
     when 'single_choice', 'multiple_choice'
       process_choice_options
+      process_comment_options  # Nouvelle ligne
     end
 
     if @question.update(question_params)
@@ -81,8 +83,33 @@ class Admin::QuestionsController < ApplicationController
   def question_params
     params.require(:question).permit(
       :title, :description, :question_type, :required,
-      question_options_attributes: [:id, :text, :value, :position, :_destroy]
+      question_options_attributes: [:id, :text, :value, :position, :_destroy],
+      # Ajouter les paramètres pour les commentaires
+      options: [
+        :comments_enabled,
+        :comment_label,
+        :comment_required,
+        :comment_placeholder,
+        :has_other_option,
+        :other_text_label
+      ]
     )
+  end
+
+  def process_comment_options
+    return unless @question.supports_comments?
+
+    if params[:question][:options].present?
+      options = @question.options || {}
+
+      # Traiter les options de commentaires
+      options['comments_enabled'] = params[:question][:options][:comments_enabled] == '1'
+      options['comment_label'] = params[:question][:options][:comment_label] if params[:question][:options][:comment_label].present?
+      options['comment_required'] = params[:question][:options][:comment_required] == '1'
+      options['comment_placeholder'] = params[:question][:options][:comment_placeholder] if params[:question][:options][:comment_placeholder].present?
+
+      @question.options = options
+    end
   end
 
   def check_survey_not_published

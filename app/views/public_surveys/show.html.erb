@@ -91,6 +91,22 @@
                           class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" %>
                     </div>
                   <% end %>
+
+                  <!-- NOUVEAU : Champ commentaire pour single_choice -->
+                  <% if question.comments_enabled? %>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <%= label_tag "responses[#{question.id}_comment]", question.comment_label,
+                          class: "block text-sm font-medium text-blue-900 mb-2" %>
+                      <%= text_area_tag "responses[#{question.id}_comment]", nil,
+                          placeholder: question.comment_placeholder,
+                          rows: 3,
+                          required: question.comment_required?,
+                          class: "w-full rounded-md border-blue-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm bg-white" %>
+                      <% if question.comment_required? %>
+                        <span class="text-red-500 text-xs mt-1 block">* Obligatoire</span>
+                      <% end %>
+                    </div>
+                  <% end %>
                 </div>
 
               <% when 'multiple_choice' %>
@@ -121,6 +137,22 @@
                       <%= text_field_tag "responses[#{question.id}_other_text]", nil,
                           placeholder: "Veuillez préciser...",
                           class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" %>
+                    </div>
+                  <% end %>
+
+                  <!-- NOUVEAU : Champ commentaire pour multiple_choice -->
+                  <% if question.comments_enabled? %>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <%= label_tag "responses[#{question.id}_comment]", question.comment_label,
+                          class: "block text-sm font-medium text-blue-900 mb-2" %>
+                      <%= text_area_tag "responses[#{question.id}_comment]", nil,
+                          placeholder: question.comment_placeholder,
+                          rows: 3,
+                          required: question.comment_required?,
+                          class: "w-full rounded-md border-blue-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm bg-white" %>
+                      <% if question.comment_required? %>
+                        <span class="text-red-500 text-xs mt-1 block">* Obligatoire</span>
+                      <% end %>
                     </div>
                   <% end %>
                 </div>

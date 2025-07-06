@@ -128,6 +128,32 @@ class Question < ApplicationRecord
     }
   end
 
+  def supports_comments?
+    %w[single_choice multiple_choice].include?(question_type)
+  end
+
+  # Méthode pour vérifier si les commentaires sont activés
+  def comments_enabled?
+    return false unless supports_comments?
+    options&.dig('comments_enabled') == true
+  end
+
+  # Méthode pour obtenir le label du commentaire
+  def comment_label
+    options&.dig('comment_label') || 'Commentaire (facultatif)'
+  end
+
+  # Méthode pour vérifier si le commentaire est obligatoire
+  def comment_required?
+    return false unless comments_enabled?
+    options&.dig('comment_required') == true
+  end
+
+  # Méthode pour obtenir le placeholder du commentaire
+  def comment_placeholder
+    options&.dig('comment_placeholder') || 'Ajoutez votre commentaire ici...'
+  end
+
   private
 
   def set_position

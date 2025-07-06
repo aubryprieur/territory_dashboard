@@ -186,6 +186,77 @@ class QuestionResponse < ApplicationRecord
     end
   end
 
+
+  # Méthode pour récupérer le commentaire
+  def comment_text
+    return nil unless question.comments_enabled?
+    answer_data.is_a?(Hash) ? answer_data['comment'] : nil
+  end
+
+  # Méthode pour vérifier si il y a un commentaire
+  def has_comment?
+    comment_text.present?
+  end
+
+  # Mettre à jour la méthode formatted_answer pour inclure les commentaires
+  def formatted_answer_with_comment
+    base_answer = formatted_answer
+
+    if has_comment?
+      "#{base_answer} | Commentaire: #{comment_text}"
+    else
+      base_answer
+    end
+  end
+
+  # Mise à jour de la méthode answer= pour gérer les commentaires
+  def set_answer_with_comment(value, comment = nil)
+    case question.question_type
+    when 'single_choice'
+      if value.is_a?(Hash) && value['type'] == 'other'
+        data = value
+        self.answer_text = 'other'
+      else
+        data = {}
+        self.answer_text = value.to_s
+      end
+
+      # Ajouter le commentaire si la question le supporte
+      if question.comments_enabled? && comment.present?
+        data['comment'] = comment
+      end
+
+      self.answer_data = data.any? ? data : nil
+
+    when 'multiple_choice'
+      processed_values = []
+      data = {}
+
+      if value.is_a?(Array)
+        value.each do |v|
+          if v.is_a?(Hash) && v['type'] == 'other'
+            processed_values << v
+          else
+            processed_values << v
+          end
+        end
+      end
+
+      # Ajouter le commentaire si la question le supporte
+      if question.comments_enabled? && comment.present?
+        data['comment'] = comment
+        data['choices'] = processed_values
+        self.answer_data = data
+      else
+        self.answer_data = processed_values.any? ? processed_values : nil
+      end
+
+      self.answer_text = processed_values.map { |v| v.is_a?(Hash) ? 'other' : v }.join(', ')
+    else
+      self.answer_text = value.to_s
+    end
+  end
+
   private
 
   def process_commune_location_answer(value)
