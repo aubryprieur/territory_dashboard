@@ -1,0 +1,138 @@
+/* Styles pour les onglets du dashboard communes */
+
+/* Animations personnalisées */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Masquer la scrollbar pour les onglets */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Effet de glassmorphism amélioré */
+.backdrop-blur-md {
+  backdrop-filter: blur(12px);
+}
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(6px);
+}
+
+/* Transitions fluides pour les onglets */
+[data-dashboard-tabs-target="tab"] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Effet de survol pour TOUS les onglets */
+[data-dashboard-tabs-target="tab"]:hover {
+  transform: translateY(-1px);
+}
+
+/* Effet de survol pour les onglets INACTIFS seulement - Haute spécificité */
+nav [data-dashboard-tabs-target="tab"]:not(.tab-active):hover {
+  background-color: rgba(238, 242, 255, 0.8) !important;
+  color: rgb(55, 65, 81) !important;
+}
+
+/* Effet de survol amélioré pour les icônes des onglets inactifs - Haute spécificité */
+nav [data-dashboard-tabs-target="tab"]:not(.tab-active):hover .p-2 {
+  background: linear-gradient(to right, rgb(224 231 255), rgb(221 214 254)) !important;
+}
+
+/* Style pour l'onglet ACTIF */
+[data-dashboard-tabs-target="tab"].tab-active {
+  background-color: rgb(224 231 255) !important;
+  color: rgb(67 56 202) !important;
+  border-color: rgb(129 140 248) !important;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Améliorer le contraste pour l'onglet actif */
+[data-dashboard-tabs-target="tab"].tab-active .p-2 {
+  background: linear-gradient(to right, rgb(199 210 254), rgb(196 181 253)) !important;
+}
+
+/* Empêcher l'effet de survol sur l'onglet actif */
+[data-dashboard-tabs-target="tab"].tab-active:hover {
+  transform: translateY(-1px) scale(1.02); /* Maintenir la transformation de l'état actif */
+}
+
+/* Amélioration du focus pour l'accessibilité */
+input:focus, button:focus {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+/* Animation pour les cartes */
+.hover\:shadow-xl:hover {
+  transform: translateY(-2px);
+}
+
+/* Gradient de fond amélioré */
+.bg-gradient-to-br {
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Style pour les boutons d'accès rapide */
+.inline-flex:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Animation de chargement pour les résultats de recherche */
+.loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Styles spécifiques pour les panneaux de contenu */
+.dashboard-panel {
+  min-height: 400px;
+}
+
+/* Responsive design pour les onglets */
+@media (max-width: 768px) {
+  [data-dashboard-tabs-target="tab"] {
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+  }
+
+  [data-dashboard-tabs-target="tab"] .flex.items-center.space-x-3 {
+    flex-direction: column;
+    space-x: 0;
+    gap: 0.5rem;
+  }
+}
