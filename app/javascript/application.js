@@ -47,11 +47,9 @@ import "charts/economic_charts"
 import "charts/births_chart"
 import "charts/domestic_violence_chart"
 import "charts/family_employment_chart"
-import "charts/age_pyramid_chart"
 
 // EPCI Dashboard
 import "epci/dashboard_init"
 
 // Dashboard
-
 import "dashboard/dashboard_init"

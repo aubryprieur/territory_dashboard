@@ -27,7 +27,6 @@ pin "charts/economic_charts", to: "charts/economic_charts.js"
 pin "charts/births_chart", to: "charts/births_chart.js"
 pin "charts/domestic_violence_chart", to: "charts/domestic_violence_chart.js"
 pin "charts/family_employment_chart", to: "charts/family_employment_chart.js"
-pin "charts/age_pyramid_chart", to: "charts/age_pyramid_chart.js"
 
 # EPCI Dashboard
 
@@ -56,6 +55,7 @@ pin "epci/tabs_scroll", to: "epci/tabs_scroll.js"
 
 # Dashboard communes
 pin "dashboard/dashboard_init", to: "dashboard/dashboard_init.js"
+pin "dashboard/charts_init", to: "dashboard/charts_init.js"
 
 # Contrôleurs pour les enquêtes
 pin "controllers/survey_tabs_controller", to: "controllers/survey_tabs_controller.js"
