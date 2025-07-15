@@ -11,145 +11,151 @@
     latest_year = all_years.last
   %>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- Graphique d'évolution -->
-    <div>
-      <h3 class="text-sm font-medium text-gray-700 mb-2">Évolution des violences intrafamiliales</h3>
-      <div class="h-64">
-        <canvas id="domestic-violence-chart"></canvas>
+  <% if all_years.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Graphique d'évolution -->
+      <div>
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Évolution des violences intrafamiliales</h3>
+        <div class="h-64">
+          <canvas id="domestic-violence-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Tableau comparatif -->
+      <div>
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Comparaison territoriale (<%= latest_year || 'N/A' %>)</h3>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Territoire
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Taux pour 1000 habitants
+              </th>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Évolution sur 5 ans
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Ligne pour la commune -->
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                <%= @territory_name %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <% latest_rate = commune_data[latest_year] %>
+                <%= number_with_precision(latest_rate, precision: 2) || 'N/A' %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <%
+                  earliest_year = all_years.first
+                  if latest_year && earliest_year && latest_year != earliest_year
+                    latest_rate = commune_data[latest_year]
+                    earliest_rate = commune_data[earliest_year]
+                    if latest_rate && earliest_rate
+                      period_length = latest_year.to_i - earliest_year.to_i
+                      difference = (latest_rate - earliest_rate).round(2)
+                      difference_class = difference > 0 ? "text-red-600" : (difference < 0 ? "text-green-600" : "text-gray-500")
+                      difference_symbol = difference > 0 ? "↑" : (difference < 0 ? "↓" : "→")
+                %>
+                  <span class="<%= difference_class %>">
+                    <%= difference_symbol %> <%= difference.abs %> points sur <%= period_length %> ans
+                  </span>
+                <% else %>
+                  <span class="text-gray-500">Données insuffisantes</span>
+                <% end %>
+              <% else %>
+                <span class="text-gray-500">N/A</span>
+              <% end %>
+              </td>
+            </tr>
+
+            <!-- Ligne pour le département si disponible -->
+            <% if @department_safety_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(department_display_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <% latest_dept_rate = department_data[latest_year] %>
+                  <%= number_with_precision(latest_dept_rate, precision: 2) || 'N/A' %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    dept_earliest_year = department_data.keys.min
+                    dept_latest_year = department_data.keys.max
+                    if dept_latest_year && dept_earliest_year && dept_latest_year != dept_earliest_year
+                      dept_latest_rate = department_data[dept_latest_year]
+                      dept_earliest_rate = department_data[dept_earliest_year]
+                      if dept_latest_rate && dept_earliest_rate
+                        dept_period_length = dept_latest_year.to_i - dept_earliest_year.to_i
+                        dept_difference = (dept_latest_rate - dept_earliest_rate).round(2)
+                        dept_difference_class = dept_difference > 0 ? "text-red-600" : (dept_difference < 0 ? "text-green-600" : "text-gray-500")
+                        dept_difference_symbol = dept_difference > 0 ? "↑" : (dept_difference < 0 ? "↓" : "→")
+                  %>
+                    <span class="<%= dept_difference_class %>">
+                      <%= dept_difference_symbol %> <%= dept_difference.abs %> points sur <%= dept_period_length %> ans
+                    </span>
+                  <% else %>
+                    <span class="text-gray-500">Données insuffisantes</span>
+                  <% end %>
+                <% else %>
+                  <span class="text-gray-500">N/A</span>
+                <% end %>
+                </td>
+              </tr>
+            <% end %>
+
+            <!-- Ligne pour la région si disponible -->
+            <% if @region_safety_data.present? %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
+                  <div class="truncate">
+                    <%= display_territory_name(region_display_name) %>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <% latest_region_rate = region_data[latest_year] %>
+                  <%= number_with_precision(latest_region_rate, precision: 2) || 'N/A' %>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  <%
+                    region_earliest_year = region_data.keys.min
+                    region_latest_year = region_data.keys.max
+                    if region_latest_year && region_earliest_year && region_latest_year != region_earliest_year
+                      region_latest_rate = region_data[region_latest_year]
+                      region_earliest_rate = region_data[region_earliest_year]
+                      if region_latest_rate && region_earliest_rate
+                        region_period_length = region_latest_year.to_i - region_earliest_year.to_i
+                        region_difference = (region_latest_rate - region_earliest_rate).round(2)
+                        region_difference_class = region_difference > 0 ? "text-red-600" : (region_difference < 0 ? "text-green-600" : "text-gray-500")
+                        region_difference_symbol = region_difference > 0 ? "↑" : (region_difference < 0 ? "↓" : "→")
+                  %>
+                    <span class="<%= region_difference_class %>">
+                      <%= region_difference_symbol %> <%= region_difference.abs %> points sur <%= region_period_length %> ans
+                    </span>
+                  <% else %>
+                    <span class="text-gray-500">Données insuffisantes</span>
+                  <% end %>
+                <% else %>
+                  <span class="text-gray-500">N/A</span>
+                <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
       </div>
     </div>
-
-    <!-- Tableau comparatif -->
-    <div>
-      <h3 class="text-sm font-medium text-gray-700 mb-2">Comparaison territoriale (<%= latest_year || 'N/A' %>)</h3>
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Territoire
-            </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Taux pour 1000 habitants
-            </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Évolution sur 5 ans
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <!-- Ligne pour la commune -->
-          <tr>
-            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-              <%= @territory_name %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <% latest_rate = commune_data[latest_year] %>
-              <%= number_with_precision(latest_rate, precision: 2) || 'N/A' %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%
-                earliest_year = all_years.first
-                if latest_year && earliest_year && latest_year != earliest_year
-                  latest_rate = commune_data[latest_year]
-                  earliest_rate = commune_data[earliest_year]
-                  if latest_rate && earliest_rate
-                    period_length = latest_year.to_i - earliest_year.to_i
-                    difference = (latest_rate - earliest_rate).round(2)
-                    difference_class = difference > 0 ? "text-red-600" : (difference < 0 ? "text-green-600" : "text-gray-500")
-                    difference_symbol = difference > 0 ? "↑" : (difference < 0 ? "↓" : "→")
-              %>
-                <span class="<%= difference_class %>">
-                  <%= difference_symbol %> <%= difference.abs %> points sur <%= period_length %> ans
-                </span>
-              <% else %>
-                <span class="text-gray-500">Données insuffisantes</span>
-              <% end %>
-            <% else %>
-              <span class="text-gray-500">N/A</span>
-            <% end %>
-            </td>
-          </tr>
-
-          <!-- Ligne pour le département si disponible -->
-          <% if @department_safety_data.present? %>
-            <tr>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
-                <div class="truncate">
-                  <%= display_territory_name(department_display_name) %>
-                </div>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <% latest_dept_rate = department_data[latest_year] %>
-                <%= number_with_precision(latest_dept_rate, precision: 2) || 'N/A' %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%
-                  dept_earliest_year = department_data.keys.min
-                  dept_latest_year = department_data.keys.max
-                  if dept_latest_year && dept_earliest_year && dept_latest_year != dept_earliest_year
-                    dept_latest_rate = department_data[dept_latest_year]
-                    dept_earliest_rate = department_data[dept_earliest_year]
-                    if dept_latest_rate && dept_earliest_rate
-                      dept_period_length = dept_latest_year.to_i - dept_earliest_year.to_i
-                      dept_difference = (dept_latest_rate - dept_earliest_rate).round(2)
-                      dept_difference_class = dept_difference > 0 ? "text-red-600" : (dept_difference < 0 ? "text-green-600" : "text-gray-500")
-                      dept_difference_symbol = dept_difference > 0 ? "↑" : (dept_difference < 0 ? "↓" : "→")
-                %>
-                  <span class="<%= dept_difference_class %>">
-                    <%= dept_difference_symbol %> <%= dept_difference.abs %> points sur <%= dept_period_length %> ans
-                  </span>
-                <% else %>
-                  <span class="text-gray-500">Données insuffisantes</span>
-                <% end %>
-              <% else %>
-                <span class="text-gray-500">N/A</span>
-              <% end %>
-              </td>
-            </tr>
-          <% end %>
-
-          <!-- Ligne pour la région si disponible -->
-          <% if @region_safety_data.present? %>
-            <tr>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
-                <div class="truncate">
-                  <%= display_territory_name(region_display_name) %>
-                </div>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <% latest_region_rate = region_data[latest_year] %>
-                <%= number_with_precision(latest_region_rate, precision: 2) || 'N/A' %>
-              </td>
-              <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                <%
-                  region_earliest_year = region_data.keys.min
-                  region_latest_year = region_data.keys.max
-                  if region_latest_year && region_earliest_year && region_latest_year != region_earliest_year
-                    region_latest_rate = region_data[region_latest_year]
-                    region_earliest_rate = region_data[region_earliest_year]
-                    if region_latest_rate && region_earliest_rate
-                      region_period_length = region_latest_year.to_i - region_earliest_year.to_i
-                      region_difference = (region_latest_rate - region_earliest_rate).round(2)
-                      region_difference_class = region_difference > 0 ? "text-red-600" : (region_difference < 0 ? "text-green-600" : "text-gray-500")
-                      region_difference_symbol = region_difference > 0 ? "↑" : (region_difference < 0 ? "↓" : "→")
-                %>
-                  <span class="<%= region_difference_class %>">
-                    <%= region_difference_symbol %> <%= region_difference.abs %> points sur <%= region_period_length %> ans
-                  </span>
-                <% else %>
-                  <span class="text-gray-500">Données insuffisantes</span>
-                <% end %>
-              <% else %>
-                <span class="text-gray-500">N/A</span>
-              <% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+  <% else %>
+    <div class="text-center py-8 text-gray-500">
+      <p>Aucune donnée disponible sur les violences intrafamiliales</p>
     </div>
-  </div>
+  <% end %>
 
   <!-- Section d'aide à l'interprétation -->
   <div class="mt-6 bg-gray-50 p-4 rounded-md">
@@ -161,8 +167,12 @@
   </div>
 </div>
 
-<!-- Script d'initialisation des données pour le graphique -->
+<!-- ✅ SCRIPT D'INITIALISATION DES DONNÉES POUR LE GRAPHIQUE -->
 <script>
+console.log("🎯 Initialisation des données violences intrafamiliales");
+
+try {
+  // Initialiser les données globales
   window.domesticViolenceData = {
     years: <%= raw all_years.to_json %>,
     communeData: [<%= all_years.map { |year| commune_data[year] || 'null' }.join(',') %>],
@@ -174,4 +184,48 @@
       region: "<%= display_territory_name(region_display_name) %>"
     }
   };
+
+  console.log("✅ Données violences intrafamiliales chargées:", {
+    years: window.domesticViolenceData.years.length,
+    commune: window.domesticViolenceData.communeData.filter(v => v !== null).length + " valeurs non nulles",
+    department: window.domesticViolenceData.departmentData.filter(v => v !== null).length + " valeurs non nulles",
+    region: window.domesticViolenceData.regionData.filter(v => v !== null).length + " valeurs non nulles"
+  });
+
+  // ✅ Marquer les données comme prêtes
+  window.domesticViolenceData._loaded = true;
+  window.domesticViolenceData._loadTime = new Date().toISOString();
+
+} catch (error) {
+  console.error("❌ Erreur lors du chargement des données violences:", error);
+  // En cas d'erreur, s'assurer qu'on a au moins un objet vide
+  window.domesticViolenceData = {
+    years: [],
+    communeData: [],
+    departmentData: [],
+    regionData: [],
+    territoryNames: {
+      commune: "<%= @territory_name %>",
+      department: "Département",
+      region: "Région"
+    },
+    _loaded: false,
+    _error: error.message
+  };
+}
+
+// ✅ DÉCLENCHER L'ÉVÉNEMENT POUR INITIALISER LE GRAPHIQUE
+document.dispatchEvent(new CustomEvent('dashboard:sectionLoaded', {
+  detail: { section: 'domestic_violence' }
+}));
+
+// ✅ BACKUP: Si le graphique ne se lance pas via l'événement, le lancer directement
+setTimeout(() => {
+  if (typeof initDomesticViolenceChart === 'function') {
+    console.log("🎯 Lancement direct du graphique violences intrafamiliales");
+    initDomesticViolenceChart();
+  } else {
+    console.warn("❌ Fonction initDomesticViolenceChart non trouvée");
+  }
+}, 300);
 </script>

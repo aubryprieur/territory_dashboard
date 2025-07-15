@@ -305,3 +305,34 @@
     </div>
   </div>
 </div>
+
+<!-- ✅ CHARGER LES DONNÉES AVANT LE SCRIPT DE GRAPHIQUES -->
+<%= render 'economic_data_script' %>
+
+<script>
+console.log("🎯 Script de post-chargement des données économiques exécuté");
+
+// ✅ VÉRIFIER QUE LES DONNÉES SONT BIEN CHARGÉES
+if (window.economicData) {
+  console.log("✅ window.economicData disponible:", Object.keys(window.economicData));
+  console.log("📊 Données revenus commune:", Object.keys(window.economicData.communeRevenueData || {}));
+  console.log("📊 Données pauvreté commune:", Object.keys(window.economicData.communePovertyData || {}));
+} else {
+  console.error("❌ window.economicData toujours non disponible après le script");
+}
+
+// ✅ DÉCLENCHER L'ÉVÉNEMENT POUR INITIALISER LES GRAPHIQUES
+document.dispatchEvent(new CustomEvent('dashboard:sectionLoaded', {
+  detail: { section: 'economic_data' }
+}));
+
+// ✅ BACKUP: Si les graphiques ne se lancent pas via l'événement, les lancer directement
+setTimeout(() => {
+  if (typeof initEconomicCharts === 'function') {
+    console.log("🎯 Lancement direct des graphiques économiques");
+    initEconomicCharts();
+  } else {
+    console.warn("❌ Fonction initEconomicCharts non trouvée");
+  }
+}, 300);
+</script>

@@ -2,8 +2,13 @@ class DashboardController < ApplicationController
   include UserAuthorization
   include RevenueAnalysisHelper
   include TerritoryNamesHelper
+  include DashboardCache  # 🚀 Ajout du système de cache
 
   before_action :check_user_territory
+  before_action :set_territory_info, only: [:index, :load_synthese, :load_families, :load_age_pyramid,
+                                            :load_economic_data, :load_schooling, :load_childcare,
+                                            :load_employment, :load_domestic_violence, :load_children_comparison,
+                                            :load_family_employment]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -12,6 +17,284 @@ class DashboardController < ApplicationController
       return
     end
 
+    # Chargement immédiat des données essentielles seulement
+    territory = Territory.find_by(codgeo: @territory_code)
+
+    @basic_info = {
+      commune_name: @territory_name,
+      territory_code: @territory_code,
+      population: 0,
+      epci_code: territory&.epci,
+      department_code: territory&.dep,
+      region_code: territory&.reg,
+      is_commune_access_from_epci: @is_commune_access_from_epci
+    }
+
+    # 🚀 Précharger les données essentielles en arrière-plan
+    preload_essential_data(@territory_code, territory&.epci, territory&.dep, territory&.reg)
+
+    # Les autres données seront chargées en AJAX
+    respond_to do |format|
+      format.html # Affichage immédiat de la structure de base
+      format.turbo_stream # Pour les mises à jour partielles
+    end
+  end
+
+  # === ACTIONS ASYNCHRONES POUR CHAQUE SECTION (AVEC CACHE) ===
+
+  def load_synthese
+    # 🚀 Chargement des données de synthèse avec cache
+    @population_data = cached_population_data(@territory_code)
+    @total_population = @population_data.present? ? @population_data.sum { |item| item["NB"].to_f }.round : 0
+    @historical_data = cached_historical_data(@territory_code)
+    @births_data = cached_births_data(@territory_code)
+    @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
+
+    # 🔍 DEBUG : Ajouter ces logs
+    Rails.logger.debug "🔍 Births data total: #{@births_data&.size || 0} items"
+    Rails.logger.debug "🔍 Births data sample: #{@births_data&.first&.keys || 'nil'}"
+    Rails.logger.debug "🔍 Births data filtered: #{@births_data_filtered.size} items"
+    Rails.logger.debug "🔍 Sample filtered item: #{@births_data_filtered.first || 'empty'}"
+
+    # 🔧 AJOUT MANQUANT : Préparer les données de la pyramide des âges
+    @age_pyramid_data = prepare_age_pyramid_data(@population_data)
+
+    respond_to do |format|
+      format.html { render partial: 'synthese', locals: {
+        population_data: @population_data,
+        total_population: @total_population,
+        historical_data: @historical_data,
+        births_data_filtered: @births_data_filtered,
+        age_pyramid_data: @age_pyramid_data,  # 🔧 AJOUT : Passer les données de la pyramide
+        territory_code: @territory_code,
+        territory_name: @territory_name
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_age_pyramid
+    # 🚀 Chargement spécifique des données de la pyramide des âges avec cache
+    @age_pyramid_data = cached_age_pyramid_data(@territory_code)
+
+    respond_to do |format|
+      format.json { render json: @age_pyramid_data }
+      format.html { render partial: 'age_pyramid', locals: { age_pyramid_data: @age_pyramid_data } }
+    end
+  end
+
+  def load_families
+    # 🚀 Chargement des données familles avec cache
+    @children_data = cached_children_data(@territory_code)
+    @births_data = cached_births_data(@territory_code)
+    @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
+    @family_data = cached_family_data(@territory_code)
+
+    # Données de comparaison avec cache
+    load_comparison_data_for_families_cached
+
+    respond_to do |format|
+      format.html { render partial: 'families', locals: {
+        children_data: @children_data,
+        births_data_filtered: @births_data_filtered,
+        family_data: @family_data,
+        france_children_data: @france_children_data,
+        france_family_data: @france_family_data,
+        epci_children_data: @epci_children_data,
+        epci_family_data: @epci_family_data,
+        department_children_data: @department_children_data,
+        department_family_data: @department_family_data,
+        region_children_data: @region_children_data,
+        region_family_data: @region_family_data,
+        epci_code: @epci_code,
+        department_code: @department_code,
+        region_code: @region_code
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_children_comparison
+    # 🚀 Chargement spécifique pour la comparaison enfants avec cache
+    @children_data = cached_children_data(@territory_code)
+    load_comparison_data_for_children_cached
+
+    respond_to do |format|
+      format.html { render partial: 'children_comparison', locals: {
+        children_data: @children_data,
+        france_children_data: @france_children_data,
+        epci_children_data: @epci_children_data,
+        department_children_data: @department_children_data,
+        region_children_data: @region_children_data,
+        epci_code: @epci_code,
+        department_code: @department_code,
+        region_code: @region_code
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_economic_data
+    # 🚀 Chargement des données économiques avec cache
+    @revenue_data = cached_revenue_data(@territory_code)
+
+    # Données de comparaison avec cache
+    load_comparison_data_for_economy_cached
+
+    respond_to do |format|
+      format.html { render partial: 'economic_data', locals: {
+        revenue_data: @revenue_data,
+        france_revenue_data: @france_revenue_data,
+        epci_revenue_data: @epci_revenue_data,
+        department_revenue_data: @department_revenue_data,
+        region_revenue_data: @region_revenue_data,
+        epci_code: @epci_code,
+        department_code: @department_code,
+        region_code: @region_code
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_schooling
+    # 🚀 Chargement des données de scolarité avec cache
+    @schooling_data = cached_schooling_data(@territory_code)
+
+    # Données de comparaison avec cache
+    load_comparison_data_for_schooling_cached
+
+    respond_to do |format|
+      format.html { render partial: 'schooling', locals: {
+        schooling_data: @schooling_data,
+        france_schooling_data: @france_schooling_data,
+        epci_schooling_data: @epci_schooling_data,
+        department_schooling_data: @department_schooling_data,
+        region_schooling_data: @region_schooling_data,
+        epci_code: @epci_code,
+        department_code: @department_code,
+        region_code: @region_code
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_childcare
+    # 🚀 Chargement des données de garde d'enfants avec cache
+    @childcare_data = cached_childcare_data(@territory_code)
+
+    # Données de comparaison avec cache
+    load_comparison_data_for_childcare_cached
+
+    respond_to do |format|
+      format.html { render partial: 'childcare', locals: {
+        childcare_data: @childcare_data,
+        france_childcare_data: @france_childcare_data,
+        epci_childcare_data: @epci_childcare_data,
+        department_childcare_data: @department_childcare_data,
+        region_childcare_data: @region_childcare_data,
+        epci_code: @epci_code,
+        department_code: @department_code,
+        region_code: @region_code
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_employment
+    # 🚀 Chargement des données d'emploi avec cache
+    @employment_data = cached_employment_data(@territory_code)
+    @family_employment_under3_data = cached_family_employment_under3_data(@territory_code)
+    @family_employment_3to5_data = cached_family_employment_3to5_data(@territory_code)
+
+    # Données de comparaison avec cache
+    load_comparison_data_for_employment_cached
+
+    respond_to do |format|
+      format.html { render partial: 'employment', locals: {
+        employment_data: @employment_data,
+        family_employment_under3_data: @family_employment_under3_data,
+        family_employment_3to5_data: @family_employment_3to5_data,
+        france_employment_data: @france_employment_data,
+        france_family_employment_under3_data: @france_family_employment_under3_data,
+        france_family_employment_3to5_data: @france_family_employment_3to5_data,
+        epci_employment_data: @epci_employment_data,
+        epci_family_employment_under3_data: @epci_family_employment_under3_data,
+        epci_family_employment_3to5_data: @epci_family_employment_3to5_data,
+        department_employment_data: @department_employment_data,
+        department_family_employment_under3_data: @department_family_employment_under3_data,
+        department_family_employment_3to5_data: @department_family_employment_3to5_data,
+        region_employment_data: @region_employment_data,
+        region_family_employment_under3_data: @region_family_employment_under3_data,
+        region_family_employment_3to5_data: @region_family_employment_3to5_data,
+        epci_code: @epci_code,
+        department_code: @department_code,
+        region_code: @region_code
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_family_employment
+    # 🚀 Chargement spécifique des données emploi familial avec cache
+    @family_employment_under3_data = cached_family_employment_under3_data(@territory_code)
+    @family_employment_3to5_data = cached_family_employment_3to5_data(@territory_code)
+
+    # Données de comparaison avec cache
+    load_comparison_data_for_family_employment_cached
+
+    respond_to do |format|
+      format.html { render partial: 'family_employment', locals: {
+        family_employment_under3_data: @family_employment_under3_data,
+        family_employment_3to5_data: @family_employment_3to5_data,
+        france_family_employment_under3_data: @france_family_employment_under3_data,
+        france_family_employment_3to5_data: @france_family_employment_3to5_data,
+        epci_family_employment_under3_data: @epci_family_employment_under3_data,
+        epci_family_employment_3to5_data: @epci_family_employment_3to5_data,
+        department_family_employment_under3_data: @department_family_employment_under3_data,
+        department_family_employment_3to5_data: @department_family_employment_3to5_data,
+        region_family_employment_under3_data: @region_family_employment_under3_data,
+        region_family_employment_3to5_data: @region_family_employment_3to5_data,
+        epci_code: @epci_code,
+        department_code: @department_code,
+        region_code: @region_code
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_domestic_violence
+    # 🚀 Chargement des données de sécurité/violence domestique avec cache
+    @safety_data = cached_safety_data(@territory_code)
+
+    # Données de comparaison avec cache
+    load_comparison_data_for_safety_cached
+
+    respond_to do |format|
+      format.html { render partial: 'domestic_violence', locals: {
+        safety_data: @safety_data,
+        department_safety_data: @department_safety_data,
+        region_safety_data: @region_safety_data,
+        department_code: @department_code,
+        region_code: @region_code
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  # 🛠️ Actions utilitaires pour la gestion du cache
+  def clear_cache
+    # Action pour vider le cache d'un territoire (pour les admins)
+    if current_user.super_admin?
+      invalidate_territory_cache(@territory_code)
+      render json: { status: 'success', message: 'Cache invalidé avec succès' }
+    else
+      render json: { status: 'error', message: 'Non autorisé' }, status: :forbidden
+    end
+  end
+
+  private
+
+  def set_territory_info
     # Déterminer le code territoire à utiliser
     if params[:commune_code].present?
       # Si un code commune est fourni en paramètre
@@ -26,79 +309,14 @@ class DashboardController < ApplicationController
       @is_commune_access_from_epci = false
     end
 
-    # Récupérer les données de base pour la commune
-    @population_data = Api::PopulationService.get_commune_data(@territory_code)
-    @total_population = @population_data.present? ? @population_data.sum { |item| item["NB"].to_f }.round : 0
-    @children_data = Api::PopulationService.get_children_data(@territory_code)
-    @historical_data = Api::HistoricalService.get_historical_data(@territory_code)
-    @revenue_data = Api::RevenueService.get_median_revenues(@territory_code)
-    @schooling_data = Api::SchoolingService.get_commune_schooling(@territory_code)
-    @childcare_data = Api::ChildcareService.get_coverage_by_commune(@territory_code)
-    @births_data = Api::PopulationService.get_births_data(@territory_code)
-    @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
-    @employment_data = Api::EmploymentService.get_commune_employment(@territory_code)
-    @safety_data = Api::PublicSafetyService.get_commune_safety(@territory_code)
-    @family_data = Api::FamilyService.get_commune_families(@territory_code)
-    @family_employment_under3_data = Api::FamilyEmploymentService.get_under3_commune(@territory_code)
-    @family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_commune(@territory_code)
-
-    @age_pyramid_data = prepare_age_pyramid_data(@population_data)
-
-    # Récupérer les données pour la France
-    @france_revenue_data = Api::RevenueService.get_median_revenues_france
-    @france_schooling_data = Api::SchoolingService.get_france_schooling
-    @france_children_data = Api::PopulationService.get_france_children_data
-    @france_employment_data = Api::EmploymentService.get_france_employment
-    @france_childcare_data = Api::ChildcareService.get_coverage_france
-    @france_family_data = Api::FamilyService.get_france_families
-    @france_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_france
-    @france_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_france
-
-    # Récupérer les données EPCI, département et région pour la commune
-    # IMPORTANT: Utiliser toujours le territoire de la commune (@territory_code) et non celui de l'utilisateur
+    # Récupérer les codes des territoires de comparaison
     territory = Territory.find_by(codgeo: @territory_code)
     if territory
-      if territory.epci.present?
-        @epci_code = territory.epci
-        @epci_children_data = Api::PopulationService.get_epci_children_data(territory.epci)
-        @epci_revenue_data = Api::RevenueService.get_median_revenues_epci(territory.epci)
-        @epci_schooling_data = Api::SchoolingService.get_epci_schooling(territory.epci)
-        @epci_employment_data = Api::EmploymentService.get_epci_employment(territory.epci)
-        @epci_childcare_data = Api::ChildcareService.get_coverage_by_epci(territory.epci)
-        @epci_family_data = Api::FamilyService.get_epci_families(territory.epci)
-        @epci_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_epci(territory.epci)
-        @epci_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_epci(territory.epci)
-      end
-
-      if territory.dep.present?
-        @department_code = territory.dep
-        @department_children_data = Api::PopulationService.get_department_children_data(territory.dep)
-        @department_revenue_data = Api::RevenueService.get_median_revenues_department(territory.dep)
-        @department_schooling_data = Api::SchoolingService.get_department_schooling(territory.dep)
-        @department_employment_data = Api::EmploymentService.get_department_employment(territory.dep)
-        @department_safety_data = Api::PublicSafetyService.get_department_safety(territory.dep)
-        @department_childcare_data = Api::ChildcareService.get_coverage_by_department(territory.dep)
-        @department_family_data = Api::FamilyService.get_department_families(territory.dep)
-        @department_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_department(territory.dep)
-        @department_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_department(territory.dep)
-      end
-
-      if territory.reg.present?
-        @region_code = territory.reg
-        @region_children_data = Api::PopulationService.get_region_children_data(territory.reg)
-        @region_revenue_data = Api::RevenueService.get_median_revenues_region(territory.reg)
-        @region_schooling_data = Api::SchoolingService.get_region_schooling(territory.reg)
-        @region_employment_data = Api::EmploymentService.get_region_employment(territory.reg)
-        @region_safety_data = Api::PublicSafetyService.get_region_safety(territory.reg)
-        @region_childcare_data = Api::ChildcareService.get_coverage_by_region(territory.reg)
-        @region_family_data = Api::FamilyService.get_region_families(territory.reg)
-        @region_family_employment_under3_data = Api::FamilyEmploymentService.get_under3_region(territory.reg)
-        @region_family_employment_3to5_data = Api::FamilyEmploymentService.get_3to5_region(territory.reg)
-      end
+      @epci_code = territory.epci
+      @department_code = territory.dep
+      @region_code = territory.reg
     end
   end
-
-  private
 
   def check_user_territory
     # Si un paramètre commune_code est fourni, vérifier les autorisations spécifiques
@@ -169,8 +387,122 @@ class DashboardController < ApplicationController
       femaleData: female_counts.reverse
     }
 
-    Rails.logger.debug "Age pyramid data: #{result.inspect}"
+    Rails.logger.debug "🔍 Age pyramid data prepared: #{result[:ageGroups].size} groups, #{result[:maleData].sum} males, #{result[:femaleData].sum} females"
 
     result
+  end
+
+  # === MÉTHODES POUR CHARGER LES DONNÉES DE COMPARAISON AVEC CACHE ===
+
+  def load_comparison_data_for_families_cached
+    @france_children_data = cached_france_children_data
+    @france_family_data = cached_france_family_data
+
+    @epci_children_data = cached_epci_children_data(@epci_code)
+    @epci_family_data = cached_epci_family_data(@epci_code)
+
+    @department_children_data = cached_department_children_data(@department_code)
+    @department_family_data = cached_department_family_data(@department_code)
+
+    @region_children_data = cached_region_children_data(@region_code)
+    @region_family_data = cached_region_family_data(@region_code)
+  end
+
+  def load_comparison_data_for_children_cached
+    @france_children_data = cached_france_children_data
+    @epci_children_data = cached_epci_children_data(@epci_code)
+    @department_children_data = cached_department_children_data(@department_code)
+    @region_children_data = cached_region_children_data(@region_code)
+  end
+
+  def load_comparison_data_for_economy_cached
+    @france_revenue_data = cached_france_revenue_data
+    @epci_revenue_data = cached_epci_revenue_data(@epci_code)
+    @department_revenue_data = cached_department_revenue_data(@department_code)
+    @region_revenue_data = cached_region_revenue_data(@region_code)
+  end
+
+  def load_comparison_data_for_schooling_cached
+    @france_schooling_data = cached_france_schooling_data
+    @epci_schooling_data = cached_epci_schooling_data(@epci_code)
+    @department_schooling_data = cached_department_schooling_data(@department_code)
+    @region_schooling_data = cached_region_schooling_data(@region_code)
+  end
+
+  def load_comparison_data_for_childcare_cached
+    @france_childcare_data = cached_france_childcare_data
+    @epci_childcare_data = cached_epci_childcare_data(@epci_code)
+    @department_childcare_data = cached_department_childcare_data(@department_code)
+    @region_childcare_data = cached_region_childcare_data(@region_code)
+  end
+
+  def load_comparison_data_for_employment_cached
+    @france_employment_data = cached_france_employment_data
+    @france_family_employment_under3_data = cached_france_family_employment_under3_data
+    @france_family_employment_3to5_data = cached_france_family_employment_3to5_data
+
+    @epci_employment_data = cached_epci_employment_data(@epci_code)
+    @epci_family_employment_under3_data = cached_epci_family_employment_under3_data(@epci_code)
+    @epci_family_employment_3to5_data = cached_epci_family_employment_3to5_data(@epci_code)
+
+    @department_employment_data = cached_department_employment_data(@department_code)
+    @department_family_employment_under3_data = cached_department_family_employment_under3_data(@department_code)
+    @department_family_employment_3to5_data = cached_department_family_employment_3to5_data(@department_code)
+
+    @region_employment_data = cached_region_employment_data(@region_code)
+    @region_family_employment_under3_data = cached_region_family_employment_under3_data(@region_code)
+    @region_family_employment_3to5_data = cached_region_family_employment_3to5_data(@region_code)
+  end
+
+  def load_comparison_data_for_family_employment_cached
+    @france_family_employment_under3_data = cached_france_family_employment_under3_data
+    @france_family_employment_3to5_data = cached_france_family_employment_3to5_data
+
+    @epci_family_employment_under3_data = cached_epci_family_employment_under3_data(@epci_code)
+    @epci_family_employment_3to5_data = cached_epci_family_employment_3to5_data(@epci_code)
+
+    @department_family_employment_under3_data = cached_department_family_employment_under3_data(@department_code)
+    @department_family_employment_3to5_data = cached_department_family_employment_3to5_data(@department_code)
+
+    @region_family_employment_under3_data = cached_region_family_employment_under3_data(@region_code)
+    @region_family_employment_3to5_data = cached_region_family_employment_3to5_data(@region_code)
+  end
+
+  def load_comparison_data_for_safety_cached
+    @department_safety_data = cached_department_safety_data(@department_code)
+    @region_safety_data = cached_region_safety_data(@region_code)
+  end
+
+  # 🚀 Anciennes méthodes conservées pour compatibilité (pourraient être supprimées)
+  def load_comparison_data_for_families
+    load_comparison_data_for_families_cached
+  end
+
+  def load_comparison_data_for_children
+    load_comparison_data_for_children_cached
+  end
+
+  def load_comparison_data_for_economy
+    load_comparison_data_for_economy_cached
+  end
+
+  def load_comparison_data_for_schooling
+    load_comparison_data_for_schooling_cached
+  end
+
+  def load_comparison_data_for_childcare
+    load_comparison_data_for_childcare_cached
+  end
+
+  def load_comparison_data_for_employment
+    load_comparison_data_for_employment_cached
+  end
+
+  def load_comparison_data_for_family_employment
+    load_comparison_data_for_family_employment_cached
+  end
+
+  def load_comparison_data_for_safety
+    load_comparison_data_for_safety_cached
   end
 end

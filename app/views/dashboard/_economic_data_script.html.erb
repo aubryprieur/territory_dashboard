@@ -1,8 +1,13 @@
 <!-- Script pour initialiser les données économiques -->
 <script>
-  // Initialiser l'objet global des données économiques
-  window.economicData = {};
+console.log("🎯 Initialisation des données économiques");
 
+// ✅ S'assurer que l'objet global existe
+if (!window.economicData) {
+  window.economicData = {};
+}
+
+try {
   // Données des revenus médians
   window.economicData.communeRevenueData = <%= raw (@revenue_data&.dig("median_revenues") || {}).to_json %>;
   window.economicData.epciRevenueData = <%= raw (@epci_revenue_data&.dig("median_revenues") || {}).to_json %>;
@@ -22,4 +27,39 @@
   window.economicData.epciName = <%= raw display_territory_name(epci_display_name).to_json %>;
   window.economicData.departmentName = <%= raw display_territory_name(department_display_name).to_json %>;
   window.economicData.regionName = <%= raw display_territory_name(region_display_name).to_json %>;
+
+  console.log("✅ Données économiques chargées avec succès:", {
+    commune: Object.keys(window.economicData.communeRevenueData || {}).length + " années de revenus",
+    epci: Object.keys(window.economicData.epciRevenueData || {}).length + " années de revenus",
+    department: Object.keys(window.economicData.departmentRevenueData || {}).length + " années de revenus",
+    region: Object.keys(window.economicData.regionRevenueData || {}).length + " années de revenus",
+    france: Object.keys(window.economicData.franceRevenueData || {}).length + " années de revenus"
+  });
+
+  // ✅ Marquer les données comme prêtes
+  window.economicData._loaded = true;
+  window.economicData._loadTime = new Date().toISOString();
+
+} catch (error) {
+  console.error("❌ Erreur lors du chargement des données économiques:", error);
+  // En cas d'erreur, s'assurer qu'on a au moins des objets vides
+  window.economicData = {
+    communeRevenueData: {},
+    epciRevenueData: {},
+    departmentRevenueData: {},
+    regionRevenueData: {},
+    franceRevenueData: {},
+    communePovertyData: {},
+    epciPovertyData: {},
+    departmentPovertyData: {},
+    regionPovertyData: {},
+    francePovertyData: {},
+    communeName: "<%= @territory_name %>",
+    epciName: "EPCI",
+    departmentName: "Département",
+    regionName: "Région",
+    _loaded: false,
+    _error: error.message
+  };
+}
 </script>

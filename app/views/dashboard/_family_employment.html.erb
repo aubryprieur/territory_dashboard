@@ -106,6 +106,10 @@
         "colors": <%= raw category_colors.to_json %>
       }
     </script>
+  <% else %>
+    <div class="text-center py-8 text-gray-500">
+      <p>Aucune donnée disponible pour les familles avec enfants de moins de 3 ans</p>
+    </div>
   <% end %>
 
   <% if latest_year_3to5.present? && chart_categories_3to5.any? %>
@@ -124,6 +128,10 @@
         "colors": <%= raw category_colors.to_json %>
       }
     </script>
+  <% else %>
+    <div class="text-center py-8 text-gray-500">
+      <p>Aucune donnée disponible pour les familles avec enfants de 3 à 5 ans</p>
+    </div>
   <% end %>
 
   <div class="mt-6 bg-gray-50 p-4 rounded-md">
@@ -138,3 +146,34 @@
     </p>
   </div>
 </div>
+
+<!-- ✅ SCRIPT POUR DÉCLENCHER L'INITIALISATION DES GRAPHIQUES -->
+<script>
+console.log("🎯 Script family employment chargé");
+
+// ✅ VÉRIFIER QUE LES DONNÉES SONT PRÉSENTES
+const under3Data = document.getElementById('family-employment-under3-data');
+const over3Data = document.getElementById('family-employment-3to5-data');
+
+if (under3Data) {
+  console.log("📊 Données moins de 3 ans trouvées");
+}
+if (over3Data) {
+  console.log("📊 Données 3-5 ans trouvées");
+}
+
+// ✅ DÉCLENCHER L'ÉVÉNEMENT POUR INITIALISER LES GRAPHIQUES
+document.dispatchEvent(new CustomEvent('dashboard:sectionLoaded', {
+  detail: { section: 'family_employment' }
+}));
+
+// ✅ BACKUP: Si les graphiques ne se lancent pas via l'événement, les lancer directement
+setTimeout(() => {
+  if (typeof initFamilyEmploymentCharts === 'function') {
+    console.log("🎯 Lancement direct des graphiques d'emploi familial");
+    initFamilyEmploymentCharts();
+  } else {
+    console.warn("❌ Fonction initFamilyEmploymentCharts non trouvée");
+  }
+}, 300);
+</script>

@@ -82,6 +82,21 @@ Rails.application.routes.draw do
   get 'dashboard', to: 'dashboard#index'
   get 'epci_dashboard', to: 'epci_dashboard#index'
 
+  # Routes pour le chargement asynchrone des sections du dashboard
+  scope 'dashboard' do
+    get 'load_synthese', to: 'dashboard#load_synthese'
+    get 'load_families', to: 'dashboard#load_families'
+    get 'load_age_pyramid', to: 'dashboard#load_age_pyramid'
+    get 'load_children_comparison', to: 'dashboard#load_children_comparison'
+    get 'load_economic_data', to: 'dashboard#load_economic_data'
+    get 'load_schooling', to: 'dashboard#load_schooling'
+    get 'load_childcare', to: 'dashboard#load_childcare'
+    get 'load_employment', to: 'dashboard#load_employment'
+    get 'load_family_employment', to: 'dashboard#load_family_employment'
+    get 'load_domestic_violence', to: 'dashboard#load_domestic_violence'
+    get 'clear_cache', to: 'dashboard#clear_cache'
+  end
+
   # Redirection conditionnelle selon le type d'utilisateur
   authenticated :user do
     root to: "application#dashboard_router", as: :authenticated_root

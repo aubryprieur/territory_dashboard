@@ -1,8 +1,72 @@
 // Graphiques pour les données économiques
+
+// ✅ CHARGEMENT INITIAL (pour les pages complètes)
 document.addEventListener('turbo:load', function() {
+  initEconomicCharts();
+});
+
+// ✅ CHARGEMENT ASYNCHRONE (pour les sections dashboard)
+document.addEventListener('dashboard:sectionLoaded', function(event) {
+  if (event.detail.section === 'economic_data') {
+    console.log("🎯 Section economic_data chargée, initialisation des graphiques");
+
+    // Attendre un peu que le DOM et le script soient prêts
+    setTimeout(() => {
+      initEconomicCharts();
+    }, 200);
+  }
+});
+
+// Fonction centralisée pour initialiser tous les graphiques économiques
+function initEconomicCharts() {
+  console.log("🎯 Initialisation des graphiques économiques");
+
+  // ✅ AJOUT: Vérifier que les données sont disponibles avant de continuer
+  if (!window.economicData) {
+    console.warn("❌ window.economicData non disponible, tentative de relecture");
+
+    // Essayer de relire les données depuis les éléments script dans le DOM
+    tryToLoadEconomicDataFromDOM();
+
+    // Si toujours pas disponible après tentative, abandonner
+    if (!window.economicData) {
+      console.error("❌ Impossible de charger window.economicData");
+      return;
+    }
+  }
+
   initRevenueChart();
   initPovertyChart();
-});
+}
+
+// ✅ NOUVELLE FONCTION: Essayer de charger les données depuis le DOM
+function tryToLoadEconomicDataFromDOM() {
+  console.log("🔄 Tentative de chargement des données économiques depuis le DOM");
+
+  // Chercher le script qui contient les données
+  const scriptElements = document.querySelectorAll('script');
+  let foundData = false;
+
+  for (let script of scriptElements) {
+    const content = script.innerHTML;
+    if (content.includes('window.economicData = {}')) {
+      console.log("📄 Script de données économiques trouvé, exécution...");
+      try {
+        // Exécuter le contenu du script
+        eval(content);
+        foundData = true;
+        console.log("✅ Données économiques chargées depuis le DOM");
+        break;
+      } catch (e) {
+        console.error("❌ Erreur lors de l'exécution du script:", e);
+      }
+    }
+  }
+
+  if (!foundData) {
+    console.warn("⚠️ Script de données économiques non trouvé dans le DOM");
+  }
+}
 
 // Graphique évolution des revenus médians
 function initRevenueChart() {
@@ -13,6 +77,14 @@ function initRevenueChart() {
     console.warn("Élément canvas 'revenue-chart' non trouvé");
     return;
   }
+
+  // Vérifier que les données sont disponibles
+  if (!window.economicData) {
+    console.warn("window.economicData non disponible pour les revenus");
+    return;
+  }
+
+  console.log("🔍 Données économiques disponibles:", window.economicData);
 
   // Ces variables seront injectées par Ruby dans le code HTML généré
   const communeRevenueData = window.economicData?.communeRevenueData || {};
@@ -25,6 +97,14 @@ function initRevenueChart() {
   const epciName = window.economicData?.epciName || "EPCI";
   const departmentName = window.economicData?.departmentName || "Département";
   const regionName = window.economicData?.regionName || "Région";
+
+  console.log("🔍 Données revenus:", {
+    commune: Object.keys(communeRevenueData).length,
+    epci: Object.keys(epciRevenueData).length,
+    department: Object.keys(departmentRevenueData).length,
+    region: Object.keys(regionRevenueData).length,
+    france: Object.keys(franceRevenueData).length
+  });
 
   if (
     Object.keys(communeRevenueData).length === 0 &&
@@ -163,9 +243,9 @@ function initRevenueChart() {
       }
     });
 
-    console.log("Graphique des revenus créé avec succès");
+    console.log("✅ Graphique des revenus créé avec succès");
   } catch (e) {
-    console.error("Erreur lors de la création du graphique des revenus:", e);
+    console.error("❌ Erreur lors de la création du graphique des revenus:", e);
   }
 }
 
@@ -177,6 +257,12 @@ function initPovertyChart() {
   const chartElement = document.getElementById('poverty-chart');
   if (!chartElement) {
     console.warn("Élément canvas 'poverty-chart' non trouvé");
+    return;
+  }
+
+  // Vérifier que les données sont disponibles
+  if (!window.economicData) {
+    console.warn("window.economicData non disponible pour la pauvreté");
     return;
   }
 
@@ -344,8 +430,8 @@ function initPovertyChart() {
       }
     });
 
-    console.log("Graphique des taux de pauvreté créé avec succès");
+    console.log("✅ Graphique des taux de pauvreté créé avec succès");
   } catch (e) {
-    console.error("Erreur lors de la création du graphique des taux de pauvreté:", e);
+    console.error("❌ Erreur lors de la création du graphique des taux de pauvreté:", e);
   }
 }

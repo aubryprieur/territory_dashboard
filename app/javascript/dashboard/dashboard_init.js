@@ -1,3 +1,6 @@
+// app/javascript/dashboard/dashboard_init.js
+import "dashboard/charts_init" // 🔧 Import absolu au lieu de relatif
+
 // Fonction d'initialisation principale du dashboard communes
 function initializeDashboard() {
   console.log("🚀 Initialisation du dashboard communes");
@@ -193,24 +196,24 @@ function debugTabsState() {
   console.log("🔍 État actuel des onglets:");
 
   const tabs = document.querySelectorAll('[data-dashboard-tabs-target="tab"]');
-  const panels = document.querySelectorAll('[data-dashboard-tabs-target="panel"]');
+  const panels = document.querySelectorAll('[data-dashboard-tabs-target="content"]'); // 🔧 Corrigé: content au lieu de panel
 
   console.log("Onglets:", tabs.length);
   tabs.forEach((tab, index) => {
-    console.log(`  - Onglet ${index}: ${tab.dataset.tabId}, actif: ${tab.classList.contains('tab-active')}`);
+    console.log(`  - Onglet ${index}: ${tab.dataset.tab}, actif: ${tab.classList.contains('tab-active')}`);
   });
 
   console.log("Panneaux:", panels.length);
   panels.forEach((panel, index) => {
-    console.log(`  - Panneau ${index}: ${panel.dataset.tabId}, visible: ${!panel.classList.contains('hidden')}`);
+    console.log(`  - Panneau ${index}: ${panel.dataset.tab}, visible: ${!panel.classList.contains('hidden')}`);
   });
 }
 
 // Fonction pour changer d'onglet depuis le console (utile pour debug)
 function switchToTab(tabId) {
-  const controller = document.querySelector('[data-controller="dashboard-tabs"]');
+  const controller = document.querySelector('[data-controller*="dashboard-tabs"]');
   if (controller && controller.controller) {
-    controller.controller.showTab(tabId);
+    controller.controller.switchToTab(tabId);
   } else {
     console.warn(`⚠️ Contrôleur d'onglets non trouvé`);
   }
