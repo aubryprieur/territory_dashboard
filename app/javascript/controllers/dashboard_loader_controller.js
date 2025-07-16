@@ -7,269 +7,232 @@ export default class extends Controller {
 
   connect() {
     console.log("🚀 Dashboard loader connecté")
-    this.loadedSections = new Set()
-    this.loadingSections = new Set()
 
-    // Écouter les événements de changement d'onglet
-    document.addEventListener('dashboard:loadSection', this.handleLoadSection.bind(this))
+    // 🔧 CORRECTION : Récupérer le commune_code depuis l'URL au connect
+    const urlParams = new URLSearchParams(window.location.search);
+    this.communeCode = urlParams.get('commune_code');
 
-    // Précharger la première section après un court délai
-    setTimeout(() => {
-      this.loadSection('synthese')
-    }, 100)
+    console.log('🔍 Commune code stocké:', this.communeCode);
+    console.log('🏛️ Territory value:', this.territoryValue);
+
+    // Écouter les événements de chargement de section
+    this.loadSectionHandler = this.loadSection.bind(this);
+    document.addEventListener('dashboard:loadSection', this.loadSectionHandler);
   }
 
   disconnect() {
-    document.removeEventListener('dashboard:loadSection', this.handleLoadSection.bind(this))
-  }
-
-  handleLoadSection(event) {
-    const sectionName = event.detail.section
-    this.loadSection(sectionName)
-  }
-
-  async loadSection(sectionName) {
-    // Éviter de charger plusieurs fois la même section
-    if (this.loadedSections.has(sectionName) || this.loadingSections.has(sectionName)) {
-      console.log(`📋 Section ${sectionName} déjà chargée ou en cours de chargement`)
-      return
+    if (this.loadSectionHandler) {
+      document.removeEventListener('dashboard:loadSection', this.loadSectionHandler);
     }
+  }
 
-    this.loadingSections.add(sectionName)
-    console.log(`⏳ Chargement de la section: ${sectionName}`)
+  loadSection(event) {
+    const section = event.detail.section;
+    const communeCode = event.detail.commune_code || this.communeCode;
 
-    const container = document.getElementById(`${sectionName}-content`)
+    console.log(`🔄 Chargement section: ${section}`, {
+      communeCode,
+      territoryValue: this.territoryValue
+    });
+
+    // Trouver le conteneur pour cette section
+    const container = document.querySelector(`[data-section="${section}"]`);
     if (!container) {
-      console.warn(`❌ Container non trouvé pour la section: ${sectionName}`)
-      return
+      console.warn(`❌ Container non trouvé pour la section: ${section}`);
+      return;
     }
 
-    try {
-      // Afficher un indicateur de chargement amélioré
-      this.showLoadingState(container, sectionName)
+    // Vérifier si la section est déjà chargée (éviter les rechargements inutiles)
+    if (container.dataset.loaded === 'true' && !container.querySelector('.animate-pulse')) {
+      console.log(`✨ Section ${section} déjà chargée, ignorée`);
+      return;
+    }
 
-      // Construire l'URL en fonction du nom de section
-      const url = this.buildSectionUrl(sectionName)
+    // Construire l'URL avec le commune_code si présent
+    let url = `/dashboard/load_${section}`;
+    if (communeCode) {
+      url += `?commune_code=${encodeURIComponent(communeCode)}`;
+    }
 
-      // Appel AJAX vers l'action correspondante
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'text/html',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
-        }
-      })
+    console.log(`📡 Requête AJAX: ${url}`);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+    // Marquer le container comme en cours de chargement
+    container.dataset.loading = 'true';
+
+    // Effectuer la requête AJAX
+    fetch(url, {
+      headers: {
+        'Accept': 'text/html',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
       }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.text();
+    })
+    .then(html => {
+      console.log(`✅ Section ${section} chargée avec succès`);
 
-      const html = await response.text()
+      // Remplacer le contenu
+      container.innerHTML = html;
 
-      // Animer le remplacement du contenu
-      await this.animateContentReplacement(container, html)
+      // Marquer comme chargé
+      container.dataset.loaded = 'true';
+      container.dataset.loading = 'false';
 
-      this.loadedSections.add(sectionName)
-      console.log(`✅ Section ${sectionName} chargée avec succès`)
+      // Déclencher un événement personnalisé pour signaler que la section est chargée
+      const loadedEvent = new CustomEvent('dashboard:sectionLoaded', {
+        detail: { section, container, communeCode }
+      });
+      document.dispatchEvent(loadedEvent);
 
-      // Déclencher l'initialisation des graphiques/cartes si nécessaire
-      this.initializeSectionComponents(sectionName)
+      // Initialiser les graphiques si nécessaire
+      this.initializeCharts(container, section);
+    })
+    .catch(error => {
+      console.error(`❌ Erreur lors du chargement de ${section}:`, error);
+
+      container.dataset.loading = 'false';
+      container.dataset.loaded = 'false';
+
+      container.innerHTML = `
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">Erreur de chargement</h3>
+              <p class="mt-1 text-sm text-red-700">
+                Impossible de charger la section "${section}": ${error.message}
+              </p>
+              <div class="mt-3 flex space-x-3">
+                <button onclick="this.closest('[data-section]').dataset.loaded='false'; document.dispatchEvent(new CustomEvent('dashboard:loadSection', {detail: {section: '${section}', commune_code: '${communeCode || ''}'}}));"
+                        class="text-sm text-red-800 underline hover:text-red-900">
+                  Réessayer
+                </button>
+                <button onclick="location.reload()"
+                        class="text-sm text-red-800 underline hover:text-red-900">
+                  Recharger la page
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // Méthode pour initialiser les graphiques après le chargement
+  initializeCharts(container, section) {
+    try {
+      // Rechercher et initialiser les graphiques Chart.js
+      const chartCanvases = container.querySelectorAll('canvas[id*="chart"]');
+      chartCanvases.forEach(canvas => {
+        if (canvas.dataset.initialized !== 'true') {
+          console.log(`🎨 Initialisation du graphique: ${canvas.id}`);
+          // Le graphique sera initialisé par les scripts spécifiques à chaque section
+          canvas.dataset.initialized = 'true';
+        }
+      });
+
+      // Rechercher et initialiser les cartes Leaflet
+      const mapContainers = container.querySelectorAll('[id*="map"]');
+      mapContainers.forEach(mapContainer => {
+        if (mapContainer.dataset.initialized !== 'true') {
+          console.log(`🗺️ Initialisation de la carte: ${mapContainer.id}`);
+          // La carte sera initialisée par les scripts spécifiques à chaque section
+          mapContainer.dataset.initialized = 'true';
+        }
+      });
 
     } catch (error) {
-      console.error(`❌ Erreur lors du chargement de ${sectionName}:`, error)
-      this.showErrorState(container, sectionName)
-    } finally {
-      this.loadingSections.delete(sectionName)
+      console.warn(`⚠️ Erreur lors de l'initialisation des graphiques pour ${section}:`, error);
     }
   }
 
-  buildSectionUrl(sectionName) {
-    // Correspondance entre les noms d'onglets et les routes du contrôleur
-    const sectionRoutes = {
-      'synthese': 'load_synthese',
-      'families': 'load_families',
-      'economic_data': 'load_economic_data',
-      'schooling': 'load_schooling',
-      'childcare': 'load_childcare',
-      'employment': 'load_employment',
-      'domestic_violence': 'load_domestic_violence',
-      'family_employment': 'load_family_employment',
-      'children_comparison': 'load_children_comparison'
+  // Méthode utilitaire pour recharger une section
+  reloadSection(section) {
+    const container = document.querySelector(`[data-section="${section}"]`);
+    if (container) {
+      container.dataset.loaded = 'false';
+      const event = new CustomEvent('dashboard:loadSection', {
+        detail: { section, commune_code: this.communeCode }
+      });
+      document.dispatchEvent(event);
     }
-
-    const route = sectionRoutes[sectionName] || `load_${sectionName}`
-    return `/dashboard/${route}`
   }
 
-  showLoadingState(container, sectionName) {
-    const loadingContent = `
-      <div class="flex flex-col items-center justify-center py-12 space-y-4">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <p class="text-gray-600 text-sm">Chargement des données ${this.getSectionDisplayName(sectionName)}...</p>
-        <div class="w-64 bg-gray-200 rounded-full h-2">
-          <div class="bg-blue-600 h-2 rounded-full animate-pulse" style="width: 60%"></div>
-        </div>
-      </div>
-    `
-    container.innerHTML = loadingContent
-  }
-
-  showErrorState(container, sectionName) {
-    const errorContent = `
-      <div class="flex flex-col items-center justify-center py-12 space-y-4">
-        <div class="rounded-full h-12 w-12 bg-red-100 flex items-center justify-center">
-          <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </div>
-        <p class="text-red-600 text-sm font-medium">Erreur lors du chargement des données</p>
-        <p class="text-gray-500 text-xs">Vérifiez votre connexion internet</p>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
-                onclick="document.dispatchEvent(new CustomEvent('dashboard:loadSection', {detail: {section: '${sectionName}'}}))">
-          <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
-          Réessayer
-        </button>
-      </div>
-    `
-    container.innerHTML = errorContent
-  }
-
-  async animateContentReplacement(container, newHTML) {
-    // Fade out avec transform
-    container.style.opacity = '0.5'
-    container.style.transform = 'translateY(10px)'
-    container.style.transition = 'all 0.2s ease-out'
-
-    await new Promise(resolve => setTimeout(resolve, 200))
-
-    // Remplacer le contenu
-    container.innerHTML = newHTML
-
-    // Fade in
-    container.style.opacity = '1'
-    container.style.transform = 'translateY(0)'
-    container.style.transition = 'all 0.3s ease-in-out'
-
-    await new Promise(resolve => setTimeout(resolve, 300))
-
-    // Nettoyer les styles
-    container.style.transition = ''
-    container.style.transform = ''
-    container.style.opacity = ''
-  }
-
-  initializeSectionComponents(sectionName) {
-    // Déclencher l'initialisation spécifique selon la section
-    console.log(`🔧 Initialisation des composants pour: ${sectionName}`)
-
-    switch(sectionName) {
-      case 'families':
-        this.initializeFamiliesCharts()
-        break
-      case 'economic_data':
-        this.initializeEconomicCharts()
-        break
-      case 'synthese':
-        // ✅ Ne rien faire de spécial ici - charts_init.js s'en occupe
-        break
-      case 'schooling':
-        this.initializeSchoolingCharts()
-        break
-      case 'childcare':
-        this.initializeChildcareCharts()
-        break
-      case 'employment':
-        this.initializeEmploymentCharts()
-        break
-      case 'domestic_violence':
-        this.initializeSafetyCharts()
-        break
-    }
-
-    // Événement global pour tous les composants
-    const event = new CustomEvent('dashboard:sectionLoaded', {
-      detail: { section: sectionName, container: document.getElementById(`${sectionName}-content`) }
-    })
-    document.dispatchEvent(event)
-  }
-
-  initializeFamiliesCharts() {
-    const event = new CustomEvent('charts:initializeFamilies')
-    document.dispatchEvent(event)
-  }
-
-  initializeEconomicCharts() {
-    const event = new CustomEvent('charts:initializeEconomic')
-    document.dispatchEvent(event)
-  }
-
-  initializeSchoolingCharts() {
-    const event = new CustomEvent('charts:initializeSchooling')
-    document.dispatchEvent(event)
-  }
-
-  initializeChildcareCharts() {
-    const event = new CustomEvent('charts:initializeChildcare')
-    document.dispatchEvent(event)
-  }
-
-  initializeEmploymentCharts() {
-    const event = new CustomEvent('charts:initializeEmployment')
-    document.dispatchEvent(event)
-  }
-
-  initializeSafetyCharts() {
-    const event = new CustomEvent('charts:initializeSafety')
-    document.dispatchEvent(event)
-  }
-
-  getSectionDisplayName(sectionName) {
-    const names = {
-      'synthese': 'de synthèse',
-      'families': 'des familles',
-      'economic_data': 'économiques',
-      'schooling': 'de scolarité',
-      'childcare': 'de garde d\'enfants',
-      'employment': 'd\'emploi',
-      'domestic_violence': 'de sécurité',
-      'family_employment': 'd\'emploi familial',
-      'children_comparison': 'de comparaison enfants'
-    }
-    return names[sectionName] || sectionName
-  }
-
-  // Méthode publique pour précharger les sections suivantes
-  preloadNextSections() {
-    const sectionsOrder = ['synthese', 'families', 'economic_data', 'schooling', 'childcare', 'employment', 'domestic_violence']
-
-    sectionsOrder.forEach((section, index) => {
-      if (!this.loadedSections.has(section)) {
-        // Précharger avec un délai progressif (plus rapide)
+  // Méthode utilitaire pour recharger toutes les sections
+  reloadAllSections() {
+    const containers = document.querySelectorAll('[data-section]');
+    containers.forEach(container => {
+      const section = container.dataset.section;
+      if (section) {
+        container.dataset.loaded = 'false';
         setTimeout(() => {
-          this.loadSection(section)
-        }, index * 500) // 500ms entre chaque préchargement
+          const event = new CustomEvent('dashboard:loadSection', {
+            detail: { section, commune_code: this.communeCode }
+          });
+          document.dispatchEvent(event);
+        }, Math.random() * 100); // Petit délai aléatoire pour éviter trop de requêtes simultanées
       }
-    })
+    });
   }
 
-  // Méthode pour vider le cache et recharger
+  // 🔧 AJOUT : Méthode pour vider le cache et recharger
   async clearCacheAndReload() {
     if (confirm('Vider le cache et recharger les données ?')) {
       try {
-        await fetch('/dashboard/clear_cache')
-        // Vider les sections chargées
-        this.loadedSections.clear()
-        // Recharger la section active
-        const activeTab = document.querySelector('[data-dashboard-tabs-target="tab"].tab-active')
-        if (activeTab) {
-          const sectionName = activeTab.dataset.tab
-          this.loadSection(sectionName)
+        // Construire l'URL avec le commune_code si présent
+        let url = '/dashboard/clear_cache';
+        if (this.communeCode) {
+          url += `?commune_code=${encodeURIComponent(this.communeCode)}`;
         }
+
+        console.log('🗑️ Vidage du cache:', url);
+
+        await fetch(url, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          }
+        });
+
+        // Marquer toutes les sections comme non chargées
+        const containers = document.querySelectorAll('[data-section]');
+        containers.forEach(container => {
+          container.dataset.loaded = 'false';
+        });
+
+        console.log('✅ Cache vidé, rechargement des sections...');
+
+        // Recharger la section active
+        const activeTab = document.querySelector('[data-dashboard-tabs-target="tab"].tab-active');
+        if (activeTab) {
+          const sectionName = activeTab.dataset.tab;
+          console.log(`🔄 Rechargement de la section active: ${sectionName}`);
+
+          const event = new CustomEvent('dashboard:loadSection', {
+            detail: { section: sectionName, commune_code: this.communeCode }
+          });
+          document.dispatchEvent(event);
+        } else {
+          // Si aucun onglet actif, charger la synthèse par défaut
+          const event = new CustomEvent('dashboard:loadSection', {
+            detail: { section: 'synthese', commune_code: this.communeCode }
+          });
+          document.dispatchEvent(event);
+        }
+
       } catch (error) {
-        console.error('Erreur lors du vidage du cache:', error)
+        console.error('❌ Erreur lors du vidage du cache:', error);
+        alert('Erreur lors du vidage du cache. Veuillez recharger la page manuellement.');
       }
     }
   }

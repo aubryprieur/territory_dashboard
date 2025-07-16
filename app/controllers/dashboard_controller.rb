@@ -17,8 +17,20 @@ class DashboardController < ApplicationController
       return
     end
 
+    # Vérification que le territoire est valide
+    unless @territory_code.present?
+      redirect_to root_path, alert: "Aucun territoire disponible pour afficher le dashboard."
+      return
+    end
+
     # Chargement immédiat des données essentielles seulement
     territory = Territory.find_by(codgeo: @territory_code)
+
+    # Vérifier que le territoire existe dans la base
+    unless territory
+      redirect_to root_path, alert: "Le territoire demandé n'existe pas dans notre base de données."
+      return
+    end
 
     @basic_info = {
       commune_name: @territory_name,
@@ -30,14 +42,22 @@ class DashboardController < ApplicationController
       is_commune_access_from_epci: @is_commune_access_from_epci
     }
 
-    # 🚀 Précharger les données essentielles en arrière-plan
-    preload_essential_data(@territory_code, territory&.epci, territory&.dep, territory&.reg)
+    begin
+      # Précharger les données essentielles en arrière-plan
+      preload_essential_data(@territory_code, territory&.epci, territory&.dep, territory&.reg)
+    rescue => e
+      Rails.logger.error "Error preloading essential data: #{e.message}"
+      # Continuer même si le préchargement échoue
+    end
 
     # Les autres données seront chargées en AJAX
     respond_to do |format|
       format.html # Affichage immédiat de la structure de base
       format.turbo_stream # Pour les mises à jour partielles
     end
+  rescue => e
+    Rails.logger.error "Dashboard index error: #{e.message}"
+    redirect_to root_path, alert: "Une erreur est survenue lors du chargement du dashboard."
   end
 
   # === ACTIONS ASYNCHRONES POUR CHAQUE SECTION (AVEC CACHE) ===
@@ -302,6 +322,15 @@ class DashboardController < ApplicationController
       territory = Territory.find_by(codgeo: @territory_code)
       @territory_name = territory&.libgeo || "Commune inconnue"
       @is_commune_access_from_epci = true
+
+      # 🔧 CORRECTION : Stocker les informations dans la session pour debugging
+      session[:last_commune_access] = {
+        commune_code: @territory_code,
+        commune_name: @territory_name,
+        accessed_at: Time.current,
+        user_territory_type: current_user.territory_type,
+        user_territory_code: current_user.territory_code
+      }
     else
       # Utiliser le territoire de l'utilisateur
       @territory_code = current_user.territory_code
@@ -319,11 +348,22 @@ class DashboardController < ApplicationController
   end
 
   def check_user_territory
+    # 🔧 CORRECTION : Logging pour debugging
+    Rails.logger.info "=== DASHBOARD ACCESS DEBUG ==="
+    Rails.logger.info "User: #{current_user.email}"
+    Rails.logger.info "User territory type: #{current_user.territory_type}"
+    Rails.logger.info "User territory code: #{current_user.territory_code}"
+    Rails.logger.info "Requested commune_code: #{params[:commune_code]}"
+    Rails.logger.info "Session info: #{session[:last_commune_access]}"
+
     # Si un paramètre commune_code est fourni, vérifier les autorisations spécifiques
     if params[:commune_code].present?
       unless user_can_access_commune?(params[:commune_code])
+        Rails.logger.error "ACCESS DENIED to commune #{params[:commune_code]} for user #{current_user.email}"
         redirect_to root_path, alert: "Vous n'avez pas l'autorisation d'accéder à cette commune."
+        return
       end
+      Rails.logger.info "ACCESS GRANTED to commune #{params[:commune_code]} for user #{current_user.email}"
       return # Sortir de la méthode si on a validé l'accès via commune_code
     end
 
@@ -338,24 +378,40 @@ class DashboardController < ApplicationController
   end
 
   def user_can_access_commune?(commune_code)
+    Rails.logger.info "=== CHECKING COMMUNE ACCESS ==="
+    Rails.logger.info "Commune code: #{commune_code}"
+
     # Vérifier que la commune existe
     territory = Territory.find_by(codgeo: commune_code)
-    return false unless territory
+    unless territory
+      Rails.logger.error "Territory not found for code: #{commune_code}"
+      return false
+    end
+
+    Rails.logger.info "Territory found: #{territory.libgeo}, EPCI: #{territory.epci}"
 
     # Les super_admin peuvent accéder à toutes les communes
-    return true if current_user.super_admin?
+    if current_user.super_admin?
+      Rails.logger.info "Access granted: Super admin"
+      return true
+    end
 
     # Si l'utilisateur est de type EPCI, vérifier que la commune appartient à son EPCI
     if current_user.territory_type == 'epci'
-      return territory.epci == current_user.territory_code
+      access_granted = (territory.epci == current_user.territory_code)
+      Rails.logger.info "EPCI access check: territory.epci=#{territory.epci}, user.territory_code=#{current_user.territory_code}, granted=#{access_granted}"
+      return access_granted
     end
 
     # Si l'utilisateur est de type commune, il peut accéder à sa propre commune
     if current_user.territory_type == 'commune'
-      return commune_code == current_user.territory_code
+      access_granted = (commune_code == current_user.territory_code)
+      Rails.logger.info "Commune access check: granted=#{access_granted}"
+      return access_granted
     end
 
     # Pour les autres cas, refuser l'accès
+    Rails.logger.error "Access denied: No matching territory type"
     false
   end
 

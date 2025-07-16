@@ -16,6 +16,18 @@
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <%= javascript_importmap_tags %>
+
+    <!-- 🔧 AJOUT : Données dashboard si disponibles -->
+    <% if defined?(@basic_info) && @basic_info.present? %>
+      <script type="application/json" id="dashboard-info">
+        {
+          "commune_name": "<%= j(@basic_info[:commune_name]) %>",
+          "territory_code": "<%= j(@basic_info[:territory_code]) %>",
+          "epci_code": "<%= j(@basic_info[:epci_code]) %>",
+          "is_commune_access_from_epci": <%= @basic_info[:is_commune_access_from_epci] %>
+        }
+      </script>
+    <% end %>
   </head>
 
   <body class="bg-gray-100 flex flex-col min-h-screen">
@@ -30,5 +42,3 @@
 
   </body>
 </html>
-
-

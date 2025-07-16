@@ -1,4 +1,23 @@
-<!-- app/views/dashboard/index.html.erb - Header amélioré -->
+<% if @is_commune_access_from_epci %>
+  <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+        </svg>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-blue-700">
+          Vous consultez le dashboard de <strong><%= @territory_name %></strong> depuis votre dashboard EPCI.
+          <button onclick="window.close()" class="underline hover:text-blue-800 ml-2">
+            Fermer cet onglet
+          </button>
+        </p>
+      </div>
+    </div>
+  </div>
+<% end %>
+
 <div data-controller="dashboard-tabs dashboard-loader"
      data-dashboard-loader-territory-value="<%= @basic_info[:territory_code] %>">
 
@@ -410,19 +429,48 @@
 <!-- Script pour déclencher le chargement immédiatement -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Initialisation dashboard');
+
+  // 🔧 CORRECTION : Récupérer le commune_code depuis l'URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const communeCode = urlParams.get('commune_code');
+
+  console.log('🔍 Commune code détecté:', communeCode);
+  console.log('🏛️ Basic info territory:', '<%= @basic_info[:territory_code] %>');
+
   // Déclencher le chargement de la première section immédiatement
-  const event = new CustomEvent('dashboard:loadSection', {
-    detail: { section: 'synthese' }
-  });
-  document.dispatchEvent(event);
+  setTimeout(() => {
+    const event = new CustomEvent('dashboard:loadSection', {
+      detail: {
+        section: 'synthese',
+        commune_code: communeCode
+      }
+    });
+    document.dispatchEvent(event);
+  }, 100); // Petit délai pour s'assurer que le contrôleur Stimulus est connecté
 });
 
 // Écouter les changements d'onglets pour charger les sections à la demande
 document.addEventListener('dashboard:tabChanged', function(event) {
   const sectionName = event.detail.section;
+
+  console.log('🔄 Changement d\'onglet vers:', sectionName);
+
+  // 🔧 CORRECTION : Récupérer le commune_code depuis l'URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const communeCode = urlParams.get('commune_code');
+
   const loadEvent = new CustomEvent('dashboard:loadSection', {
-    detail: { section: sectionName }
+    detail: {
+      section: sectionName,
+      commune_code: communeCode
+    }
   });
   document.dispatchEvent(loadEvent);
+});
+
+// Debug : Afficher les événements de chargement
+document.addEventListener('dashboard:sectionLoaded', function(event) {
+  console.log('✅ Section chargée:', event.detail);
 });
 </script>

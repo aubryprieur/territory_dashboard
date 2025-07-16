@@ -1,12 +1,30 @@
-// app/javascript/epci/commune_search.js
 console.log("✅ commune_search.js chargé");
 
-// Fonction globale pour ouvrir le dashboard d'une commune
+// Fonction globale pour ouvrir le dashboard d'une commune - VERSION CORRIGÉE
 window.openCommuneDashboard = function(communeCode) {
-  if (communeCode) {
-    const url = `/dashboard?commune_code=${communeCode}`;
-    window.open(url, '_blank');
+  console.log("🚀 Ouverture dashboard commune:", communeCode);
+
+  if (!communeCode) {
+    console.error("❌ Code commune manquant");
+    alert("Erreur : Code commune manquant");
+    return;
   }
+
+  // Construire l'URL avec des paramètres encodés
+  const url = `/dashboard?commune_code=${encodeURIComponent(communeCode)}`;
+  console.log("📍 URL dashboard:", url);
+
+  // Ouvrir dans un nouvel onglet
+  const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+
+  // Vérifier que la fenêtre s'est bien ouverte
+  if (!newWindow) {
+    console.error("❌ Impossible d'ouvrir la fenêtre - popup bloqué?");
+    alert("Impossible d'ouvrir le dashboard. Veuillez autoriser les popups pour ce site ou essayer en maintenant Ctrl+clic.");
+    return;
+  }
+
+  console.log("✅ Dashboard ouvert avec succès");
 }
 
 // Fonction globale pour masquer les résultats de recherche
@@ -27,13 +45,13 @@ class CommuneSearch {
     this.selectedIndex = -1;
 
     if (!this.searchInput || !this.resultsContainer) {
-      console.warn('Éléments de recherche non trouvés');
+      console.warn('❌ Éléments de recherche non trouvés');
       return;
     }
 
     // ✅ Ajouter validation des données
     if (!Array.isArray(this.communes)) {
-      console.warn('Données des communes invalides - doit être un tableau');
+      console.warn('❌ Données des communes invalides - doit être un tableau');
       this.communes = [];
       return;
     }
@@ -42,11 +60,11 @@ class CommuneSearch {
   }
 
   init() {
-    console.log(`Recherche initialisée avec ${this.communes.length} communes`);
+    console.log(`🚀 Recherche initialisée avec ${this.communes.length} communes`);
 
     // ✅ Arrêter l'initialisation si pas de communes
     if (this.communes.length === 0) {
-      console.warn('Aucune commune disponible pour la recherche');
+      console.warn('⚠️ Aucune commune disponible pour la recherche');
       return;
     }
 
@@ -60,6 +78,8 @@ class CommuneSearch {
     this.searchInput.addEventListener('input', () => {
       this.selectedIndex = -1;
     });
+
+    console.log('✅ Event listeners attachés');
   }
 
   handleInput(e) {
@@ -80,21 +100,25 @@ class CommuneSearch {
         this.resultsContainer.classList.remove('hidden');
       }, 150);
     } catch (error) {
-      console.error('Erreur lors de la recherche:', error);
+      console.error('❌ Erreur lors de la recherche:', error);
     }
   }
 
   searchCommunes(query) {
     if (!query || query.length < 2 || !Array.isArray(this.communes)) return [];
 
+    console.log(`🔍 Recherche: "${query}"`);
+
     const normalizedQuery = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     const filtered = this.communes.filter(commune => {
       // ✅ Validation supplémentaire des propriétés de commune
-      if (!commune || !commune.name) return false;
+      if (!commune || !commune.name || !commune.code) return false;
 
       const normalizedName = commune.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      return normalizedName.includes(normalizedQuery);
+      const normalizedCode = commune.code.toString().toLowerCase();
+
+      return normalizedName.includes(normalizedQuery) || normalizedCode.includes(normalizedQuery);
     });
 
     // Trier par pertinence (communes qui commencent par la recherche en premier)
@@ -106,10 +130,13 @@ class CommuneSearch {
       return a.name.localeCompare(b.name);
     });
 
+    console.log(`✅ ${filtered.length} résultats trouvés`);
     return filtered.slice(0, 8); // Limiter à 8 résultats
   }
 
   displayResults(results) {
+    if (!this.resultsContainer) return;
+
     if (results.length === 0) {
       this.resultsContainer.innerHTML = `
         <div class="p-4 text-center text-gray-500">
@@ -120,6 +147,7 @@ class CommuneSearch {
         </div>
       `;
       this.selectedIndex = -1;
+      this.resultsContainer.classList.remove('hidden');
       return;
     }
 
@@ -127,6 +155,7 @@ class CommuneSearch {
       // ✅ Validation et échappement des données
       const communeCode = (commune.code || '').toString().replace(/'/g, "\\'");
       const communeName = (commune.name || 'Commune inconnue').replace(/'/g, "\\'");
+      const population = commune.population ? ` • ${commune.population.toLocaleString()} hab.` : '';
 
       return `
         <button onclick="openCommuneDashboard('${communeCode}'); window.hideResults();"
@@ -142,16 +171,18 @@ class CommuneSearch {
             </div>
             <div>
               <div class="font-medium text-gray-900">${communeName}</div>
+              <div class="text-sm text-gray-500">Code: ${communeCode}${population}</div>
             </div>
           </div>
           <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
           </svg>
         </button>
       `;
     }).join('');
 
     this.resultsContainer.innerHTML = html;
+    this.resultsContainer.classList.remove('hidden');
     this.selectedIndex = -1;
   }
 
@@ -177,13 +208,19 @@ class CommuneSearch {
 
   updateSelection(results) {
     results.forEach((result, index) => {
-      result.classList.toggle('bg-blue-50', index === this.selectedIndex);
+      if (index === this.selectedIndex) {
+        result.classList.add('bg-blue-50', 'selected');
+        result.scrollIntoView({ block: 'nearest' });
+      } else {
+        result.classList.remove('bg-blue-50', 'selected');
+      }
     });
   }
 
   handleDocumentClick(e) {
     if (!this.searchInput.contains(e.target) && !this.resultsContainer.contains(e.target)) {
       this.resultsContainer.classList.add('hidden');
+      this.selectedIndex = -1;
     }
   }
 
@@ -196,13 +233,27 @@ class CommuneSearch {
   }
 }
 
-// Fonction d'initialisation exportée
+// Fonction d'initialisation exportée - VERSION CORRIGÉE
 export function initializeCommuneSearch(communes) {
+  console.log("🚀 Initialisation de la recherche de communes");
+
   // ✅ Validation des données avant création de l'instance
   if (!communes || !Array.isArray(communes)) {
-    console.error('initializeCommuneSearch: données des communes invalides', communes);
+    console.error('❌ initializeCommuneSearch: données des communes invalides', communes);
     return null;
   }
 
-  return new CommuneSearch(communes);
+  if (communes.length === 0) {
+    console.warn('⚠️ initializeCommuneSearch: aucune commune fournie');
+    return null;
+  }
+
+  try {
+    const searchInstance = new CommuneSearch(communes);
+    console.log('✅ Instance de recherche créée avec succès');
+    return searchInstance;
+  } catch (error) {
+    console.error('❌ Erreur lors de la création de l\'instance de recherche:', error);
+    return null;
+  }
 }
