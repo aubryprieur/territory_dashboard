@@ -97,6 +97,15 @@ Rails.application.routes.draw do
     get 'clear_cache', to: 'dashboard#clear_cache'
   end
 
+  resources :epci_dashboard, only: [:index] do
+    collection do
+      # 🗑️ Routes pour la gestion du cache (développement/admin)
+      delete :clear_cache       # Vider le cache de l'EPCI
+      delete :clear_france_cache # Vider le cache France
+      get :cache_info          # Voir les infos de cache
+    end
+  end
+
   # Redirection conditionnelle selon le type d'utilisateur
   authenticated :user do
     root to: "application#dashboard_router", as: :authenticated_root
