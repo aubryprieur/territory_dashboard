@@ -312,11 +312,22 @@ function createSchooling35yLegend(breaks, containerId, colors) {
   legendContainer.appendChild(legend);
 }
 
-// ✅ Initialiser les cartes au chargement de la page (une seule fois sur turbo:load)
-document.addEventListener("turbo:load", function() {
-  initializeSchooling2yMap();
-  initializeSchooling35yMap();
-});
+// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
+window.EpciSchoolingMaps = {
+  init() {
+    console.log('🗺️ EpciSchoolingMaps.init() appelée');
+
+    // Initialiser toutes les cartes de scolarisation
+    initializeSchooling2yMap();
+    initializeSchooling35yMap();
+  }
+};
+
+// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener("turbo:load", function() {
+//   initializeSchooling2yMap();
+//   initializeSchooling35yMap();
+// });
 
 // Exporter les fonctions pour les rendre disponibles
 export {

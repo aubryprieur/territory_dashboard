@@ -7,6 +7,8 @@
 
 // Fonction principale d'initialisation
 function initializeEpciFamilyEmploymentCharts() {
+  console.log('📊 Initialisation des graphiques emploi familles');
+
   // Initialiser le graphique pour les enfants de moins de 3 ans (EPCI)
   initEpciFamilyEmploymentChart('family-employment-under3-chart-epci', 'family-employment-under3-data-epci');
 
@@ -210,10 +212,19 @@ function initEpciFamilyEmploymentChart(chartElementId, dataElementId) {
   }
 }
 
-// ✅ Initialiser les graphiques au chargement de la page (une seule fois sur turbo:load)
-document.addEventListener('turbo:load', function() {
-  initializeEpciFamilyEmploymentCharts();
-});
+// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
+window.EpciFamilyEmploymentChart = {
+  init() {
+    console.log('📊 EpciFamilyEmploymentChart.init() appelée');
+    // Initialiser tous les graphiques d'emploi des familles
+    initializeEpciFamilyEmploymentCharts();
+  }
+};
+
+// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener('turbo:load', function() {
+//   initializeEpciFamilyEmploymentCharts();
+// });
 
 // Exporter les fonctions pour les rendre disponibles
 export { initializeEpciFamilyEmploymentCharts, initEpciFamilyEmploymentChart };

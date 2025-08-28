@@ -1,3 +1,4 @@
+
 class EpciDashboardController < ApplicationController
   include UserAuthorization
   include TerritoryNamesHelper
@@ -9,21 +10,142 @@ class EpciDashboardController < ApplicationController
     # ⏱️ Mesurer le temps de chargement en développement
     start_time = Time.current if Rails.env.development?
 
-    # ✅ Charger les données essentielles (communes + France) - RAPIDE avec cache
-    load_essential_data
-
-    # ✅ Charger TOUTES les sections avec le cache - BEAUCOUP plus rapide !
-    load_all_sections_data
-
-    # ✅ Préparer les données géographiques si disponibles
-    prepare_geographic_data if @epci_communes_data.present?
+    # ✅ Charger SEULEMENT les données essentielles au chargement initial
+    load_essential_data_only
 
     # 📊 Log du temps de chargement en développement
     if Rails.env.development? && start_time
       total_time = ((Time.current - start_time) * 1000).round(2)
-      cache_info = EpciCacheService.cache_info(@epci_code)
-      Rails.logger.info "🚀 EPCI Dashboard chargé en #{total_time}ms - Cache info: #{cache_info}"
+      Rails.logger.info "🚀 EPCI Dashboard initial chargé en #{total_time}ms (mode asynchrone)"
     end
+  end
+
+  # 🚀 NOUVELLES MÉTHODES ASYNCHRONES POUR CHAQUE SECTION
+
+  def load_population
+    # Charger les données spécifiques à la section Population
+    load_children_data_with_cache  # Pour @epci_population_data et @epci_historical_data
+
+    # Préparer la pyramide des âges
+    @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
+
+    render partial: 'epci_dashboard/population'
+  end
+
+  def load_families
+    load_families_data_with_cache
+    prepare_families_geojson_data if @epci_families_data.present?
+    prepare_single_parent_geojson_data if @epci_single_parent_data.present?
+    prepare_large_families_geojson_data if @epci_large_families_data.present?
+
+    render partial: 'epci_dashboard/families'
+  end
+
+  def load_births
+    Rails.logger.info "🔍 DEBUG load_births - Début"
+
+    load_births_data_with_cache
+    Rails.logger.info "🔍 DEBUG @epci_births_data présent: #{@epci_births_data.present?}"
+    Rails.logger.info "🔍 DEBUG @epci_births_data keys: #{@epci_births_data&.keys}"
+
+    prepare_births_geojson_data if @epci_births_data.present?
+    Rails.logger.info "🔍 DEBUG @communes_births_geojson présent: #{@communes_births_geojson.present?}"
+    Rails.logger.info "🔍 DEBUG @epci_latest_birth_year: #{@epci_latest_birth_year}"
+
+    render partial: 'epci_dashboard/communes_births'
+  end
+
+  def load_children
+    # Charger les données spécifiques à la section Children
+    load_children_data_with_cache
+
+    # 🚀 AJOUT CRITIQUE : S'assurer que les données communes essentielles sont disponibles
+    # Ces données sont nécessaires pour prepare_geojson_data
+    if @epci_communes_data.blank?
+      @epci_communes_data = EpciCacheService.epci_essential_data(@epci_code)
+      Rails.logger.info "🔧 Rechargement des données communes pour les cartes enfants"
+    end
+
+    # Préparer la pyramide des âges
+    @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
+    @epci_children_section_data[:age_pyramid_data] = @epci_age_pyramid_data if @epci_children_section_data
+
+    # 🚀 AJOUT CRITIQUE : Générer les données GeoJSON maintenant que nous avons les données communes
+    prepare_geojson_data if @epci_communes_data.present?
+
+    # Debug pour vérifier que les données sont bien générées
+    Rails.logger.info "🔍 DEBUG Children GeoJSON:"
+    Rails.logger.info "- @communes_geojson présent: #{@communes_geojson.present?}"
+    Rails.logger.info "- @communes_geojson_3to5 présent: #{@communes_geojson_3to5.present?}"
+    if @communes_geojson.present?
+      Rails.logger.info "- @communes_geojson longueur: #{@communes_geojson.length} caractères"
+    end
+
+    render partial: 'epci_dashboard/communes_children'
+  end
+
+  def load_schooling
+    load_schooling_data_with_cache
+    prepare_schooling_geojson_data if @epci_schooling_communes_data.present?
+
+    render partial: 'epci_dashboard/schooling'
+  end
+
+  def load_economic
+    load_economic_data_with_cache
+    prepare_revenues_geojson_data if @epci_revenues_data.present?
+
+    render partial: 'epci_dashboard/economic_data'
+  end
+
+  def load_childcare
+    load_childcare_data_with_cache
+    prepare_childcare_geojson_data if @epci_childcare_communes_data.present?
+
+    render partial: 'epci_dashboard/childcare'
+  end
+
+  def load_family_employment
+    load_family_employment_data_with_cache
+
+    render partial: 'epci_dashboard/family_employment'
+  end
+
+  def load_women_employment
+    load_women_employment_data_with_cache
+
+    render partial: 'epci_dashboard/women_employment'
+  end
+
+  def load_domestic_violence_data_with_cache
+    @epci_domestic_violence_data = EpciCacheService.epci_domestic_violence_data(@epci_code) || {}
+
+    # Appel direct API (contourne le problème de cache)
+    if @main_department_code
+      begin
+        @department_domestic_violence_data = Api::PublicSafetyService.get_department_safety(@main_department_code)
+      rescue => e
+        Rails.logger.error "Erreur API Département: #{e.message}"
+        @department_domestic_violence_data = {}
+      end
+    end
+
+    if @main_region_code
+      begin
+        @region_domestic_violence_data = Api::PublicSafetyService.get_region_safety(@main_region_code)
+      rescue => e
+        Rails.logger.error "Erreur API Région: #{e.message}"
+        @region_domestic_violence_data = {}
+      end
+    end
+
+    @epci_domestic_violence_section_data = {
+      domestic_violence_data: @epci_domestic_violence_data,
+      department_domestic_violence_data: @department_domestic_violence_data,
+      region_domestic_violence_data: @region_domestic_violence_data
+    }
+
+    @epci_latest_violence_year = @epci_domestic_violence_data["latest_year"] if @epci_domestic_violence_data
   end
 
   # 🗑️ Vider le cache de l'EPCI (utile en développement)
@@ -34,7 +156,6 @@ class EpciDashboardController < ApplicationController
 
   # 🗑️ Vider le cache France (admin seulement)
   def clear_france_cache
-    # Sécurité : seulement pour les super admins
     unless current_user.super_admin?
       redirect_to epci_dashboard_path, alert: "Accès non autorisé"
       return
@@ -50,6 +171,23 @@ class EpciDashboardController < ApplicationController
     render json: info
   end
 
+  def load_domestic_violence
+    # Récupérer les codes depuis la session pour le contexte asynchrone
+    @main_department_code ||= session[:main_department_code]
+    @main_region_code ||= session[:main_region_code]
+
+    # Récupérer aussi les noms EPCI depuis l'utilisateur
+    @epci_code ||= current_user.territory_code
+    @epci_name ||= current_user.territory_name
+
+    load_domestic_violence_data_with_cache
+
+    # Générer les données GeoJSON pour la carte
+    prepare_domestic_violence_geojson_data if @epci_domestic_violence_data.present?
+
+    render partial: 'epci_dashboard/domestic_violence'
+  end
+
   private
 
   # 🔧 Initialiser les variables EPCI
@@ -60,6 +198,10 @@ class EpciDashboardController < ApplicationController
     # Récupérer les codes département et région principal avec la LOGIQUE ORIGINALE
     @main_department_code = get_main_department_code(@epci_code)
     @main_region_code = get_main_region_code(@epci_code)
+
+    # AJOUT : Stocker ces valeurs en session pour les requêtes asynchrones
+    session[:main_department_code] = @main_department_code
+    session[:main_region_code] = @main_region_code
 
     # 🔧 AJOUT CRUCIAL : Assigner les variables que le helper territory_names_helper.rb attend
     @department_code = @main_department_code
@@ -77,15 +219,13 @@ class EpciDashboardController < ApplicationController
     return nil if epci_code.blank?
 
     begin
-      # ✅ LOGIQUE ORIGINALE : Utiliser les relations Epci et la colonne 'dep'
       epci_object = Epci.find_by(epci: epci_code)
       return nil unless epci_object && epci_object.territories.any?
 
-      # Trouver le département le plus représenté dans l'EPCI
-      department_counts = epci_object.territories.group(:dep).count
-      main_department_code = department_counts.max_by { |_, count| count }&.first
+      # Récupérer le département avec le plus de communes
+      main_department_code = epci_object.territories.group(:dep).count.max_by(&:last)&.first
 
-      Rails.logger.info "🏛️ Département principal pour EPCI #{epci_code}: #{main_department_code}"
+      Rails.logger.info "🗺️ Département principal pour EPCI #{epci_code}: #{main_department_code}"
       return main_department_code
 
     rescue => e
@@ -98,7 +238,6 @@ class EpciDashboardController < ApplicationController
     return nil if epci_code.blank?
 
     begin
-      # ✅ LOGIQUE ORIGINALE : Utiliser les relations Epci et la colonne 'reg'
       epci_object = Epci.find_by(epci: epci_code)
       return nil unless epci_object && epci_object.territories.any?
 
@@ -118,16 +257,20 @@ class EpciDashboardController < ApplicationController
     end
   end
 
-  def load_essential_data
-    # ✅ Utilise le cache pour les données essentielles
+  # ✅ CHARGEMENT INITIAL UNIQUEMENT DES DONNÉES ESSENTIELLES
+ def load_essential_data_only
+    # ✅ Utilise le cache pour les données essentielles (communes)
     @epci_communes_data = EpciCacheService.epci_essential_data(@epci_code)
 
-    # ✅ Données France (cache longue durée)
+    # ✅ Données France (cache longue durée) - UNIQUEMENT pour les comparaisons
     load_france_data_with_cache
+
+    # ✅ Préparer les données géographiques si disponibles
+    prepare_geographic_data if @epci_communes_data.present?
   end
 
   def load_france_data_with_cache
-    # ✅ Toutes les données France en cache
+    # ✅ Toutes les données France en cache (utilisées pour les comparaisons)
     @france_children_data = EpciCacheService.france_children_data
     @france_revenue_data = EpciCacheService.france_revenue_data
     @france_family_data = EpciCacheService.france_family_data
@@ -138,19 +281,8 @@ class EpciDashboardController < ApplicationController
     @france_employment_data = EpciCacheService.france_employment_data
   end
 
-  # ✅ Nouvelles méthodes avec cache pour charger toutes les sections
-  def load_all_sections_data
-    # Charger toutes les données en parallèle avec le cache
-    load_families_data_with_cache
-    load_births_data_with_cache
-    load_children_data_with_cache
-    load_schooling_data_with_cache
-    load_economic_data_with_cache
-    load_childcare_data_with_cache
-    load_family_employment_data_with_cache
-    load_women_employment_data_with_cache
-    load_domestic_violence_data_with_cache
-  end
+  # ✅ CONSERVER TOUTES LES MÉTHODES EXISTANTES DE CHARGEMENT DES DONNÉES
+  # (Toutes les méthodes load_*_data_with_cache restent identiques)
 
   def load_families_data_with_cache
     # ✅ Données EPCI families (cache)
@@ -159,6 +291,11 @@ class EpciDashboardController < ApplicationController
     # ✅ Données département et région (cache) - avec gestion d'erreur
     department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
     region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
+
+    # 🚀 AJOUT CRITIQUE : Charger les données France pour le contexte asynchrone
+    # Ces données sont nécessaires pour les tableaux de comparaison dans le template
+    @france_family_data = EpciCacheService.france_family_data
+    @france_children_data = EpciCacheService.france_children_data
 
     # 🔧 CORRECTION : Assigner les variables individuelles pour compatibilité avec les templates
     @epci_family_data = families_data[:family_data] || {}
@@ -181,17 +318,11 @@ class EpciDashboardController < ApplicationController
       department_family_data: @department_family_data,
       region_family_data: @region_family_data
     })
-
-    # Préparer le GeoJSON (garde les méthodes existantes)
-    prepare_families_geojson_data if @epci_families_data.present?
-    prepare_single_parent_geojson_data if @epci_single_parent_data.present?
-    prepare_large_families_geojson_data if @epci_large_families_data.present?
   end
 
   def load_births_data_with_cache
     @epci_births_data = EpciCacheService.epci_births_data(@epci_code) || {}
     @epci_births_section_data = { births_data: @epci_births_data }
-    prepare_births_geojson_data if @epci_births_data.present?
   end
 
   def load_children_data_with_cache
@@ -201,6 +332,9 @@ class EpciDashboardController < ApplicationController
     # ✅ Données département et région (cache) - avec gestion d'erreur
     department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
     region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
+
+    # 🚀 AJOUT CRITIQUE : Charger les données France pour le contexte asynchrone
+    @france_children_data = EpciCacheService.france_children_data
 
     # 🔧 CORRECTION : Assigner les variables individuelles pour compatibilité
     @epci_children_data = children_data[:children_data] || {}
@@ -216,9 +350,8 @@ class EpciDashboardController < ApplicationController
       region_children_data: @region_children_data
     })
 
-    # Préparer la pyramide des âges
-    @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
-    @epci_children_section_data[:age_pyramid_data] = @epci_age_pyramid_data
+    # 🚀 IMPORTANT : Ne pas appeler prepare_geojson_data ici car @epci_communes_data peut ne pas être disponible
+    # Cette méthode sera appelée dans load_children après avoir vérifié/rechargé @epci_communes_data
   end
 
   def load_schooling_data_with_cache
@@ -228,6 +361,10 @@ class EpciDashboardController < ApplicationController
     # ✅ Données département et région (cache) - avec gestion d'erreur
     department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
     region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
+
+    # 🚀 AJOUT CRITIQUE : Charger les données France pour le contexte asynchrone
+    # Ces données sont nécessaires pour les tableaux de comparaison
+    @france_schooling_data = EpciCacheService.france_schooling_data
 
     # 🔧 CORRECTION : Assigner les variables individuelles
     @epci_schooling_data = schooling_data[:schooling_data] || {}
@@ -252,6 +389,10 @@ class EpciDashboardController < ApplicationController
     department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
     region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
 
+    # 🚀 AJOUT CRITIQUE : Charger les données France pour le contexte asynchrone
+    # Ces données sont nécessaires pour les tableaux de comparaison économique
+    @france_revenue_data = EpciCacheService.france_revenue_data
+
     # 🔧 CORRECTION : Assigner les variables individuelles
     @epci_revenues_data = economic_data[:revenues_data] || {}
     @epci_revenue_data = economic_data[:revenue_data] || {}
@@ -275,6 +416,10 @@ class EpciDashboardController < ApplicationController
     department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
     region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
 
+    # 🚀 AJOUT CRITIQUE : Charger les données France pour le contexte asynchrone
+    # Ces données sont nécessaires pour les tableaux de comparaison petite enfance
+    @france_childcare_data = EpciCacheService.france_childcare_data
+
     # 🔧 CORRECTION : Assigner les variables individuelles
     @epci_childcare_data = childcare_data[:childcare_data] || {}
     @epci_childcare_communes_data = childcare_data[:childcare_communes_data] || {}
@@ -291,51 +436,54 @@ class EpciDashboardController < ApplicationController
   end
 
   def load_family_employment_data_with_cache
-    # ✅ Données EPCI family employment (cache)
-    family_employment_data = EpciCacheService.epci_family_employment_data(@epci_code)
+      # ✅ Données EPCI family employment (cache)
+      family_employment_data = EpciCacheService.epci_family_employment_data(@epci_code)
 
-    # ✅ Données département et région (cache) - avec gestion d'erreur
-    department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
-    region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
+      # ✅ Données département et région (cache) - avec gestion d'erreur
+      department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
+      region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
 
-    # 🔧 CORRECTION : Assigner les variables individuelles AVEC LES BONS NOMS
-    @epci_family_employment_under3_data = family_employment_data[:family_employment_under3_data] || {}
-    @epci_family_employment_3to5_data = family_employment_data[:family_employment_3to5_data] || {}
+      # 🚀 AJOUT CRITIQUE : Charger les données France pour le contexte asynchrone
+      # Ces données sont nécessaires pour les graphiques de comparaison
+      @france_family_employment_under3_data = EpciCacheService.france_family_employment_under3_data
+      @france_family_employment_3to5_data = EpciCacheService.france_family_employment_3to5_data
 
-    # 🔧 AJOUT : Variables département/région que le template attend
-    @department_family_employment_under3_data = department_data[:family_employment_under3_data] || {}
-    @department_family_employment_3to5_data = department_data[:family_employment_3to5_data] || {}
-    @region_family_employment_under3_data = region_data[:family_employment_under3_data] || {}
-    @region_family_employment_3to5_data = region_data[:family_employment_3to5_data] || {}
+      # 🔧 CORRECTION : Assigner les variables individuelles
+      @epci_family_employment_under3_data = family_employment_data[:family_employment_under3_data] || {}
+      @epci_family_employment_3to5_data = family_employment_data[:family_employment_3to5_data] || {}
 
-    @epci_family_employment_section_data = family_employment_data.merge({
-      department_family_employment_under3_data: @department_family_employment_under3_data,
-      department_family_employment_3to5_data: @department_family_employment_3to5_data,
-      region_family_employment_under3_data: @region_family_employment_under3_data,
-      region_family_employment_3to5_data: @region_family_employment_3to5_data
-    })
-  end
+      @department_family_employment_under3_data = department_data[:family_employment_under3_data] || {}
+      @department_family_employment_3to5_data = department_data[:family_employment_3to5_data] || {}
+      @region_family_employment_under3_data = region_data[:family_employment_under3_data] || {}
+      @region_family_employment_3to5_data = region_data[:family_employment_3to5_data] || {}
+
+      @epci_family_employment_section_data = family_employment_data.merge({
+        department_family_employment_under3_data: @department_family_employment_under3_data,
+        department_family_employment_3to5_data: @department_family_employment_3to5_data,
+        region_family_employment_under3_data: @region_family_employment_under3_data,
+        region_family_employment_3to5_data: @region_family_employment_3to5_data
+      })
+    end
 
   def load_women_employment_data_with_cache
     @epci_women_employment_data = EpciCacheService.epci_women_employment_data(@epci_code) || {}
 
-    # ✅ Données département et région (cache) - avec gestion d'erreur
+    # ✅ Données département et région (cache)
     department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
     region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
 
-    # 🔧 CORRECTION : Assigner les variables département/région que le template attend
+    # 🚀 AJOUT CRITIQUE : Charger les données France pour le contexte asynchrone
+    # Ces données sont nécessaires pour les tableaux de comparaison emploi des femmes
+    @france_employment_data = EpciCacheService.france_employment_data
+
     @department_employment_data = department_data[:employment_data] || {}
     @region_employment_data = region_data[:employment_data] || {}
 
-    # ✅ Variable pour la section complète
     @epci_women_employment_section_data = {
-      women_employment_data: @epci_women_employment_data
-    }
-
-    @epci_women_employment_section_data.merge!({
+      women_employment_data: @epci_women_employment_data,
       department_employment_data: @department_employment_data,
       region_employment_data: @region_employment_data
-    })
+    }
 
     prepare_women_employment_geojson_data if @epci_women_employment_data.present?
   end
@@ -343,40 +491,35 @@ class EpciDashboardController < ApplicationController
   def load_domestic_violence_data_with_cache
     @epci_domestic_violence_data = EpciCacheService.epci_domestic_violence_data(@epci_code) || {}
 
-    # ✅ Données département et région (cache) - avec gestion d'erreur COMPLÈTE
-    department_data = {}
-    region_data = {}
-
-    if @main_department_code.present?
+    # Appel direct API pour le département (bypass du cache)
+    if @main_department_code
       begin
-        department_data = EpciCacheService.department_data(@main_department_code) || {}
+        @department_domestic_violence_data = Api::PublicSafetyService.get_department_safety(@main_department_code)
+        Rails.logger.info "✅ Dept #{@main_department_code} - Année 2023: #{@department_domestic_violence_data['department']['data'].find { |d| d['indicator_class'] == 'Coups et blessures volontaires intrafamiliaux' && d['year'] == 23 }&.dig('rate')}"
       rescue => e
-        Rails.logger.warn "Erreur chargement données département #{@main_department_code}: #{e.message}"
+        Rails.logger.error "Erreur API Département: #{e.message}"
+        @department_domestic_violence_data = {}
       end
     end
 
-    if @main_region_code.present?
+    # Appel direct API pour la région (bypass du cache)
+    if @main_region_code
       begin
-        region_data = EpciCacheService.region_data(@main_region_code) || {}
+        @region_domestic_violence_data = Api::PublicSafetyService.get_region_safety(@main_region_code)
+        Rails.logger.info "✅ Region #{@main_region_code} - Année 2023: #{@region_domestic_violence_data['region']['data'].find { |d| d['indicator_class'] == 'Coups et blessures volontaires intrafamiliaux' && d['year'] == 23 }&.dig('rate')}"
       rescue => e
-        Rails.logger.warn "Erreur chargement données région #{@main_region_code}: #{e.message}"
+        Rails.logger.error "Erreur API Région: #{e.message}"
+        @region_domestic_violence_data = {}
       end
     end
-
-    # 🔧 CORRECTION : Assigner les variables individuelles avec protection nil COMPLÈTE
-    @department_domestic_violence_data = department_data.dig(:domestic_violence_data) || {}
-    @region_domestic_violence_data = region_data.dig(:domestic_violence_data) || {}
 
     @epci_domestic_violence_section_data = {
-      domestic_violence_data: @epci_domestic_violence_data
-    }
-
-    @epci_domestic_violence_section_data.merge!({
+      domestic_violence_data: @epci_domestic_violence_data,
       department_domestic_violence_data: @department_domestic_violence_data,
       region_domestic_violence_data: @region_domestic_violence_data
-    })
+    }
 
-    prepare_domestic_violence_geojson_data if @epci_domestic_violence_data.present?
+    @epci_latest_violence_year = @epci_domestic_violence_data["latest_year"] if @epci_domestic_violence_data
   end
 
   def prepare_geographic_data
@@ -811,13 +954,27 @@ class EpciDashboardController < ApplicationController
   def extract_domestic_violence_data(data)
     result = {}
 
-    if data.present? && data["data"].present?
-      violence_data = data["data"].select { |item| item["indicator_class"] == "Coups et blessures volontaires intrafamiliaux" }
+    return {} unless data.present?
 
-      violence_data.each do |item|
-        year = "20#{item["year"]}" # Convertir 16 en "2016"
-        result[year] = item["rate"]
-      end
+    # Identifier le type de structure par la présence ET la valeur du code
+    violence_data = if data["region"] && data["region"]["code"] && data["region"]["code"] != "" && data["region"]["data"]
+      data["region"]["data"]
+    elsif data["department"] && data["department"]["code"] && data["department"]["code"] != "" && data["department"]["data"]
+      data["department"]["data"]
+    elsif data["data"]
+      data["data"]
+    else
+      []
+    end
+
+    # Filtrer et extraire les données de violences intrafamiliales
+    violence_items = violence_data.select { |item|
+      item["indicator_class"] == "Coups et blessures volontaires intrafamiliaux"
+    }
+
+    violence_items.each do |item|
+      year = "20#{item["year"]}"
+      result[year] = item["rate"]
     end
 
     result

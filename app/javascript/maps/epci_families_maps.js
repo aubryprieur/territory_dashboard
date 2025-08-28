@@ -372,12 +372,24 @@ function createLargeFamiliesLegend(breaks, containerId, colors) {
   legendContainer.appendChild(legend);
 }
 
-// ✅ Initialiser les cartes au chargement de la page (une seule fois sur turbo:load)
-document.addEventListener("turbo:load", function() {
-  initializeFamiliesMap();
-  initializeSingleParentMap();
-  initializeLargeFamiliesMap();
-});
+// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
+window.EpciFamiliesMaps = {
+  init() {
+    console.log('🗺️ EpciFamiliesMaps.init() appelée');
+
+    // Initialiser toutes les cartes des familles
+    initializeFamiliesMap();
+    initializeSingleParentMap();
+    initializeLargeFamiliesMap();
+  }
+};
+
+// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener("turbo:load", function() {
+//   initializeFamiliesMap();
+//   initializeSingleParentMap();
+//   initializeLargeFamiliesMap();
+// });
 
 // Exporter les fonctions pour les rendre disponibles
 export {

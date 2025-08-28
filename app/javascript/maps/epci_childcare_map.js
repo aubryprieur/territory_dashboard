@@ -139,10 +139,19 @@ function createChildcareLegend(breaks, containerId, colors) {
   legendContainer.appendChild(note);
 }
 
-// ✅ Initialiser la carte au chargement de la page (une seule fois sur turbo:load)
-document.addEventListener("turbo:load", function() {
-  initializeChildcareMap();
-});
+// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
+window.EpciChildcareMap = {
+  init() {
+    console.log('🗺️ EpciChildcareMap.init() appelée');
+    // Initialiser la carte de la petite enfance
+    initializeChildcareMap();
+  }
+};
+
+// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener("turbo:load", function() {
+//   initializeChildcareMap();
+// });
 
 // Exporter les fonctions pour les rendre disponibles
 export { initializeChildcareMap, createChildcareLegend };

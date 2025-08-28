@@ -86,10 +86,18 @@ function initializeBirthsHistoryChart() {
   }
 }
 
-// Initialiser le graphique au chargement de la page
-document.addEventListener("turbo:load", function() {
-  initializeBirthsHistoryChart();
-});
+// 🚀 AJOUT : Exposer l'objet pour le système asynchrone
+window.EpciBirthsHistoryChart = {
+  init() {
+    console.log('📊 EpciBirthsHistoryChart.init() appelée');
+    initializeBirthsHistoryChart();
+  }
+};
+
+// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener("turbo:load", function() {
+//   initializeBirthsHistoryChart();
+// });
 
 // Exporter la fonction pour la rendre disponible
 export { initializeBirthsHistoryChart };

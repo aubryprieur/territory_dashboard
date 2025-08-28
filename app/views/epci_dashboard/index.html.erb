@@ -1,5 +1,12 @@
-<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50" data-controller="tabs" data-tabs-default-tab-value="population">
+<!-- app/views/epci_dashboard/index.html.erb -->
+
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50"
+     data-controller="tabs"
+     data-tabs-default-tab-value="population"
+     data-epci-code="<%= @epci_code %>"
+     data-epci-name="<%= @epci_name %>">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
     <!-- En-tête du dashboard avec effet glassmorphism -->
     <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
       <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -25,11 +32,17 @@
               <%= @epci_communes_data&.dig("communes")&.count || 0 %> communes
             </span>
           </div>
+          <% if Rails.env.development? %>
+            <%= link_to "🗑️", clear_cache_epci_dashboard_index_path,
+                method: :delete,
+                class: "text-xs text-gray-500 hover:text-gray-700",
+                title: "Vider le cache" %>
+          <% end %>
         </div>
       </div>
     </div>
 
-    <!-- ✅ AJOUT : Données JSON des communes (CACHÉ) -->
+    <!-- ✅ CONSERVÉ : Données JSON des communes (CACHÉ) -->
     <script type="application/json" id="communes-data-json" style="display: none;">
       {
         "communes": [
@@ -48,7 +61,7 @@
       }
     </script>
 
-    <!-- Section accès aux communes avec design de carte moderne -->
+    <!-- ✅ CONSERVÉ : Section accès aux communes avec design de carte moderne -->
     <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 mb-8 hover:shadow-xl transition-all duration-300">
       <div class="flex items-center justify-between mb-6">
         <div class="flex items-center space-x-3">
@@ -65,7 +78,7 @@
         </div>
       </div>
 
-      <!-- Search box moderne avec autocomplétion -->
+      <!-- ✅ CONSERVÉ : Search box moderne avec autocomplétion -->
       <div class="relative">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,16 +97,16 @@
         </div>
       </div>
 
-      <!-- Dropdown results avec animation -->
+      <!-- ✅ CONSERVÉ : Dropdown results avec animation -->
       <div id="commune-results" class="hidden mt-2 bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
         <!-- Les résultats seront injectés ici par JavaScript -->
       </div>
     </div>
 
-    <!-- Navigation par onglets avec design moderne -->
+    <!-- ✅ CONSERVÉ : Navigation par onglets avec design moderne -->
     <div class="bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 mb-8 overflow-hidden">
       <div class="p-2 relative">
-        <!-- Flèche gauche -->
+        <!-- ✅ CONSERVÉ : Flèche gauche -->
         <button id="scroll-left"
                 class="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg border border-white/50 hover:bg-white/90 transition-all duration-300 hover:scale-110 opacity-0">
           <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +114,7 @@
           </svg>
         </button>
 
-        <!-- Flèche droite -->
+        <!-- ✅ CONSERVÉ : Flèche droite -->
         <button id="scroll-right"
                 class="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg border border-white/50 hover:bg-white/90 transition-all duration-300 hover:scale-110">
           <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,12 +122,12 @@
           </svg>
         </button>
 
-        <!-- Gradients pour indiquer le défilement -->
+        <!-- ✅ CONSERVÉ : Gradients pour indiquer le défilement -->
         <div class="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white/60 to-transparent pointer-events-none z-5 opacity-0" id="gradient-left"></div>
         <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white/60 to-transparent pointer-events-none z-5" id="gradient-right"></div>
 
         <nav class="flex space-x-1 overflow-x-auto scrollbar-hide scroll-smooth" id="tabs-container">
-          <!-- Onglet Population -->
+          <!-- ✅ MODIFIÉ : Onglet Population avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="population"
@@ -129,10 +142,14 @@
                 <div class="font-semibold">Population</div>
                 <div class="text-xs text-gray-500">Démographie & répartition</div>
               </div>
+              <!-- 🚀 AJOUT : Indicateur de chargement asynchrone -->
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-indigo-600"></div>
+              </div>
             </div>
           </button>
 
-          <!-- Onglet Naissances -->
+          <!-- ✅ MODIFIÉ : Onglet Naissances avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="births"
@@ -147,10 +164,13 @@
                 <div class="font-semibold">Naissances</div>
                 <div class="text-xs text-gray-500">Natalité & évolution</div>
               </div>
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-pink-600"></div>
+              </div>
             </div>
           </button>
 
-          <!-- Onglet Familles -->
+          <!-- ✅ MODIFIÉ : Onglet Familles avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="families"
@@ -159,11 +179,8 @@
               <div class="p-2 rounded-lg bg-gradient-to-r from-emerald-100 to-teal-100 group-hover:from-emerald-200 group-hover:to-teal-200 transition-all duration-300">
                 <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <g stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                    <!-- Grande personne (parent) -->
                     <circle cx="10" cy="7" r="3"/>
                     <path d="M4 21v-2a6 6 0 016-6h0a6 6 0 016 6v2"/>
-
-                    <!-- Petite personne (enfant) -->
                     <circle cx="17" cy="10" r="2"/>
                     <path d="M14 21v-1.5a3 3 0 013-3h0a3 3 0 013 3V21"/>
                   </g>
@@ -173,10 +190,13 @@
                 <div class="font-semibold">Familles</div>
                 <div class="text-xs text-gray-500">Structures familiales</div>
               </div>
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-emerald-600"></div>
+              </div>
             </div>
           </button>
 
-          <!-- Onglet Enfants -->
+          <!-- ✅ MODIFIÉ : Onglet Enfants avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="children"
@@ -195,10 +215,13 @@
                 <div class="font-semibold">Enfants</div>
                 <div class="text-xs text-gray-500">Petite enfance</div>
               </div>
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-yellow-600"></div>
+              </div>
             </div>
           </button>
 
-          <!-- Onglet Scolarisation -->
+          <!-- ✅ MODIFIÉ : Onglet Scolarisation avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="schooling"
@@ -213,10 +236,13 @@
                 <div class="font-semibold">Scolarisation</div>
                 <div class="text-xs text-gray-500">Éducation & écoles</div>
               </div>
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-blue-600"></div>
+              </div>
             </div>
           </button>
 
-          <!-- Onglet Économie -->
+          <!-- ✅ MODIFIÉ : Onglet Économie avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="economy"
@@ -231,10 +257,13 @@
                 <div class="font-semibold">Économie</div>
                 <div class="text-xs text-gray-500">Revenus & pauvreté</div>
               </div>
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-green-600"></div>
+              </div>
             </div>
           </button>
 
-          <!-- Onglet Petite Enfance -->
+          <!-- ✅ MODIFIÉ : Onglet Petite Enfance avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="childcare"
@@ -249,10 +278,13 @@
                 <div class="font-semibold">Capacité d'accueil</div>
                 <div class="text-xs text-gray-500">Accueil & garde</div>
               </div>
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-purple-600"></div>
+              </div>
             </div>
           </button>
 
-          <!-- Onglet Emploi Familles -->
+          <!-- ✅ MODIFIÉ : Onglet Emploi Familles avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="family-employment"
@@ -261,17 +293,20 @@
               <div class="p-2 rounded-lg bg-gradient-to-r from-teal-100 to-cyan-100 group-hover:from-teal-200 group-hover:to-cyan-200 transition-all duration-300">
                 <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2-2v2"></path>
                 </svg>
               </div>
               <div class="text-left">
                 <div class="font-semibold">Emploi Familles</div>
                 <div class="text-xs text-gray-500">Activité professionnelle</div>
               </div>
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-teal-600"></div>
+              </div>
             </div>
           </button>
 
-          <!-- Onglet Emploi Femmes -->
+          <!-- ✅ MODIFIÉ : Onglet Emploi Femmes avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="women-employment"
@@ -280,10 +315,8 @@
               <div class="p-2 rounded-lg bg-gradient-to-r from-rose-100 to-pink-100 group-hover:from-rose-200 group-hover:to-pink-200 transition-all duration-300">
                 <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <g stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                    <!-- Femme -->
                     <circle cx="15" cy="6" r="3"/>
                     <path d="M15 9c-3 0-5 2-5 5v7h10v-7c0-3-2-5-5-5z"/>
-                    <!-- Grand laptop devant elle -->
                     <rect x="4" y="14" width="10" height="6" rx="0.5" stroke-width="1.5"/>
                     <path d="M3 20h12v1H3v-1z" stroke-width="1.5"/>
                     <line x1="7" y1="17" x2="11" y2="17" stroke-width="1"/>
@@ -294,10 +327,13 @@
                 <div class="font-semibold">Emploi Femmes</div>
                 <div class="text-xs text-gray-500">Activité féminine</div>
               </div>
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-rose-600"></div>
+              </div>
             </div>
           </button>
 
-          <!-- Onglet Violences -->
+          <!-- ✅ MODIFIÉ : Onglet Violences avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
                   data-tab-id="violence"
@@ -312,83 +348,100 @@
                 <div class="font-semibold">Violences</div>
                 <div class="text-xs text-gray-500">Sécurité intrafamiliale</div>
               </div>
+              <div class="async-loading-indicator hidden">
+                <div class="animate-spin rounded-full h-3 w-3 border-b border-red-600"></div>
+              </div>
             </div>
           </button>
         </nav>
       </div>
     </div>
 
-    <!-- Panneaux de contenu avec animation -->
+    <!-- ✅ MODIFIÉ : Panneaux de contenu avec système asynchrone -->
     <div class="tab-content">
-      <!-- Panel Population -->
+
+      <!-- 🚀 MODIFIÉ : Panel Population - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="population" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/population" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
 
-      <!-- Panel Naissances -->
+      <!-- 🚀 MODIFIÉ : Panel Naissances - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="births" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/communes_births" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
 
-      <!-- Panel Familles -->
+      <!-- 🚀 MODIFIÉ : Panel Familles - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="families" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/families" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
 
-      <!-- Panel Enfants -->
+      <!-- 🚀 MODIFIÉ : Panel Enfants - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="children" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/communes_children" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
 
-      <!-- Panel Scolarisation -->
+      <!-- 🚀 MODIFIÉ : Panel Scolarisation - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="schooling" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/schooling" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
 
-      <!-- Panel Économie -->
+      <!-- 🚀 MODIFIÉ : Panel Économie - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="economy" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/economic_data" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
 
-      <!-- Panel Petite Enfance -->
+      <!-- 🚀 MODIFIÉ : Panel Petite Enfance - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="childcare" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/childcare" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
 
-      <!-- Panel Emploi Familles -->
+      <!-- 🚀 MODIFIÉ : Panel Emploi Familles - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="family-employment" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/family_employment" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
 
-      <!-- Panel Emploi Femmes -->
+      <!-- 🚀 MODIFIÉ : Panel Emploi Femmes - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="women-employment" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/women_employment" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
 
-      <!-- Panel Violences -->
+      <!-- 🚀 MODIFIÉ : Panel Violences - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="violence" class="hidden animate-fadeIn">
-        <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-          <%= render "epci_dashboard/domestic_violence" %>
-        </div>
+        <!-- Le contenu sera chargé dynamiquement -->
       </div>
     </div>
   </div>
 </div>
+
+<!-- 🚀 AJOUT : Données JavaScript globales pour le système asynchrone -->
+<script>
+window.epciDashboardData = {
+  epci_code: "<%= @epci_code %>",
+  epci_name: "<%= @epci_name %>",
+  department_code: "<%= @main_department_code %>",
+  region_code: "<%= @main_region_code %>",
+  communes_data: <%= raw(@epci_communes_data&.to_json || '{}') %>,
+  // Données géographiques si disponibles
+  <% if @communes_geojson.present? %>
+  communes_geojson: <%= raw(@communes_geojson) %>,
+  <% end %>
+  // Données France pour les comparaisons
+  france_data: {
+    children: <%= raw(@france_children_data&.to_json || '{}') %>,
+    revenue: <%= raw(@france_revenue_data&.to_json || '{}') %>,
+    family: <%= raw(@france_family_data&.to_json || '{}') %>,
+    schooling: <%= raw(@france_schooling_data&.to_json || '{}') %>,
+    childcare: <%= raw(@france_childcare_data&.to_json || '{}') %>,
+    family_employment_under3: <%= raw(@france_family_employment_under3_data&.to_json || '{}') %>,
+    family_employment_3to5: <%= raw(@france_family_employment_3to5_data&.to_json || '{}') %>,
+    employment: <%= raw(@france_employment_data&.to_json || '{}') %>
+  }
+};
+
+// Noms des territoires pour les helpers
+window.territoryNames = {
+  epci: "<%= display_territory_name(@epci_name) %>",
+  department: "<%= department_display_name if @main_department_code %>",
+  region: "<%= region_display_name if @main_region_code %>"
+};
+</script>

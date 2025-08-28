@@ -280,11 +280,22 @@ function createPovertyLegend(breaks, containerId, colors) {
   legendContainer.appendChild(legend);
 }
 
-// Initialiser les cartes au chargement de la page
-document.addEventListener("turbo:load", function() {
-  initializeRevenuesMap();
-  initializePovertyMap();
-});
+// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
+window.EpciEconomicMaps = {
+  init() {
+    console.log('🗺️ EpciEconomicMaps.init() appelée');
+
+    // Initialiser toutes les cartes économiques
+    initializeRevenuesMap();
+    initializePovertyMap();
+  }
+};
+
+// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener("turbo:load", function() {
+//   initializeRevenuesMap();
+//   initializePovertyMap();
+// });
 
 // Exporter les fonctions pour les rendre disponibles
 export { initializeRevenuesMap, initializePovertyMap };

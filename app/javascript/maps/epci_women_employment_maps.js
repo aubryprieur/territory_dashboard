@@ -274,13 +274,13 @@ function initializeWomenPartTimeMap() {
     const values = geojsonData.features.map(f => f.properties.part_time_rate_15_64).filter(v => v > 0).sort((a, b) => a - b);
 
     // Utiliser des discrétisations de Jenks si possible
-    const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [25], [30], [35], [40]];
+    const clusters = values.length >= 4 ? ss.ckmeans(values, 5) : [[0], [25], [35], [45], [60]];
     const breaks = clusters.map(c => c[0]);
     breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
 
     // Palette de couleurs pour le taux de temps partiel (du plus faible au plus élevé)
-    // Utilisation d'une palette violette pour distinguer des autres indicateurs
-    const colors = ["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#756bb1"];
+    // Utilisation d'une palette différente (tons oranges)
+    const colors = ["#fef0d9", "#fdcc8a", "#fc8d59", "#e34a33", "#b30000"];
 
     function getColor(rate) {
       return rate > breaks[4] ? colors[4] :
@@ -305,9 +305,9 @@ function initializeWomenPartTimeMap() {
         <div class="text-sm">
           <strong>${feature.properties.name}</strong><br>
           Taux de temps partiel : <strong>${feature.properties.part_time_rate_15_64.toFixed(1)}%</strong><br>
-          Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%<br>
           Taux d'activité : ${feature.properties.activity_rate.toFixed(1)}%<br>
-          Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
+          Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%<br>
+          Femmes actives : ${feature.properties.women_active_15_64} habitantes
         </div>
       `;
       layer.bindPopup(popup);
@@ -379,12 +379,24 @@ function createWomenPartTimeLegend(breaks, containerId, colors) {
   legendContainer.appendChild(legend);
 }
 
-// ✅ Initialiser les cartes au chargement de la page (une seule fois sur turbo:load)
-document.addEventListener("turbo:load", function() {
-  initializeWomenEmploymentMap();
-  initializeWomenEmploymentRateMap();
-  initializeWomenPartTimeMap();
-});
+// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
+window.EpciWomenEmploymentMaps = {
+  init() {
+    console.log('🗺️ EpciWomenEmploymentMaps.init() appelée');
+
+    // Initialiser toutes les cartes d'emploi des femmes
+    initializeWomenEmploymentMap();
+    initializeWomenEmploymentRateMap();
+    initializeWomenPartTimeMap();
+  }
+};
+
+// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener("turbo:load", function() {
+//   initializeWomenEmploymentMap();
+//   initializeWomenEmploymentRateMap();
+//   initializeWomenPartTimeMap();
+// });
 
 // Exporter les fonctions pour les rendre disponibles
 export {
