@@ -159,10 +159,19 @@ function renderViolenceMapLegend(breaks, containerId, colors, unit = "‰") {
   container.appendChild(note);
 }
 
-// ✅ Initialiser la carte au chargement de la page (une seule fois sur turbo:load)
-document.addEventListener("turbo:load", function() {
-  initializeDomesticViolenceMap();
-});
+// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
+window.EpciDomesticViolenceMap = {
+  init() {
+    console.log('🗺️ EpciDomesticViolenceMap.init() appelée');
+    // Initialiser la carte des violences intrafamiliales
+    initializeDomesticViolenceMap();
+  }
+};
+
+// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener("turbo:load", function() {
+//   initializeDomesticViolenceMap();
+// });
 
 // Exporter les fonctions pour les rendre disponibles
 export { initializeDomesticViolenceMap, renderViolenceMapLegend };

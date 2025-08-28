@@ -76,7 +76,7 @@ function initializeBirthsCountMap() {
     }
 
     window.leafletMaps.set(mapElement.id, map);
-    window.mapBounds.set(mapElement.id, bounds); // ✅ Stocker les bounds corrects
+    window.mapBounds.set(mapElement.id, bounds);
 
     console.log("✅ Carte des naissances initialisée avec succès");
   } catch (e) {
@@ -122,10 +122,18 @@ function createLegend(breaks, containerId, colors) {
   container.appendChild(legend);
 }
 
-// ✅ N'initialiser qu'une seule fois, seulement sur turbo:load
-document.addEventListener("turbo:load", function() {
-  initializeBirthsCountMap();
-});
+// 🚀 AJOUT : Exposer l'objet pour le système asynchrone
+window.EpciBirthsMap = {
+  init() {
+    console.log('🗺️ EpciBirthsMap.init() appelée');
+    initializeBirthsCountMap();
+  }
+};
+
+// ✅ Retirer l'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener("turbo:load", function() {
+//   initializeBirthsCountMap();
+// });
 
 // Exporter les fonctions pour les rendre disponibles
 export { initializeBirthsCountMap, createLegend };

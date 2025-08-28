@@ -103,10 +103,18 @@ function initializeEpciAgePyramidChart() {
   }
 }
 
-// Initialiser au chargement de la page
-document.addEventListener("turbo:load", function() {
-  initializeEpciAgePyramidChart();
-});
+// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
+window.EpciAgePyramidChart = {
+  init() {
+    console.log('📊 EpciAgePyramidChart.init() appelée');
+    initializeEpciAgePyramidChart();
+  }
+};
+
+// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
+// document.addEventListener("turbo:load", function() {
+//   initializeEpciAgePyramidChart();
+// });
 
 // Exporter la fonction pour la rendre disponible
 export { initializeEpciAgePyramidChart };

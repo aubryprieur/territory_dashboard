@@ -119,25 +119,32 @@
       et blessures volontaires enregistrés dans un cadre familial.
     </p>
   </div>
-</div>
 
-<!-- Script JavaScript pour initialiser les données nécessaires aux graphiques -->
-<script>
-// Initialisation des données pour le graphique
-window.domesticViolenceData = {
-  epci_name: "<%= @epci_name %>",
-  epci_code: "<%= @epci_code %>",
-  communes: <%= raw(@epci_domestic_violence_data["communes"].to_json) %>,
-  yearly_rates: <%= raw(@epci_domestic_violence_data["yearly_rates"].to_json) %>,
-  department_data: {
-    yearly_rates: <%= raw(extract_domestic_violence_data(@department_domestic_violence_data["department"]).to_json) %>
-  },
-  region_data: {
-    yearly_rates: <%= raw(extract_domestic_violence_data(@region_domestic_violence_data["region"]).to_json) %>
-  },
-  territoryNames: {
-    department: "<%= department_display_name %>",
-    region: "<%= region_display_name %>"
-  }
-};
-</script>
+  <!-- DONNÉES JSON INTÉGRÉES DIRECTEMENT DANS UN ATTRIBUT DATA -->
+  <div id="domestic-violence-data" style="display: none;"
+       data-epci-name="<%= @epci_name %>"
+       data-epci-code="<%= @epci_code %>"
+       data-communes='<%= @epci_domestic_violence_data && @epci_domestic_violence_data["communes"] ? @epci_domestic_violence_data["communes"].to_json : "[]" %>'
+       data-yearly-rates='<%= @epci_domestic_violence_data && @epci_domestic_violence_data["yearly_rates"] ? @epci_domestic_violence_data["yearly_rates"].to_json : "{}" %>'
+       data-department-rates='<%=
+         dept_rates = {}
+         if @department_domestic_violence_data && @department_domestic_violence_data["department"] && @department_domestic_violence_data["department"]["data"]
+           @department_domestic_violence_data["department"]["data"].select { |d| d["indicator_class"] == "Coups et blessures volontaires intrafamiliaux" }.each do |item|
+             dept_rates["20#{item["year"]}"] = item["rate"]
+           end
+         end
+         dept_rates.to_json
+       %>'
+       data-region-rates='<%=
+         region_rates = {}
+         if @region_domestic_violence_data && @region_domestic_violence_data["region"] && @region_domestic_violence_data["region"]["data"]
+           @region_domestic_violence_data["region"]["data"].select { |d| d["indicator_class"] == "Coups et blessures volontaires intrafamiliaux" }.each do |item|
+             region_rates["20#{item["year"]}"] = item["rate"]
+           end
+         end
+         region_rates.to_json
+       %>'
+       data-department-name="<%= @main_department_code.present? ? department_display_name : 'Département' %>"
+       data-region-name="<%= @main_region_code.present? ? region_display_name : 'Région' %>">
+  </div>
+</div>

@@ -370,13 +370,18 @@ function renderLegend(breaks, containerId, colors, unit = "") {
   container.appendChild(legend);
 }
 
-// Initialiser les cartes au chargement de la page
-document.addEventListener("turbo:load", function () {
-  initializeMapEffectifs();
-  initializeMapTaux();
-  initializeMapEffectifs3to5();
-  initializeMapTaux3to5();
-});
+// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
+window.EpciChildrenMaps = {
+  init() {
+    console.log('🗺️ EpciChildrenMaps.init() appelée');
+
+    // Initialiser toutes les cartes des enfants
+    initializeMapEffectifs();
+    initializeMapTaux();
+    initializeMapEffectifs3to5();
+    initializeMapTaux3to5();
+  }
+};
 
 // Exporter les fonctions pour les rendre disponibles
 export {
@@ -386,3 +391,5 @@ export {
   initializeMapTaux3to5,
   renderLegend
 };
+
+

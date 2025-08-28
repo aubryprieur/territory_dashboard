@@ -29,8 +29,7 @@ pin "charts/domestic_violence_chart", to: "charts/domestic_violence_chart.js"
 pin "charts/family_employment_chart", to: "charts/family_employment_chart.js"
 
 # EPCI Dashboard
-
-# Charts
+# EPCI Charts
 pin "charts/epci_communes_chart", to: "charts/epci_communes_chart.js"
 pin "charts/epci_age_pyramid_chart", to: "charts/epci_age_pyramid_chart.js"
 pin "charts/epci_population_history_chart", to: "charts/epci_population_history_chart.js"
@@ -38,7 +37,7 @@ pin "charts/epci_family_employment_chart", to: "charts/epci_family_employment_ch
 pin "charts/epci_births_history_chart", to: "charts/epci_births_history_chart.js"
 pin "charts/epci_domestic_violence_chart", to: "charts/epci_domestic_violence_chart.js"
 
-# Maps
+# EPCI Maps
 pin "maps/epci_domestic_violence_map", to: "maps/epci_domestic_violence_map.js"
 pin "maps/epci_childcare_map", to: "maps/epci_childcare_map.js"
 pin "maps/epci_births_map", to: "maps/epci_births_map.js"
@@ -48,7 +47,8 @@ pin "maps/epci_families_maps", to: "maps/epci_families_maps.js"
 pin "maps/epci_schooling_maps", to: "maps/epci_schooling_maps.js"
 pin "maps/epci_women_employment_maps", to: "maps/epci_women_employment_maps.js"
 
-# EPCI Dashboard
+# EPCI Dashboard - Système asynchrone
+pin "epci/async_section_loader", to: "epci/async_section_loader.js"
 pin "epci/dashboard_init", to: "epci/dashboard_init.js"
 pin "epci/commune_search", to: "epci/commune_search.js"
 pin "epci/tabs_scroll", to: "epci/tabs_scroll.js"

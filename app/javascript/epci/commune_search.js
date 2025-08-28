@@ -15,14 +15,7 @@ window.openCommuneDashboard = function(communeCode) {
   console.log("📍 URL dashboard:", url);
 
   // Ouvrir dans un nouvel onglet
-  const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-
-  // Vérifier que la fenêtre s'est bien ouverte
-  if (!newWindow) {
-    console.error("❌ Impossible d'ouvrir la fenêtre - popup bloqué?");
-    alert("Impossible d'ouvrir le dashboard. Veuillez autoriser les popups pour ce site ou essayer en maintenant Ctrl+clic.");
-    return;
-  }
+  window.open(url, '_blank', 'noopener,noreferrer');
 
   console.log("✅ Dashboard ouvert avec succès");
 }
@@ -257,3 +250,4 @@ export function initializeCommuneSearch(communes) {
     return null;
   }
 }
+window.initializeCommuneSearch = initializeCommuneSearch;

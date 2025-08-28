@@ -1,3 +1,29 @@
+// app/javascript/charts/epci_domestic_violence_chart.js
+/**
+ * Graphique des violences intrafamiliales pour l'EPCI
+ * Affiche l'évolution des taux par commune, département et région
+ */
+
+// Fonction principale d'initialisation
+function initializeEpciDomesticViolenceChart() {
+  console.log('📊 Initialisation du graphique violences domestiques EPCI');
+
+  // Trouver le conteneur avec le code EPCI
+  const container = document.querySelector('[data-epci-code]');
+  if (!container) {
+    console.warn('❌ Conteneur EPCI non trouvé');
+    return;
+  }
+
+  const epciCode = container.getAttribute('data-epci-code');
+  if (!epciCode) {
+    console.warn('❌ Code EPCI manquant');
+    return;
+  }
+
+  initDomesticViolenceChart(epciCode);
+}
+
 // Fonction d'initialisation du graphique
 function initDomesticViolenceChart(epciCode) {
   console.log("Initializing domestic violence chart for EPCI", epciCode);
@@ -10,7 +36,7 @@ function initDomesticViolenceChart(epciCode) {
     return;
   }
 
-  // ✅ Vérifier si déjà initialisé et nettoyer si nécessaire
+  // Vérifier si déjà initialisé et nettoyer si nécessaire
   try {
     const existingChart = Chart.getChart(ctx);
     if (existingChart) {
@@ -21,8 +47,51 @@ function initDomesticViolenceChart(epciCode) {
     console.warn("Erreur lors de la vérification du graphique existant:", error);
   }
 
+  // NOUVEAU : Lire les données depuis l'élément data-*
+  const dataElement = document.getElementById('domestic-violence-data');
+  if (!dataElement) {
+    console.error("❌ Élément domestic-violence-data non trouvé");
+    return;
+  }
+
+  console.log("🔍 Données trouvées dans l'élément:", dataElement);
+
+  // Extraire et parser les données
+  let data;
+  try {
+    data = {
+      epci_name: dataElement.getAttribute('data-epci-name'),
+      epci_code: dataElement.getAttribute('data-epci-code'),
+      communes: JSON.parse(dataElement.getAttribute('data-communes') || '[]'),
+      yearly_rates: JSON.parse(dataElement.getAttribute('data-yearly-rates') || '{}'),
+      department_data: {
+        yearly_rates: JSON.parse(dataElement.getAttribute('data-department-rates') || '{}')
+      },
+      region_data: {
+        yearly_rates: JSON.parse(dataElement.getAttribute('data-region-rates') || '{}')
+      },
+      territoryNames: {
+        department: dataElement.getAttribute('data-department-name'),
+        region: dataElement.getAttribute('data-region-name')
+      }
+    };
+
+    console.log("✅ Données parsées avec succès:", data);
+
+    // Vérifier la structure des données
+    console.log(`📊 ${data.communes.length} communes trouvées`);
+    console.log('📊 Yearly rates EPCI:', Object.keys(data.yearly_rates).length, 'années');
+    console.log('📊 Département rates:', Object.keys(data.department_data.yearly_rates).length, 'années');
+    console.log('📊 Région rates:', Object.keys(data.region_data.yearly_rates).length, 'années');
+
+  } catch (error) {
+    console.error("❌ Erreur lors du parsing des données:", error);
+    return;
+  }
+
   // Fonction pour décoder les entités HTML
   function decodeHTMLEntities(text) {
+    if (!text) return '';
     const textarea = document.createElement('textarea');
     textarea.innerHTML = text;
     return textarea.value;
@@ -43,26 +112,33 @@ function initDomesticViolenceChart(epciCode) {
   const years = ["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"];
   const allDatasets = [];
 
-  // Récupérer les données depuis la variable globale
-  const data = window.domesticViolenceData || {};
+  // Décoder les noms de territoires
+  const deptName = decodeHTMLEntities(data.territoryNames.department);
+  const regionName = decodeHTMLEntities(data.territoryNames.region);
 
-  // Décoder les noms de territoires une seule fois
-  const deptName = data.territoryNames ? decodeHTMLEntities(data.territoryNames.department) : '';
-  const regionName = data.territoryNames ? decodeHTMLEntities(data.territoryNames.region) : '';
+  // Traiter les communes
+  if (data.communes && Array.isArray(data.communes) && data.communes.length > 0) {
+    console.log(`📊 Traitement de ${data.communes.length} communes`);
 
-  if (data.communes && data.communes.length > 0) {
     const communesWithData = [];
 
     data.communes.forEach(commune => {
-      const communeData = commune.yearly_data.map(yd => {
-        const yearIndex = years.indexOf("20" + yd.year);
-        return yearIndex >= 0 ? yd.rate : null;
+      if (!commune.yearly_data || !Array.isArray(commune.yearly_data)) {
+        console.warn(`Commune ${commune.name} sans données yearly_data`);
+        return;
+      }
+
+      const communeData = years.map(year => {
+        // Chercher les données pour cette année (format "16", "17", etc.)
+        const shortYear = year.substring(2); // "2016" -> "16"
+        const yearData = commune.yearly_data.find(yd => yd.year.toString() === shortYear);
+        return yearData ? yearData.rate : null;
       });
 
       // Vérifier si les données ne sont pas toutes nulles avant d'ajouter
-      if (communeData.some(val => val !== null)) {
+      if (communeData.some(val => val !== null && val !== undefined)) {
         // Calculer la moyenne (en ignorant les valeurs nulles)
-        const validValues = communeData.filter(val => val !== null);
+        const validValues = communeData.filter(val => val !== null && val !== undefined);
         const avgRate = validValues.length > 0
           ? validValues.reduce((a, b) => a + b, 0) / validValues.length
           : 0;
@@ -75,6 +151,8 @@ function initDomesticViolenceChart(epciCode) {
         });
       }
     });
+
+    console.log(`📊 ${communesWithData.length} communes avec des données valides`);
 
     // Trier les communes par taux moyen
     communesWithData.sort((a, b) => b.avgRate - a.avgRate);
@@ -89,24 +167,9 @@ function initDomesticViolenceChart(epciCode) {
         borderWidth: 1.5,
         pointRadius: 2,
         pointHoverRadius: 5,
-        hidden: true // Toutes cachées par défaut
+        hidden: true, // Toutes cachées par défaut
+        fill: false
       });
-    });
-  }
-
-  // Ajouter moyenne EPCI
-  if (data.yearly_rates) {
-    const epciData = years.map(year => data.yearly_rates[year] || null);
-
-    allDatasets.push({
-      label: "Moyenne EPCI " + data.epci_name,
-      data: epciData,
-      borderColor: '#000000',
-      backgroundColor: 'rgba(0, 0, 0, 0)',
-      borderWidth: 3,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      hidden: false
     });
   }
 
@@ -114,15 +177,18 @@ function initDomesticViolenceChart(epciCode) {
   if (data.department_data && data.department_data.yearly_rates) {
     const deptData = years.map(year => data.department_data.yearly_rates[year] || null);
 
+    console.log("📊 Données département:", deptData);
+
     allDatasets.push({
-      label: decodeHTMLEntities(data.territoryNames.department),
+      label: deptName || 'Département',
       data: deptData,
       borderColor: '#4F46E5',
       backgroundColor: 'rgba(0, 0, 0, 0)',
       borderWidth: 3,
       borderDash: [5, 5],
       pointRadius: 4,
-      hidden: false
+      hidden: false,
+      fill: false
     });
   }
 
@@ -130,19 +196,27 @@ function initDomesticViolenceChart(epciCode) {
   if (data.region_data && data.region_data.yearly_rates) {
     const regionData = years.map(year => data.region_data.yearly_rates[year] || null);
 
+    console.log("📊 Données région:", regionData);
+
     allDatasets.push({
-      label: decodeHTMLEntities(data.territoryNames.region),
+      label: regionName || 'Région',
       data: regionData,
       borderColor: '#10B981',
       backgroundColor: 'rgba(0, 0, 0, 0)',
       borderWidth: 3,
       borderDash: [5, 5],
       pointRadius: 4,
-      hidden: false
+      hidden: false,
+      fill: false
     });
   }
 
-  console.log("Creating chart with " + allDatasets.length + " datasets");
+  console.log(`📊 Création du graphique avec ${allDatasets.length} datasets`);
+
+  if (allDatasets.length === 0) {
+    console.error("❌ Aucun dataset à afficher");
+    return;
+  }
 
   // Créer le graphique
   const chart = new Chart(ctx, {
@@ -160,6 +234,12 @@ function initDomesticViolenceChart(epciCode) {
           title: {
             display: true,
             text: 'Taux pour 1000 habitants'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Année'
           }
         }
       },
@@ -187,8 +267,8 @@ function initDomesticViolenceChart(epciCode) {
         tooltip: {
           callbacks: {
             label: function(context) {
-              if (context.raw === null) return 'Donnée non disponible';
-              return context.dataset.label + ': ' + context.raw.toFixed(2) + '‰';
+              if (context.raw === null || context.raw === undefined) return 'Donnée non disponible';
+              return context.dataset.label + ': ' + parseFloat(context.raw).toFixed(2) + '‰';
             }
           }
         }
@@ -196,14 +276,16 @@ function initDomesticViolenceChart(epciCode) {
     }
   });
 
-  // ✅ Stocker l'instance de graphique
+  // Stocker l'instance de graphique
   if (!window.chartInstances) {
     window.chartInstances = new Map();
   }
   window.chartInstances.set(ctx.id, chart);
 
-  // Configurer les contrôles pour le graphique avec les noms de territoires
+  // Configurer les contrôles pour le graphique
   setupChartControls(epciCode, chart, allDatasets, years, deptName, regionName);
+
+  console.log('✅ Graphique violences domestiques créé avec succès');
 }
 
 // Fonction pour paramétrer les contrôles du graphique
@@ -237,11 +319,9 @@ function setupChartControls(epciCode, chart, allDatasets, years, deptName, regio
   controlsContainer.appendChild(showHighRateButton);
   controlsContainer.appendChild(hideAllButton);
 
-  // Ajouter les événements sur les boutons
+  // Événements des boutons
   showAllButton.addEventListener('click', function() {
-    // Afficher toutes les communes
     allDatasets.forEach((dataset, index) => {
-      // Exclure les moyennes territoriales en vérifiant les vrais noms ET les noms génériques
       const isAverage = dataset.label.includes('Moyenne') ||
         dataset.label.includes('Département') ||
         dataset.label.includes('Région') ||
@@ -255,8 +335,23 @@ function setupChartControls(epciCode, chart, allDatasets, years, deptName, regio
     chart.update();
   });
 
+  hideAllButton.addEventListener('click', function() {
+    allDatasets.forEach((dataset, index) => {
+      const isAverage = dataset.label.includes('Moyenne') ||
+        dataset.label.includes('Département') ||
+        dataset.label.includes('Région') ||
+        (deptName && dataset.label.includes(deptName)) ||
+        (regionName && dataset.label.includes(regionName));
+
+      if (!isAverage) {
+        chart.setDatasetVisibility(index, false);
+      }
+    });
+    chart.update();
+  });
+
   showHighRateButton.addEventListener('click', function() {
-    // D'abord masquer toutes les communes
+    // Masquer toutes les communes d'abord
     allDatasets.forEach((dataset, index) => {
       const isAverage = dataset.label.includes('Moyenne') ||
         dataset.label.includes('Département') ||
@@ -269,10 +364,9 @@ function setupChartControls(epciCode, chart, allDatasets, years, deptName, regio
       }
     });
 
-    // Trouver l'index de la dernière année avec des données
+    // Logique pour afficher les communes au-dessus de la moyenne
     let lastYearIndex = years.length - 1;
     while (lastYearIndex >= 0) {
-      // Vérifier si les données départementales ou régionales existent pour cette année
       const deptDataset = allDatasets.find(d =>
         (deptName && d.label.includes(deptName)) || d.label.includes('Département')
       );
@@ -286,12 +380,10 @@ function setupChartControls(epciCode, chart, allDatasets, years, deptName, regio
       if (deptValue !== null || regionValue !== null) {
         break;
       }
-
       lastYearIndex--;
     }
 
     if (lastYearIndex >= 0) {
-      // Déterminer le seuil (max entre département et région)
       const deptDataset = allDatasets.find(d =>
         (deptName && d.label.includes(deptName)) || d.label.includes('Département')
       );
@@ -307,7 +399,6 @@ function setupChartControls(epciCode, chart, allDatasets, years, deptName, regio
         regionValue !== null ? regionValue : -Infinity
       );
 
-      // Afficher les communes dont la valeur pour la dernière année dépasse le seuil
       allDatasets.forEach((dataset, index) => {
         const isAverage = dataset.label.includes('Moyenne') ||
           dataset.label.includes('Département') ||
@@ -322,65 +413,23 @@ function setupChartControls(epciCode, chart, allDatasets, years, deptName, regio
           }
         }
       });
-
-      // Indiquer le seuil utilisé
-      const yearLabel = years[lastYearIndex];
-      const thresholdText = threshold.toFixed(2);
-      const referenceText = deptValue >= regionValue ? "départementale" : "régionale";
-
-      // Supprimer toute alerte précédente
-      const existingAlert = document.querySelector(`.threshold-alert-${epciCode}`);
-      if (existingAlert) {
-        existingAlert.remove();
-      }
-
-      // Afficher une alerte temporaire pour indiquer le seuil utilisé
-      const alertDiv = document.createElement('div');
-      alertDiv.className = `mt-2 p-2 bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs rounded threshold-alert-${epciCode}`;
-      alertDiv.textContent = `Affichage des communes avec un taux supérieur à la moyenne ${referenceText} (${thresholdText}‰) pour l'année ${yearLabel}`;
-      controlsContainer.parentNode.insertBefore(alertDiv, controlsContainer.nextSibling);
-
-      // Supprimer l'alerte après 5 secondes
-      setTimeout(() => {
-        alertDiv.remove();
-      }, 5000);
     }
 
     chart.update();
   });
-
-  hideAllButton.addEventListener('click', function() {
-    // Masquer toutes les communes mais garder les moyennes
-    allDatasets.forEach((dataset, index) => {
-      const isAverage = dataset.label.includes('Moyenne') ||
-        dataset.label.includes('Département') ||
-        dataset.label.includes('Région') ||
-        (deptName && dataset.label.includes(deptName)) ||
-        (regionName && dataset.label.includes(regionName));
-
-      if (!isAverage) {
-        chart.setDatasetVisibility(index, false);
-      }
-    });
-    chart.update();
-  });
 }
 
-// Fonction pour initialiser les graphiques pour tous les EPCI dans la page
-function initAllDomesticViolenceCharts() {
-  // Trouver tous les conteneurs de violences domestiques dans la page
-  const containers = document.querySelectorAll('[data-epci-code]');
+// Exposer les fonctions pour le système asynchrone
+window.EpciDomesticViolenceChart = {
+  init() {
+    console.log('📊 EpciDomesticViolenceChart.init() appelée');
+    initializeEpciDomesticViolenceChart();
+  }
+};
 
-  containers.forEach(container => {
-    const epciCode = container.getAttribute('data-epci-code');
-    if (epciCode) {
-      initDomesticViolenceChart(epciCode);
-    }
-  });
-}
-
-// ✅ Initialiser au chargement via Turbo (une seule fois)
-document.addEventListener('turbo:load', initAllDomesticViolenceCharts);
+// Exposer aussi les fonctions directement pour le fallback
+window.initializeDomesticViolenceChart = initializeEpciDomesticViolenceChart;
+window.initDomesticViolenceChart = initDomesticViolenceChart;
 
 // Exporter les fonctions pour les rendre disponibles
-export { initDomesticViolenceChart, setupChartControls, initAllDomesticViolenceCharts };
+export { initializeEpciDomesticViolenceChart, initDomesticViolenceChart, setupChartControls };

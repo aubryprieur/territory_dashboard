@@ -248,8 +248,7 @@ class EpciCacheService
       return {} if department_code.blank?
 
       begin
-        # ✅ Utiliser le service existant avec la bonne méthode
-        Api::EpciDomesticViolenceService.get_department_domestic_violence(department_code)
+        Api::PublicSafetyService.get_department_safety(department_code)
       rescue => e
         Rails.logger.error "Erreur récupération violences domestiques département #{department_code}: #{e.message}"
         {}
@@ -260,8 +259,7 @@ class EpciCacheService
       return {} if region_code.blank?
 
       begin
-        # ✅ Utiliser le service existant avec la bonne méthode
-        Api::EpciDomesticViolenceService.get_region_domestic_violence(region_code)
+        Api::PublicSafetyService.get_region_safety(region_code)
       rescue => e
         Rails.logger.error "Erreur récupération violences domestiques région #{region_code}: #{e.message}"
         {}
