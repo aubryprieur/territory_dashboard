@@ -55,9 +55,7 @@ function initializeWomenEmploymentMap() {
         <div class="text-sm">
           <strong>${feature.properties.name}</strong><br>
           Taux d'activité : <strong>${feature.properties.activity_rate.toFixed(1)}%</strong><br>
-          Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%<br>
-          Temps partiel : ${feature.properties.part_time_rate_15_64.toFixed(1)}%<br>
-          Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
+          Taux d'emploi : ${feature.properties.employment_rate.toFixed(1)}%
         </div>
       `;
       layer.bindPopup(popup);
@@ -180,9 +178,7 @@ function initializeWomenEmploymentRateMap() {
         <div class="text-sm">
           <strong>${feature.properties.name}</strong><br>
           Taux d'emploi : <strong>${feature.properties.employment_rate.toFixed(1)}%</strong><br>
-          Taux d'activité : ${feature.properties.activity_rate.toFixed(1)}%<br>
-          Écart : ${(feature.properties.activity_rate - feature.properties.employment_rate).toFixed(1)} points<br>
-          Femmes 15-64 ans : ${feature.properties.women_15_64} habitantes
+          Taux d'activité : ${feature.properties.activity_rate.toFixed(1)}%
         </div>
       `;
       layer.bindPopup(popup);

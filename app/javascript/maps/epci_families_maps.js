@@ -176,8 +176,8 @@ function initializeSingleParentMap() {
           <strong>${feature.properties.name}</strong><br>
           Familles monoparentales : ${feature.properties.single_parent_percentage.toFixed(2)}%<br>
           Nombre : ${feature.properties.single_parent_count} familles<br>
-          Pères seuls : ${feature.properties.single_fathers_percentage.toFixed(2)}%<br>
-          Mères seules : ${feature.properties.single_mothers_percentage.toFixed(2)}%<br>
+          Pères seuls : ${feature.properties.single_father_percentage.toFixed(2)}%<br>
+          Mères seules : ${feature.properties.single_mother_percentage.toFixed(2)}%<br>
           Total ménages : ${feature.properties.total_households}
         </div>
       `;
@@ -260,8 +260,25 @@ function initializeLargeFamiliesMap() {
 
   // ✅ Vérification simple pour éviter la double initialisation
   if (mapElement._leaflet_id) {
-    console.log("Carte des familles nombreuses déjà initialisée");
-    return;
+    console.log("Carte des familles nombreuses déjà initialisée, nettoyage...");
+
+    // Nettoyer l'ancienne instance Leaflet
+    if (window.leafletMaps && window.leafletMaps.has(mapElement.id)) {
+      const oldMap = window.leafletMaps.get(mapElement.id);
+      oldMap.remove();
+      window.leafletMaps.delete(mapElement.id);
+    }
+
+    // Nettoyer l'ancienne instance des bounds
+    if (window.mapBounds && window.mapBounds.has(mapElement.id)) {
+      window.mapBounds.delete(mapElement.id);
+    }
+
+    // Réinitialiser l'élément DOM
+    delete mapElement._leaflet_id;
+    mapElement.innerHTML = '';
+
+    console.log("Nettoyage terminé, procédure de réinitialisation...");
   }
 
   try {
@@ -372,24 +389,44 @@ function createLargeFamiliesLegend(breaks, containerId, colors) {
   legendContainer.appendChild(legend);
 }
 
-// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
-window.EpciFamiliesMaps = {
-  init() {
-    console.log('🗺️ EpciFamiliesMaps.init() appelée');
+window.initializeFamiliesMap = initializeFamiliesMap;
+window.initializeSingleParentMap = initializeSingleParentMap;
+window.initializeLargeFamiliesMap = initializeLargeFamiliesMap;
 
-    // Initialiser toutes les cartes des familles
-    initializeFamiliesMap();
-    initializeSingleParentMap();
-    initializeLargeFamiliesMap();
+// Créer aussi la fonction globale générale
+window.initializeFamiliesMaps = function() {
+  console.log('🗺️ initializeFamiliesMaps() - Initialisation de toutes les cartes familles');
+
+  // Appeler toutes les fonctions d'initialisation
+  try {
+    initializeFamiliesMap();           // Couples avec enfants
+    console.log('✅ Carte couples avec enfants OK');
+  } catch (e) {
+    console.error('❌ Erreur carte couples:', e);
+  }
+
+  try {
+    initializeSingleParentMap();       // Familles monoparentales
+    console.log('✅ Carte familles monoparentales OK');
+  } catch (e) {
+    console.error('❌ Erreur carte monoparentales:', e);
+  }
+
+  try {
+    initializeLargeFamiliesMap();      // Familles nombreuses
+    console.log('✅ Carte familles nombreuses OK');
+  } catch (e) {
+    console.error('❌ Erreur carte familles nombreuses:', e);
   }
 };
 
-// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
-// document.addEventListener("turbo:load", function() {
-//   initializeFamiliesMap();
-//   initializeSingleParentMap();
-//   initializeLargeFamiliesMap();
-// });
+// Garder aussi l'objet EpciFamiliesMaps pour compatibilité
+window.EpciFamiliesMaps = {
+  init() {
+    console.log('🗺️ EpciFamiliesMaps.init() appelée');
+    window.initializeFamiliesMaps();
+  }
+};
 
 // Exporter les fonctions pour les rendre disponibles
 export {
