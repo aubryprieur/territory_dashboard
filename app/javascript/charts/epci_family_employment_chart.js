@@ -221,10 +221,7 @@ window.EpciFamilyEmploymentChart = {
   }
 };
 
-// ✅ SUPPRIMÉ : L'écouteur turbo:load car maintenant géré par le système asynchrone
-// document.addEventListener('turbo:load', function() {
-//   initializeEpciFamilyEmploymentCharts();
-// });
+window.initializeEpciFamilyEmploymentCharts = initializeEpciFamilyEmploymentCharts;
 
 // Exporter les fonctions pour les rendre disponibles
 export { initializeEpciFamilyEmploymentCharts, initEpciFamilyEmploymentChart };
