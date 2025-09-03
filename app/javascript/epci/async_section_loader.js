@@ -1,16 +1,19 @@
-// app/javascript/epci/async_section_loader.js - Version anti-double-requête corrigée
+// app/javascript/epci/async_section_loader.js - Version CORRIGÉE contre double-appels
 
 class AsyncSectionLoader {
   constructor() {
-    // Prévenir la double création
     if (window.asyncSectionLoader) {
-      console.log('AsyncSectionLoader déjà créé, retour de l\'instance existante');
+      console.log('AsyncSectionLoader déjà créé, retour instance existante');
       return window.asyncSectionLoader;
     }
 
     this.loadedSections = new Set();
-    this.requestInProgress = new Set(); // CRITIQUE: Tracker les requêtes HTTP en cours
-    this.requestQueue = new Map(); // Stocker les promesses pour éviter les doublons
+    this.requestInProgress = new Set();
+    this.requestQueue = new Map();
+    this.initializationInProgress = new Set();
+
+    // NOUVEAU: Protection contre l'initialisation multiple des composants
+    this.componentsInitialized = new Set();
 
     this.sectionEndpoints = {
       'population': '/epci_dashboard/load_population',
@@ -26,35 +29,33 @@ class AsyncSectionLoader {
     };
 
     this.initializeEventListeners();
-    console.log('🚀 AsyncSectionLoader créé avec protection anti-double-requête renforcée');
+    console.log('🚀 AsyncSectionLoader ÉTAPE 6 COMPLÈTE - Tous graphiques restaurés');
   }
 
   initializeEventListeners() {
-    // CORRECTION MAJEURE: Une seule délégation d'événement avec debouncing
-    let clickTimeout = null;
+    // Protection renforcée contre les clics multiples
+    let lastClickTime = 0;
+    const DEBOUNCE_DELAY = 300; // 300ms entre clics
 
     document.addEventListener('click', (e) => {
       const tabButton = e.target.closest('[data-tab-id]');
       if (tabButton) {
-        e.preventDefault(); // Empêcher navigation par défaut
-
+        const now = Date.now();
         const sectionId = tabButton.dataset.tabId;
 
-        // Clear previous timeout
-        if (clickTimeout) {
-          clearTimeout(clickTimeout);
+        // Protection anti-spam
+        if (now - lastClickTime < DEBOUNCE_DELAY) {
+          console.log(`🛡️ Clic trop rapide ignoré pour ${sectionId}`);
+          return;
         }
 
-        // Debounce: attendre 150ms avant d'exécuter
-        clickTimeout = setTimeout(() => {
-          console.log(`🔄 Clic traité pour: ${sectionId}`);
-          this.loadSectionIfNeeded(sectionId);
-        }, 150);
+        lastClickTime = now;
+        console.log(`🎯 Clic immédiat pour: ${sectionId}`);
+        this.loadSectionIfNeeded(sectionId);
       }
-    }, { passive: false });
+    }, { passive: true });
 
-    // Intercepter les événements custom du système de tabs
-    document.addEventListener('section:activated', (e) => {
+    document.addEventListener('section:activate', (e) => {
       if (e.detail && e.detail.sectionId) {
         this.loadSectionIfNeeded(e.detail.sectionId);
       }
@@ -62,19 +63,17 @@ class AsyncSectionLoader {
   }
 
   async loadSectionIfNeeded(sectionId) {
-    console.log(`🔍 Demande de chargement: ${sectionId}`);
+    console.log(`🔍 ÉTAPE 6 - Demande de chargement: ${sectionId}`);
+    console.log(`- Déjà chargé: ${this.loadedSections.has(sectionId)}`);
+    console.log(`- Requête en cours: ${this.requestInProgress.has(sectionId)}`);
 
-    // VÉRIFICATION 1: Déjà chargé
     if (this.loadedSections.has(sectionId)) {
-      console.log(`📝 Section ${sectionId} déjà chargée`);
+      console.log(`✅ Section ${sectionId} déjà chargée`);
       return;
     }
 
-    // VÉRIFICATION 2: Requête en cours
     if (this.requestInProgress.has(sectionId)) {
-      console.log(`⏳ Section ${sectionId} en cours, attente de la requête existante...`);
-
-      // Attendre la requête existante au lieu d'en créer une nouvelle
+      console.log(`⏳ PROTECTION: Requête déjà en cours pour ${sectionId}, attente...`);
       const existingRequest = this.requestQueue.get(sectionId);
       if (existingRequest) {
         try {
@@ -89,40 +88,29 @@ class AsyncSectionLoader {
 
     const endpoint = this.sectionEndpoints[sectionId];
     if (!endpoint) {
-      console.log(`⚠️ Pas d'endpoint pour: ${sectionId}`);
+      console.warn(`⚠️ Endpoint non trouvé pour: ${sectionId}`);
       return;
     }
 
-    // ÉTAPE CRITIQUE: Marquer comme en cours AVANT de créer la requête
     this.requestInProgress.add(sectionId);
+    console.log(`🚀 ÉTAPE 6: Démarrage fetch ${sectionId}`);
 
-    // Créer et stocker la promesse
-    const requestPromise = this.performSectionLoad(sectionId, endpoint);
+    const requestPromise = this.fetchSection(sectionId, endpoint);
     this.requestQueue.set(sectionId, requestPromise);
 
-    try {
-      await requestPromise;
-    } catch (error) {
-      console.error(`❌ Erreur lors du chargement de ${sectionId}:`, error);
-    } finally {
-      // NETTOYAGE OBLIGATOIRE
-      this.requestInProgress.delete(sectionId);
-      this.requestQueue.delete(sectionId);
-    }
+    return requestPromise;
   }
 
-  async performSectionLoad(sectionId, endpoint) {
-    console.log(`🔄 Chargement HTTP: ${sectionId}`);
+  async fetchSection(sectionId, endpoint) {
+    const startTime = Date.now();
+    console.log(`🔥 ÉTAPE 6: Début fetch ${sectionId} - ${endpoint}`);
 
     try {
-      this.showLoader(sectionId);
-
-      // CORRECTION: Timeout strict et AbortController
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.warn(`⏰ Timeout pour ${sectionId} après 20s`);
+        console.warn(`⏰ Timeout pour ${sectionId} après 15s`);
         controller.abort();
-      }, 20000); // 20s max
+      }, 15000);
 
       const response = await fetch(endpoint, {
         method: 'GET',
@@ -142,17 +130,14 @@ class AsyncSectionLoader {
       }
 
       const html = await response.text();
-
-      // Injecter le contenu
-      await this.injectSectionContent(sectionId, html);
-
-      // IMPORTANT: Marquer comme chargé seulement APRÈS succès complet
+      this.injectSectionContent(sectionId, html);
       this.loadedSections.add(sectionId);
 
-      // Initialiser les composants
-      await this.initializeSectionComponents(sectionId);
+      const duration = Date.now() - startTime;
+      console.log(`✅ ÉTAPE 6: Section ${sectionId} chargée en ${duration}ms`);
 
-      console.log(`✅ Section ${sectionId} chargée avec succès`);
+      // ÉTAPE 6: Initialisation complète avec protection renforcée
+      await this.initializeSectionComponentsComplete(sectionId);
 
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -161,371 +146,356 @@ class AsyncSectionLoader {
         console.error(`❌ Erreur HTTP pour ${sectionId}:`, error);
         this.showError(sectionId, error);
       }
-      throw error; // Re-throw pour être capturé par loadSectionIfNeeded
+      throw error;
 
     } finally {
-      this.hideLoader(sectionId);
+      console.log(`🧹 ÉTAPE 6: Nettoyage pour ${sectionId}`);
+      this.requestInProgress.delete(sectionId);
+      this.requestQueue.delete(sectionId);
     }
   }
 
-  showLoader(sectionId) {
-    const panel = document.querySelector(`[data-tab-id="${sectionId}"][data-tabs-target="panel"]`);
-    if (panel) {
-      const loader = this.createLoader(sectionId);
-      panel.innerHTML = '';
-      panel.appendChild(loader);
-    }
-  }
+  injectSectionContent(sectionId, html) {
+    const container = document.querySelector(`[data-section-id="${sectionId}"]`) ||
+                     document.querySelector(`[data-tab-id="${sectionId}"][data-tabs-target="panel"]`);
 
-  hideLoader(sectionId) {
-    const panel = document.querySelector(`[data-tab-id="${sectionId}"][data-tabs-target="panel"]`);
-    if (panel) {
-      const loader = panel.querySelector('.async-loader');
-      if (loader) {
-        loader.remove();
-      }
-    }
-  }
+    if (container) {
+      container.innerHTML = html;
+      container.offsetHeight; // Force reflow
 
-  createLoader(sectionId) {
-    const loader = document.createElement('div');
-    loader.className = 'async-loader flex items-center justify-center h-64';
-
-    const sectionNames = {
-      'population': 'population',
-      'families': 'familles',
-      'children': 'enfants',
-      'births': 'naissances',
-      'economy': 'données économiques',
-      'schooling': 'scolarisation',
-      'childcare': 'petite enfance',
-      'family-employment': 'emploi des familles',
-      'women-employment': 'emploi des femmes',
-      'violence': 'violences domestiques'
-    };
-
-    const sectionName = sectionNames[sectionId] || 'données';
-
-    loader.innerHTML = `
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p class="text-gray-600">Chargement ${sectionName}...</p>
-        <div class="w-32 bg-gray-200 rounded-full h-1 mt-2 mx-auto overflow-hidden">
-          <div class="bg-blue-600 h-1 rounded-full animate-pulse"></div>
-        </div>
-      </div>
-    `;
-    return loader;
-  }
-
-  async injectSectionContent(sectionId, html) {
-    const panel = document.querySelector(`[data-tab-id="${sectionId}"][data-tabs-target="panel"]`);
-    if (panel) {
-      panel.innerHTML = html;
-
-      // Déclencher événement pour les composants
       const event = new CustomEvent('dashboard:sectionLoaded', {
         detail: { section: sectionId, timestamp: Date.now() }
       });
       document.dispatchEvent(event);
+
+      console.log(`📝 ÉTAPE 6: Contenu injecté pour ${sectionId}`);
+    } else {
+      console.error(`❌ Container non trouvé pour: ${sectionId}`);
     }
   }
 
   showError(sectionId, error) {
-    const panel = document.querySelector(`[data-tab-id="${sectionId}"][data-tabs-target="panel"]`);
-    if (panel) {
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-8 text-center';
-      errorDiv.innerHTML = `
-        <div class="text-red-600 mb-4">
-          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
+    const container = document.querySelector(`[data-section-id="${sectionId}"]`) ||
+                     document.querySelector(`[data-tab-id="${sectionId}"][data-tabs-target="panel"]`);
+
+    if (container) {
+      container.innerHTML = `
+        <div class="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
+          <div class="text-red-600 mb-4">
+            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
+          <p class="text-gray-600 mb-4">Impossible de charger cette section.</p>
+          <button onclick="window.asyncSectionLoader.reloadSection('${sectionId}')"
+                  class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+            Réessayer
+          </button>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
-        <p class="text-gray-600 mb-4">Impossible de charger cette section. Veuillez réessayer.</p>
-        <button onclick="window.asyncSectionLoader.reloadSection('${sectionId}')"
-                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-          Réessayer
-        </button>
       `;
-      panel.innerHTML = '';
-      panel.appendChild(errorDiv);
     }
   }
 
   async reloadSection(sectionId) {
-    console.log(`🔄 Rechargement forcé: ${sectionId}`);
-
-    // Nettoyer tous les états
+    console.log(`🔄 ÉTAPE 6: Rechargement forcé ${sectionId}`);
     this.loadedSections.delete(sectionId);
     this.requestInProgress.delete(sectionId);
     this.requestQueue.delete(sectionId);
-
-    // Recharger
+    this.initializationInProgress.delete(sectionId);
+    this.componentsInitialized.delete(sectionId); // NOUVEAU: Reset des composants
     await this.loadSectionIfNeeded(sectionId);
   }
 
-  async initializeSectionComponents(sectionId) {
-    // Attendre un peu que le DOM soit prêt
-    await new Promise(resolve => setTimeout(resolve, 100));
+  async initializeSectionComponentsComplete(sectionId) {
+    console.log(`🎯 ÉTAPE 6: Init COMPLÈTE ${sectionId}`);
 
-    const initMethods = {
-      'population': () => this.initializePopulationComponents(),
-      'families': () => this.initializeFamiliesComponents(),
-      'births': () => this.initializeBirthsComponents(),
-      'children': () => this.initializeChildrenComponents(),
-      'schooling': () => this.initializeSchoolingComponents(),
-      'economy': () => this.initializeEconomicComponents(),
-      'childcare': () => this.initializeChildcareComponents(),
-      'family-employment': () => this.initializeFamilyEmploymentComponents(),
-      'women-employment': () => this.initializeWomenEmploymentComponents(),
-      'violence': () => this.initializeViolenceComponents()
-    };
+    // PROTECTION RENFORCÉE: Vérifier si déjà en cours ou fait
+    if (this.initializationInProgress.has(sectionId)) {
+      console.log(`⏸️ Initialisation déjà en cours pour ${sectionId}`);
+      return;
+    }
 
-    const initMethod = initMethods[sectionId];
-    if (initMethod) {
-      try {
+    if (this.componentsInitialized.has(sectionId)) {
+      console.log(`✅ Composants déjà initialisés pour ${sectionId}`);
+      return;
+    }
+
+    this.initializationInProgress.add(sectionId);
+
+    try {
+      // Délais appropriés selon la complexité de chaque section
+      const delays = {
+        'families': 400,  // Plus long car plusieurs cartes
+        'schooling': 300,
+        'births': 350,
+        'children': 250,
+        'population': 200,
+        'violence': 300,
+        'economy': 200,
+        'childcare': 200,
+        'family-employment': 200,
+        'women-employment': 200
+      };
+
+      await new Promise(resolve => setTimeout(resolve, delays[sectionId] || 200));
+
+      const initMethods = {
+        'families': () => this.initializeFamiliesComplete(),
+        'schooling': () => this.initializeSchoolingComplete(),
+        'births': () => this.initializeBirthsComplete(),
+        'children': () => this.initializeChildrenComplete(),
+        'population': () => this.initializePopulationComplete(),
+        'economy': () => this.initializeEconomicComplete(),
+        'childcare': () => this.initializeChildcareComplete(),
+        'family-employment': () => this.initializeFamilyEmploymentComplete(),
+        'women-employment': () => this.initializeWomenEmploymentComplete(),
+        'violence': () => this.initializeViolenceComplete()
+      };
+
+      const initMethod = initMethods[sectionId];
+      if (initMethod) {
         await initMethod();
-        console.log(`🎯 Composants ${sectionId} initialisés`);
-      } catch (error) {
-        console.error(`❌ Erreur init composants ${sectionId}:`, error);
+        // MARQUER COMME INITIALISÉ SEULEMENT EN CAS DE SUCCÈS
+        this.componentsInitialized.add(sectionId);
+        console.log(`✅ ÉTAPE 6: Composants ${sectionId} initialisés COMPLÈTEMENT`);
       }
+
+    } catch (error) {
+      console.error(`❌ Erreur init complète ${sectionId}:`, error);
+    } finally {
+      this.initializationInProgress.delete(sectionId);
     }
   }
 
-  // Méthodes d'initialisation des composants (simplifiées)
-  async initializePopulationComponents() {
-    console.log('🔢 Init population');
+  // ÉTAPE 6: Méthodes d'initialisation COMPLÈTES avec protection renforcée
 
-    if (window.initializeAgePyramidChart) {
-      setTimeout(() => window.initializeAgePyramidChart(), 200);
-    }
-    if (window.initializePopulationHistoryChart) {
-      setTimeout(() => window.initializePopulationHistoryChart(), 400);
-    }
-  }
+  async initializeFamiliesComplete() {
+    console.log('👨‍👩‍👧‍👦 ÉTAPE 6: Init familles COMPLÈTE');
 
-  async initializeBirthsComponents() {
-    console.log('👶 Init naissances');
-
-    // Attendre que les scripts soient chargés
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    // Méthode 1 : Essayer l'objet EpciBirthsMap
-    if (window.EpciBirthsMap && typeof window.EpciBirthsMap.init === 'function') {
-      console.log('🎯 Utilisation de EpciBirthsMap.init');
-      window.EpciBirthsMap.init();
-    } else if (typeof window.initializeBirthsCountMap === 'function') {
-      console.log('🎯 Fallback - initializeBirthsCountMap');
-      window.initializeBirthsCountMap();
-    }
-
-    // Méthode 2 : Essayer le graphique d'historique
-    if (window.EpciBirthsHistoryChart && typeof window.EpciBirthsHistoryChart.init === 'function') {
-      console.log('🎯 Utilisation de EpciBirthsHistoryChart.init');
-      setTimeout(() => window.EpciBirthsHistoryChart.init(), 200);
-    } else if (typeof window.initializeBirthsHistoryChart === 'function') {
-      console.log('🎯 Fallback - initializeBirthsHistoryChart');
-      setTimeout(() => window.initializeBirthsHistoryChart(), 200);
-    }
-
-    console.log('🔍 État final des fonctions naissances:', {
-      EpciBirthsMap: typeof window.EpciBirthsMap,
-      EpciBirthsHistoryChart: typeof window.EpciBirthsHistoryChart,
-      initializeBirthsCountMap: typeof window.initializeBirthsCountMap,
-      initializeBirthsHistoryChart: typeof window.initializeBirthsHistoryChart
-    });
-  }
-
-  async initializeFamiliesComponents() {
-    console.log('👨‍👩‍👧‍👦 Init familles');
-
-    // Attendre que les scripts soient chargés
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    // Méthode 1 : Essayer la fonction globale principale
-    if (typeof window.initializeFamiliesMaps === 'function') {
-      console.log('🎯 Utilisation de initializeFamiliesMaps');
-      window.initializeFamiliesMaps();
-      return;
-    }
-
-    // Méthode 2 : Essayer l'objet EpciFamiliesMaps
-    if (window.EpciFamiliesMaps && typeof window.EpciFamiliesMaps.init === 'function') {
-      console.log('🎯 Utilisation de EpciFamiliesMaps.init');
-      window.EpciFamiliesMaps.init();
-      return;
-    }
-
-    // Méthode 3 : Fallback - Essayer les fonctions individuelles
-    console.log('🎯 Fallback - Fonctions individuelles');
-    const functions = [
-      { name: 'initializeFamiliesMap', fn: window.initializeFamiliesMap },
-      { name: 'initializeSingleParentMap', fn: window.initializeSingleParentMap },
-      { name: 'initializeLargeFamiliesMap', fn: window.initializeLargeFamiliesMap }
-    ];
-
-    functions.forEach(({ name, fn }) => {
-      if (typeof fn === 'function') {
-        console.log(`✅ Exécution de ${name}`);
-        try {
-          fn();
-        } catch (error) {
-          console.error(`❌ Erreur dans ${name}:`, error);
-        }
-      } else {
-        console.warn(`⚠️ ${name} non trouvée (type: ${typeof fn})`);
+    try {
+      // PROTECTION SPÉCIALE pour les familles - le plus problématique
+      const familyKey = 'epci-families-maps';
+      if (window.initializationGuard && window.initializationGuard[familyKey]) {
+        console.log('🛡️ EpciFamiliesMaps déjà initialisé, abandon');
+        return;
       }
-    });
 
-    // Debug final
-    console.log('🔍 État final des fonctions familles:', {
-      initializeFamiliesMaps: typeof window.initializeFamiliesMaps,
-      EpciFamiliesMaps: typeof window.EpciFamiliesMaps,
-      initializeLargeFamiliesMap: typeof window.initializeLargeFamiliesMap
-    });
-  }
+      // Marquer comme en cours d'initialisation
+      if (!window.initializationGuard) window.initializationGuard = {};
+      window.initializationGuard[familyKey] = true;
 
-  async initializeChildrenComponents() {
-    console.log('👦 Init enfants');
+      // Initialiser les cartes des familles avec délais
+      if (typeof window.initializeFamiliesMap === 'function') {
+        console.log('🗺️ Initialisation carte couples avec enfants');
+        window.initializeFamiliesMap();
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
 
-    if (window.initializeChildrenMaps) {
-      setTimeout(() => window.initializeChildrenMaps(), 200);
+      if (typeof window.initializeSingleParentMap === 'function') {
+        console.log('🗺️ Initialisation carte familles monoparentales');
+        window.initializeSingleParentMap();
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      if (typeof window.initializeLargeFamiliesMap === 'function') {
+        console.log('🗺️ Initialisation carte familles nombreuses');
+        window.initializeLargeFamiliesMap();
+      }
+
+      // Fallback avec protection additionnelle
+      if (typeof window.EpciFamiliesMaps === 'object' &&
+          typeof window.EpciFamiliesMaps.init === 'function' &&
+          !window.EpciFamiliesMaps._initialized) {
+
+        console.log('🗺️ Fallback EpciFamiliesMaps.init');
+        window.EpciFamiliesMaps.init();
+        window.EpciFamiliesMaps._initialized = true; // Marquer comme initialisé
+      }
+
+    } catch (e) {
+      console.error('❌ Erreur init familles complète:', e);
     }
   }
 
-  async initializeSchoolingComponents() {
-    console.log('🎓 Init scolarisation');
+  async initializeSchoolingComplete() {
+    console.log('🎓 ÉTAPE 6: Init scolarisation COMPLÈTE');
 
-    if (window.initializeSchoolingMaps) {
-      setTimeout(() => window.initializeSchoolingMaps(), 200);
+    try {
+      if (typeof window.initializeMapScolarisation === 'function') {
+        console.log('🗺️ Initialisation carte scolarisation 2 ans');
+        window.initializeMapScolarisation();
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      if (typeof window.initializeMapScolarisation3to5 === 'function') {
+        console.log('🗺️ Initialisation carte scolarisation 3-5 ans');
+        window.initializeMapScolarisation3to5();
+      }
+
+      if (typeof window.EpciSchoolingMaps === 'object' &&
+          typeof window.EpciSchoolingMaps.init === 'function' &&
+          !window.EpciSchoolingMaps._initialized) {
+
+        console.log('🗺️ Fallback EpciSchoolingMaps.init');
+        window.EpciSchoolingMaps.init();
+        window.EpciSchoolingMaps._initialized = true;
+      }
+
+    } catch (e) {
+      console.error('❌ Erreur init scolarisation complète:', e);
     }
   }
 
-  async initializeEconomicComponents() {
-    console.log('💰 Init économie');
+  async initializeBirthsComplete() {
+    console.log('👶 ÉTAPE 6: Init naissances COMPLÈTE');
 
-    if (window.initializeEconomicMaps) {
-      setTimeout(() => window.initializeEconomicMaps(), 200);
+    try {
+      if (window.EpciBirthsMap && typeof window.EpciBirthsMap.init === 'function') {
+        console.log('🗺️ Initialisation carte naissances');
+        window.EpciBirthsMap.init();
+      } else if (typeof window.initializeBirthsCountMap === 'function') {
+        window.initializeBirthsCountMap();
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      if (window.EpciBirthsHistoryChart && typeof window.EpciBirthsHistoryChart.init === 'function') {
+        console.log('📊 Initialisation graphique historique naissances');
+        window.EpciBirthsHistoryChart.init();
+      } else if (typeof window.initializeBirthsHistoryChart === 'function') {
+        window.initializeBirthsHistoryChart();
+      }
+
+    } catch (e) {
+      console.error('❌ Erreur init naissances complète:', e);
     }
   }
 
-  async initializeChildcareComponents() {
-    console.log('🍼 Init petite enfance');
+  async initializeChildrenComplete() {
+    console.log('👦 ÉTAPE 6: Init enfants COMPLÈTE');
 
-    if (window.initializeChildcareMap) {
-      setTimeout(() => window.initializeChildcareMap(), 200);
+    try {
+      if (typeof window.initializeChildrenMaps === 'function') {
+        console.log('🗺️ Initialisation cartes enfants');
+        window.initializeChildrenMaps();
+      } else if (window.EpciChildrenMaps && typeof window.EpciChildrenMaps.init === 'function') {
+        window.EpciChildrenMaps.init();
+      }
+    } catch (e) {
+      console.error('❌ Erreur init enfants complète:', e);
     }
   }
 
-  async initializeFamilyEmploymentComponents() {
-    console.log('👼 Init emploi familles');
+  async initializePopulationComplete() {
+    console.log('📢 ÉTAPE 6: Init population COMPLÈTE');
 
-    // Attendre que les scripts soient chargés
-    await new Promise(resolve => setTimeout(resolve, 300));
+    try {
+      if (typeof window.initializeAgePyramidChart === 'function') {
+        console.log('📊 Initialisation pyramide des âges');
+        window.initializeAgePyramidChart();
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
 
-    // Méthode 1 : Essayer l'objet EpciFamilyEmploymentChart
-    if (window.EpciFamilyEmploymentChart && typeof window.EpciFamilyEmploymentChart.init === 'function') {
-      console.log('🎯 Utilisation de EpciFamilyEmploymentChart.init');
-      window.EpciFamilyEmploymentChart.init();
-      return;
-    }
+      if (typeof window.initializePopulationHistoryChart === 'function') {
+        console.log('📊 Initialisation graphique historique population');
+        window.initializePopulationHistoryChart();
+      } else if (window.EpciPopulationHistoryChart && typeof window.EpciPopulationHistoryChart.init === 'function') {
+        window.EpciPopulationHistoryChart.init();
+      }
 
-    // Méthode 2 : Fallback - Essayer la fonction directe
-    if (typeof window.initializeEpciFamilyEmploymentCharts === 'function') {
-      console.log('🎯 Fallback - initializeEpciFamilyEmploymentCharts');
-      window.initializeEpciFamilyEmploymentCharts();
-      return;
-    }
-
-    console.warn('⚠️ Aucune fonction d\'emploi familles trouvée');
-    console.log('🔍 État des fonctions emploi familles:', {
-      EpciFamilyEmploymentChart: typeof window.EpciFamilyEmploymentChart,
-      initializeEpciFamilyEmploymentCharts: typeof window.initializeEpciFamilyEmploymentCharts
-    });
-  }
-
-  async initializeWomenEmploymentComponents() {
-    console.log('👩‍💼 Init emploi femmes');
-
-    if (window.initializeWomenEmploymentMaps) {
-      setTimeout(() => window.initializeWomenEmploymentMaps(), 200);
+    } catch (e) {
+      console.error('❌ Erreur init population complète:', e);
     }
   }
 
-  async initializeViolenceComponents() {
-    console.log('🚨 Init violences');
+  async initializeViolenceComplete() {
+    console.log('🚨 ÉTAPE 6: Init violences COMPLÈTE');
 
-    // Attendre que les scripts soient chargés
-    await new Promise(resolve => setTimeout(resolve, 300));
+    try {
+      if (window.EpciDomesticViolenceMap && typeof window.EpciDomesticViolenceMap.init === 'function') {
+        console.log('🗺️ Initialisation carte violences');
+        window.EpciDomesticViolenceMap.init();
+      } else if (typeof window.initializeDomesticViolenceMap === 'function') {
+        window.initializeDomesticViolenceMap();
+      }
 
-    // Initialiser la carte
-    if (window.EpciDomesticViolenceMap && typeof window.EpciDomesticViolenceMap.init === 'function') {
-      console.log('🎯 Utilisation de EpciDomesticViolenceMap.init');
-      window.EpciDomesticViolenceMap.init();
-    } else if (typeof window.initializeDomesticViolenceMap === 'function') {
-      console.log('🎯 Fallback - initializeDomesticViolenceMap');
-      window.initializeDomesticViolenceMap();
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      if (window.EpciDomesticViolenceChart && typeof window.EpciDomesticViolenceChart.init === 'function') {
+        console.log('📊 Initialisation graphique violences');
+        window.EpciDomesticViolenceChart.init();
+      } else if (typeof window.initializeEpciDomesticViolenceChart === 'function') {
+        window.initializeEpciDomesticViolenceChart();
+      }
+
+    } catch (e) {
+      console.error('❌ Erreur init violences complète:', e);
     }
-
-    // Initialiser le graphique
-    if (window.EpciDomesticViolenceChart && typeof window.EpciDomesticViolenceChart.init === 'function') {
-      console.log('🎯 Utilisation de EpciDomesticViolenceChart.init');
-      setTimeout(() => window.EpciDomesticViolenceChart.init(), 200);
-    } else if (typeof window.initializeEpciDomesticViolenceChart === 'function') {
-      console.log('🎯 Fallback - initializeEpciDomesticViolenceChart');
-      setTimeout(() => window.initializeEpciDomesticViolenceChart(), 200);
-    }
-
-    console.log('🔍 État final des fonctions violences:', {
-      EpciDomesticViolenceMap: typeof window.EpciDomesticViolenceMap,
-      EpciDomesticViolenceChart: typeof window.EpciDomesticViolenceChart,
-      initializeDomesticViolenceMap: typeof window.initializeDomesticViolenceMap,
-      initializeEpciDomesticViolenceChart: typeof window.initializeEpciDomesticViolenceChart
-    });
   }
 
-  // API publique pour debugging
+  async initializeEconomicComplete() {
+    console.log('💰 ÉTAPE 6: Init économie COMPLÈTE');
+    try {
+      if (typeof window.initializeEconomicMaps === 'function') {
+        window.initializeEconomicMaps();
+      }
+    } catch (e) {
+      console.error('❌ Erreur économie complète:', e);
+    }
+  }
+
+  async initializeChildcareComplete() {
+    console.log('🍼 ÉTAPE 6: Init petite enfance COMPLÈTE');
+    try {
+      if (typeof window.initializeChildcareMap === 'function') {
+        window.initializeChildcareMap();
+      }
+    } catch (e) {
+      console.error('❌ Erreur petite enfance complète:', e);
+    }
+  }
+
+  async initializeFamilyEmploymentComplete() {
+    console.log('💼 ÉTAPE 6: Init emploi familles COMPLÈTE');
+    try {
+      if (window.EpciFamilyEmploymentChart && typeof window.EpciFamilyEmploymentChart.init === 'function') {
+        window.EpciFamilyEmploymentChart.init();
+      } else if (typeof window.initializeEpciFamilyEmploymentCharts === 'function') {
+        window.initializeEpciFamilyEmploymentCharts();
+      }
+    } catch (e) {
+      console.error('❌ Erreur emploi familles complète:', e);
+    }
+  }
+
+  async initializeWomenEmploymentComplete() {
+    console.log('👩‍💼 ÉTAPE 6: Init emploi femmes COMPLÈTE');
+    try {
+      if (typeof window.initializeWomenEmploymentMaps === 'function') {
+        window.initializeWomenEmploymentMaps();
+      }
+    } catch (e) {
+      console.error('❌ Erreur emploi femmes complète:', e);
+    }
+  }
+
   getLoadingStats() {
     return {
       loadedSections: Array.from(this.loadedSections),
       sectionsInProgress: Array.from(this.requestInProgress),
       queuedRequests: Array.from(this.requestQueue.keys()),
+      initializationInProgress: Array.from(this.initializationInProgress),
+      componentsInitialized: Array.from(this.componentsInitialized),
       totalSections: Object.keys(this.sectionEndpoints).length
     };
   }
-
-  // Méthode pour précharger intelligemment
-  async preloadPopularSections() {
-    const popularSections = ['families', 'children']; // Sections les plus consultées
-
-    setTimeout(async () => {
-      for (const sectionId of popularSections) {
-        if (!this.loadedSections.has(sectionId) && !this.requestInProgress.has(sectionId)) {
-          console.log(`🔄 Préchargement: ${sectionId}`);
-          await this.loadSectionIfNeeded(sectionId);
-          // Pause entre préchargements
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
-    }, 3000); // Attendre 3s après le chargement initial
-  }
 }
 
-// INITIALISATION SÉCURISÉE - UNE SEULE INSTANCE
+// Instance unique sécurisée
 if (!window.asyncSectionLoader) {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      window.asyncSectionLoader = new AsyncSectionLoader();
-      // Optionnel: précharger après initialisation
-      window.asyncSectionLoader.preloadPopularSections();
-    });
-  } else {
-    window.asyncSectionLoader = new AsyncSectionLoader();
-    window.asyncSectionLoader.preloadPopularSections();
-  }
+  window.asyncSectionLoader = new AsyncSectionLoader();
 }
 
 export default AsyncSectionLoader;

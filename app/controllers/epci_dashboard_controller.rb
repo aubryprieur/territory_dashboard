@@ -1,6 +1,7 @@
 class EpciDashboardController < ApplicationController
   include UserAuthorization
   include TerritoryNamesHelper
+  include DashboardCache
 
   before_action :check_epci_user
   before_action :set_epci_variables
@@ -218,12 +219,9 @@ class EpciDashboardController < ApplicationController
     return unless @epci_communes_data.present? && @epci_communes_data["communes"].present?
 
     start_time = Time.current
-    commune_codes = @epci_communes_data["communes"].map { |c| c["code"] }
 
-    # CRITIQUE: Utiliser pluck pour ne récupérer QUE les données nécessaires
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
+    commune_codes = get_all_commune_codes_for_epci  # Pour les logs
 
     Rails.logger.info "🗺️ Géométries chargées: #{geometries_by_code.count}/#{commune_codes.count} communes"
 
@@ -545,10 +543,7 @@ class EpciDashboardController < ApplicationController
 
     start_time = Time.current
 
-    commune_codes = @epci_births_data["communes"].map { |c| c["code"] }
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
 
     features_births = []
     latest_year = @epci_births_data["years_available"]&.max&.to_s || "2021"
@@ -590,10 +585,7 @@ class EpciDashboardController < ApplicationController
 
     start_time = Time.current
 
-    commune_codes = @epci_families_data["communes"].map { |c| c["code"] }
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
 
     features_families = []
 
@@ -663,10 +655,7 @@ class EpciDashboardController < ApplicationController
   def prepare_single_parent_geojson_data
     return unless @epci_single_parent_data.present? && @epci_single_parent_data["communes"].present?
 
-    commune_codes = @epci_single_parent_data["communes"].map { |c| c["code"] }
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
 
     features_single_parent = []
 
@@ -703,10 +692,7 @@ class EpciDashboardController < ApplicationController
   def prepare_large_families_geojson_data
     return unless @epci_large_families_data.present? && @epci_large_families_data["communes"].present?
 
-    commune_codes = @epci_large_families_data["communes"].map { |c| c["code"] }
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
 
     features_large_families = []
 
@@ -741,10 +727,7 @@ class EpciDashboardController < ApplicationController
   def prepare_revenues_geojson_data
     return unless @epci_revenues_data.present? && @epci_revenues_data["communes"].present?
 
-    commune_codes = @epci_revenues_data["communes"].map { |c| c["code"] }
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
 
     features_revenues = []
     latest_year = @epci_revenues_data["latest_year"]&.to_s || "2021"
@@ -779,10 +762,7 @@ class EpciDashboardController < ApplicationController
   def prepare_schooling_geojson_data
     return unless @epci_schooling_communes_data.present? && @epci_schooling_communes_data["communes"].present?
 
-    commune_codes = @epci_schooling_communes_data["communes"].map { |c| c["code"] }
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
 
     features_schooling = []
 
@@ -813,10 +793,7 @@ class EpciDashboardController < ApplicationController
   def prepare_childcare_geojson_data
     return unless @epci_childcare_communes_data.present? && @epci_childcare_communes_data["communes"].present?
 
-    commune_codes = @epci_childcare_communes_data["communes"].map { |c| c["code"] }
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
 
     features_childcare = []
 
@@ -847,10 +824,7 @@ class EpciDashboardController < ApplicationController
   def prepare_women_employment_geojson_data
     return unless @epci_women_employment_data.present? && @epci_women_employment_data["communes"].present?
 
-    commune_codes = @epci_women_employment_data["communes"].map { |c| c["code"] }
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
 
     features_women_employment = []
 
@@ -886,10 +860,7 @@ class EpciDashboardController < ApplicationController
   def prepare_domestic_violence_geojson_data
     return unless @epci_domestic_violence_data.present? && @epci_domestic_violence_data["communes"].present?
 
-    commune_codes = @epci_domestic_violence_data["communes"].map { |c| c["code"] }
-    geometries_by_code = CommuneGeometry.where(code_insee: commune_codes)
-                                        .pluck(:code_insee, :geojson)
-                                        .to_h
+    geometries_by_code = get_cached_geometries
 
     features_domestic_violence = []
 
@@ -930,6 +901,20 @@ class EpciDashboardController < ApplicationController
     }.to_json
 
     @epci_latest_violence_year = full_year
+  end
+
+  # À ajouter dans le controller, vers la fin du fichier
+  def get_all_commune_codes_for_epci
+    return @all_commune_codes if @all_commune_codes.present?
+
+    @all_commune_codes = get_epci_commune_codes(@epci_code)
+  end
+
+  def get_cached_geometries
+    return @cached_geometries if @cached_geometries.present?
+
+    commune_codes = get_all_commune_codes_for_epci
+    @cached_geometries = cached_commune_geometries(commune_codes)
   end
 
 end
