@@ -122,6 +122,25 @@ module DashboardCache
     end
   end
 
+  def cached_commune_geometries(codes_insee)
+    return {} if codes_insee.blank?
+
+    cache_key = "commune_geometries_#{codes_insee.sort.join('_')}"
+    cached_api_call(cache_key, expires_in: 1.day) do
+      CommuneGeometry.where(code_insee: codes_insee)
+                     .pluck(:code_insee, :geojson)
+                     .to_h
+    end
+  end
+
+  # Méthode utilitaire pour obtenir les codes INSEE d'un EPCI
+  def get_epci_commune_codes(epci_code)
+    cache_key = "epci_commune_codes_#{epci_code}"
+    cached_api_call(cache_key, expires_in: 1.day) do
+      Territory.where(epci: epci_code).pluck(:codgeo)
+    end
+  end
+
   # === MÉTHODES CACHÉES POUR LES DONNÉES DE COMPARAISON FRANCE ===
 
   def cached_france_children_data

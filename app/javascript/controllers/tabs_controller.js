@@ -1,4 +1,5 @@
-// app/javascript/controllers/tabs_controller.js
+// app/javascript/controllers/tabs_controller.js - ÉTAPE 2: Synchronisation avec l'async loader
+
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
@@ -18,15 +19,26 @@ export default class extends Controller {
   switch(event) {
     event.preventDefault()
     const tabId = event.currentTarget.dataset.tabId
+
+    // CORRECTION ÉTAPE 2: Déclencher immédiatement le chargement asynchrone
+    this.triggerAsyncLoad(tabId)
+
     this.showTab(tabId)
+  }
+
+  // NOUVELLE MÉTHODE: Déclencher le chargement asynchrone sans attendre
+  triggerAsyncLoad(tabId) {
+    if (window.asyncSectionLoader) {
+      console.log(`🎯 Déclenchement immédiat du chargement: ${tabId}`)
+      // Appeler directement sans debounce
+      window.asyncSectionLoader.loadSectionIfNeeded(tabId)
+    }
   }
 
   showTab(tabId) {
     // Désactiver tous les onglets
     this.tabTargets.forEach(tab => {
-      // Retirer la classe d'état actif personnalisée
       tab.classList.remove("tab-active");
-      // Ajouter les classes d'état inactif SANS hover:text-gray-700
       tab.classList.add("text-gray-500", "border-transparent");
     });
 
@@ -38,9 +50,7 @@ export default class extends Controller {
     // Activer l'onglet sélectionné
     const activeTab = this.tabTargets.find(tab => tab.dataset.tabId === tabId);
     if (activeTab) {
-      // Retirer les classes d'état inactif
       activeTab.classList.remove("text-gray-500", "border-transparent");
-      // Ajouter la classe d'état actif personnalisée
       activeTab.classList.add("tab-active");
     }
 
@@ -48,6 +58,11 @@ export default class extends Controller {
     const activePanel = this.panelTargets.find(panel => panel.dataset.tabId === tabId);
     if (activePanel) {
       activePanel.classList.remove("hidden");
+
+      // CORRECTION ÉTAPE 2: Vérifier si le contenu est vide et afficher un loader temporaire
+      if (this.isPanelEmpty(activePanel) && window.asyncSectionLoader) {
+        this.showTemporaryLoader(activePanel, tabId)
+      }
 
       // Solution simple : redimensionnement direct après un délai
       setTimeout(() => {
@@ -57,6 +72,48 @@ export default class extends Controller {
 
     // Sauvegarder l'onglet actif dans le localStorage
     localStorage.setItem('epci-dashboard-active-tab', tabId);
+  }
+
+  // NOUVELLE MÉTHODE: Vérifier si un panneau est vide
+  isPanelEmpty(panel) {
+    const content = panel.innerHTML.trim()
+    return content === '' || content === '<div class="async-loader"></div>'
+  }
+
+  // NOUVELLE MÉTHODE: Afficher un loader temporaire
+  showTemporaryLoader(panel, sectionId) {
+    const sectionNames = {
+      'population': 'population',
+      'families': 'familles',
+      'children': 'enfants',
+      'births': 'naissances',
+      'economy': 'données économiques',
+      'schooling': 'scolarisation',
+      'childcare': 'petite enfance',
+      'family-employment': 'emploi des familles',
+      'women-employment': 'emploi des femmes',
+      'violence': 'violences domestiques'
+    }
+
+    const sectionName = sectionNames[sectionId] || 'données'
+
+    const loader = document.createElement('div')
+    loader.className = 'async-loader flex items-center justify-center h-64'
+    loader.innerHTML = `
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Chargement ${sectionName}...</p>
+        <div class="w-32 bg-gray-200 rounded-full h-1 mt-2 mx-auto overflow-hidden">
+          <div class="bg-blue-600 h-1 rounded-full animate-pulse"></div>
+        </div>
+      </div>
+    `
+
+    // Remplacer le contenu seulement s'il est vide
+    if (this.isPanelEmpty(panel)) {
+      panel.innerHTML = ''
+      panel.appendChild(loader)
+    }
   }
 
   resizeAllMaps() {
