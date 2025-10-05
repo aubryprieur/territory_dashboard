@@ -498,12 +498,31 @@ class EpciDashboardController < ApplicationController
   end
 
   def load_children_data_with_cache
-    children_data = EpciCacheService.epci_children_data(@epci_code)
-    department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
-    region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
+    require 'concurrent'
 
-    @france_children_data = EpciCacheService.france_children_data
+    # Lancer tous les appels en parallèle
+    promises = {
+      children: Concurrent::Promise.execute {
+        EpciCacheService.epci_children_data(@epci_code)
+      },
+      department: Concurrent::Promise.execute {
+        @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
+      },
+      region: Concurrent::Promise.execute {
+        @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
+      },
+      france: Concurrent::Promise.execute {
+        EpciCacheService.france_children_data
+      }
+    }
 
+    # Attendre tous les résultats
+    children_data = promises[:children].value!
+    department_data = promises[:department].value!
+    region_data = promises[:region].value!
+    @france_children_data = promises[:france].value!
+
+    # Reste du code inchangé
     @epci_children_data = children_data[:children_data] || {}
     @epci_population_data = children_data[:population_data] || {}
     @epci_historical_data = children_data[:historical_data] || {}
@@ -518,11 +537,25 @@ class EpciDashboardController < ApplicationController
   end
 
   def load_schooling_data_with_cache
-    schooling_data = EpciCacheService.epci_schooling_data(@epci_code)
-    department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
-    region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
+    require 'concurrent'
 
-    @france_schooling_data = EpciCacheService.france_schooling_data
+    # Lancer tous les appels en parallèle
+    promises = {
+      schooling: Concurrent::Promise.execute { EpciCacheService.epci_schooling_data(@epci_code) },
+      department: Concurrent::Promise.execute {
+        @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
+      },
+      region: Concurrent::Promise.execute {
+        @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
+      },
+      france: Concurrent::Promise.execute { EpciCacheService.france_schooling_data }
+    }
+
+    # Attendre tous les résultats
+    schooling_data = promises[:schooling].value!
+    department_data = promises[:department].value!
+    region_data = promises[:region].value!
+    @france_schooling_data = promises[:france].value!
 
     @epci_schooling_data = schooling_data[:schooling_data] || {}
     @epci_schooling_communes_data = schooling_data[:schooling_communes_data] || {}
