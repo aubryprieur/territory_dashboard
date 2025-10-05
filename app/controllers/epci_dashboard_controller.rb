@@ -45,14 +45,20 @@ class EpciDashboardController < ApplicationController
 
     load_families_data_with_cache
 
-    if should_prepare_geojson?
-      prepare_families_geojson_data if @epci_families_data.present?
-      prepare_single_parent_geojson_data if @epci_single_parent_data.present?
-      prepare_large_families_geojson_data if @epci_large_families_data.present?
+    # FORCER la préparation GeoJSON pour les cartes (toujours)
+    Rails.logger.info "🗺️ Préparation systématique du GeoJSON familles"
+
+    if @epci_families_data.present?
+      prepare_families_geojson_optimized
     end
 
-    duration = ((Time.current - start_time) * 1000).round(2)
-    Rails.logger.info "✅ load_families total : #{duration}ms"
+    if @epci_single_parent_data.present?
+      prepare_single_parent_geojson_optimized
+    end
+
+    if @epci_large_families_data.present?
+      prepare_large_families_geojson_optimized
+    end
 
     render partial: 'epci_dashboard/families'
   end
@@ -194,6 +200,117 @@ class EpciDashboardController < ApplicationController
   end
 
   private
+  # NOUVELLE méthode optimisée - une seule fois les géométries
+  def prepare_families_geojson_optimized
+    return unless @epci_families_data.present? && @epci_families_data["communes"].present?
+
+    start_time = Time.current
+
+    # Récupérer les géométries UNE SEULE FOIS pour toutes les cartes familles
+    geometries_by_code = get_cached_geometries
+    Rails.logger.info "🗺️ Géométries chargées pour #{geometries_by_code.count} communes"
+
+    features_families = []
+    @epci_families_data["communes"].each do |commune|
+      geojson = geometries_by_code[commune["code"]]
+      next unless geojson.present?
+
+      couples_percentage = commune["couples_with_children_percentage"].to_f
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          couples_percentage: couples_percentage,
+          couples_count: (commune["couples_with_children"] || 0).round,
+          total_households: (commune["total_households"] || 0).round,
+          year: @epci_families_data["year"]
+        },
+        geometry: JSON.parse(geojson)
+      }
+      features_families << feature
+    end
+
+    @communes_families_geojson = {
+      type: "FeatureCollection",
+      features: features_families
+    }.to_json
+
+    duration = ((Time.current - start_time) * 1000).round(2)
+    Rails.logger.info "✅ GeoJSON couples avec enfants créé en #{duration}ms"
+  end
+
+  def prepare_single_parent_geojson_optimized
+    return unless @epci_single_parent_data.present? && @epci_single_parent_data["communes"].present?
+
+    start_time = Time.current
+
+    # Réutiliser les géométries déjà en cache (pas de nouvel appel coûteux)
+    geometries_by_code = Rails.cache.read("geom_cache_#{@epci_code}") || get_cached_geometries
+
+    features_single_parent = []
+    @epci_single_parent_data["communes"].each do |commune|
+      geojson = geometries_by_code[commune["code"]]
+      next unless geojson.present?
+
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          single_parent_percentage: commune["single_parent_percentage"].to_f,
+          single_parent_count: (commune["single_parent_families"] || 0).round,
+          year: @epci_single_parent_data["year"]
+        },
+        geometry: JSON.parse(geojson)
+      }
+      features_single_parent << feature
+    end
+
+    @communes_single_parent_geojson = {
+      type: "FeatureCollection",
+      features: features_single_parent
+    }.to_json
+
+    duration = ((Time.current - start_time) * 1000).round(2)
+    Rails.logger.info "✅ GeoJSON familles monoparentales créé en #{duration}ms"
+  end
+
+  def prepare_large_families_geojson_optimized
+    return unless @epci_large_families_data.present? && @epci_large_families_data["communes"].present?
+
+    start_time = Time.current
+
+    # Réutiliser les géométries déjà en cache
+    geometries_by_code = Rails.cache.read("geom_cache_#{@epci_code}") || get_cached_geometries
+
+    features_large_families = []
+    @epci_large_families_data["communes"].each do |commune|
+      geojson = geometries_by_code[commune["code"]]
+      next unless geojson.present?
+
+      feature = {
+        type: "Feature",
+        properties: {
+          code: commune["code"],
+          name: commune["name"],
+          large_families_percentage: commune["large_families_percentage"].to_f,
+          large_families_count: (commune["large_families"] || 0).round,
+          year: @epci_large_families_data["year"]
+        },
+        geometry: JSON.parse(geojson)
+      }
+      features_large_families << feature
+    end
+
+    @communes_large_families_geojson = {
+      type: "FeatureCollection",
+      features: features_large_families
+    }.to_json
+
+    duration = ((Time.current - start_time) * 1000).round(2)
+    Rails.logger.info "✅ GeoJSON familles nombreuses créé en #{duration}ms"
+  end
 
   # Chargement VRAIMENT minimal - pas d'API, pas de GeoJSON
   def load_minimal_essential_data_only
@@ -348,29 +465,31 @@ class EpciDashboardController < ApplicationController
 
   # TOUTES VOS MÉTHODES DE CHARGEMENT DE DONNÉES (identiques à la version précédente)
   def load_families_data_with_cache
-    families_data = EpciCacheService.epci_families_data(@epci_code)
-    department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
-    region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
+    Rails.logger.info "🔄 SIMPLE: Début load_families_data_with_cache"
+    start_time = Time.current
 
-    @france_family_data = EpciCacheService.france_family_data
-    @france_children_data = EpciCacheService.france_children_data
+    # SIMPLIFICATION : Seulement l'essentiel comme les autres méthodes
+    families_data = EpciCacheService.epci_families_data(@epci_code)
 
     @epci_family_data = families_data[:family_data] || {}
     @epci_families_data = families_data[:families_data] || {}
     @epci_single_parent_data = families_data[:single_parent_data] || {}
     @epci_large_families_data = families_data[:large_families_data] || {}
 
-    @department_family_data = department_data[:family_data] || {}
-    @region_family_data = region_data[:family_data] || {}
-    @department_children_data = department_data[:children_data] || {}
-    @department_revenue_data = department_data[:revenue_data] || {}
-    @region_children_data = region_data[:children_data] || {}
-    @region_revenue_data = region_data[:revenue_data] || {}
+    # SKIP les données France/Department/Region pour l'instant
+    @department_family_data = {}
+    @region_family_data = {}
+    @department_children_data = {}
+    @department_revenue_data = {}
+    @region_children_data = {}
+    @region_revenue_data = {}
+    @france_family_data = {}
+    @france_children_data = {}
 
-    @epci_families_section_data = families_data.merge({
-      department_family_data: @department_family_data,
-      region_family_data: @region_family_data
-    })
+    @epci_families_section_data = families_data
+
+    duration = ((Time.current - start_time) * 1000).round(2)
+    Rails.logger.info "✅ SIMPLE load_families_data_with_cache : #{duration}ms"
   end
 
   def load_births_data_with_cache
@@ -913,8 +1032,14 @@ class EpciDashboardController < ApplicationController
   def get_cached_geometries
     return @cached_geometries if @cached_geometries.present?
 
-    commune_codes = get_all_commune_codes_for_epci
-    @cached_geometries = cached_commune_geometries(commune_codes)
+    # Cache aussi dans Rails.cache pour éviter les recalculs dans la même requête
+    cache_key = "geom_cache_#{@epci_code}"
+    @cached_geometries = Rails.cache.fetch(cache_key, expires_in: 5.minutes) do
+      commune_codes = get_all_commune_codes_for_epci
+      cached_commune_geometries(commune_codes)
+    end
+
+    @cached_geometries
   end
 
 end

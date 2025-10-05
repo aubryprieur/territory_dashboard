@@ -108,9 +108,9 @@ class AsyncSectionLoader {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.warn(`⏰ Timeout pour ${sectionId} après 15s`);
+        console.warn(`⏰ Timeout pour ${sectionId} après 30s`);
         controller.abort();
-      }, 15000);
+      }, 30000);
 
       const response = await fetch(endpoint, {
         method: 'GET',
@@ -272,50 +272,64 @@ class AsyncSectionLoader {
   // ÉTAPE 6: Méthodes d'initialisation COMPLÈTES avec protection renforcée
 
   async initializeFamiliesComplete() {
-    console.log('👨‍👩‍👧‍👦 ÉTAPE 6: Init familles COMPLÈTE');
+    console.log('Familles: Init complète avec diagnostic');
 
-    try {
-      // PROTECTION SPÉCIALE pour les familles - le plus problématique
-      const familyKey = 'epci-families-maps';
-      if (window.initializationGuard && window.initializationGuard[familyKey]) {
-        console.log('🛡️ EpciFamiliesMaps déjà initialisé, abandon');
-        return;
+    // Diagnostic des éléments DOM
+    const requiredElements = [
+      'communes-map-families', 'communes-families-geojson',
+      'communes-map-single-parent', 'communes-single-parent-geojson',
+      'communes-map-large-families', 'communes-large-families-geojson'
+    ];
+
+    let allPresent = true;
+    requiredElements.forEach(id => {
+      const element = document.getElementById(id);
+      if (!element) {
+        console.error(`Element manquant: ${id}`);
+        allPresent = false;
+      } else if (id.includes('geojson')) {
+        try {
+          const data = JSON.parse(element.textContent);
+          console.log(`${id}: ${data.features?.length || 0} features`);
+        } catch (e) {
+          console.error(`JSON invalide: ${id}`);
+          allPresent = false;
+        }
       }
+    });
 
-      // Marquer comme en cours d'initialisation
-      if (!window.initializationGuard) window.initializationGuard = {};
-      window.initializationGuard[familyKey] = true;
+    if (!allPresent) return;
 
-      // Initialiser les cartes des familles avec délais
-      if (typeof window.initializeFamiliesMap === 'function') {
-        console.log('🗺️ Initialisation carte couples avec enfants');
-        window.initializeFamiliesMap();
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
+    // Attendre stabilisation
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-      if (typeof window.initializeSingleParentMap === 'function') {
-        console.log('🗺️ Initialisation carte familles monoparentales');
-        window.initializeSingleParentMap();
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
+    // Nettoyer cartes existantes
+    ['communes-map-families', 'communes-map-single-parent', 'communes-map-large-families']
+      .forEach(mapId => {
+        const element = document.getElementById(mapId);
+        if (element?._leaflet_id) {
+          if (window.leafletMaps?.has(mapId)) {
+            window.leafletMaps.get(mapId).remove();
+            window.leafletMaps.delete(mapId);
+          }
+          delete element._leaflet_id;
+          element.innerHTML = '';
+        }
+      });
 
-      if (typeof window.initializeLargeFamiliesMap === 'function') {
-        console.log('🗺️ Initialisation carte familles nombreuses');
-        window.initializeLargeFamiliesMap();
-      }
+    // Initialiser séquentiellement
+    if (typeof window.initializeFamiliesMap === 'function') {
+      window.initializeFamiliesMap();
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
 
-      // Fallback avec protection additionnelle
-      if (typeof window.EpciFamiliesMaps === 'object' &&
-          typeof window.EpciFamiliesMaps.init === 'function' &&
-          !window.EpciFamiliesMaps._initialized) {
+    if (typeof window.initializeSingleParentMap === 'function') {
+      window.initializeSingleParentMap();
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
 
-        console.log('🗺️ Fallback EpciFamiliesMaps.init');
-        window.EpciFamiliesMaps.init();
-        window.EpciFamiliesMaps._initialized = true; // Marquer comme initialisé
-      }
-
-    } catch (e) {
-      console.error('❌ Erreur init familles complète:', e);
+    if (typeof window.initializeLargeFamiliesMap === 'function') {
+      window.initializeLargeFamiliesMap();
     }
   }
 
@@ -323,26 +337,13 @@ class AsyncSectionLoader {
     console.log('🎓 ÉTAPE 6: Init scolarisation COMPLÈTE');
 
     try {
-      if (typeof window.initializeMapScolarisation === 'function') {
-        console.log('🗺️ Initialisation carte scolarisation 2 ans');
-        window.initializeMapScolarisation();
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-
-      if (typeof window.initializeMapScolarisation3to5 === 'function') {
-        console.log('🗺️ Initialisation carte scolarisation 3-5 ans');
-        window.initializeMapScolarisation3to5();
-      }
-
-      if (typeof window.EpciSchoolingMaps === 'object' &&
-          typeof window.EpciSchoolingMaps.init === 'function' &&
-          !window.EpciSchoolingMaps._initialized) {
-
-        console.log('🗺️ Fallback EpciSchoolingMaps.init');
+      // Appel direct à EpciSchoolingMaps (comme pour les autres sections qui fonctionnent)
+      if (window.EpciSchoolingMaps && typeof window.EpciSchoolingMaps.init === 'function') {
+        console.log('🗺️ Initialisation cartes scolarisation');
         window.EpciSchoolingMaps.init();
-        window.EpciSchoolingMaps._initialized = true;
+      } else {
+        console.warn('⚠️ EpciSchoolingMaps non disponible');
       }
-
     } catch (e) {
       console.error('❌ Erreur init scolarisation complète:', e);
     }

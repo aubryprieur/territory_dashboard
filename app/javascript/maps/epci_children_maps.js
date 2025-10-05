@@ -1,17 +1,40 @@
 /**
+ * Ce fichier contient les fonctions pour initialiser les cartes relatives aux enfants de l'EPCI
+ * - Carte des effectifs d'enfants <3 ans par commune
+ * - Carte des taux d'enfants <3 ans par commune
+ * - Carte des effectifs d'enfants 3-5 ans par commune
+ * - Carte des taux d'enfants 3-5 ans par commune
+ */
+
+// Système de garde global pour éviter les initialisations multiples
+if (!window.childrenMapsGuard) {
+  window.childrenMapsGuard = {
+    initialized: new Set(),
+    inProgress: new Set()
+  };
+}
+
+/**
  * Initialise la carte des effectifs d'enfants de moins de 3 ans par commune
  */
 function initializeMapEffectifs() {
-  const mapElement = document.getElementById("communes-map-effectifs");
-  const geojsonElement = document.getElementById("communes-geojson");
-  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
-    console.warn("Éléments nécessaires pour la carte des effectifs d'enfants <3 ans manquants");
+  const mapId = 'communes-map-effectifs';
+
+  // Protection contre les initialisations multiples
+  if (window.childrenMapsGuard.initialized.has(mapId) ||
+      window.childrenMapsGuard.inProgress.has(mapId)) {
+    console.log(`Carte ${mapId} déjà initialisée ou en cours`);
     return;
   }
 
-  // ✅ Vérification simple pour éviter la double initialisation
-  if (mapElement._leaflet_id) {
-    console.log("Carte des effectifs déjà initialisée");
+  window.childrenMapsGuard.inProgress.add(mapId);
+
+  const mapElement = document.getElementById(mapId);
+  const geojsonElement = document.getElementById("communes-geojson");
+
+  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
+    console.warn("Éléments nécessaires pour la carte des effectifs d'enfants <3 ans manquants");
+    window.childrenMapsGuard.inProgress.delete(mapId);
     return;
   }
 
@@ -64,7 +87,7 @@ function initializeMapEffectifs() {
 
     renderLegend(breaks, "effectif-legend", colors);
 
-    // ✅ Stocker l'instance de carte ET ses bounds initiaux
+    // Stocker l'instance de carte
     if (!window.leafletMaps) {
       window.leafletMaps = new Map();
     }
@@ -73,11 +96,16 @@ function initializeMapEffectifs() {
     }
 
     window.leafletMaps.set(mapElement.id, map);
-    window.mapBounds.set(mapElement.id, bounds); // ✅ Stocker les bounds corrects
+    window.mapBounds.set(mapElement.id, bounds);
 
+    // Marquer comme initialisé
+    window.childrenMapsGuard.initialized.add(mapId);
     console.log("✅ Carte des effectifs d'enfants <3 ans initialisée avec succès");
+
   } catch (e) {
     console.error("Erreur lors de l'initialisation de la carte des effectifs d'enfants <3 ans:", e);
+  } finally {
+    window.childrenMapsGuard.inProgress.delete(mapId);
   }
 }
 
@@ -85,16 +113,23 @@ function initializeMapEffectifs() {
  * Initialise la carte des taux d'enfants de moins de 3 ans par commune
  */
 function initializeMapTaux() {
-  const mapElement = document.getElementById("communes-map");
-  const geojsonElement = document.getElementById("communes-geojson");
-  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
-    console.warn("Éléments nécessaires pour la carte des taux d'enfants <3 ans manquants");
+  const mapId = 'communes-map';
+
+  // Protection contre les initialisations multiples
+  if (window.childrenMapsGuard.initialized.has(mapId) ||
+      window.childrenMapsGuard.inProgress.has(mapId)) {
+    console.log(`Carte ${mapId} déjà initialisée ou en cours`);
     return;
   }
 
-  // ✅ Vérification simple pour éviter la double initialisation
-  if (mapElement._leaflet_id) {
-    console.log("Carte des taux déjà initialisée");
+  window.childrenMapsGuard.inProgress.add(mapId);
+
+  const mapElement = document.getElementById(mapId);
+  const geojsonElement = document.getElementById("communes-geojson");
+
+  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
+    console.warn("Éléments nécessaires pour la carte des taux d'enfants <3 ans manquants");
+    window.childrenMapsGuard.inProgress.delete(mapId);
     return;
   }
 
@@ -147,16 +182,25 @@ function initializeMapTaux() {
 
     renderLegend(breaks, "taux-legend", colors, " %");
 
-    // ✅ Stocker l'instance de carte
+    // Stocker l'instance de carte
     if (!window.leafletMaps) {
       window.leafletMaps = new Map();
     }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
     window.leafletMaps.set(mapElement.id, map);
     window.mapBounds.set(mapElement.id, bounds);
 
+    // Marquer comme initialisé
+    window.childrenMapsGuard.initialized.add(mapId);
     console.log("✅ Carte des taux d'enfants <3 ans initialisée avec succès");
+
   } catch (e) {
     console.error("Erreur lors de l'initialisation de la carte des taux d'enfants <3 ans:", e);
+  } finally {
+    window.childrenMapsGuard.inProgress.delete(mapId);
   }
 }
 
@@ -164,16 +208,23 @@ function initializeMapTaux() {
  * Initialise la carte des effectifs d'enfants de 3 à 5 ans par commune
  */
 function initializeMapEffectifs3to5() {
-  const mapElement = document.getElementById("communes-map-effectifs-3to5");
-  const geojsonElement = document.getElementById("communes-geojson-3to5");
-  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
-    console.warn("Éléments nécessaires pour la carte des effectifs d'enfants 3-5 ans manquants");
+  const mapId = 'communes-map-effectifs-3to5';
+
+  // Protection contre les initialisations multiples
+  if (window.childrenMapsGuard.initialized.has(mapId) ||
+      window.childrenMapsGuard.inProgress.has(mapId)) {
+    console.log(`Carte ${mapId} déjà initialisée ou en cours`);
     return;
   }
 
-  // ✅ Vérification simple pour éviter la double initialisation
-  if (mapElement._leaflet_id) {
-    console.log("Carte des effectifs 3-5 ans déjà initialisée");
+  window.childrenMapsGuard.inProgress.add(mapId);
+
+  const mapElement = document.getElementById(mapId);
+  const geojsonElement = document.getElementById("communes-geojson-3to5");
+
+  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
+    console.warn("Éléments nécessaires pour la carte des effectifs d'enfants 3-5 ans manquants");
+    window.childrenMapsGuard.inProgress.delete(mapId);
     return;
   }
 
@@ -184,7 +235,6 @@ function initializeMapEffectifs3to5() {
     const breaks = clusters.map(c => c[0]);
     breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
 
-    // Palette de couleurs différente pour distinguer visuellement
     const colors = ["#6baed6", "#fed976", "#fd8d3c", "#e31a1c"];
 
     function getColor(count) {
@@ -227,16 +277,25 @@ function initializeMapEffectifs3to5() {
 
     renderLegend(breaks, "effectif-legend-3to5", colors);
 
-    // ✅ Stocker l'instance de carte
+    // Stocker l'instance de carte
     if (!window.leafletMaps) {
       window.leafletMaps = new Map();
     }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
     window.leafletMaps.set(mapElement.id, map);
     window.mapBounds.set(mapElement.id, bounds);
 
+    // Marquer comme initialisé
+    window.childrenMapsGuard.initialized.add(mapId);
     console.log("✅ Carte des effectifs d'enfants 3-5 ans initialisée avec succès");
+
   } catch (e) {
     console.error("Erreur lors de l'initialisation de la carte des effectifs d'enfants 3-5 ans:", e);
+  } finally {
+    window.childrenMapsGuard.inProgress.delete(mapId);
   }
 }
 
@@ -244,16 +303,23 @@ function initializeMapEffectifs3to5() {
  * Initialise la carte des taux d'enfants de 3 à 5 ans par commune
  */
 function initializeMapTaux3to5() {
-  const mapElement = document.getElementById("communes-map-3to5");
-  const geojsonElement = document.getElementById("communes-geojson-3to5");
-  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
-    console.warn("Éléments nécessaires pour la carte des taux d'enfants 3-5 ans manquants");
+  const mapId = 'communes-map-3to5';
+
+  // Protection contre les initialisations multiples
+  if (window.childrenMapsGuard.initialized.has(mapId) ||
+      window.childrenMapsGuard.inProgress.has(mapId)) {
+    console.log(`Carte ${mapId} déjà initialisée ou en cours`);
     return;
   }
 
-  // ✅ Vérification simple pour éviter la double initialisation
-  if (mapElement._leaflet_id) {
-    console.log("Carte des taux 3-5 ans déjà initialisée");
+  window.childrenMapsGuard.inProgress.add(mapId);
+
+  const mapElement = document.getElementById(mapId);
+  const geojsonElement = document.getElementById("communes-geojson-3to5");
+
+  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
+    console.warn("Éléments nécessaires pour la carte des taux d'enfants 3-5 ans manquants");
+    window.childrenMapsGuard.inProgress.delete(mapId);
     return;
   }
 
@@ -264,7 +330,6 @@ function initializeMapTaux3to5() {
     const breaks = clusters.map(c => c[0]);
     breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
 
-    // Palette de couleurs différente
     const colors = ["#6baed6", "#fed976", "#fd8d3c", "#e31a1c"];
 
     function getColor(rate) {
@@ -307,16 +372,25 @@ function initializeMapTaux3to5() {
 
     renderLegend(breaks, "taux-legend-3to5", colors, " %");
 
-    // ✅ Stocker l'instance de carte
+    // Stocker l'instance de carte
     if (!window.leafletMaps) {
       window.leafletMaps = new Map();
     }
+    if (!window.mapBounds) {
+      window.mapBounds = new Map();
+    }
+
     window.leafletMaps.set(mapElement.id, map);
     window.mapBounds.set(mapElement.id, bounds);
 
+    // Marquer comme initialisé
+    window.childrenMapsGuard.initialized.add(mapId);
     console.log("✅ Carte des taux d'enfants 3-5 ans initialisée avec succès");
+
   } catch (e) {
     console.error("Erreur lors de l'initialisation de la carte des taux d'enfants 3-5 ans:", e);
+  } finally {
+    window.childrenMapsGuard.inProgress.delete(mapId);
   }
 }
 
@@ -370,16 +444,47 @@ function renderLegend(breaks, containerId, colors, unit = "") {
   container.appendChild(legend);
 }
 
-// 🚀 AJOUT CRITIQUE : Exposer l'objet pour le système asynchrone
-window.EpciChildrenMaps = {
-  init() {
-    console.log('🗺️ EpciChildrenMaps.init() appelée');
+// Exposer les fonctions individuelles
+window.initializeMapEffectifs = initializeMapEffectifs;
+window.initializeMapTaux = initializeMapTaux;
+window.initializeMapEffectifs3to5 = initializeMapEffectifs3to5;
+window.initializeMapTaux3to5 = initializeMapTaux3to5;
 
-    // Initialiser toutes les cartes des enfants
-    initializeMapEffectifs();
-    initializeMapTaux();
-    initializeMapEffectifs3to5();
-    initializeMapTaux3to5();
+// Créer la fonction globale avec séquencement
+window.initializeChildrenMaps = function() {
+  // Protection globale contre les appels multiples
+  if (window.childrenMapsGuard.globalInit) {
+    console.log('🛡️ initializeChildrenMaps() déjà appelé, protection activée');
+    return;
+  }
+
+  window.childrenMapsGuard.globalInit = true;
+  console.log('🗺️ initializeChildrenMaps() - Initialisation de toutes les cartes enfants');
+
+  // Séquencer les initialisations avec délais
+  setTimeout(() => initializeMapEffectifs(), 100);
+  setTimeout(() => initializeMapTaux(), 300);
+  setTimeout(() => initializeMapEffectifs3to5(), 500);
+  setTimeout(() => initializeMapTaux3to5(), 700);
+
+  // Réinitialiser le garde global après un délai
+  setTimeout(() => {
+    window.childrenMapsGuard.globalInit = false;
+  }, 2000);
+};
+
+// Objet EpciChildrenMaps pour compatibilité avec async_section_loader.js
+window.EpciChildrenMaps = {
+  _initialized: false,
+  init() {
+    if (this._initialized) {
+      console.log('🛡️ EpciChildrenMaps.init() - Déjà initialisé');
+      return;
+    }
+
+    console.log('🗺️ EpciChildrenMaps.init() appelée');
+    window.initializeChildrenMaps();
+    this._initialized = true;  // ✅ CORRECTION: marqué comme initialisé APRÈS l'appel
   }
 };
 
@@ -391,5 +496,3 @@ export {
   initializeMapTaux3to5,
   renderLegend
 };
-
-

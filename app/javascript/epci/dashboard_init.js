@@ -183,42 +183,51 @@ class EpciDashboardManager {
     // Ces fonctions seront appelées par le système asynchrone
 
     window.initializeFamiliesMaps = () => {
-      console.log('🗺️ Initialisation des cartes Familles');
-      if (window.EpciFamiliesMaps && typeof window.EpciFamiliesMaps.init === 'function') {
-        window.EpciFamiliesMaps.init();
+      console.log('🗺️ Initialisation des cartes Familles - Fonction globale');
+
+      // Vérifier que le système de protection est en place
+      if (!window.familiesMapsGuard) {
+        console.warn('⚠️ Système de protection manquant, initialisation annulée');
+        return;
       }
+
+      // Éviter les appels multiples depuis cette fonction globale
+      if (window.familiesMapsGuard.globalCalled) {
+        console.log('🛡️ initializeFamiliesMaps() déjà appelée depuis la fonction globale');
+        return;
+      }
+
+      window.familiesMapsGuard.globalCalled = true;
+
+      // Appel direct des fonctions individuelles avec délais
+      setTimeout(() => {
+        if (typeof window.initializeFamiliesMap === 'function') {
+          window.initializeFamiliesMap();
+        }
+      }, 100);
+
+      setTimeout(() => {
+        if (typeof window.initializeSingleParentMap === 'function') {
+          window.initializeSingleParentMap();
+        }
+      }, 300);
+
+      setTimeout(() => {
+        if (typeof window.initializeLargeFamiliesMap === 'function') {
+          window.initializeLargeFamiliesMap();
+        }
+      }, 500);
+
+      // Réinitialiser le garde après un délai
+      setTimeout(() => {
+        window.familiesMapsGuard.globalCalled = false;
+      }, 2000);
     };
 
     window.initializeBirthsMap = () => {
       console.log('🗺️ Initialisation de la carte Naissances');
       if (window.EpciBirthsMap && typeof window.EpciBirthsMap.init === 'function') {
         window.EpciBirthsMap.init();
-      }
-    };
-
-    // 🔧 CORRIGÉ : Une seule définition avec debug intégré
-    window.initializeChildrenMaps = () => {
-      console.log('🗺️ initializeChildrenMaps appelée');
-      console.log('🔍 Vérification EpciChildrenMaps:', window.EpciChildrenMaps);
-      console.log('🔍 Type:', typeof window.EpciChildrenMaps);
-
-      if (window.EpciChildrenMaps && typeof window.EpciChildrenMaps.init === 'function') {
-        console.log('✅ EpciChildrenMaps.init trouvée, appel en cours');
-        window.EpciChildrenMaps.init();
-      } else {
-        console.error('❌ EpciChildrenMaps.init non trouvée');
-        console.log('🔍 Objets window disponibles:', Object.keys(window).filter(k => k.includes('Epci')));
-
-        // Fallback : essayer d'appeler directement les fonctions si elles existent
-        if (window.initializeMapEffectifs) {
-          console.log('🔄 Fallback: appel direct des fonctions de cartes');
-          window.initializeMapEffectifs();
-          window.initializeMapTaux();
-          window.initializeMapEffectifs3to5();
-          window.initializeMapTaux3to5();
-        } else {
-          console.error('❌ Aucune fonction de carte trouvée');
-        }
       }
     };
 

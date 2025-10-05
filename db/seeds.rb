@@ -20,23 +20,30 @@ puts "✓ Données d'enquêtes supprimées"
 puts "========== CRÉATION DES DONNÉES DE TEST ==========\n\n"
 
 puts "Création d'une enquête complète avec tous les types de questions..."
-
 # Créer un super admin s'il n'existe pas
 super_admin = User.find_or_create_by!(email: 'admin@example.com') do |user|
-  user.password = 'password123'
+  user.password = 'SuperSecurePass2024!@#MinAdmin'
   user.role = 'super_admin'
   user.territory_type = nil
   user.territory_code = nil
   user.territory_name = nil
+  # Définir directement les champs de confirmation
+  user.confirmed_at = Time.current
+  user.password_set = true
+  user.first_login = false
 end
 
 # Créer un utilisateur commune
 commune_user = User.find_or_create_by!(email: 'mairie.bordeaux@example.com') do |user|
-  user.password = 'password123'
+  user.password = 'SuperSecurePass2024!@#Commune'
   user.role = 'user'
   user.territory_type = 'commune'
   user.territory_code = '33063'
   user.territory_name = 'Bordeaux'
+  # Définir directement les champs de confirmation
+  user.confirmed_at = Time.current
+  user.password_set = true
+  user.first_login = false
 end
 
 # Créer l'enquête principale
@@ -324,5 +331,5 @@ end
 
 puts "\n✅ Seeds terminées avec succès !"
 puts "Connectez-vous avec :"
-puts "  - Super Admin: admin@example.com / password123"
-puts "  - Commune: mairie.bordeaux@example.com / password123"
+puts "  - Super Admin: admin@example.com / SuperSecurePass2024!@#MinAdmin"
+puts "  - Commune: mairie.bordeaux@example.com / SuperSecurePass2024!@#Commune"
