@@ -5,18 +5,33 @@
  * - Carte des familles nombreuses par commune
  */
 
+// Système de garde global pour éviter les initialisations multiples
+if (!window.familiesMapsGuard) {
+  window.familiesMapsGuard = {
+    initialized: new Set(),
+    inProgress: new Set()
+  };
+}
+
 // Fonction pour initialiser la carte des couples avec enfants
 function initializeFamiliesMap() {
-  const mapElement = document.getElementById("communes-map-families");
-  const geojsonElement = document.getElementById("communes-families-geojson");
-  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
-    console.warn("Éléments nécessaires non trouvés pour la carte des familles");
+  const mapId = 'communes-map-families';
+
+  // Protection contre les initialisations multiples
+  if (window.familiesMapsGuard.initialized.has(mapId) ||
+      window.familiesMapsGuard.inProgress.has(mapId)) {
+    console.log(`Carte ${mapId} déjà initialisée ou en cours`);
     return;
   }
 
-  // ✅ Vérification simple pour éviter la double initialisation
-  if (mapElement._leaflet_id) {
-    console.log("Carte des familles déjà initialisée");
+  window.familiesMapsGuard.inProgress.add(mapId);
+
+  const mapElement = document.getElementById(mapId);
+  const geojsonElement = document.getElementById("communes-families-geojson");
+
+  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
+    console.warn("Éléments nécessaires non trouvés pour la carte des familles");
+    window.familiesMapsGuard.inProgress.delete(mapId);
     return;
   }
 
@@ -73,7 +88,7 @@ function initializeFamiliesMap() {
     // Créer une légende pour la carte
     createFamiliesLegend(breaks, "families-legend", colors);
 
-    // ✅ Stocker l'instance de carte ET ses bounds initiaux
+    // Stocker l'instance de carte
     if (!window.leafletMaps) {
       window.leafletMaps = new Map();
     }
@@ -84,9 +99,14 @@ function initializeFamiliesMap() {
     window.leafletMaps.set(mapElement.id, map);
     window.mapBounds.set(mapElement.id, bounds);
 
+    // Marquer comme initialisé
+    window.familiesMapsGuard.initialized.add(mapId);
     console.log("✅ Carte des couples avec enfants initialisée avec succès");
+
   } catch (e) {
     console.error("Erreur lors de l'initialisation de la carte des couples avec enfants:", e);
+  } finally {
+    window.familiesMapsGuard.inProgress.delete(mapId);
   }
 }
 
@@ -128,16 +148,23 @@ function createFamiliesLegend(breaks, containerId, colors) {
 
 // Fonction pour initialiser la carte des familles monoparentales
 function initializeSingleParentMap() {
-  const mapElement = document.getElementById("communes-map-single-parent");
-  const geojsonElement = document.getElementById("communes-single-parent-geojson");
-  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
-    console.warn("Éléments nécessaires non trouvés pour la carte des familles monoparentales");
+  const mapId = 'communes-map-single-parent';
+
+  // Protection contre les initialisations multiples
+  if (window.familiesMapsGuard.initialized.has(mapId) ||
+      window.familiesMapsGuard.inProgress.has(mapId)) {
+    console.log(`Carte ${mapId} déjà initialisée ou en cours`);
     return;
   }
 
-  // ✅ Vérification simple pour éviter la double initialisation
-  if (mapElement._leaflet_id) {
-    console.log("Carte des familles monoparentales déjà initialisée");
+  window.familiesMapsGuard.inProgress.add(mapId);
+
+  const mapElement = document.getElementById(mapId);
+  const geojsonElement = document.getElementById("communes-single-parent-geojson");
+
+  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
+    console.warn("Éléments nécessaires non trouvés pour la carte des familles monoparentales");
+    window.familiesMapsGuard.inProgress.delete(mapId);
     return;
   }
 
@@ -176,9 +203,7 @@ function initializeSingleParentMap() {
           <strong>${feature.properties.name}</strong><br>
           Familles monoparentales : ${feature.properties.single_parent_percentage.toFixed(2)}%<br>
           Nombre : ${feature.properties.single_parent_count} familles<br>
-          Pères seuls : ${feature.properties.single_father_percentage.toFixed(2)}%<br>
-          Mères seules : ${feature.properties.single_mother_percentage.toFixed(2)}%<br>
-          Total ménages : ${feature.properties.total_households}
+          Total familles : ${feature.properties.total_families}
         </div>
       `;
       layer.bindPopup(popup);
@@ -196,7 +221,7 @@ function initializeSingleParentMap() {
     // Créer une légende pour la carte
     createSingleParentLegend(breaks, "single-parent-legend", colors);
 
-    // ✅ Stocker l'instance de carte
+    // Stocker l'instance de carte
     if (!window.leafletMaps) {
       window.leafletMaps = new Map();
     }
@@ -207,9 +232,14 @@ function initializeSingleParentMap() {
     window.leafletMaps.set(mapElement.id, map);
     window.mapBounds.set(mapElement.id, bounds);
 
+    // Marquer comme initialisé
+    window.familiesMapsGuard.initialized.add(mapId);
     console.log("✅ Carte des familles monoparentales initialisée avec succès");
+
   } catch (e) {
     console.error("Erreur lors de l'initialisation de la carte des familles monoparentales:", e);
+  } finally {
+    window.familiesMapsGuard.inProgress.delete(mapId);
   }
 }
 
@@ -251,34 +281,24 @@ function createSingleParentLegend(breaks, containerId, colors) {
 
 // Fonction pour initialiser la carte des familles nombreuses
 function initializeLargeFamiliesMap() {
-  const mapElement = document.getElementById("communes-map-large-families");
-  const geojsonElement = document.getElementById("communes-large-families-geojson");
-  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
-    console.warn("Éléments nécessaires non trouvés pour la carte des familles nombreuses");
+  const mapId = 'communes-map-large-families';
+
+  // Protection contre les initialisations multiples
+  if (window.familiesMapsGuard.initialized.has(mapId) ||
+      window.familiesMapsGuard.inProgress.has(mapId)) {
+    console.log(`Carte ${mapId} déjà initialisée ou en cours`);
     return;
   }
 
-  // ✅ Vérification simple pour éviter la double initialisation
-  if (mapElement._leaflet_id) {
-    console.log("Carte des familles nombreuses déjà initialisée, nettoyage...");
+  window.familiesMapsGuard.inProgress.add(mapId);
 
-    // Nettoyer l'ancienne instance Leaflet
-    if (window.leafletMaps && window.leafletMaps.has(mapElement.id)) {
-      const oldMap = window.leafletMaps.get(mapElement.id);
-      oldMap.remove();
-      window.leafletMaps.delete(mapElement.id);
-    }
+  const mapElement = document.getElementById(mapId);
+  const geojsonElement = document.getElementById("communes-large-families-geojson");
 
-    // Nettoyer l'ancienne instance des bounds
-    if (window.mapBounds && window.mapBounds.has(mapElement.id)) {
-      window.mapBounds.delete(mapElement.id);
-    }
-
-    // Réinitialiser l'élément DOM
-    delete mapElement._leaflet_id;
-    mapElement.innerHTML = '';
-
-    console.log("Nettoyage terminé, procédure de réinitialisation...");
+  if (!mapElement || !geojsonElement || typeof L === "undefined" || typeof ss === "undefined") {
+    console.warn("Éléments nécessaires non trouvés pour la carte des familles nombreuses");
+    window.familiesMapsGuard.inProgress.delete(mapId);
+    return;
   }
 
   try {
@@ -290,14 +310,14 @@ function initializeLargeFamiliesMap() {
     const breaks = clusters.map(c => c[0]);
     breaks.push(clusters[clusters.length - 1].slice(-1)[0]);
 
-    // Palette de couleurs pour les familles nombreuses (teintes de bleu/vert)
-    const colors = ["#f1faee", "#a8dadc", "#457b9d", "#1d3557"];
+    // Palette de couleurs pour les familles nombreuses (teintes d'orange)
+    const colors = ["#fef0d9", "#fdcc8a", "#fc8d59", "#d7301f"];
 
     function getColor(percentage) {
       return percentage > breaks[3] ? colors[3] :
              percentage > breaks[2] ? colors[2] :
              percentage > breaks[1] ? colors[1] :
-                                    colors[0];
+                                   colors[0];
     }
 
     function style(feature) {
@@ -316,9 +336,7 @@ function initializeLargeFamiliesMap() {
           <strong>${feature.properties.name}</strong><br>
           Familles nombreuses : ${feature.properties.large_families_percentage.toFixed(2)}%<br>
           Nombre : ${feature.properties.large_families_count} familles<br>
-          3 enfants : ${feature.properties.families_3_children_percentage.toFixed(2)}%<br>
-          4 enfants ou + : ${feature.properties.families_4_plus_percentage.toFixed(2)}%<br>
-          Total ménages : ${feature.properties.total_households}
+          Total familles : ${feature.properties.total_families}
         </div>
       `;
       layer.bindPopup(popup);
@@ -336,7 +354,7 @@ function initializeLargeFamiliesMap() {
     // Créer une légende pour la carte
     createLargeFamiliesLegend(breaks, "large-families-legend", colors);
 
-    // ✅ Stocker l'instance de carte
+    // Stocker l'instance de carte
     if (!window.leafletMaps) {
       window.leafletMaps = new Map();
     }
@@ -347,9 +365,14 @@ function initializeLargeFamiliesMap() {
     window.leafletMaps.set(mapElement.id, map);
     window.mapBounds.set(mapElement.id, bounds);
 
+    // Marquer comme initialisé
+    window.familiesMapsGuard.initialized.add(mapId);
     console.log("✅ Carte des familles nombreuses initialisée avec succès");
+
   } catch (e) {
     console.error("Erreur lors de l'initialisation de la carte des familles nombreuses:", e);
+  } finally {
+    window.familiesMapsGuard.inProgress.delete(mapId);
   }
 }
 
@@ -395,35 +418,37 @@ window.initializeLargeFamiliesMap = initializeLargeFamiliesMap;
 
 // Créer aussi la fonction globale générale
 window.initializeFamiliesMaps = function() {
+  // Protection globale contre les appels multiples
+  if (window.familiesMapsGuard.globalInit) {
+    console.log('🛡️ initializeFamiliesMaps() déjà appelé, protection activée');
+    return;
+  }
+
+  window.familiesMapsGuard.globalInit = true;
   console.log('🗺️ initializeFamiliesMaps() - Initialisation de toutes les cartes familles');
 
-  // Appeler toutes les fonctions d'initialisation
-  try {
-    initializeFamiliesMap();           // Couples avec enfants
-    console.log('✅ Carte couples avec enfants OK');
-  } catch (e) {
-    console.error('❌ Erreur carte couples:', e);
-  }
+  // Séquencer les initialisations avec délais
+  setTimeout(() => initializeFamiliesMap(), 100);
+  setTimeout(() => initializeSingleParentMap(), 300);
+  setTimeout(() => initializeLargeFamiliesMap(), 500);
 
-  try {
-    initializeSingleParentMap();       // Familles monoparentales
-    console.log('✅ Carte familles monoparentales OK');
-  } catch (e) {
-    console.error('❌ Erreur carte monoparentales:', e);
-  }
-
-  try {
-    initializeLargeFamiliesMap();      // Familles nombreuses
-    console.log('✅ Carte familles nombreuses OK');
-  } catch (e) {
-    console.error('❌ Erreur carte familles nombreuses:', e);
-  }
+  // Réinitialiser le garde global après un délai
+  setTimeout(() => {
+    window.familiesMapsGuard.globalInit = false;
+  }, 2000);
 };
 
 // Garder aussi l'objet EpciFamiliesMaps pour compatibilité
 window.EpciFamiliesMaps = {
+  _initialized: false,
   init() {
+    if (this._initialized) {
+      console.log('🛡️ EpciFamiliesMaps.init() - Déjà initialisé');
+      return;
+    }
+
     console.log('🗺️ EpciFamiliesMaps.init() appelée');
+    this._initialized = true;
     window.initializeFamiliesMaps();
   }
 };
