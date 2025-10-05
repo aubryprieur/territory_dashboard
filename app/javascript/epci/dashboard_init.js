@@ -343,6 +343,37 @@ class EpciDashboardManager {
     }
   }
 
+  // ✅ AJOUT : Méthodes pour accéder aux stats de performance
+  getPerformanceStats() {
+    return this.asyncLoader ? this.asyncLoader.getPerformanceStats() : null;
+  }
+
+  togglePerformanceMonitoring(enabled) {
+    if (this.asyncLoader) {
+      this.asyncLoader.performanceEnabled = enabled;
+      console.log(`📊 Monitoring des performances ${enabled ? 'activé' : 'désactivé'}`);
+    }
+  }
+
+  showPerformanceSummary() {
+    const stats = this.getPerformanceStats();
+    if (!stats || Object.keys(stats).length === 0) {
+      console.log('📊 Aucune statistique de performance disponible');
+      return;
+    }
+
+    console.log('📊 RÉSUMÉ DES PERFORMANCES DES ONGLETS');
+    console.log('=====================================');
+    console.table(stats);
+    console.log('');
+    console.log('Légende:');
+    console.log('- count: nombre de chargements');
+    console.log('- average: temps moyen (ms)');
+    console.log('- min: temps minimum (ms)');
+    console.log('- max: temps maximum (ms)');
+    console.log('- last: dernier chargement (ms)');
+  }
+
   // Méthode pour précharger des sections spécifiques
   preloadSections(sectionIds) {
     if (this.asyncLoader && Array.isArray(sectionIds)) {

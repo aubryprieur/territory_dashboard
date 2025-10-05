@@ -15,6 +15,10 @@ class AsyncSectionLoader {
     // NOUVEAU: Protection contre l'initialisation multiple des composants
     this.componentsInitialized = new Set();
 
+    // ✅ AJOUT : Système de monitoring des performances
+    this.performanceMetrics = new Map(); // Pour stocker les temps de chargement
+    this.performanceEnabled = true; // Mettre à false pour désactiver en production
+
     this.sectionEndpoints = {
       'population': '/epci_dashboard/load_population',
       'families': '/epci_dashboard/load_families',
@@ -28,8 +32,49 @@ class AsyncSectionLoader {
       'violence': '/epci_dashboard/load_domestic_violence'
     };
 
+    // ✅ AJOUT : Injecter les styles pour les badges de performance
+    this.injectPerformanceStyles();
+
     this.initializeEventListeners();
     console.log('🚀 AsyncSectionLoader ÉTAPE 6 COMPLÈTE - Tous graphiques restaurés');
+  }
+
+  // Après le constructeur, avant initializeEventListeners()
+  injectPerformanceStyles() {
+    if (document.getElementById('perf-monitor-styles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'perf-monitor-styles';
+    style.textContent = `
+      .perf-badge {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+        color: white;
+      }
+
+      .perf-badge.fast { background: #10b981; }
+      .perf-badge.medium { background: #f59e0b; }
+      .perf-badge.slow { background: #ef4444; }
+
+      @keyframes slideIn {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(400px); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   initializeEventListeners() {
@@ -105,6 +150,11 @@ class AsyncSectionLoader {
     const startTime = Date.now();
     console.log(`🔥 ÉTAPE 6: Début fetch ${sectionId} - ${endpoint}`);
 
+    // ✅ AJOUT : Tracking début
+    if (this.performanceEnabled) {
+      console.log(`🔍 [Performance] Début chargement: ${sectionId}`);
+    }
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
@@ -138,6 +188,11 @@ class AsyncSectionLoader {
 
       // ÉTAPE 6: Initialisation complète avec protection renforcée
       await this.initializeSectionComponentsComplete(sectionId);
+
+      // ✅ AJOUT : Calcul du temps total et affichage
+      const totalDuration = Date.now() - startTime;
+      this.showPerformanceBadge(sectionId, totalDuration);
+      this.storeMetric(sectionId, totalDuration);
 
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -482,6 +537,87 @@ class AsyncSectionLoader {
     }
   }
 
+  // Ajouter avant getLoadingStats()
+
+  showPerformanceBadge(sectionId, duration) {
+    if (!this.performanceEnabled) return;
+
+    // Déterminer la couleur selon le temps
+    let badgeClass = 'fast';
+    if (duration > 5000) badgeClass = 'slow';
+    else if (duration > 2000) badgeClass = 'medium';
+
+    // Nom lisible de l'onglet
+    const sectionNames = {
+      'population': 'Population',
+      'families': 'Familles',
+      'births': 'Naissances',
+      'children': 'Enfants',
+      'schooling': 'Scolarisation',
+      'economy': 'Économie',
+      'childcare': 'Petite enfance',
+      'family-employment': 'Emploi familles',
+      'women-employment': 'Emploi femmes',
+      'violence': 'Violences'
+    };
+
+    const displayName = sectionNames[sectionId] || sectionId;
+
+    // Log console avec couleur
+    const color = badgeClass === 'fast' ? 'green' : badgeClass === 'medium' ? 'orange' : 'red';
+    console.log(
+      `%c✅ [Performance] "${displayName}" chargé en ${duration.toFixed(0)}ms`,
+      `color: ${color}; font-weight: bold; font-size: 12px;`
+    );
+
+    // Créer le badge visuel
+    const badge = document.createElement('div');
+    badge.className = `perf-badge ${badgeClass}`;
+    badge.textContent = `${displayName}: ${duration.toFixed(0)}ms`;
+
+    document.body.appendChild(badge);
+
+    // Retirer après 3 secondes
+    setTimeout(() => {
+      badge.style.animation = 'slideOut 0.3s ease-out';
+      setTimeout(() => badge.remove(), 300);
+    }, 3000);
+  }
+
+  storeMetric(sectionId, duration) {
+    if (!this.performanceMetrics.has(sectionId)) {
+      this.performanceMetrics.set(sectionId, []);
+    }
+
+    const metrics = this.performanceMetrics.get(sectionId);
+    metrics.push({
+      duration,
+      timestamp: new Date().toISOString()
+    });
+
+    // Garder seulement les 10 dernières mesures
+    if (metrics.length > 10) {
+      metrics.shift();
+    }
+  }
+
+  getPerformanceStats() {
+    const stats = {};
+
+    this.performanceMetrics.forEach((metrics, sectionId) => {
+      const durations = metrics.map(m => m.duration);
+      stats[sectionId] = {
+        count: durations.length,
+        average: (durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(0),
+        min: Math.min(...durations).toFixed(0),
+        max: Math.max(...durations).toFixed(0),
+        last: durations[durations.length - 1]?.toFixed(0)
+      };
+    });
+
+    return stats;
+  }
+
   getLoadingStats() {
     return {
       loadedSections: Array.from(this.loadedSections),
@@ -489,7 +625,8 @@ class AsyncSectionLoader {
       queuedRequests: Array.from(this.requestQueue.keys()),
       initializationInProgress: Array.from(this.initializationInProgress),
       componentsInitialized: Array.from(this.componentsInitialized),
-      totalSections: Object.keys(this.sectionEndpoints).length
+      totalSections: Object.keys(this.sectionEndpoints).length,
+      performanceStats: this.getPerformanceStats()
     };
   }
 }
