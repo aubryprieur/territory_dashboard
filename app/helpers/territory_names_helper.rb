@@ -1,7 +1,7 @@
 module TerritoryNamesHelper
   # Récupère le nom de l'EPCI depuis la base de données
   def epci_display_name
-    if @epci_code.present?
+    if defined?(@epci_code) && @epci_code.present?
       epci_record = Epci.find_by(epci: @epci_code)
       return epci_record.libepci if epci_record&.libepci.present?
       return "EPCI #{@epci_code}"
@@ -11,13 +11,16 @@ module TerritoryNamesHelper
 
   # Récupère le nom du département depuis la base de données ou mapping
   def department_display_name
+    # ✅ CORRECTION : Utiliser @main_department_code pour le dashboard EPCI
+    department_code = defined?(@main_department_code) ? @main_department_code : @department_code
+
     # D'abord essayer de récupérer depuis les données API si disponibles
-    return @department_revenue_data['name'] if @department_revenue_data&.dig('name').present?
-    return @department_children_data['name'] if @department_children_data&.dig('name').present?
+    return @department_revenue_data['name'] if defined?(@department_revenue_data) && @department_revenue_data&.dig('name').present?
+    return @department_children_data['name'] if defined?(@department_children_data) && @department_children_data&.dig('name').present?
 
     # Sinon utiliser le mapping avec le code
-    if @department_code.present?
-      return department_name_from_code(@department_code)
+    if department_code.present?
+      return department_name_from_code(department_code)
     end
 
     'Département'
@@ -25,13 +28,16 @@ module TerritoryNamesHelper
 
   # Récupère le nom de la région depuis la base de données ou mapping
   def region_display_name
+    # ✅ CORRECTION : Utiliser @main_region_code pour le dashboard EPCI
+    region_code = defined?(@main_region_code) ? @main_region_code : @region_code
+
     # D'abord essayer de récupérer depuis les données API si disponibles
-    return @region_revenue_data['name'] if @region_revenue_data&.dig('name').present?
-    return @region_children_data['name'] if @region_children_data&.dig('name').present?
+    return @region_revenue_data['name'] if defined?(@region_revenue_data) && @region_revenue_data&.dig('name').present?
+    return @region_children_data['name'] if defined?(@region_children_data) && @region_children_data&.dig('name').present?
 
     # Sinon utiliser le mapping avec le code
-    if @region_code.present?
-      return region_name_from_code(@region_code)
+    if region_code.present?
+      return region_name_from_code(region_code)
     end
 
     'Région'

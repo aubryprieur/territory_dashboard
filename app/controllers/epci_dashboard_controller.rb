@@ -479,21 +479,18 @@ class EpciDashboardController < ApplicationController
 
     # SIMPLIFICATION : Seulement l'essentiel comme les autres méthodes
     families_data = EpciCacheService.epci_families_data(@epci_code)
+    department_data = @main_department_code ? EpciCacheService.department_data(@main_department_code) : {}
+    region_data = @main_region_code ? EpciCacheService.region_data(@main_region_code) : {}
 
     @epci_family_data = families_data[:family_data] || {}
     @epci_families_data = families_data[:families_data] || {}
     @epci_single_parent_data = families_data[:single_parent_data] || {}
     @epci_large_families_data = families_data[:large_families_data] || {}
 
-    # SKIP les données France/Department/Region pour l'instant
-    @department_family_data = {}
-    @region_family_data = {}
-    @department_children_data = {}
-    @department_revenue_data = {}
-    @region_children_data = {}
-    @region_revenue_data = {}
-    @france_family_data = {}
-    @france_children_data = {}
+
+    @department_family_data = department_data[:family_data] || {}
+    @region_family_data = region_data[:family_data] || {}
+    @france_family_data = EpciCacheService.france_family_data || {}
 
     @epci_families_section_data = families_data
 
