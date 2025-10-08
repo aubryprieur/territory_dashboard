@@ -321,12 +321,21 @@ class EpciDashboardController < ApplicationController
       region: @main_region_code
     }
 
-    # ✅ AJOUT CRITIQUE : Charger les données des communes pour la recherche
+    # ✅ Charger les données des communes pour la recherche
     cache_key = "epci:#{@epci_code}:essential:v1"
     @epci_communes_data = Rails.cache.fetch(cache_key, expires_in: 6.hours) do
       Rails.logger.info "📄 Chargement données essentielles communes pour #{@epci_code}"
       EpciCacheService.epci_essential_data(@epci_code)
     end
+
+    # ✅ Charger aussi les données de population pour l'onglet Accueil
+    population_cache_key = "epci:#{@epci_code}:population:v1"
+    @population_data = Rails.cache.fetch(population_cache_key, expires_in: 6.hours) do
+      Rails.logger.info "📊 Chargement données population pour accueil #{@epci_code}"
+      EpciCacheService.epci_children_data(@epci_code)
+    end
+
+    @epci_population_data = @population_data[:population_data] || {}
 
     Rails.logger.info "✅ Chargement minimal terminé pour #{@epci_code} avec #{@epci_communes_data&.dig('communes')&.count || 0} communes"
   end

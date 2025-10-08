@@ -2,7 +2,7 @@
 
 <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50"
      data-controller="tabs"
-     data-tabs-default-tab-value="population"
+     data-tabs-default-tab-value="accueil"
      data-epci-code="<%= @epci_code %>"
      data-epci-name="<%= @epci_name %>">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -104,7 +104,7 @@
     </div>
 
     <!-- ✅ CONSERVÉ : Navigation par onglets avec design moderne -->
-    <div class="bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 mb-8 overflow-hidden">
+    <div id="tabs-navigation" class="bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 mb-8 overflow-hidden">
       <div class="p-2 relative">
         <!-- ✅ CONSERVÉ : Flèche gauche -->
         <button id="scroll-left"
@@ -127,6 +127,26 @@
         <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white/60 to-transparent pointer-events-none z-5" id="gradient-right"></div>
 
         <nav class="flex space-x-1 overflow-x-auto scrollbar-hide scroll-smooth" id="tabs-container">
+
+          <!-- ✅ NOUVEL ONGLET ACCUEIL - EN PREMIÈRE POSITION -->
+          <button data-tabs-target="tab"
+                  data-action="click->tabs#switch"
+                  data-tab-id="accueil"
+                  class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+              </div>
+              <div class="text-left">
+                <div class="font-semibold">Accueil</div>
+                <div class="text-xs text-gray-500">Vue d'ensemble</div>
+              </div>
+            </div>
+          </button>
+
+
           <!-- ✅ MODIFIÉ : Onglet Population avec indicateur de chargement -->
           <button data-tabs-target="tab"
                   data-action="click->tabs#switch"
@@ -293,7 +313,7 @@
               <div class="p-2 rounded-lg bg-gradient-to-r from-teal-100 to-cyan-100 group-hover:from-teal-200 group-hover:to-cyan-200 transition-all duration-300">
                 <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2-2v2"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"></path>
                 </svg>
               </div>
               <div class="text-left">
@@ -315,11 +335,11 @@
               <div class="p-2 rounded-lg bg-gradient-to-r from-rose-100 to-pink-100 group-hover:from-rose-200 group-hover:to-pink-200 transition-all duration-300">
                 <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <g stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                    <circle cx="15" cy="6" r="3"/>
-                    <path d="M15 9c-3 0-5 2-5 5v7h10v-7c0-3-2-5-5-5z"/>
-                    <rect x="4" y="14" width="10" height="6" rx="0.5" stroke-width="1.5"/>
-                    <path d="M3 20h12v1H3v-1z" stroke-width="1.5"/>
-                    <line x1="7" y1="17" x2="11" y2="17" stroke-width="1"/>
+                    <!-- Cercle de Vénus -->
+                    <circle cx="12" cy="9" r="5"/>
+                    <!-- Croix en bas -->
+                    <path d="M12 19v-5"/>
+                    <path d="M9 17h6"/>
                   </g>
                 </svg>
               </div>
@@ -359,6 +379,11 @@
 
     <!-- ✅ MODIFIÉ : Panneaux de contenu avec système asynchrone -->
     <div class="tab-content">
+
+    <!-- ✅ NOUVEAU : Panel Accueil - EN PREMIÈRE POSITION -->
+    <div data-tabs-target="panel" data-tab-id="accueil" class="hidden animate-fadeIn">
+      <%= render partial: 'epci_dashboard/accueil' %>
+    </div>
 
       <!-- 🚀 MODIFIÉ : Panel Population - Chargement asynchrone -->
       <div data-tabs-target="panel" data-tab-id="population" class="hidden animate-fadeIn">

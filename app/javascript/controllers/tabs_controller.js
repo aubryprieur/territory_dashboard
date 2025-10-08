@@ -7,13 +7,15 @@ export default class extends Controller {
   static values = { defaultTab: String }
 
   connect() {
-    // Restaurer l'onglet sauvegardé ou utiliser l'onglet par défaut
-    const storedTab = this.getStoredActiveTab()
-    const defaultTabId = storedTab || this.defaultTabValue || this.tabTargets[0]?.dataset.tabId
+    // ✅ Toujours rediriger vers l'onglet Accueil
+    const defaultTabId = 'accueil';
 
     if (defaultTabId) {
       this.showTab(defaultTabId)
     }
+
+    // Nettoyer l'ancien localStorage
+    localStorage.removeItem('epci-dashboard-active-tab');
   }
 
   switch(event) {
@@ -24,6 +26,17 @@ export default class extends Controller {
     this.triggerAsyncLoad(tabId)
 
     this.showTab(tabId)
+
+    // ✅ Scroll vers la barre de navigation des onglets
+    setTimeout(() => {
+      const tabsNavigation = document.getElementById('tabs-navigation');
+      if (tabsNavigation) {
+        tabsNavigation.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 50);
   }
 
   // NOUVELLE MÉTHODE: Déclencher le chargement asynchrone sans attendre
