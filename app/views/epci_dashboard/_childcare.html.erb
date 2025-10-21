@@ -225,6 +225,99 @@
   </div>
 </div>
 
+<!-- Bloc contextuel : Taux de couverture global -->
+<div class="mt-6 bg-gradient-to-r from-violet-50 to-purple-50 border-l-4 border-violet-500 rounded-lg p-6 shadow-sm">
+  <div class="flex items-start space-x-4">
+    <!-- Icône -->
+    <div class="flex-shrink-0">
+      <div class="p-3 bg-violet-100 rounded-lg">
+        <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Contenu -->
+    <div class="flex-1">
+      <h4 class="text-lg font-semibold text-gray-900 mb-3">
+        🏛️ Lecture du tableau – Taux de couverture global (TCG) de l'accueil du jeune enfant
+      </h4>
+
+      <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
+        <p class="font-medium text-gray-800">
+          <span class="bg-violet-100 px-2 py-1 rounded">Comprendre le taux de couverture global</span>
+        </p>
+
+        <p>
+          Le taux de couverture global rapporte l'<strong>ensemble des places d'accueil formel</strong>
+          (crèches, assistantes maternelles, garde à domicile, etc.) au nombre d'enfants de moins de 3 ans sur un territoire.
+          Il constitue un <strong>indicateur clé du pilotage</strong> de la politique petite enfance, permettant d'évaluer
+          la capacité du territoire à répondre aux besoins des familles.
+        </p>
+
+        <div class="bg-white border border-violet-200 rounded-lg p-4">
+          <p class="font-medium text-gray-900 mb-2">📊 Interprétation du TCG</p>
+          <div class="space-y-2 text-gray-700">
+            <div class="flex items-start space-x-2">
+              <span class="text-red-600 font-bold mt-0.5">🔴</span>
+              <p>
+                <strong>TCG faible</strong> traduit un risque de <span class="font-semibold text-violet-700">sous-capacité d'accueil</span>
+                et donc de non-satisfaction de la demande
+              </p>
+            </div>
+            <div class="flex items-start space-x-2">
+              <span class="text-green-600 font-bold mt-0.5">🟢</span>
+              <p>
+                <strong>TCG élevé</strong> reflète une offre plus abondante, mais qui peut masquer d'importantes
+                <span class="font-semibold text-violet-700">disparités locales</span> entre communes ou quartiers
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-purple-50 border border-purple-300 rounded-lg p-4">
+          <p class="font-medium text-gray-900 mb-2">🗺️ Enjeux d'équité territoriale et sociale</p>
+          <p class="text-gray-700 mb-2">
+            L'analyse de ce taux éclaire les enjeux d'équité territoriale et sociale :
+          </p>
+          <ul class="list-disc list-inside space-y-1 text-gray-700 ml-2">
+            <li>Les <strong>zones urbaines aisées</strong> disposent souvent d'une offre collective dense</li>
+            <li>Les <strong>territoires ruraux ou populaires</strong> s'appuient surtout sur les assistantes maternelles</li>
+          </ul>
+        </div>
+
+        <div class="bg-white border border-violet-200 rounded-lg p-4">
+          <p class="font-medium text-gray-900 mb-2">🎯 Pilotage pour les EPCI</p>
+          <p class="text-gray-700">
+            Pour les EPCI, suivre l'évolution du TCG permet de :
+          </p>
+          <ul class="list-disc list-inside space-y-1 text-gray-700 mt-2 ml-2">
+            <li><strong>Prioriser les investissements</strong> en fonction des besoins identifiés</li>
+            <li><strong>Diversifier les modes d'accueil</strong> pour répondre à tous les profils de familles</li>
+            <li>
+              <strong>Coordonner les financements</strong> CAF–État–collectivités dans le cadre du
+              Service public de la petite enfance (SPPE)
+            </li>
+          </ul>
+        </div>
+
+        <p class="italic text-gray-600 border-l-2 border-violet-300 pl-3 mt-4">
+          L'objectif est de tendre vers une <strong>couverture universelle et équitable</strong> de l'accueil
+          des moins de 3 ans, garantissant à chaque famille un accès effectif aux modes de garde adaptés à ses besoins.
+        </p>
+
+        <div class="mt-4 pt-3 border-t border-gray-200">
+          <p class="text-xs text-gray-500">
+            <strong>Sources :</strong> CAF – DREES (portails de données territoriales, 2024) •
+            Cour des comptes, <em>La politique d'accueil du jeune enfant</em>, 2024 •
+            Ministère des Solidarités, <em>Service public de la petite enfance</em>, 2023
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Données JSON pour la carte -->
 <script type="application/json" id="communes-childcare-geojson">
   <%= raw(@communes_childcare_geojson) %>
