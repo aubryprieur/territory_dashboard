@@ -218,6 +218,9 @@ class AsyncSectionLoader {
       container.innerHTML = html;
       container.offsetHeight; // Force reflow
 
+      // ✨ NOUVEAU: Redimensionner après injection du contenu
+      this.resizeLoadedContent();
+
       const event = new CustomEvent('dashboard:sectionLoaded', {
         detail: { section: sectionId, timestamp: Date.now() }
       });
@@ -226,6 +229,51 @@ class AsyncSectionLoader {
       console.log(`📝 ÉTAPE 6: Contenu injecté pour ${sectionId}`);
     } else {
       console.error(`❌ Container non trouvé pour: ${sectionId}`);
+    }
+  }
+
+  resizeLoadedContent() {
+    console.log('🔄 Redimensionnement du contenu chargé');
+
+    // Redimensionner les cartes Leaflet
+    if (window.leafletMaps && window.leafletMaps.size > 0) {
+      window.leafletMaps.forEach((map, elementId) => {
+        const element = document.getElementById(elementId);
+
+        if (element && !element.closest('.hidden') && map && map.invalidateSize) {
+          try {
+            map.invalidateSize(true);
+
+            // Repositionner avec les bounds stockés
+            if (window.mapBounds && window.mapBounds.has(elementId)) {
+              const bounds = window.mapBounds.get(elementId);
+              if (bounds && bounds.isValid()) {
+                map.fitBounds(bounds);
+              }
+            }
+
+            console.log(`✅ Carte redimensionnée: ${elementId}`);
+          } catch (error) {
+            console.warn(`⚠️ Erreur redimensionnement carte ${elementId}:`, error);
+          }
+        }
+      });
+    }
+
+    // Redimensionner les graphiques Chart.js
+    if (window.chartInstances && window.chartInstances.size > 0) {
+      window.chartInstances.forEach((chart, elementId) => {
+        const element = document.getElementById(elementId);
+
+        if (element && !element.closest('.hidden') && chart && chart.resize) {
+          try {
+            chart.resize();
+            console.log(`✅ Graphique redimensionné: ${elementId}`);
+          } catch (error) {
+            console.warn(`⚠️ Erreur redimensionnement graphique ${elementId}:`, error);
+          }
+        }
+      });
     }
   }
 
@@ -635,5 +683,97 @@ class AsyncSectionLoader {
 if (!window.asyncSectionLoader) {
   window.asyncSectionLoader = new AsyncSectionLoader();
 }
+
+// ===== NETTOYAGE POUR TURBO NAVIGATION =====
+document.addEventListener('turbo:before-cache', () => {
+  console.log('🧹 Turbo:before-cache - Nettoyage global');
+
+  // 0️⃣ Réinitialiser les gardes Families et Children
+  if (window.familiesMapsGuard) {
+    window.familiesMapsGuard.globalInit = false;
+    window.familiesMapsGuard.initialized.clear();
+    window.familiesMapsGuard.inProgress.clear();
+    console.log('✅ familiesMapsGuard réinitialisé');
+  }
+
+  if (window.childrenMapsGuard) {
+    window.childrenMapsGuard.globalInit = false;
+    window.childrenMapsGuard.initialized.clear();
+    window.childrenMapsGuard.inProgress.clear();
+    console.log('✅ childrenMapsGuard réinitialisé');
+  }
+
+  // 1️⃣ Nettoyer les cartes Leaflet - SEULEMENT celles orphelines
+  if (window.leafletMaps && window.leafletMaps.size > 0) {
+    const orphanedMaps = [];
+
+    window.leafletMaps.forEach((map, elementId) => {
+      try {
+        const element = document.getElementById(elementId);
+        // Si l'élément n'existe pas dans le DOM, nettoyer la carte
+        if (!element) {
+          if (map && map.remove) {
+            map.remove();
+          }
+          orphanedMaps.push(elementId);
+          console.log(`✅ Carte orpheline ${elementId} supprimée`);
+        }
+      } catch (e) {
+        console.warn(`⚠️ Erreur nettoyage carte ${elementId}:`, e);
+      }
+    });
+
+    // Supprimer seulement les cartes orphelines
+    orphanedMaps.forEach(mapId => window.leafletMaps.delete(mapId));
+  }
+
+  // 2️⃣ Nettoyer les graphiques Chart.js - SEULEMENT ceux orphelins
+  if (window.chartInstances && window.chartInstances.size > 0) {
+    const orphanedCharts = [];
+
+    window.chartInstances.forEach((chart, elementId) => {
+      try {
+        const element = document.getElementById(elementId);
+        // Si l'élément n'existe pas, nettoyer le graphique
+        if (!element) {
+          if (chart && chart.destroy) {
+            chart.destroy();
+          }
+          orphanedCharts.push(elementId);
+          console.log(`✅ Graphique orphelin ${elementId} supprimé`);
+        }
+      } catch (e) {
+        console.warn(`⚠️ Erreur nettoyage graphique ${elementId}:`, e);
+      }
+    });
+
+    // Supprimer seulement les graphiques orphelins
+    orphanedCharts.forEach(chartId => window.chartInstances.delete(chartId));
+  }
+
+  // 3️⃣ Réinitialiser AsyncSectionLoader
+  if (window.asyncSectionLoader) {
+    window.asyncSectionLoader.loadedSections.clear();
+    window.asyncSectionLoader.requestInProgress.clear();
+    window.asyncSectionLoader.requestQueue.clear();
+    window.asyncSectionLoader.initializationInProgress.clear();
+    window.asyncSectionLoader.componentsInitialized.clear();
+    console.log('✅ AsyncSectionLoader réinitialisé');
+  }
+
+  console.log('✅ Nettoyage Turbo complété');
+});
+
+// Réinitialiser aussi après le chargement d'une nouvelle page
+document.addEventListener('turbo:load', () => {
+  console.log('🔄 Turbo:load - Nouvelle page chargée');
+
+  // Vérifier si on est sur une nouvelle page EPCI
+  const isEpciDashboard = document.querySelector('[data-controller="tabs"]');
+  if (isEpciDashboard) {
+    console.log('📄 Page EPCI Dashboard détectée');
+    // Le AsyncSectionLoader et Stimulus se réinitialisent automatiquement
+  }
+});
 
 export default AsyncSectionLoader;
