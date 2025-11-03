@@ -274,137 +274,73 @@
       <!-- Contenu des onglets -->
       <div class="dashboard-content pb-12">
 
-        <!-- Panel Population -->
-        <div data-dashboard-tabs-target="content" data-tab="synthese" class="dashboard-panel">
-          <div id="synthese-content" data-dashboard-loader-target="container" data-section="synthese">
-            <!-- Squelette de chargement -->
-            <div class="animate-pulse space-y-6">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-gray-200 h-32 rounded-lg"></div>
-                <div class="bg-gray-200 h-32 rounded-lg"></div>
-                <div class="bg-gray-200 h-32 rounded-lg"></div>
-              </div>
-              <div class="bg-gray-200 h-64 rounded-lg"></div>
-              <div class="bg-gray-200 h-96 rounded-lg"></div>
-            </div>
+        <!-- Panel Synthese -->
+        <div data-dashboard-tabs-target="content" data-tab="synthese" class="hidden dashboard-panel">
+          <div id="synthese-content" data-section="synthese">
+            <%= render 'components/loader', section_name: 'synthèse' %>
           </div>
         </div>
 
         <!-- Panel Familles -->
         <div data-dashboard-tabs-target="content" data-tab="families" class="hidden dashboard-panel">
-          <div id="families-content" data-dashboard-loader-target="container" data-section="families">
-            <!-- Squelette de chargement -->
-            <div class="animate-pulse space-y-4">
-              <div class="bg-gray-200 h-8 w-1/3 rounded"></div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-200 h-96 rounded-lg"></div>
-                <div class="bg-gray-200 h-96 rounded-lg"></div>
-              </div>
-              <div class="bg-gray-200 h-64 rounded-lg"></div>
-            </div>
+          <div id="families-content" data-section="families">
+            <%= render 'components/loader', section_name: 'familles' %>
+          </div>
+        </div>
+
+        <!-- Panel Naissances -->
+        <div data-dashboard-tabs-target="content" data-tab="births" class="hidden dashboard-panel">
+          <div id="births-content" data-section="births">
+            <%= render 'components/loader', section_name: 'naissances' %>
           </div>
         </div>
 
         <!-- Panel Enfants -->
         <div data-dashboard-tabs-target="content" data-tab="children_comparison" class="hidden dashboard-panel">
-          <div id="children_comparison-content" data-dashboard-loader-target="container" data-section="children_comparison">
-            <!-- Squelette de chargement -->
-            <div class="animate-pulse space-y-4">
-              <div class="bg-gray-200 h-8 w-1/3 rounded"></div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-200 h-64 rounded-lg"></div>
-                <div class="bg-gray-200 h-64 rounded-lg"></div>
-              </div>
-            </div>
+          <div id="children_comparison-content" data-section="children_comparison">
+            <%= render 'components/loader', section_name: 'enfants' %>
           </div>
         </div>
 
         <!-- Panel Scolarisation -->
         <div data-dashboard-tabs-target="content" data-tab="schooling" class="hidden dashboard-panel">
-          <div id="schooling-content" data-dashboard-loader-target="container" data-section="schooling">
-            <!-- Squelette de chargement -->
-            <div class="animate-pulse space-y-4">
-              <div class="bg-gray-200 h-8 w-1/3 rounded"></div>
-              <div class="bg-gray-200 h-72 rounded-lg"></div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-gray-200 h-32 rounded-lg"></div>
-                <div class="bg-gray-200 h-32 rounded-lg"></div>
-                <div class="bg-gray-200 h-32 rounded-lg"></div>
-              </div>
-            </div>
+          <div id="schooling-content" data-section="schooling">
+            <%= render 'components/loader', section_name: 'scolarisation' %>
           </div>
         </div>
 
-        <!-- Panel Revenus -->
+        <!-- Panel Économie -->
         <div data-dashboard-tabs-target="content" data-tab="economic_data" class="hidden dashboard-panel">
-          <div id="economic_data-content" data-dashboard-loader-target="container" data-section="economic_data">
-            <!-- Squelette de chargement -->
-            <div class="animate-pulse space-y-4">
-              <div class="bg-gray-200 h-8 w-1/4 rounded"></div>
-              <div class="bg-gray-200 h-80 rounded-lg"></div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-200 h-48 rounded-lg"></div>
-                <div class="bg-gray-200 h-48 rounded-lg"></div>
-              </div>
-            </div>
+          <div id="economic_data-content" data-section="economic_data">
+            <%= render 'components/loader', section_name: 'données économiques' %>
           </div>
         </div>
 
         <!-- Panel Garde d'enfants -->
         <div data-dashboard-tabs-target="content" data-tab="childcare" class="hidden dashboard-panel">
-          <div id="childcare-content" data-dashboard-loader-target="container" data-section="childcare">
-            <!-- Squelette de chargement -->
-            <div class="animate-pulse space-y-4">
-              <div class="bg-gray-200 h-8 w-1/3 rounded"></div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-200 h-64 rounded-lg"></div>
-                <div class="bg-gray-200 h-64 rounded-lg"></div>
-              </div>
-            </div>
+          <div id="childcare-content" data-section="childcare">
+            <%= render 'components/loader', section_name: 'garde d\'enfants' %>
           </div>
         </div>
 
         <!-- Panel Emploi -->
         <div data-dashboard-tabs-target="content" data-tab="employment" class="hidden dashboard-panel">
-          <div id="employment-content" data-dashboard-loader-target="container" data-section="employment">
-            <!-- Squelette de chargement -->
-            <div class="animate-pulse space-y-4">
-              <div class="bg-gray-200 h-8 w-1/3 rounded"></div>
-              <div class="bg-gray-200 h-72 rounded-lg"></div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-200 h-48 rounded-lg"></div>
-                <div class="bg-gray-200 h-48 rounded-lg"></div>
-              </div>
-            </div>
+          <div id="employment-content" data-section="employment">
+            <%= render 'components/loader', section_name: 'emploi' %>
           </div>
         </div>
 
         <!-- Panel Emploi Femmes -->
         <div data-dashboard-tabs-target="content" data-tab="family_employment" class="hidden dashboard-panel">
-          <div id="family_employment-content" data-dashboard-loader-target="container" data-section="family_employment">
-            <!-- Squelette de chargement -->
-            <div class="animate-pulse space-y-4">
-              <div class="bg-gray-200 h-8 w-1/3 rounded"></div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-200 h-48 rounded-lg"></div>
-                <div class="bg-gray-200 h-48 rounded-lg"></div>
-              </div>
-            </div>
+          <div id="family_employment-content" data-section="family_employment">
+            <%= render 'components/loader', section_name: 'emploi des femmes' %>
           </div>
         </div>
 
         <!-- Panel Violences -->
         <div data-dashboard-tabs-target="content" data-tab="domestic_violence" class="hidden dashboard-panel">
-          <div id="domestic_violence-content" data-dashboard-loader-target="container" data-section="domestic_violence">
-            <!-- Squelette de chargement -->
-            <div class="animate-pulse space-y-4">
-              <div class="bg-gray-200 h-8 w-1/3 rounded"></div>
-              <div class="bg-gray-200 h-64 rounded-lg"></div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-gray-200 h-32 rounded-lg"></div>
-                <div class="bg-gray-200 h-32 rounded-lg"></div>
-              </div>
-            </div>
+          <div id="domestic_violence-content" data-section="domestic_violence">
+            <%= render 'components/loader', section_name: 'violences domestiques' %>
           </div>
         </div>
 
