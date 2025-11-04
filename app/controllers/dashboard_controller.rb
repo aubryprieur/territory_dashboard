@@ -5,7 +5,7 @@ class DashboardController < ApplicationController
   include DashboardCache  # 🚀 Ajout du système de cache
 
   before_action :check_user_territory
-  before_action :set_territory_info, only: [:index, :load_synthese, :load_families, :load_age_pyramid,
+  before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families, :load_age_pyramid,
                                             :load_economic_data, :load_schooling, :load_childcare,
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
                                             :load_family_employment]
@@ -88,6 +88,17 @@ class DashboardController < ApplicationController
         age_pyramid_data: @age_pyramid_data,  # 🔧 AJOUT : Passer les données de la pyramide
         territory_code: @territory_code,
         territory_name: @territory_name
+      }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_accueil
+    # L'onglet accueil ne nécessite pas de chargement asynchrone de données
+    # On rend simplement le partial avec les données de base déjà disponibles
+    respond_to do |format|
+      format.html { render partial: 'accueil', locals: {
+        basic_info: @basic_info
       }}
       format.json { render json: { status: 'success' } }
     end

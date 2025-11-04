@@ -6,19 +6,18 @@ export default class extends Controller {
   static values = { defaultTab: String }
 
   connect() {
-    console.log("🚀 Dashboard tabs controller connecté")
+      console.log("🚀 Dashboard tabs controller connecté")
 
-    // Restaurer l'onglet sauvegardé ou utiliser l'onglet par défaut
-    const storedTab = this.getStoredActiveTab()
-    const defaultTabId = storedTab || this.defaultTabValue || 'synthese'
+      // ✅ MODIFICATION : Toujours charger l'onglet "accueil" (pas de restauration localStorage)
+      const defaultTabId = 'accueil'
 
-    if (defaultTabId) {
-      this.showTab({ currentTarget: { dataset: { tab: defaultTabId } } })
+      if (defaultTabId) {
+        this.showTab({ currentTarget: { dataset: { tab: defaultTabId } } })
+      }
+
+      // Initialiser le système de défilement des onglets
+      this.initializeTabsScroll()
     }
-
-    // Initialiser le système de défilement des onglets
-    this.initializeTabsScroll()
-  }
 
   disconnect() {
     console.log("🔌 Dashboard tabs controller déconnecté")
@@ -34,9 +33,7 @@ export default class extends Controller {
 
     // Désactiver tous les onglets
     this.tabTargets.forEach(tab => {
-      // ✅ CORRECTION: Utiliser la classe tab-active comme dans le CSS
       tab.classList.remove("tab-active")
-      // Remettre les couleurs de base (gris)
       tab.classList.add("text-gray-600")
       tab.classList.remove("text-blue-600")
     })
@@ -49,9 +46,7 @@ export default class extends Controller {
     // Activer l'onglet sélectionné
     const activeTab = this.tabTargets.find(tab => tab.dataset.tab === tabName)
     if (activeTab) {
-      // ✅ CORRECTION: Ajouter la classe tab-active (le CSS s'occupe du style)
       activeTab.classList.add("tab-active")
-      // Retirer la couleur grise pour laisser le CSS gérer
       activeTab.classList.remove("text-gray-600")
     }
 
@@ -60,8 +55,11 @@ export default class extends Controller {
     if (activeContent) {
       activeContent.classList.remove("hidden")
 
-      // Déclencher le chargement asynchrone de la section si pas encore chargée
-      this.triggerSectionLoad(tabName)
+      // ✅ NE PAS déclencher le chargement asynchrone pour "accueil"
+      // car c'est un contenu statique déjà rendu
+      if (tabName !== 'accueil') {
+        this.triggerSectionLoad(tabName)
+      }
 
       // Redimensionner les éléments après un délai
       setTimeout(() => {
@@ -69,8 +67,11 @@ export default class extends Controller {
       }, 100)
     }
 
-    // Sauvegarder l'onglet actif
-    localStorage.setItem('dashboard-active-tab', tabName)
+    // ✅ NOUVEAU : Scroller vers le header
+    window.scrollTo({
+      top: 150,  // Hauteur approximative du header
+      behavior: 'smooth'
+    })
 
     // Déclencher l'événement de changement d'onglet
     const changeEvent = new CustomEvent('dashboard:tabChanged', {
@@ -126,11 +127,6 @@ export default class extends Controller {
         }
       })
     }
-  }
-
-  // Restaurer l'onglet actif depuis le localStorage
-  getStoredActiveTab() {
-    return localStorage.getItem('dashboard-active-tab')
   }
 
   // Initialiser le système de défilement des onglets avec flèches

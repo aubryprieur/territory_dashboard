@@ -93,6 +93,24 @@
 
           <nav class="flex space-x-1 overflow-x-auto scrollbar-hide scroll-smooth" id="dashboard-tabs-container">
 
+            <!-- ✅ NOUVEAU : Onglet Accueil EN PREMIER -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="accueil"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 group-hover:from-indigo-200 group-hover:to-purple-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Accueil</div>
+                  <div class="text-xs text-gray-500">Vue d'ensemble</div>
+                </div>
+              </div>
+            </button>
+
             <!-- Onglet Population -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
@@ -274,6 +292,13 @@
       <!-- Contenu des onglets -->
       <div class="dashboard-content pb-12">
 
+        <!-- ✅ NOUVEAU : Panel Accueil EN PREMIÈRE POSITION -->
+        <div data-dashboard-tabs-target="content" data-tab="accueil" class="hidden dashboard-panel">
+          <div id="accueil-content" data-section="accueil">
+            <%= render 'dashboard/accueil', basic_info: @basic_info %>
+          </div>
+        </div>
+
         <!-- Panel Synthese -->
         <div data-dashboard-tabs-target="content" data-tab="synthese" class="hidden dashboard-panel">
           <div id="synthese-content" data-section="synthese">
@@ -409,4 +434,12 @@ document.addEventListener('dashboard:tabChanged', function(event) {
 document.addEventListener('dashboard:sectionLoaded', function(event) {
   console.log('✅ Section chargée:', event.detail);
 });
+</script>
+<script>
+  function switchDashboardTab(tabName) {
+    const controller = document.querySelector('[data-controller*="dashboard-tabs"]')
+    if (controller && controller.controller) {
+      controller.controller.switchToTab(tabName)
+    }
+  }
 </script>
