@@ -42,30 +42,239 @@
   </div>
 </div>
 
-<!-- Graphique d'évolution historique -->
-<% if historical_data.present? %>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-4">Évolution historique</h2>
-
-  <!-- Grille pour deux graphiques côte à côte sur grands écrans -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- Graphique de population -->
-    <div>
-      <h3 class="text-sm font-medium text-gray-700 mb-2">Évolution de la population</h3>
-      <div class="h-64">
-        <canvas id="historical-chart"></canvas>
+<!-- Bloc contextuel : Lecture de la pyramide des âges et petite enfance -->
+<div class="mt-6 bg-gradient-to-r from-sky-50 to-blue-50 border-l-4 border-sky-500 rounded-lg p-6 shadow-sm">
+  <div class="flex items-start space-x-4">
+    <!-- Icône -->
+    <div class="flex-shrink-0">
+      <div class="p-3 bg-sky-100 rounded-lg">
+        <svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
       </div>
     </div>
 
-    <!-- Graphique des naissances -->
-    <div>
-      <h3 class="text-sm font-medium text-gray-700 mb-2">Évolution des naissances</h3>
-      <div class="h-64">
-        <canvas id="births-chart"></canvas>
+    <!-- Contenu -->
+    <div class="flex-1">
+      <h4 class="text-lg font-semibold text-gray-900 mb-3">
+        📊 Lecture du tableau – Pyramide des âges et petite enfance
+      </h4>
+
+      <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+
+        <!-- Section 1: Introduction -->
+        <div>
+          <p class="font-semibold text-gray-800 mb-2">Un outil d'analyse locale essentiel</p>
+          <p>
+            La pyramide des âges constitue le <strong>premier niveau d'analyse démographique</strong> d'une commune.
+            Elle offre une photographie instantanée de la répartition de la population par âge et permet d'observer
+            la forme de la base, révélatrice du poids des jeunes enfants et des familles en âge d'avoir des enfants.
+            Cet indicateur, bien que statique, constitue une entrée précieuse pour comprendre les tendances locales
+            avant d'analyser plus finement les naissances, les enfants de 0–3 ans et les besoins en modes de garde.
+          </p>
+        </div>
+
+        <!-- Section 2: Lecture pour la politique communale -->
+        <div class="bg-white border border-sky-200 rounded-lg p-4">
+          <p class="font-semibold text-gray-900 mb-2">🔍 Lecture pour la politique communale de la petite enfance</p>
+          <p>
+            Pour une commune, la structure des <strong>jeunes adultes (20–40 ans)</strong> et de la base de la pyramide
+            renseigne sur le <strong>potentiel de naissances à venir</strong> et sur la pression future sur les modes d'accueil.
+            Elle permet d'orienter la planification des crèches, relais petite enfance ou accueils familiaux,
+            en cohérence avec les besoins des familles du territoire.
+          </p>
+        </div>
+
+        <!-- Section 3: Interprétation de la forme -->
+        <div>
+          <p class="font-semibold text-gray-800 mb-2">📈 Interprétation de la forme de la base</p>
+          <ul class="space-y-2 ml-4">
+            <li class="flex items-start space-x-2">
+              <span class="text-sky-600 font-bold">▸</span>
+              <span><strong>Une base large</strong> traduit une commune jeune et attractive, appelant à renforcer les capacités d'accueil et les services aux familles.</span>
+            </li>
+            <li class="flex items-start space-x-2">
+              <span class="text-sky-600 font-bold">▸</span>
+              <span><strong>Une base étroite</strong> signale au contraire un vieillissement de la population et la nécessité d'adapter l'offre existante tout en attirant de jeunes ménages (logement, emploi, services à la famille).</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Section 4: Conclusion -->
+        <div class="bg-indigo-50 border-l-2 border-indigo-300 pl-4 py-2">
+          <p>
+            La pyramide des âges constitue ainsi un <strong>repère clé pour anticiper les évolutions locales</strong>
+            et ajuster les politiques communales de la petite enfance et de l'attractivité résidentielle.
+          </p>
+        </div>
+
+        <!-- Sources -->
+        <div class="text-xs text-gray-600 pt-2 border-t border-sky-200">
+          <p><strong>Sources :</strong> INSEE (2023) • Futuribles, « Démographie : des EHPAD ou des crèches ? » (2024)</p>
+        </div>
+
       </div>
     </div>
   </div>
 </div>
+
+<!-- Graphique d'évolution historique -->
+<% if historical_data.present? %>
+
+  <!-- Section 1: Évolution de la population -->
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-lg font-medium text-gray-900 mb-4">Évolution de la population</h2>
+    <div class="h-64">
+      <canvas id="historical-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- Bloc explicatif: Lecture du graphique population -->
+  <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 rounded-lg p-6 mb-6 shadow-sm">
+    <div class="flex items-start space-x-4">
+      <!-- Icône -->
+      <div class="flex-shrink-0">
+        <div class="p-3 bg-amber-100 rounded-lg">
+          <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Contenu -->
+      <div class="flex-1">
+        <h4 class="text-lg font-semibold text-gray-900 mb-3">
+          📈 Lecture du graphique – Évolution de la population communale et dynamiques locales
+        </h4>
+
+        <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+
+          <!-- Section 1: Introduction -->
+          <div>
+            <p>
+              L'évolution de la population d'une commune reflète ses <strong>grandes tendances démographiques</strong> :
+              une hausse traduit souvent une <strong>attractivité résidentielle</strong> liée à l'installation de nouveaux habitants,
+              tandis qu'une stagnation ou une baisse peut indiquer un vieillissement de la population ou un recul des naissances.
+            </p>
+          </div>
+
+          <!-- Section 2: Attention croissance vs naissances -->
+          <div class="bg-white border-l-4 border-amber-300 rounded-lg p-4">
+            <p class="font-semibold text-gray-900 mb-2">⚠️ Croissance ≠ Hausse des naissances</p>
+            <p class="mb-2">
+              Une croissance de la population ne signifie pas toujours une augmentation des naissances :
+              dans de nombreuses communes, la hausse est portée avant tout par les <strong>migrations résidentielles</strong>
+              (arrivée de jeunes ménages, retraités, etc.) plutôt que par un rebond de la fécondité.
+            </p>
+            <p>
+              À l'inverse, la <strong>baisse nationale des naissances</strong> observée depuis plusieurs années
+              peut réduire progressivement la part des jeunes enfants, même dans des communes encore en expansion démographique.
+            </p>
+          </div>
+
+          <!-- Section 3: À retenir -->
+          <div class="bg-blue-50 border-l-2 border-blue-300 pl-4 py-3 rounded">
+            <p class="font-semibold text-gray-900 mb-2">👉 À retenir :</p>
+            <p>
+              Pour une lecture fine, il est essentiel de <strong>croiser l'évolution de la population totale
+              avec la courbe des naissances</strong> (onglet « Naissances »). Cela permet d'identifier si la croissance
+              est portée par les mouvements de population ou par le dynamisme naturel du territoire,
+              et d'en déduire les besoins futurs en accueil du jeune enfant et en services aux familles.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Évolution des naissances -->
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-lg font-medium text-gray-900 mb-4">Évolution des naissances</h2>
+    <div class="h-64">
+      <canvas id="births-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- Bloc explicatif: Contexte démographique et naissances -->
+  <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg p-6 mb-6 shadow-sm">
+    <div class="flex items-start space-x-4">
+      <!-- Icône -->
+      <div class="flex-shrink-0">
+        <div class="p-3 bg-green-100 rounded-lg">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Contenu -->
+      <div class="flex-1">
+        <h4 class="text-lg font-semibold text-gray-900 mb-3">
+          📊 Contexte démographique communal : évolution des naissances et perspectives
+        </h4>
+
+        <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+
+          <!-- Section 1: Lecture du tableau -->
+          <div>
+            <p class="font-semibold text-gray-800 mb-2">Lecture du tableau</p>
+            <p class="mb-2">
+              La baisse du nombre de naissances observée depuis plusieurs années s'inscrit dans une
+              <strong>tendance nationale durable de recul de la fécondité</strong>. Selon l'INED
+              (Population & Sociétés, n°635, 2025), l'indicateur conjoncturel de fécondité est passé
+              de <strong>2,0 enfants par femme en 2014 à 1,6 en 2024</strong>, soit une baisse de près de 20 %.
+            </p>
+            <p>
+              À l'échelle communale, cette évolution se traduit souvent par un <strong>ralentissement du nombre
+              d'enfants de moins de 3 ans</strong>, mais avec des disparités fortes selon les quartiers ou IRIS :
+              certaines zones peuvent accueillir davantage de jeunes ménages, tandis que d'autres se vieillissent
+              plus rapidement. Ces contrastes locaux <strong>influencent directement les besoins en modes d'accueil</strong>.
+            </p>
+          </div>
+
+          <!-- Section 2: Implications -->
+          <div class="bg-white border border-green-200 rounded-lg p-4">
+            <p class="font-semibold text-gray-900 mb-3">💡 Implications pour la politique communale de la petite enfance :</p>
+            <ul class="space-y-2">
+              <li class="flex items-start space-x-3">
+                <span class="text-green-600 font-bold mt-0.5">•</span>
+                <span>
+                  <strong>Anticiper une natalité plus faible et plus tardive</strong>, tout en maintenant une offre d'accueil
+                  de qualité et de proximité.
+                </span>
+              </li>
+              <li class="flex items-start space-x-3">
+                <span class="text-green-600 font-bold mt-0.5">•</span>
+                <span>
+                  <strong>Développer une analyse fine par IRIS</strong> pour repérer les secteurs où la demande reste soutenue
+                  et ceux où elle diminue.
+                </span>
+              </li>
+              <li class="flex items-start space-x-3">
+                <span class="text-green-600 font-bold mt-0.5">•</span>
+                <span>
+                  <strong>Ajuster la localisation et la capacité des structures</strong> (crèches, MAM, assistantes maternelles)
+                  afin de garantir une égalité d'accès pour toutes les familles.
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Section 3: Conclusion -->
+          <div class="bg-emerald-50 border-l-2 border-emerald-400 pl-4 py-3 rounded">
+            <p>
+              La lecture des naissances par IRIS permet ainsi d'<strong>orienter la planification communale</strong> :
+              adapter l'offre là où les besoins persistent, soutenir les quartiers attractifs pour les jeunes ménages
+              et prévenir les déséquilibres territoriaux.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
 <% end %>
 
 <!-- Données JSON pour les graphiques (OBLIGATOIRE) -->
