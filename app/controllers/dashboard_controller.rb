@@ -35,7 +35,7 @@ class DashboardController < ApplicationController
     @basic_info = {
       commune_name: @territory_name,
       territory_code: @territory_code,
-      population: 0,
+      population: cached_population_data(@territory_code)&.sum { |item| item["NB"].to_f }&.round || 0,
       epci_code: territory&.epci,
       department_code: territory&.dep,
       region_code: territory&.reg,
