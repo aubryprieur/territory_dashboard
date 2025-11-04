@@ -28,6 +28,12 @@ export default class extends Controller {
 
   loadSection(event) {
     const section = event.detail.section;
+
+    if (section === 'accueil') {
+      console.log('ℹ️ Section accueil ignorée (contenu statique rendu côté serveur)');
+      return;
+    }
+
     const communeCode = event.detail.commune_code || this.communeCode;
 
     console.log(`🔄 Chargement section: ${section}`, {
