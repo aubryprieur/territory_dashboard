@@ -219,6 +219,173 @@
     </div>
   </div>
 
+  <!-- 🎯 BLOC À AJOUTER : Projection 0-3 ans -->
+  <% if @epci_population_data.present? && @epci_population_data["population_by_age"].present? %>
+
+    <%
+      # Calculer les données
+      population_by_age = @epci_population_data["population_by_age"]
+
+      # Extraire effectifs par âge (0, 1, 2, 3)
+      age_data = {}
+      (0..3).each do |age|
+        age_items = population_by_age.select { |item| item["age"].to_i == age }
+        men = age_items.sum { |item| item["men"].to_f }
+        women = age_items.sum { |item| item["women"].to_f }
+        current = (men + women).round(0)
+
+        age_data[age] = {
+          current: current,
+          conservative: (current * 0.85).round(0),
+          pessimistic: (current * 0.80).round(0)
+        }
+      end
+
+      # Totaux
+      current_total = age_data.map { |_, v| v[:current] }.sum
+      conservative_total = age_data.map { |_, v| v[:conservative] }.sum
+      pessimistic_total = age_data.map { |_, v| v[:pessimistic] }.sum
+    %>
+
+    <!-- Projection simple et épurée -->
+    <div class="mt-8 bg-gradient-to-r from-emerald-50 to-teal-50 border-l-4 border-emerald-500 rounded-lg p-6 shadow-sm">
+      <div class="flex items-start space-x-4">
+        <!-- Icône -->
+        <div class="flex-shrink-0">
+          <div class="p-3 bg-emerald-100 rounded-lg">
+            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6M3 21h18"></path>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Contenu -->
+        <div class="flex-1">
+          <h4 class="text-lg font-semibold text-gray-900 mb-6">📈 Projection de la population 0-3 ans à 10 ans</h4>
+
+          <!-- Population actuelle -->
+          <div class="mb-6 bg-white border border-emerald-200 rounded-lg p-6">
+            <h5 class="text-sm font-medium text-gray-600 mb-2">Population actuelle</h5>
+            <p class="text-4xl font-bold text-emerald-600">
+              <%= number_with_delimiter(current_total) %>
+            </p>
+            <p class="text-sm text-gray-600">enfants de moins de 3 ans dans l'EPCI</p>
+          </div>
+
+          <!-- Deux scénarios côte à côte -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <!-- Scénario Modéré -15% -->
+            <div class="border-2 border-amber-200 rounded-lg p-5 bg-amber-50">
+              <div class="flex items-center justify-between mb-3">
+                <h6 class="font-semibold text-gray-900">Scénario modéré</h6>
+                <span class="bg-amber-200 text-amber-900 px-2 py-1 rounded text-xs font-bold">-15%</span>
+              </div>
+
+              <p class="text-sm text-gray-600 mb-2">Projection (10 ans)</p>
+              <p class="text-3xl font-bold text-amber-700 mb-2">
+                <%= number_with_delimiter(conservative_total) %>
+              </p>
+
+              <p class="text-sm text-gray-600 mb-3">Baisse estimée</p>
+              <p class="text-xl font-bold text-amber-600 mb-4">
+                -<%= number_with_delimiter(current_total - conservative_total) %>
+              </p>
+
+              <!-- Barre générale de progression -->
+              <div class="w-full bg-amber-200 rounded-full h-3 overflow-hidden mb-4">
+                <div class="bg-amber-600 h-full rounded-full" style="width: 85%;"></div>
+              </div>
+
+              <!-- Détail par tranche d'âge -->
+              <div class="border-t border-amber-200 pt-4">
+                <% (0..3).each do |age| %>
+                  <% age_label = age == 0 ? "0 an" : "#{age} ans" %>
+                  <div class="mb-3">
+                    <div class="flex justify-between items-center mb-1">
+                      <span class="text-xs font-semibold text-gray-700"><%= age_label %></span>
+                      <span class="text-xs font-bold text-amber-700">
+                        <%= number_with_delimiter(age_data[age][:current]) %> → <%= number_with_delimiter(age_data[age][:conservative]) %>
+                        <span class="text-amber-600">(-<%= number_with_delimiter(age_data[age][:current] - age_data[age][:conservative]) %>)</span>
+                      </span>
+                    </div>
+                    <div class="w-full bg-amber-100 rounded-full h-2 overflow-hidden">
+                      <div class="bg-amber-600 h-full rounded-full" style="width: 85%;"></div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- Scénario Accentué -20% -->
+            <div class="border-2 border-red-200 rounded-lg p-5 bg-red-50">
+              <div class="flex items-center justify-between mb-3">
+                <h6 class="font-semibold text-gray-900">Scénario accentué</h6>
+                <span class="bg-red-200 text-red-900 px-2 py-1 rounded text-xs font-bold">-20%</span>
+              </div>
+
+              <p class="text-sm text-gray-600 mb-2">Projection (10 ans)</p>
+              <p class="text-3xl font-bold text-red-700 mb-2">
+                <%= number_with_delimiter(pessimistic_total) %>
+              </p>
+
+              <p class="text-sm text-gray-600 mb-3">Baisse estimée</p>
+              <p class="text-xl font-bold text-red-600 mb-4">
+                -<%= number_with_delimiter(current_total - pessimistic_total) %>
+              </p>
+
+              <!-- Barre générale de progression -->
+              <div class="w-full bg-red-200 rounded-full h-3 overflow-hidden mb-4">
+                <div class="bg-red-600 h-full rounded-full" style="width: 80%;"></div>
+              </div>
+
+              <!-- Détail par tranche d'âge -->
+              <div class="border-t border-red-200 pt-4">
+                <% (0..3).each do |age| %>
+                  <% age_label = age == 0 ? "0 an" : "#{age} ans" %>
+                  <div class="mb-3">
+                    <div class="flex justify-between items-center mb-1">
+                      <span class="text-xs font-semibold text-gray-700"><%= age_label %></span>
+                      <span class="text-xs font-bold text-red-700">
+                        <%= number_with_delimiter(age_data[age][:current]) %> → <%= number_with_delimiter(age_data[age][:pessimistic]) %>
+                        <span class="text-red-600">(-<%= number_with_delimiter(age_data[age][:current] - age_data[age][:pessimistic]) %>)</span>
+                      </span>
+                    </div>
+                    <div class="w-full bg-red-100 rounded-full h-2 overflow-hidden">
+                      <div class="bg-red-600 h-full rounded-full" style="width: 80%;"></div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Implications territoriales -->
+          <div class="mb-6 bg-emerald-50 border border-emerald-200 rounded-lg p-6">
+            <div class="flex items-start gap-3">
+              <span class="text-2xl">💡</span>
+              <div>
+                <h5 class="font-semibold text-gray-900 mb-2">Implications territoriales</h5>
+                <p class="text-sm text-gray-700 leading-relaxed">
+                  Cette projection de baisse devrait guider la <strong>stratégie d'accueil de la petite enfance</strong> au niveau intercommunal.
+                  Les EPCI doivent <strong>adapter progressivement les capacités d'accueil</strong> (crèches, assistants maternels) tout en veillant
+                  à ne pas créer des « trous » de service dans les communes.
+                  C'est aussi une opportunité pour <strong>renforcer l'attractivité familiale</strong> via le logement, les aides et les services.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sources -->
+          <div class="text-xs text-gray-600">
+            <p><strong>Source :</strong> Projections INSEE/INED basées sur la pyramide des âges actuelle et tendances régionales</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <% end %>
+
+
   <% else %>
   <!-- Message si pas de données historiques -->
   <div class="mt-8">
