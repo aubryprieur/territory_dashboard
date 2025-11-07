@@ -32,6 +32,9 @@ class EpciDashboardController < ApplicationController
     if @epci_population_data.present?
       @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
       @epci_projection_0_3 = calculate_epci_projection_0_3(@epci_population_data)
+
+      @women_15_49 = calculate_women_15_49(@epci_population_data)
+      @births_projection_2035 = calculate_births_projection_2035(@women_15_49)
     end
 
     duration = ((Time.current - start_time) * 1000).round(2)
@@ -68,12 +71,101 @@ class EpciDashboardController < ApplicationController
     start_time = Time.current
 
     load_births_data_with_cache
+
+    # Charger les données de population pour les projections
+    population_data = Rails.cache.fetch("epci:#{@epci_code}:population:v1", expires_in: 6.hours) do
+      EpciCacheService.epci_children_data(@epci_code)
+    end
+
+    @epci_population_data = population_data[:population_data] || {} if population_data.present?
+
+    # Calcul : Projection naissances 2035
+    if @epci_population_data.present?
+      @women_15_49 = calculate_women_15_49(@epci_population_data)
+      @births_projection_2035 = calculate_births_projection_2035(@women_15_49)
+
+      # 🆕 MODIFIER : Passer women_count en paramètre
+      @births_projection_data = generate_births_projection_data(@epci_births_data, @births_projection_2035, @women_15_49)
+      Rails.logger.debug "📊 Projections naissances : #{@women_15_49} femmes → #{@births_projection_2035} naissances en 2035 (ICF 1,6)"
+    end
+
     prepare_births_geojson_data if @epci_births_data.present? && should_prepare_geojson?
 
     duration = ((Time.current - start_time) * 1000).round(2)
     Rails.logger.info "📊 load_births terminé en #{duration}ms"
 
     render partial: 'epci_dashboard/communes_births'
+  end
+
+  def generate_births_projection_data(births_data, births_2035_target, women_count)
+    return {} if births_data.blank? || births_2035_target.blank?
+
+    years_available = births_data["years_available"] || []
+    epci_births_by_year = births_data["epci_births_by_year"] || {}
+
+    return {} if years_available.empty?
+
+    # Dernière année disponible et nombre de naissances
+    last_year = years_available.max
+    last_births_count = epci_births_by_year[last_year.to_s].to_f
+
+    # 🆕 TROIS SCÉNARIOS D'ICF
+    icf_low = 1.5      # Scénario bas
+    icf_central = 1.6  # Scénario central
+    icf_high = 1.7     # Scénario haut
+
+    # Calculer les effectifs cibles pour chaque scénario
+    target_low = (women_count * (icf_low.to_f / 35.0)).round(0)
+    target_central = births_2035_target  # ICF 1,6
+    target_high = (women_count * (icf_high.to_f / 35.0)).round(0)
+
+    projection_years = []
+    projection_values_low = []    # 🆕
+    projection_values_central = [] # Central (la courbe du milieu)
+    projection_values_high = []   # 🆕
+
+    # PHASE 1 : Du dernier enregistrement (2023) à 2025 - INTERPOLATION COURBE
+    (last_year..2025).each do |year|
+      projection_years << year
+
+      years_elapsed = year - last_year
+      transition_years = 2025 - last_year
+
+      if transition_years > 0
+        # Interpolation linéaire vers les 3 cibles
+        value_low = last_births_count - (last_births_count - target_low) * (years_elapsed.to_f / transition_years)
+        value_central = last_births_count - (last_births_count - target_central) * (years_elapsed.to_f / transition_years)
+        value_high = last_births_count - (last_births_count - target_high) * (years_elapsed.to_f / transition_years)
+
+        projection_values_low << value_low.round(0)
+        projection_values_central << value_central.round(0)
+        projection_values_high << value_high.round(0)
+      else
+        projection_values_low << target_low
+        projection_values_central << target_central
+        projection_values_high << target_high
+      end
+    end
+
+    # PHASE 2 : De 2026 à 2035 - STABILITÉ (ligne horizontale)
+    (2026..2035).each do |year|
+      projection_years << year
+      projection_values_low << target_low
+      projection_values_central << target_central
+      projection_values_high << target_high
+    end
+
+    {
+      projection_years: projection_years,
+      projection_values_low: projection_values_low,        # 🆕 ICF 1,5
+      projection_values_central: projection_values_central, # Central ICF 1,6
+      projection_values_high: projection_values_high,      # 🆕 ICF 1,7
+      last_year: last_year,
+      target_low: target_low,
+      target_central: target_central,
+      target_high: target_high,
+      icf_values: { low: icf_low, central: icf_central, high: icf_high }
+    }
   end
 
   def load_children
@@ -704,6 +796,25 @@ class EpciDashboardController < ApplicationController
       maleData: population_by_age.map { |age_data| age_data["men"].to_f.round }.reverse,
       femaleData: population_by_age.map { |age_data| age_data["women"].to_f.round }.reverse
     }
+  end
+
+  def calculate_women_15_49(population_data)
+    return 0 if population_data.blank? || !population_data.key?("population_by_age")
+
+    # Extraire les femmes de 15 à 49 ans de la pyramide
+    women_15_49 = population_data["population_by_age"]
+      .select { |age_data| (15..49).include?(age_data["age"].to_i) }
+      .sum { |age_data| age_data["women"].to_f }
+
+    women_15_49.round(0)
+  end
+
+  def calculate_births_projection_2035(women_count, icf = 1.6)
+    return 0 if women_count.blank? || women_count <= 0
+
+    # Formule INSEE : naissances = femmes 15-49 ans × (ICF / 35 années fertiles)
+    # Avec ICF 1,6 : (1,6 / 35) ≈ 0,0457 enfant par femme par an
+    (women_count * (icf.to_f / 35.0)).round(0)
   end
 
   # [TOUS LES prepare_*_geojson_data de la version précédente - identiques avec pluck]

@@ -35,6 +35,8 @@ pin "charts/epci_age_pyramid_chart", to: "charts/epci_age_pyramid_chart.js"
 pin "charts/epci_population_history_chart", to: "charts/epci_population_history_chart.js"
 pin "charts/epci_family_employment_chart", to: "charts/epci_family_employment_chart.js"
 pin "charts/epci_births_history_chart", to: "charts/epci_births_history_chart.js"
+pin "charts/epci_births_projection_chart", to: "charts/epci_births_projection_chart.js"
+
 pin "charts/epci_domestic_violence_chart", to: "charts/epci_domestic_violence_chart.js"
 
 # EPCI Maps

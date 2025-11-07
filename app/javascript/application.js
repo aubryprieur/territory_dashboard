@@ -49,6 +49,7 @@ import "maps/epci_domestic_violence_map"
 
 // EPCI Charts - Chargés de manière asynchrone
 import "charts/epci_births_history_chart"
+import "charts/epci_births_projection_chart"
 import "charts/epci_age_pyramid_chart"
 import "charts/epci_domestic_violence_chart"
 import "charts/epci_population_history_chart"
