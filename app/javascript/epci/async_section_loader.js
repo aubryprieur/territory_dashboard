@@ -465,11 +465,22 @@ class AsyncSectionLoader {
 
       await new Promise(resolve => setTimeout(resolve, 200));
 
+      // ✅ GRAPHIQUE HISTORIQUE
       if (window.EpciBirthsHistoryChart && typeof window.EpciBirthsHistoryChart.init === 'function') {
         console.log('📊 Initialisation graphique historique naissances');
         window.EpciBirthsHistoryChart.init();
       } else if (typeof window.initializeBirthsHistoryChart === 'function') {
         window.initializeBirthsHistoryChart();
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 🆕 GRAPHIQUE PROJECTION (NOUVEAU)
+      if (window.EpciBirthsProjectionChart && typeof window.EpciBirthsProjectionChart.init === 'function') {
+        console.log('📊 Initialisation graphique projection naissances 2035');
+        window.EpciBirthsProjectionChart.init();
+      } else if (typeof window.initializeBirthsProjectionChart === 'function') {
+        window.initializeBirthsProjectionChart();
       }
 
     } catch (e) {
