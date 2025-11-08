@@ -181,6 +181,22 @@ class EpciDashboardController < ApplicationController
       @epci_children_section_data[:age_pyramid_data] = @epci_age_pyramid_data if @epci_children_section_data
     end
 
+    # Calculer l'effectif total des enfants de moins de 3 ans
+    @epci_under_3_count = calculate_under_3_count(@epci_population_data)
+
+    # Charger les naissances projetées et calculer la projection 0-3 ans
+    population_data = Rails.cache.fetch("epci:#{@epci_code}:population:v1", expires_in: 6.hours) do
+      EpciCacheService.epci_children_data(@epci_code)
+    end
+
+    @epci_population_data = population_data[:population_data] || {} if population_data.present?
+
+    if @epci_population_data.present?
+      @women_15_49 = calculate_women_15_49(@epci_population_data)
+      @births_projection_2035 = calculate_births_projection_2035(@women_15_49)
+      @children_0_3_projection_2035 = calculate_children_0_3_projection_2035(@births_projection_2035)
+    end
+
     # GeoJSON seulement si nécessaire
     if should_prepare_geojson? && @epci_communes_data.present?
       prepare_geojson_data_optimized
@@ -1199,4 +1215,43 @@ class EpciDashboardController < ApplicationController
     @cached_geometries
   end
 
+  def calculate_under_3_count(population_data)
+    return 0 if population_data.blank?
+
+    population_by_age = population_data["population_by_age"]
+    return 0 if population_by_age.blank?
+
+    population_by_age
+      .select { |age_data| age_data["age"].to_i <= 2 }
+      .sum { |age_data| (age_data["men"].to_f + age_data["women"].to_f) }
+      .round(0)
+  end
+
+  def calculate_under_3_count(population_data)
+    return 0 if population_data.blank?
+
+    population_by_age = population_data["population_by_age"]
+    return 0 if population_by_age.blank?
+
+    population_by_age
+      .select { |age_data| age_data["age"].to_i <= 2 }
+      .sum { |age_data| (age_data["men"].to_f + age_data["women"].to_f) }
+      .round(0)
+  end
+
+  def calculate_children_0_3_projection_2035(births_2035_count)
+    return 0 if births_2035_count.blank?
+
+    # Agrégation de 3 années de naissances (enfants de 0, 1, 2 ans révolus)
+    years_aggregated = 3
+    annual_births = births_2035_count
+    total_births_3_years = annual_births * years_aggregated
+
+    # Taux de survie : neutralise la mortalité infantile (~3-4 pour 1000 en France)
+    survival_rate = 0.9965
+
+    projected_children = (total_births_3_years * survival_rate).round(0)
+
+    projected_children
+  end
 end
