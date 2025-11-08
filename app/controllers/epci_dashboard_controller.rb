@@ -31,10 +31,6 @@ class EpciDashboardController < ApplicationController
 
     if @epci_population_data.present?
       @epci_age_pyramid_data = prepare_epci_age_pyramid_data(@epci_population_data)
-      @epci_projection_0_3 = calculate_epci_projection_0_3(@epci_population_data)
-
-      @women_15_49 = calculate_women_15_49(@epci_population_data)
-      @births_projection_2035 = calculate_births_projection_2035(@women_15_49)
     end
 
     duration = ((Time.current - start_time) * 1000).round(2)
@@ -1201,31 +1197,6 @@ class EpciDashboardController < ApplicationController
     end
 
     @cached_geometries
-  end
-
-  def calculate_epci_projection_0_3(population_data)
-    Rails.logger.info "🔍 DEBUG 1 - population_data keys: #{population_data.keys.inspect}"
-    Rails.logger.info "🔍 DEBUG 2 - population_by_age existe: #{population_data['population_by_age'].present?}"
-
-    return PopulationProjectionService.projection_scenarios(0, 10) if population_data.blank?
-
-    population_by_age = population_data["population_by_age"]
-
-    if population_by_age.present?
-      Rails.logger.info "🔍 DEBUG 3 - First item: #{population_by_age.first.inspect}"
-    else
-      Rails.logger.warn "⚠️ population_by_age est VIDE ou inexistant !"
-    end
-
-    return PopulationProjectionService.projection_scenarios(0, 10) if population_by_age.blank?
-
-    under_three_count = population_by_age
-      .select { |age_data| age_data["age"].to_i <= 2 }
-      .sum { |age_data| (age_data["men"].to_f + age_data["women"].to_f) }
-
-    Rails.logger.info "📊 Projection 0-3 ans : #{under_three_count.round} enfants actuellement"
-
-    PopulationProjectionService.projection_scenarios(under_three_count, 10)
   end
 
 end
