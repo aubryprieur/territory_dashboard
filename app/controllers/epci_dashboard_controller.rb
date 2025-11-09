@@ -236,6 +236,34 @@ class EpciDashboardController < ApplicationController
     start_time = Time.current
 
     load_childcare_data_with_cache
+
+    # 🆕 Charger aussi les données d'enfants pour la projection
+    population_data = Rails.cache.fetch("epci:#{@epci_code}:population:v1", expires_in: 6.hours) do
+      EpciCacheService.epci_children_data(@epci_code)
+    end
+
+    @epci_population_data = population_data[:population_data] || {} if population_data.present?
+
+    # Calculer les projections si les données sont disponibles
+    if @epci_population_data.present?
+      @epci_under_3_count = calculate_under_3_count(@epci_population_data)
+      @women_15_49 = calculate_women_15_49(@epci_population_data)
+      @births_projection_2035 = calculate_births_projection_2035(@women_15_49)
+      @children_0_3_projection_2035 = calculate_children_0_3_projection_2035(@births_projection_2035)
+
+      # 🆕 Calculer la projection du taux de couverture
+      current_year = @epci_childcare_communes_data["year"].to_s
+      current_rate = @epci_childcare_data&.dig("coverage_data", current_year, "coverage_rates", "global")
+
+      if current_rate.present? && current_rate > 0 && @epci_under_3_count > 0
+        @childcare_coverage_projection = calculate_childcare_coverage_projection_2035(
+          current_rate,
+          @epci_under_3_count,
+          @children_0_3_projection_2035
+        )
+      end
+    end
+
     prepare_childcare_geojson_data if @epci_childcare_communes_data.present? && should_prepare_geojson?
 
     duration = ((Time.current - start_time) * 1000).round(2)
@@ -1253,5 +1281,61 @@ class EpciDashboardController < ApplicationController
     projected_children = (total_births_3_years * survival_rate).round(0)
 
     projected_children
+  end
+
+  def calculate_childcare_coverage_projection_2035(
+    current_coverage_rate,
+    current_children_count,
+    projected_children_count
+  )
+    return {} if current_coverage_rate.blank? || current_coverage_rate <= 0
+
+    # Calculer le nombre de places actuelles
+    current_places = (current_coverage_rate / 100.0) * current_children_count
+
+    # Variation proportionnelle d'enfants
+    children_ratio = projected_children_count.to_f / current_children_count.to_f
+
+    # 🔵 SCÉNARIO 1 : Offre constante (places inchangées)
+    conservative_rate = (current_places / projected_children_count * 100).round(1)
+
+    # 🟢 SCÉNARIO 2 : Offre proportionnelle (maintien du taux)
+    proportional_places = current_places * children_ratio
+    proportional_rate = (proportional_places / projected_children_count * 100).round(1)
+
+    # 🟣 SCÉNARIO 3 : Offre augmentée de 20%
+    ambitious_places = current_places * 1.2
+    ambitious_rate = (ambitious_places / projected_children_count * 100).round(1)
+
+    {
+      current_rate: current_coverage_rate,
+      current_places: current_places.round(0),
+      current_children: current_children_count,
+      projected_children: projected_children_count,
+      children_evolution_pct: ((projected_children_count - current_children_count).to_f / current_children_count * 100).round(1),
+      scenarios: {
+        conservative: {
+          label: "Offre constante",
+          rate: conservative_rate,
+          places: current_places.round(0),
+          evolution: (conservative_rate - current_coverage_rate).round(1),
+          description: "Les places actuelles restent inchangées"
+        },
+        proportional: {
+          label: "Offre proportionnelle (maintien du TCG)",
+          rate: proportional_rate,
+          places: proportional_places.round(0),
+          evolution: (proportional_rate - current_coverage_rate).round(1),
+          description: "L'offre suit l'évolution démographique"
+        },
+        ambitious: {
+          label: "Offre augmentée (+20%)",
+          rate: ambitious_rate,
+          places: ambitious_places.round(0),
+          evolution: (ambitious_rate - current_coverage_rate).round(1),
+          description: "Augmentation volontariste de 20% des places"
+        }
+      }
+    }
   end
 end
