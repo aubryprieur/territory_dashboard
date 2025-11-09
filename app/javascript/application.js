@@ -66,6 +66,7 @@ import "charts/economic_charts"
 import "charts/births_chart"
 import "charts/domestic_violence_chart"
 import "charts/family_employment_chart"
+import "charts/births_projection_chart"
 
 // Dashboard communes - Initialisation normale
 import "dashboard/dashboard_init"
