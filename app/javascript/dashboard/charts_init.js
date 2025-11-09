@@ -392,6 +392,7 @@ document.addEventListener('dashboard:sectionLoaded', async function(event) {
           console.log("📈 Données historiques récupérées:", histData);
           createHistoricalChart(histData);
           createBirthsChart();
+          initializeBirthsProjectionChart();
         } catch (e) {
           console.error("❌ Erreur parsing données historiques:", e);
         }
@@ -401,3 +402,4 @@ document.addEventListener('dashboard:sectionLoaded', async function(event) {
 });
 
 console.log("✅ Module graphiques dashboard initialisé");
+console.log("Fonction initializeBirthsProjectionChart existe ?", typeof initializeBirthsProjectionChart);

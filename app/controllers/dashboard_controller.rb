@@ -70,14 +70,19 @@ class DashboardController < ApplicationController
     @births_data = cached_births_data(@territory_code)
     @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
 
-    # 🔍 DEBUG : Ajouter ces logs
-    Rails.logger.debug "🔍 Births data total: #{@births_data&.size || 0} items"
-    Rails.logger.debug "🔍 Births data sample: #{@births_data&.first&.keys || 'nil'}"
-    Rails.logger.debug "🔍 Births data filtered: #{@births_data_filtered.size} items"
-    Rails.logger.debug "🔍 Sample filtered item: #{@births_data_filtered.first || 'empty'}"
+    # 🆕 Calcul des projections naissances 2035
+    if @population_data.present?
+      @women_15_49 = calculate_women_15_49_from_population(@population_data)
+      @births_projection_2035 = calculate_births_projection_2035(@women_15_49) if @women_15_49 > 0
+      Rails.logger.debug "📊 Commune #{@territory_code} : #{@women_15_49} femmes → #{@births_projection_2035} naissances 2035"
 
-    # 🔧 AJOUT MANQUANT : Préparer les données de la pyramide des âges
-    @age_pyramid_data = prepare_age_pyramid_data(@population_data)
+      # 🆕 Générer les données de projection avec graphique
+      @births_projection_data = generate_commune_births_projection_data(
+        @births_data_filtered,
+        @births_projection_2035,
+        @women_15_49
+      )
+    end
 
     respond_to do |format|
       format.html { render partial: 'synthese', locals: {
@@ -85,7 +90,9 @@ class DashboardController < ApplicationController
         total_population: @total_population,
         historical_data: @historical_data,
         births_data_filtered: @births_data_filtered,
-        age_pyramid_data: @age_pyramid_data,  # 🔧 AJOUT : Passer les données de la pyramide
+        women_15_49: @women_15_49,
+        births_projection_2035: @births_projection_2035,
+        births_projection_data: @births_projection_data,
         territory_code: @territory_code,
         territory_name: @territory_name
       }}
@@ -571,5 +578,121 @@ class DashboardController < ApplicationController
 
   def load_comparison_data_for_safety
     load_comparison_data_for_safety_cached
+  end
+
+  def calculate_women_15_49(population_by_age)
+    return 0 if population_by_age.blank?
+
+    women_15_49 = population_by_age
+      .select { |age_data| (15..49).include?(age_data["age"].to_i) }
+      .sum { |age_data| age_data["women"].to_f }
+
+    women_15_49.round(0)
+  end
+
+  def calculate_births_projection_2035(women_count, icf = 1.6)
+    return 0 if women_count.blank? || women_count <= 0
+
+    # Formule INSEE : naissances = femmes 15-49 ans × (ICF / 35 années fertiles)
+    (women_count * (icf.to_f / 35.0)).round(0)
+  end
+
+  def calculate_women_15_49_from_population(population_data)
+    return 0 if population_data.blank?
+
+    # Calculer les femmes de 15-49 ans depuis population_data
+    # Structure : item["AGED100"] = âge, item["SEXE"] = 1 (homme) ou 2 (femme), item["NB"] = nombre
+    women_15_49 = population_data
+      .select { |item|
+        (15..49).include?(item["AGED100"].to_i) &&
+        item["SEXE"].to_s == "2"  # SEXE = 2 pour les femmes
+      }
+      .sum { |item| item["NB"].to_f }
+
+    women_15_49.round(0)
+  end
+
+  def generate_commune_births_projection_data(births_data_filtered, births_2035_target, women_count)
+    return {} if births_data_filtered.blank? || births_2035_target.blank?
+
+    # Construire un dictionnaire année → naissances à partir des données
+    # Gérer différents formats possibles de clés (API INSEE peut varier)
+    births_by_year = {}
+    births_data_filtered.each do |item|
+      # Essayer différentes clés possibles pour l'année et la valeur
+      year = item["ANNEE"] || item["annee"] || item["year"] || item["time_period"]
+      count = item["NB"] || item["naissances"] || item["births"] || item["obs_value"]
+
+      next if year.blank? || count.blank?
+
+      year_int = year.to_i
+      births_by_year[year_int] = count.to_f
+    end
+
+    return {} if births_by_year.empty?
+
+    years_available = births_by_year.keys.sort
+    last_year = years_available.max
+    last_births_count = births_by_year[last_year]
+
+    Rails.logger.debug "📊 Données naissances trouvées : #{years_available.inspect}, dernière année: #{last_year}, dernier effectif: #{last_births_count}"
+
+    # Trois scénarios d'ICF
+    icf_low = 1.5
+    icf_central = 1.6
+    icf_high = 1.7
+
+    target_low = (women_count * (icf_low.to_f / 35.0)).round(0)
+    target_central = births_2035_target
+    target_high = (women_count * (icf_high.to_f / 35.0)).round(0)
+
+    projection_years = []
+    projection_values_low = []
+    projection_values_central = []
+    projection_values_high = []
+
+    # Phase 1 : Transition de l'année dernière jusqu'à 2025
+    (last_year..2025).each do |year|
+      projection_years << year
+
+      years_elapsed = year - last_year
+      transition_years = 2025 - last_year
+
+      if transition_years > 0
+        # Interpolation linéaire vers les 3 cibles
+        value_low = last_births_count - (last_births_count - target_low) * (years_elapsed.to_f / transition_years)
+        value_central = last_births_count - (last_births_count - target_central) * (years_elapsed.to_f / transition_years)
+        value_high = last_births_count - (last_births_count - target_high) * (years_elapsed.to_f / transition_years)
+
+        projection_values_low << value_low.round(0)
+        projection_values_central << value_central.round(0)
+        projection_values_high << value_high.round(0)
+      else
+        projection_values_low << target_low
+        projection_values_central << target_central
+        projection_values_high << target_high
+      end
+    end
+
+    # Phase 2 : Stabilité 2026-2035
+    (2026..2035).each do |year|
+      projection_years << year
+      projection_values_low << target_low
+      projection_values_central << target_central
+      projection_values_high << target_high
+    end
+
+    {
+      historical_years: years_available,
+      historical_values: years_available.map { |y| births_by_year[y].round(0) },
+      projection_years: projection_years,
+      projection_values_low: projection_values_low,
+      projection_values_central: projection_values_central,
+      projection_values_high: projection_values_high,
+      last_year: last_year,
+      target_low: target_low,
+      target_central: target_central,
+      target_high: target_high
+    }
   end
 end
