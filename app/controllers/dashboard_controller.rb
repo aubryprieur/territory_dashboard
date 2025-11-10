@@ -613,13 +613,11 @@ class DashboardController < ApplicationController
   end
 
   def generate_commune_births_projection_data(births_data_filtered, births_2035_target, women_count)
-    return {} if births_data_filtered.blank? || births_2035_target.blank?
+    return {} if births_data_filtered.blank? || women_count.blank? || women_count == 0
 
     # Construire un dictionnaire année → naissances à partir des données
-    # Gérer différents formats possibles de clés (API INSEE peut varier)
     births_by_year = {}
     births_data_filtered.each do |item|
-      # Essayer différentes clés possibles pour l'année et la valeur
       year = item["ANNEE"] || item["annee"] || item["year"] || item["time_period"]
       count = item["NB"] || item["naissances"] || item["births"] || item["obs_value"]
 
@@ -637,21 +635,15 @@ class DashboardController < ApplicationController
 
     Rails.logger.debug "📊 Données naissances trouvées : #{years_available.inspect}, dernière année: #{last_year}, dernier effectif: #{last_births_count}"
 
-    # Trois scénarios d'ICF
-    icf_low = 1.5
-    icf_central = 1.6
-    icf_high = 1.7
-
-    target_low = (women_count * (icf_low.to_f / 35.0)).round(0)
-    target_central = births_2035_target
-    target_high = (women_count * (icf_high.to_f / 35.0)).round(0)
+    # 🆕 DEUX SCÉNARIOS : Stable et -10%
+    target_stable = last_births_count                    # Scénario stable
+    target_minus_10 = (last_births_count * 0.9).round(0) # Scénario -10%
 
     projection_years = []
-    projection_values_low = []
-    projection_values_central = []
-    projection_values_high = []
+    projection_values_stable = []
+    projection_values_minus_10 = []
 
-    # Phase 1 : Transition de l'année dernière jusqu'à 2025
+    # PHASE 1 : Du dernier enregistrement à 2025 - INTERPOLATION LINÉAIRE
     (last_year..2025).each do |year|
       projection_years << year
 
@@ -659,40 +651,34 @@ class DashboardController < ApplicationController
       transition_years = 2025 - last_year
 
       if transition_years > 0
-        # Interpolation linéaire vers les 3 cibles
-        value_low = last_births_count - (last_births_count - target_low) * (years_elapsed.to_f / transition_years)
-        value_central = last_births_count - (last_births_count - target_central) * (years_elapsed.to_f / transition_years)
-        value_high = last_births_count - (last_births_count - target_high) * (years_elapsed.to_f / transition_years)
+        # Interpolation linéaire vers les 2 cibles
+        value_stable = last_births_count - (last_births_count - target_stable) * (years_elapsed.to_f / transition_years)
+        value_minus_10 = last_births_count - (last_births_count - target_minus_10) * (years_elapsed.to_f / transition_years)
 
-        projection_values_low << value_low.round(0)
-        projection_values_central << value_central.round(0)
-        projection_values_high << value_high.round(0)
+        projection_values_stable << value_stable.round(0)
+        projection_values_minus_10 << value_minus_10.round(0)
       else
-        projection_values_low << target_low
-        projection_values_central << target_central
-        projection_values_high << target_high
+        projection_values_stable << target_stable
+        projection_values_minus_10 << target_minus_10
       end
     end
 
-    # Phase 2 : Stabilité 2026-2035
+    # PHASE 2 : De 2026 à 2035 - STABILITÉ (ligne horizontale)
     (2026..2035).each do |year|
       projection_years << year
-      projection_values_low << target_low
-      projection_values_central << target_central
-      projection_values_high << target_high
+      projection_values_stable << target_stable
+      projection_values_minus_10 << target_minus_10
     end
 
     {
       historical_years: years_available,
       historical_values: years_available.map { |y| births_by_year[y].round(0) },
       projection_years: projection_years,
-      projection_values_low: projection_values_low,
-      projection_values_central: projection_values_central,
-      projection_values_high: projection_values_high,
+      projection_values_stable: projection_values_stable,
+      projection_values_minus_10: projection_values_minus_10,
       last_year: last_year,
-      target_low: target_low,
-      target_central: target_central,
-      target_high: target_high
+      target_stable: target_stable,
+      target_minus_10: target_minus_10
     }
   end
 end
