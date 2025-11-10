@@ -1,13 +1,26 @@
 /**
  * Initialise le graphique de projection des naissances (historique + projection 2035)
  * Commune Dashboard
+ * Affiche deux scénarios : Stable et -10% avec zone d'incertitude entre les deux
  */
-function initializeBirthsProjectionChart() {
+
+// Rendre la fonction globalement disponible
+window.initializeBirthsProjectionChart = function() {
+  console.log("✅ births_projection_chart.js chargé - Fonction disponible");
+
   const chartElement = document.getElementById("commune-births-projection-chart");
   const dataElement = document.getElementById("commune-births-projection-data");
 
+  console.log("🔍 Tentative d'initialisation du graphique de projection");
+  console.log("Canvas element:", chartElement);
+  console.log("Data element:", dataElement);
+  console.log("Chart.js disponible ?", typeof Chart !== "undefined");
+
   if (!chartElement || !dataElement || typeof Chart === "undefined") {
-    console.warn("Éléments nécessaires pour le graphique de projection manquants");
+    console.error("❌ PROBLÈME : Un des éléments manque !");
+    console.error("  - Canvas:", !!chartElement);
+    console.error("  - Data JSON:", !!dataElement);
+    console.error("  - Chart.js:", typeof Chart !== "undefined");
     return;
   }
 
@@ -26,179 +39,223 @@ function initializeBirthsProjectionChart() {
     const historicalYears = data.historical_years || [];
     const historicalValues = data.historical_values || [];
     const projectionYears = data.projection_years || [];
-    const projectionValuesLow = data.projection_values_low || [];
-    const projectionValuesCentral = data.projection_values_central || [];
-    const projectionValuesHigh = data.projection_values_high || [];
+    const projectionValuesStable = data.projection_values_stable || [];
+    const projectionValuesMinus10 = data.projection_values_minus_10 || [];
 
     console.log("📊 Données historiques:", { years: historicalYears, values: historicalValues });
-    console.log("📈 Scénario bas (ICF 1,5):", projectionValuesLow);
-    console.log("📈 Scénario central (ICF 1,6):", projectionValuesCentral);
-    console.log("📈 Scénario haut (ICF 1,7):", projectionValuesHigh);
+    console.log("📈 Scénario Stable:", projectionValuesStable);
+    console.log("📈 Scénario -10%:", projectionValuesMinus10);
 
     if (!historicalYears.length || !projectionYears.length) {
-      console.warn("⚠️ Données de projection vides ou invalides");
+      console.warn("Données insuffisantes pour le graphique de projection");
       return;
     }
 
+    // Déterminer l'année de transition (dernière année historique)
+    const lastHistoricalYear = Math.max(...historicalYears);
+
+    // Construire les datasets
+    // 1. Ligne historique (épaisse, noir)
+    const historicalDataset = {
+      label: "Historique observé",
+      data: historicalYears.map((year, idx) => ({
+        x: year,
+        y: historicalValues[idx]
+      })),
+      borderColor: "#10b981",  // Vert émeraude
+      backgroundColor: "rgba(16, 185, 129, 0.08)",
+      borderWidth: 2.5,
+      pointRadius: 3,
+      pointHoverRadius: 6,  // Grossir les points au survol
+      pointBackgroundColor: "#10b981",
+      pointBorderColor: "#fff",
+      pointBorderWidth: 2,
+      pointHoverBorderWidth: 3,
+      tension: 0.3,
+      fill: false,
+      hoverBorderWidth: 3.5,
+      hoverBorderColor: "#059669",
+      tooltip: {
+        enabled: false
+      }
+    };
+
+    // 2. Scénario -10% (rouge, tirets) - EN PREMIER pour que la zone grisée se remplisse correctement
+    const minus10Dataset = {
+      label: "Scénario -10% (déclin progressif)",
+      data: projectionYears.map((year, idx) => ({
+        x: year,
+        y: projectionValuesMinus10[idx]
+      })),
+      borderColor: "#ef4444",
+      backgroundColor: "rgba(239, 68, 68, 0.05)",
+      borderWidth: 2,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      tension: 0,
+      fill: false,
+      pointBackgroundColor: "#ef4444"
+    };
+
+    // 3. Zone grisée entre les deux scénarios (fill between)
+    const fillBetweenDataset = {
+      label: "Zone d'incertitude",
+      data: projectionYears.map((year, idx) => ({
+        x: year,
+        y: projectionValuesStable[idx]
+      })),
+      borderWidth: 0,
+      backgroundColor: "rgba(156, 163, 175, 0.25)",
+      borderColor: "transparent",
+      fill: '-1',  // Remplit entre ce dataset et le +1 (le dataset -10%)
+      pointRadius: 0,
+      tension: 0,
+      pointHoverRadius: 0,
+      hoverBackgroundColor: "transparent"
+    };
+
+    // 4. Scénario Stable (bleu, tirets)
+    const stableDataset = {
+      label: "Scénario Stable (taux constant)",
+      data: projectionYears.map((year, idx) => ({
+        x: year,
+        y: projectionValuesStable[idx]
+      })),
+      borderColor: "#3b82f6",
+      backgroundColor: "rgba(59, 130, 246, 0.05)",
+      borderWidth: 2,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      tension: 0,
+      fill: false,
+      pointBackgroundColor: "#3b82f6"
+    };
+
+    // Créer le graphique
     const chart = new Chart(chartElement, {
-      type: 'line',
+      type: "line",
       data: {
-        labels: [],
         datasets: [
-          // 🆕 SCÉNARIO BAS (ICF 1,5) - Min de la bande
-          {
-            label: 'Scénario bas (ICF 1,5)',
-            data: projectionYears.map((year, index) => ({
-              x: year,
-              y: projectionValuesLow[index]
-            })),
-            borderColor: 'transparent',
-            backgroundColor: 'transparent',
-            fill: false,
-            tension: 0.4,
-            pointRadius: 0,
-            borderWidth: 0
-          },
-          // 🆕 SCÉNARIO HAUT (ICF 1,7) - Max de la bande AVEC FILL
-          {
-            label: 'Scénario haut (ICF 1,7)',
-            data: projectionYears.map((year, index) => ({
-              x: year,
-              y: projectionValuesHigh[index]
-            })),
-            borderColor: 'rgba(107, 114, 128, 0.4)',
-            backgroundColor: 'rgba(107, 114, 128, 0.12)',
-            fill: '-1',
-            tension: 0.4,
-            pointRadius: 0,
-            borderWidth: 1,
-            borderDash: [2, 2]
-          },
-          // SCÉNARIO CENTRAL (ICF 1,6)
-          {
-            label: 'Projection centrale (ICF 1,6)',
-            data: projectionYears.map((year, index) => ({
-              x: year,
-              y: projectionValuesCentral[index]
-            })),
-            borderColor: 'rgba(168, 85, 247, 1)',
-            backgroundColor: 'rgba(168, 85, 247, 0)',
-            fill: false,
-            tension: 0.4,
-            borderDash: [5, 5],
-            pointRadius: 3,
-            pointBackgroundColor: 'rgba(168, 85, 247, 1)',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 1
-          },
-          // COURBE HISTORIQUE
-          {
-            label: 'Naissances observées',
-            data: historicalYears.map((year, index) => ({
-              x: year,
-              y: historicalValues[index]
-            })),
-            borderColor: 'rgba(246, 114, 128, 1)',
-            backgroundColor: 'rgba(246, 114, 128, 0.2)',
-            fill: false,
-            tension: 0.4,
-            pointRadius: 5,
-            pointBackgroundColor: 'rgba(246, 114, 128, 1)',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2
-          }
+          historicalDataset,
+          minus10Dataset,
+          fillBetweenDataset,
+          stableDataset
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        scales: {
-          x: {
-            type: 'linear',
-            position: 'bottom',
-            title: {
-              display: true,
-              text: 'Année',
-              font: {
-                weight: 'bold'
-              }
-            },
-            min: Math.min(...historicalYears, ...projectionYears) - 1,
-            max: 2036,
-            ticks: {
-              stepSize: 2
-            }
-          },
-          y: {
-            beginAtZero: false,
-            title: {
-              display: true,
-              text: 'Nombre de naissances',
-              font: {
-                weight: 'bold'
-              }
-            },
-            ticks: {
-              callback: function(value) {
-                return value.toLocaleString('fr-FR');
-              }
-            }
-          }
+        interaction: {
+          mode: "index",
+          intersect: false
         },
         plugins: {
           legend: {
             display: true,
-            position: 'top',
+            position: "top",
             labels: {
+              font: { size: 12, weight: 500 },
               usePointStyle: true,
               padding: 15,
-              font: {
-                size: 12
-              }
-            }
+              color: "#374151"
+            },
+            onClick: null  // Désactiver le click sur la légende
           },
           tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
             padding: 12,
-            titleFont: {
-              size: 13,
-              weight: 'bold'
-            },
-            bodyFont: {
-              size: 12
+            titleFont: { size: 13, weight: "bold" },
+            bodyFont: { size: 12 },
+            borderColor: "rgba(255, 255, 255, 0.2)",
+            borderWidth: 1,
+            displayColors: true,
+            filter: function(tooltipItem) {
+              // Afficher SEULEMENT les deux scénarios de projection
+              return tooltipItem.dataset.label === "Scénario Stable (taux constant)" ||
+                     tooltipItem.dataset.label === "Scénario -10% (déclin progressif)";
             },
             callbacks: {
               title: function(context) {
-                return 'Année ' + context[0].raw.x;
+                if (context.length > 0) {
+                  const year = Math.round(context[0].parsed.x);
+                  return "Année " + year;
+                }
+                return '';
               },
               label: function(context) {
-                const value = context.raw.y || context.raw;
-                const label = context.dataset.label || '';
-
-                if (label.includes('Scénario bas') || label.includes('Scénario haut')) {
-                  return null;
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
                 }
-
-                return label + ': ' + value.toLocaleString('fr-FR') + ' naissances';
-              },
-              filter: function(context) {
-                return !context.dataset.label.includes('Scénario bas') && !context.dataset.label.includes('Scénario haut');
+                label += Math.round(context.parsed.y) + ' naissances';
+                return label;
               }
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: "linear",
+            min: Math.min(...historicalYears) - 1,
+            max: 2035,
+            ticks: {
+              stepSize: 1,
+              callback: function(value) {
+                return Math.round(value);
+              },
+              font: { size: 11 }
+            },
+            title: {
+              display: true,
+              text: "Année",
+              font: { size: 12, weight: "bold" }
+            },
+            grid: {
+              drawBorder: true,
+              color: "rgba(0, 0, 0, 0.05)"
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Nombre de naissances",
+              font: { size: 12, weight: "bold" }
+            },
+            ticks: {
+              font: { size: 11 }
+            },
+            grid: {
+              drawBorder: true,
+              color: "rgba(0, 0, 0, 0.05)"
             }
           }
         }
       }
     });
 
-    if (!window.chartInstances) {
-      window.chartInstances = new Map();
-    }
-    window.chartInstances.set(chartElement.id, chart);
+    console.log("✅ Graphique de projection des naissances créé avec succès");
 
-    console.log("✅ Graphique de projection des naissances (commune) initialisé (ICF 1,5 à 1,7)");
-  } catch (e) {
-    console.error("Erreur lors de l'initialisation du graphique de projection:", e);
+  } catch (error) {
+    console.error("Erreur lors de l'initialisation du graphique de projection des naissances:", error);
   }
-}
+};
 
-window.initializeBirthsProjectionChart = initializeBirthsProjectionChart;
+// Initialiser le graphique dès que le DOM est prêt
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("DOMContentLoaded - Initialisation births projection chart");
+  if (typeof window.initializeBirthsProjectionChart === "function") {
+    window.initializeBirthsProjectionChart();
+  }
+});
+
+// Réinitialiser aussi quand le contenu est chargé dynamiquement (stimulus/turbo)
+document.addEventListener("turbo:load", function() {
+  console.log("turbo:load - Initialisation births projection chart");
+  if (typeof window.initializeBirthsProjectionChart === "function") {
+    window.initializeBirthsProjectionChart();
+  }
+});
+
+console.log("✅ Module births_projection_chart.js chargé");
