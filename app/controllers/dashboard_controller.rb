@@ -155,6 +155,31 @@ class DashboardController < ApplicationController
   def load_children_comparison
     # 🚀 Chargement spécifique pour la comparaison enfants avec cache
     @children_data = cached_children_data(@territory_code)
+
+    # 🆕 Charger les données de population et naissances pour les projections
+    @population_data = cached_population_data(@territory_code)
+    @births_data = cached_births_data(@territory_code)
+    @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
+
+    # 🆕 Calculer les projections d'enfants 0-3 ans
+    if @population_data.present? && @births_data_filtered.present?
+      @women_15_49 = calculate_women_15_49_from_population(@population_data)
+      @births_projection_2035 = calculate_births_projection_2035(@women_15_49) if @women_15_49 > 0
+
+      # 🆕 Générer les données de projection des naissances (2 scénarios)
+      @births_projection_data = generate_commune_births_projection_data(
+        @births_data_filtered,
+        @births_projection_2035,
+        @women_15_49
+      )
+
+      # 🆕 Calculer la projection des enfants 0-3 ans
+      @children_0_3_projection_2035 = calculate_children_0_3_projection_2035_commune(@births_projection_data)
+
+      # 🆕 Calculer le nombre actuel d'enfants 0-3 ans
+      @current_children_0_3 = calculate_under_3_count(@population_data)
+    end
+
     load_comparison_data_for_children_cached
 
     respond_to do |format|
@@ -166,7 +191,12 @@ class DashboardController < ApplicationController
         region_children_data: @region_children_data,
         epci_code: @epci_code,
         department_code: @department_code,
-        region_code: @region_code
+        region_code: @region_code,
+        # 🆕 Ajouter les nouvelles données de projection
+        births_projection_data: @births_projection_data,
+        children_0_3_projection_2035: @children_0_3_projection_2035,
+        current_children_0_3: @current_children_0_3,
+        women_15_49: @women_15_49
       }}
       format.json { render json: { status: 'success' } }
     end
@@ -679,6 +709,43 @@ class DashboardController < ApplicationController
       last_year: last_year,
       target_stable: target_stable,
       target_minus_10: target_minus_10
+    }
+  end
+
+  # 🆕 Calculer le nombre d'enfants actuels de 0-3 ans
+  def calculate_under_3_count(population_data)
+    return 0 if population_data.blank?
+
+    population_data
+      .select { |item| item["AGED100"].to_i <= 2 }
+      .sum { |item| item["NB"].to_f }
+      .round(0)
+  end
+
+  # 🆕 Calculer la projection des enfants 0-3 ans pour les communes
+  # avec deux scénarios (stable et -10%)
+  def calculate_children_0_3_projection_2035_commune(births_projection_data)
+    return {} if births_projection_data.blank?
+
+    # Récupérer les scénarios de naissances (stable et -10%)
+    births_stable = births_projection_data[:target_stable]
+    births_minus_10 = births_projection_data[:target_minus_10]
+
+    return {} if births_stable.blank? || births_minus_10.blank?
+
+    # Constantes de calcul
+    years_aggregated = 3  # Enfants de 0, 1, 2 ans
+    survival_rate = 0.9965  # Taux de survie (mortalité ~3,5 pour 1000)
+
+    # Calcul des deux scénarios
+    children_0_3_stable = (births_stable * years_aggregated * survival_rate).round(0)
+    children_0_3_minus_10 = (births_minus_10 * years_aggregated * survival_rate).round(0)
+
+    {
+      stable: children_0_3_stable,
+      minus_10: children_0_3_minus_10,
+      births_stable: births_stable,
+      births_minus_10: births_minus_10
     }
   end
 end
