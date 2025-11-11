@@ -193,4 +193,130 @@
       </div>
     </div>
   <% end %>
+
+  <!-- 🆕 PROJECTION TAUX DE COUVERTURE 2035 -->
+  <% if childcare_coverage_projection.present? %>
+  <div class="mt-8 bg-gradient-to-r from-cyan-50 to-blue-50 border-l-4 border-cyan-500 rounded-lg p-6 shadow-sm mb-6">
+    <div class="flex items-start space-x-4">
+      <!-- Icône -->
+      <div class="flex-shrink-0">
+        <div class="p-3 bg-cyan-100 rounded-lg">
+          <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Contenu -->
+      <div class="flex-1">
+        <h4 class="text-lg font-semibold text-gray-900 mb-4">
+          🔮 Projection du taux de couverture en 2035
+        </h4>
+
+        <!-- KPI actuels -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-white rounded-lg p-4 border border-cyan-200">
+            <p class="text-sm text-gray-600 font-medium mb-1">Enfants 0-3 ans (année actuelle)</p>
+            <p class="text-3xl font-bold text-cyan-700">
+              <%= number_with_delimiter(childcare_coverage_projection[:current_children], delimiter: " ") %>
+            </p>
+          </div>
+
+          <div class="bg-white rounded-lg p-4 border border-cyan-200">
+            <p class="text-sm text-gray-600 font-medium mb-1">Enfants 0-3 ans (projection 2035)</p>
+            <p class="text-3xl font-bold text-cyan-700">
+              <%= number_with_delimiter(childcare_coverage_projection[:projected_children], delimiter: " ") %>
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+              <span class="<%= childcare_coverage_projection[:children_evolution_pct] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= childcare_coverage_projection[:children_evolution_pct] >= 0 ? '+' : '' %><%= childcare_coverage_projection[:children_evolution_pct] %>%
+              </span>
+            </p>
+          </div>
+
+          <div class="bg-white rounded-lg p-4 border border-cyan-200">
+            <p class="text-sm text-gray-600 font-medium mb-1">Places d'accueil actuelles</p>
+            <p class="text-3xl font-bold text-cyan-700">
+              <%= number_with_delimiter(childcare_coverage_projection[:current_places], delimiter: " ") %>
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+              (Taux <%= number_to_percentage(childcare_coverage_projection[:current_rate], precision: 1) %>)
+            </p>
+          </div>
+        </div>
+
+        <!-- 3 Scénarios -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <% childcare_coverage_projection[:scenarios].each do |scenario_key, scenario| %>
+            <div class="bg-white border-2 <%= scenario_key == :proportional ? 'border-cyan-500 shadow-md' : 'border-gray-200' %> rounded-lg p-4">
+              <p class="font-semibold text-gray-900 mb-3">
+                <%= scenario[:label] %>
+                <% if scenario_key == :proportional %>
+                  <span class="ml-2 inline-block px-2 py-1 bg-cyan-100 text-cyan-800 text-xs rounded font-medium">Référence</span>
+                <% end %>
+              </p>
+
+              <div class="space-y-2 mb-4">
+                <div>
+                  <p class="text-sm text-gray-600">Taux de couverture projeté</p>
+                  <p class="text-2xl font-bold <%= scenario[:evolution] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= number_to_percentage(scenario[:rate], precision: 1) %>
+                  </p>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                  <span class="text-xs text-gray-500">Évolution</span>
+                  <span class="text-sm font-semibold <%= scenario[:evolution] >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= scenario[:evolution] >= 0 ? '+' : '' %><%= scenario[:evolution] %>%
+                  </span>
+                </div>
+
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-500">Places nécessaires</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    <%= number_with_delimiter(scenario[:places], delimiter: " ") %>
+                  </span>
+                </div>
+              </div>
+
+              <p class="text-xs text-gray-600 italic">
+                <%= scenario[:description] %>
+              </p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Bloc méthodologique -->
+        <div class="bg-white border border-cyan-200 rounded-lg p-4">
+          <p class="font-semibold text-gray-900 text-sm mb-3">📌 Méthodologie</p>
+          <div class="space-y-2 text-sm text-gray-700">
+            <p>
+              <strong>Formule :</strong> Taux 2035 = (Places 2035 / Enfants projetés 2035) × 100
+            </p>
+            <p>
+              <strong>Places actuelles :</strong> <%= number_with_delimiter(childcare_coverage_projection[:current_places], delimiter: " ") %>
+              = <%= number_to_percentage(childcare_coverage_projection[:current_rate], precision: 1) %> ×
+              <%= number_with_delimiter(childcare_coverage_projection[:current_children], delimiter: " ") %> enfants
+            </p>
+            <p class="bg-cyan-50 p-2 rounded border border-cyan-200">
+              Les trois scénarios testent différentes hypothèses d'offre : une offre stable, une offre qui suit la démographie,
+              ou une offre volontariste (+20%). Le scénario de référence (proportionnel) suppose un maintien de la couverture
+              malgré l'évolution du nombre d'enfants.
+            </p>
+          </div>
+        </div>
+
+        <!-- Alerte contextuelle -->
+        <div class="mt-4 bg-amber-50 border border-amber-300 rounded-lg p-4">
+          <p class="font-medium text-amber-900 text-sm mb-2">⚠️ Contexte crucial</p>
+          <p class="text-sm text-amber-800">
+            Cette projection dépend fortement de la dynamique future de l'offre d'accueil.
+            Elle suppose une répartition stable des places par mode d'accueil.
+            Le vieillissement des assistantes maternelles pourrait réduire l'offre individuelle indépendamment de ces scénarios.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% end %>
 </div>

@@ -253,6 +253,79 @@ class DashboardController < ApplicationController
     # Données de comparaison avec cache
     load_comparison_data_for_childcare_cached
 
+    # 🆕 Calculer la projection du taux de couverture en 2035
+    # Il faut d'abord charger et calculer les données d'enfants
+    begin
+      @population_data = cached_population_data(@territory_code)
+      @births_data = cached_births_data(@territory_code)
+      @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
+
+      Rails.logger.debug "📊 load_childcare: population_data present? #{@population_data.present?}, births_filtered: #{@births_data_filtered.present?}"
+
+      if @population_data.present? && @births_data_filtered.present?
+        # Calculer les projections d'enfants 0-3 ans
+        @women_15_49 = calculate_women_15_49_from_population(@population_data)
+        Rails.logger.debug "📊 load_childcare: women_15_49 = #{@women_15_49}"
+
+        if @women_15_49 > 0
+          @births_projection_2035 = calculate_births_projection_2035(@women_15_49)
+          Rails.logger.debug "📊 load_childcare: births_projection_2035 = #{@births_projection_2035}"
+
+          # Générer les données de projection des naissances (2 scénarios)
+          @births_projection_data = generate_commune_births_projection_data(
+            @births_data_filtered,
+            @births_projection_2035,
+            @women_15_49
+          )
+
+          if @births_projection_data.present?
+            # Calculer la projection des enfants 0-3 ans
+            @children_0_3_projection_2035 = calculate_children_0_3_projection_2035_commune(@births_projection_data)
+
+            # Calculer le nombre actuel d'enfants 0-3 ans (version robuste)
+            @current_children_0_3 = calculate_under_3_count_safe(@population_data)
+            Rails.logger.debug "📊 load_childcare: current_children_0_3 = #{@current_children_0_3}, projected = #{@children_0_3_projection_2035}"
+
+            # 🆕 Calculer la projection du taux de couverture si les données sont disponibles
+            if @childcare_data.present? && @current_children_0_3 > 0 && @children_0_3_projection_2035.present? && @children_0_3_projection_2035.is_a?(Hash)
+              reference_year = @childcare_data&.dig("coverage_data")&.keys&.sort&.last
+              current_rate = @childcare_data&.dig("coverage_data", reference_year)&.dig("coverage_rates", "global")
+
+              if current_rate.present? && current_rate > 0
+                # Utiliser le scénario stable par défaut
+                projected_children_count = @children_0_3_projection_2035[:stable]
+
+                if projected_children_count.present? && projected_children_count > 0
+                  @childcare_coverage_projection = calculate_childcare_coverage_projection_2035(
+                    current_rate,
+                    @current_children_0_3,
+                    projected_children_count
+                  )
+                  Rails.logger.debug "📊 load_childcare: projection créée ✅"
+                else
+                  Rails.logger.debug "⚠️ load_childcare: projected_children_count is nil or zero"
+                end
+              else
+                Rails.logger.debug "⚠️ load_childcare: no childcare rate data"
+              end
+            else
+              Rails.logger.debug "⚠️ load_childcare: missing condition for projection - childcare: #{@childcare_data.present?}, current_children: #{@current_children_0_3}, projection: #{@children_0_3_projection_2035.present?}"
+            end
+          else
+            Rails.logger.debug "⚠️ load_childcare: births_projection_data is empty"
+          end
+        else
+          Rails.logger.debug "⚠️ load_childcare: women_15_49 is 0 or negative"
+        end
+      else
+        Rails.logger.debug "⚠️ load_childcare: missing population or births data"
+      end
+    rescue => e
+      Rails.logger.error "🔴 ERROR in load_childcare projection: #{e.class} - #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      # Continuer sans la projection en cas d'erreur
+    end
+
     respond_to do |format|
       format.html { render partial: 'childcare', locals: {
         childcare_data: @childcare_data,
@@ -262,7 +335,9 @@ class DashboardController < ApplicationController
         region_childcare_data: @region_childcare_data,
         epci_code: @epci_code,
         department_code: @department_code,
-        region_code: @region_code
+        region_code: @region_code,
+        # 🆕 Passer les données de projection
+        childcare_coverage_projection: @childcare_coverage_projection
       }}
       format.json { render json: { status: 'success' } }
     end
@@ -746,6 +821,88 @@ class DashboardController < ApplicationController
       minus_10: children_0_3_minus_10,
       births_stable: births_stable,
       births_minus_10: births_minus_10
+    }
+  end
+
+  # 🆕 Calcul robuste du nombre d'enfants 0-3 ans pour communes
+  # Gère les deux structures de données possibles
+  def calculate_under_3_count_safe(population_data)
+    return 0 if population_data.blank?
+
+    # Cas 1 : Structure directe (tableau avec AGED100)
+    if population_data.is_a?(Array) && population_data.first&.key?("AGED100")
+      return population_data
+        .select { |item| item["AGED100"].to_i <= 2 }
+        .sum { |item| item["NB"].to_f }
+        .round(0)
+    end
+
+    # Cas 2 : Structure avec population_by_age (EPCI)
+    if population_data.is_a?(Hash) && population_data["population_by_age"].present?
+      population_by_age = population_data["population_by_age"]
+      return population_by_age
+        .select { |age_data| age_data["age"].to_i <= 2 }
+        .sum { |age_data| (age_data["men"].to_f + age_data["women"].to_f) }
+        .round(0)
+    end
+
+    0
+  end
+
+  # 🆕 Calculer la projection du taux de couverture en 2035 (pour communes)
+  def calculate_childcare_coverage_projection_2035(
+    current_coverage_rate,
+    current_children_count,
+    projected_children_count
+  )
+    return {} if current_coverage_rate.blank? || current_coverage_rate <= 0
+
+    # Calculer le nombre de places actuelles
+    current_places = (current_coverage_rate / 100.0) * current_children_count
+
+    # Variation proportionnelle d'enfants
+    children_ratio = projected_children_count.to_f / current_children_count.to_f
+
+    # 🔵 SCÉNARIO 1 : Offre constante (places inchangées)
+    conservative_rate = (current_places / projected_children_count * 100).round(1)
+
+    # 🟢 SCÉNARIO 2 : Offre proportionnelle (maintien du taux)
+    proportional_places = current_places * children_ratio
+    proportional_rate = (proportional_places / projected_children_count * 100).round(1)
+
+    # 🟣 SCÉNARIO 3 : Offre augmentée de 20%
+    ambitious_places = current_places * 1.2
+    ambitious_rate = (ambitious_places / projected_children_count * 100).round(1)
+
+    {
+      current_rate: current_coverage_rate,
+      current_places: current_places.round(0),
+      current_children: current_children_count,
+      projected_children: projected_children_count,
+      children_evolution_pct: ((projected_children_count - current_children_count).to_f / current_children_count * 100).round(1),
+      scenarios: {
+        conservative: {
+          label: "Offre constante",
+          rate: conservative_rate,
+          places: current_places.round(0),
+          evolution: (conservative_rate - current_coverage_rate).round(1),
+          description: "Les places actuelles restent inchangées"
+        },
+        proportional: {
+          label: "Offre proportionnelle (maintien du TCG)",
+          rate: proportional_rate,
+          places: proportional_places.round(0),
+          evolution: (proportional_rate - current_coverage_rate).round(1),
+          description: "L'offre suit l'évolution démographique"
+        },
+        ambitious: {
+          label: "Offre augmentée (+20%)",
+          rate: ambitious_rate,
+          places: ambitious_places.round(0),
+          evolution: (ambitious_rate - current_coverage_rate).round(1),
+          description: "Augmentation volontariste de 20% des places"
+        }
+      }
     }
   end
 end
