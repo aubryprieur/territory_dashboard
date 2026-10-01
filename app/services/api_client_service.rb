@@ -8,7 +8,10 @@ class ApiClientService
 
   def get(endpoint, params = {})
     with_caching(endpoint, params) do
+      # Demande des réponses compressées (gzip) et les décompresse automatiquement
       response = HTTP
+        .use(:auto_inflate)
+        .headers("Accept-Encoding" => "gzip")
         .auth("Bearer #{@auth_service.get_token}")
         .get("#{@base_url}#{endpoint}", params: params)
 
@@ -34,7 +37,7 @@ class ApiClientService
     result = yield
 
     # Mettre en cache uniquement les résultats valides
-    if result.present?
+    if result.present? && !(result.is_a?(Hash) && result.key?("error"))
       # Pour les données démographiques, un cache longue durée est approprié
       Rails.cache.write(cache_key, result, expires_in: 1.day)
     end
@@ -43,6 +46,7 @@ class ApiClientService
   end
 
   def generate_cache_key(endpoint, params)
-    "api:#{endpoint}:#{params.to_json.hash}"
+    # Digest stable entre processus et redémarrages (String#hash est aléatoire par processus)
+    "api:#{endpoint}:#{Digest::SHA256.hexdigest(params.to_json)}"
   end
 end

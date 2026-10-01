@@ -5,17 +5,31 @@ module DashboardCache
   private
 
   # Méthode générique pour la mise en cache des appels API
+  # Les réponses vides ou en erreur ne sont jamais mises en cache :
+  # un échec ponctuel de l'API ne doit pas masquer des données pendant des heures.
   def cached_api_call(cache_key, expires_in: 1.hour, &block)
-    Rails.cache.fetch(cache_key, expires_in: expires_in) do
-      Rails.logger.debug "🔄 Cache MISS pour: #{cache_key}"
-      result = block.call
+    cached = Rails.cache.read(cache_key)
+    return cached if cacheable_api_result?(cached)
+
+    Rails.logger.debug "🔄 Cache MISS pour: #{cache_key}"
+    result = block.call
+    if cacheable_api_result?(result)
+      Rails.cache.write(cache_key, result, expires_in: expires_in)
       Rails.logger.debug "✅ Données mises en cache: #{cache_key}"
-      result
+    else
+      Rails.logger.warn "⚠️ Réponse vide ou en erreur, non mise en cache: #{cache_key}"
     end
+    result
   rescue => e
     Rails.logger.error "❌ Erreur lors de la mise en cache #{cache_key}: #{e.message}"
     # En cas d'erreur, exécuter directement sans cache
     block.call
+  end
+
+  def cacheable_api_result?(value)
+    return false if value.blank?
+    return false if value.is_a?(Hash) && value.key?("error")
+    true
   end
 
   # Générer une clé de cache basée sur le territoire et la date
