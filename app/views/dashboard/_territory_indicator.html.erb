@@ -8,7 +8,8 @@
     title        - titre du bloc
     theme        - couleur Tailwind de la carte : "indigo" | "purple" | "blue" | "teal" ...
     value_key    - clé de l'indicateur dans les données
-    value_format - :pct (défaut, écarts en points) ou :decimal (écarts en valeur)
+    value_format - :pct (défaut, écarts en points), :points (écart déjà en points, 1 décimale)
+                   ou :decimal (écarts en valeur)
     unit         - unité affichée après une valeur décimale (ex. "pers.")
     count_key    - effectif à afficher sous la valeur (optionnel)
     total_key    - dénominateur à afficher "x sur y" (optionnel)
@@ -25,8 +26,15 @@
   definition ||= nil
   details ||= []
   commune = territories.first
-  fmt_value = ->(v) { value_format == :pct ? fmt_pct(v) : (v.nil? ? "–" : "#{fmt_decimal(v)} #{unit}".strip) }
-  trend = ->(a, b) { value_format == :pct ? fmt_trend(a, b) : fmt_trend(a, b, unit: :value, precision: 2) }
+  unit = "pts" if value_format == :points && unit.nil?
+  precision = value_format == :points ? 1 : 2
+  fmt_value = ->(v) { value_format == :pct ? fmt_pct(v) : (v.nil? ? "–" : "#{fmt_decimal(v, precision: precision)} #{unit}".strip) }
+  trend = lambda do |a, b|
+    case value_format
+    when :pct, :points then fmt_trend(a, b)            # évolution en points, 1 décimale
+    else fmt_trend(a, b, unit: :value, precision: 2)
+    end
+  end
   value = territory_value(commune, latest, value_key)
   count = count_key && territory_value(commune, latest, count_key)
   total = total_key && territory_value(commune, latest, total_key)

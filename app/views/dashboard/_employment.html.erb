@@ -126,7 +126,7 @@
 
     <%= render "dashboard/territory_indicator", **common,
           title: "Écart de taux d'emploi femmes - hommes", theme: "blue",
-          value_key: "employment_gap_women_men", value_format: :decimal, unit: "pts",
+          value_key: "employment_gap_women_men", value_format: :points,
           definition: "Taux d'emploi des femmes moins taux d'emploi des hommes (15-64 ans), en points. Plus la valeur est négative, plus l'écart au détriment des femmes est grand." %>
 
     <%= render "dashboard/territory_indicator", **common,
@@ -143,11 +143,11 @@
           title: "Salariés en contrat à durée limitée", theme: "orange",
           value_key: "fixed_term_percentage",
           count_key: "res_fixed_term", total_key: "res_salaried", count_label: "salariés en contrat court",
-          definition: "Part des salariés en CDD, intérim, emploi aidé, apprentissage ou stage, parmi l'ensemble des salariés résidents. Repère de la précarité de l'emploi.",
+          definition: "Part des salariés en CDD, intérim, emploi aidé, apprentissage ou stage, parmi l'ensemble des salariés résidents. Repère de la précarité de l'emploi. Non-salariés : part des indépendants parmi l'ensemble des actifs occupés.",
           details: [
             { label: "Femmes", share_key: "fixed_term_percentage_women" },
             { label: "Hommes", share_key: "fixed_term_percentage_men" },
-            { label: "Non-salariés (indépendants) parmi les actifs occupés", share_key: "non_salaried_percentage" }
+            { label: "Non-salariés (indépendants)", share_key: "non_salaried_percentage" }
           ] %>
 
     <%= render "dashboard/territory_indicator", **common,
@@ -164,7 +164,7 @@
 
     <%= render "dashboard/territory_indicator", **common,
           title: "Écart de temps partiel femmes - hommes", theme: "orange",
-          value_key: "part_time_gap_women_men", value_format: :decimal, unit: "pts",
+          value_key: "part_time_gap_women_men", value_format: :points,
           definition: "Part des femmes salariées à temps partiel moins celle des hommes salariés, en points." %>
 
     <section style="margin-bottom:2.5rem">
