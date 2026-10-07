@@ -356,35 +356,18 @@ class DashboardController < ApplicationController
   end
 
   def load_employment
-    # 🚀 Chargement des données d'emploi avec cache
-    @employment_data = cached_employment_data(@territory_code)
-    @family_employment_under3_data = cached_family_employment_under3_data(@territory_code)
-    @family_employment_3to5_data = cached_family_employment_3to5_data(@territory_code)
-
-    # Données de comparaison avec cache
-    load_comparison_data_for_employment_cached
+    # Onglet Emploi (ABS) : emploi, activité, chômage, femmes, emploi local, mobilité
+    # (INSEE RP 2012, 2017, 2023) + emploi des parents de jeunes enfants (2023)
+    load_employment_activity_comparison
+    # Familles (API /families/*) : enfants de moins de 6 ans selon l'activité des parents (2023)
+    @family_data = cached_family_data(@territory_code)
+    @epci_family_data = cached_epci_family_data(@epci_code)
+    @department_family_data = cached_department_family_data(@department_code)
+    @region_family_data = cached_region_family_data(@region_code)
+    @france_family_data = cached_france_family_data
 
     respond_to do |format|
-      format.html { render partial: 'employment', locals: {
-        employment_data: @employment_data,
-        family_employment_under3_data: @family_employment_under3_data,
-        family_employment_3to5_data: @family_employment_3to5_data,
-        france_employment_data: @france_employment_data,
-        france_family_employment_under3_data: @france_family_employment_under3_data,
-        france_family_employment_3to5_data: @france_family_employment_3to5_data,
-        epci_employment_data: @epci_employment_data,
-        epci_family_employment_under3_data: @epci_family_employment_under3_data,
-        epci_family_employment_3to5_data: @epci_family_employment_3to5_data,
-        department_employment_data: @department_employment_data,
-        department_family_employment_under3_data: @department_family_employment_under3_data,
-        department_family_employment_3to5_data: @department_family_employment_3to5_data,
-        region_employment_data: @region_employment_data,
-        region_family_employment_under3_data: @region_family_employment_under3_data,
-        region_family_employment_3to5_data: @region_family_employment_3to5_data,
-        epci_code: @epci_code,
-        department_code: @department_code,
-        region_code: @region_code
-      }}
+      format.html { render partial: 'employment' }
       format.json { render json: { status: 'success' } }
     end
   end

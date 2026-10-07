@@ -1,0 +1,81 @@
+<%#
+  Emploi des parents de jeunes enfants — INSEE, tableau détaillé 2023 (familles x âge des enfants
+  x activité des parents), via l'API /families/* (clés children_lt2_* et children_2_5_*).
+  Commune comparée à l'EPCI, au département, à la région et à la France métropolitaine.
+%>
+<%
+  territories = comparison_territories("family_data", {
+    commune: @family_data, epci: @epci_family_data, department: @department_family_data,
+    region: @region_family_data, france: @france_family_data
+  })
+  latest = comparison_latest_year(@family_data, comparison_years(@family_data, "family_data"))
+  commune = territories.first
+  categories = [
+    ["couple_both_employed", "Couple, deux parents en emploi", "#1d4ed8"],
+    ["couple_man_only_employed", "Couple, seul le père en emploi", "#60a5fa"],
+    ["couple_woman_only_employed", "Couple, seule la mère en emploi", "#bfdbfe"],
+    ["couple_none_employed", "Couple, aucun parent en emploi", "#ef4444"],
+    ["mother_employed", "Mère seule en emploi", "#0d9488"],
+    ["mother_not_employed", "Mère seule sans emploi", "#f59e0b"],
+    ["father_employed", "Père seul en emploi", "#84cc16"],
+    ["father_not_employed", "Père seul sans emploi", "#9ca3af"]
+  ]
+  key_shares = [
+    ["all_parents_employed_percentage", "Tous les parents en emploi"],
+    ["no_parent_employed_percentage", "Aucun parent en emploi"],
+    ["single_parent_percentage", "En famille monoparentale"],
+    ["mother_not_employed_percentage", "Avec une mère seule sans emploi"]
+  ]
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Emploi des parents de jeunes enfants</h2>
+  <p class="text-xs text-gray-500 mb-4">
+    Enfants selon la situation d'emploi de leurs parents (<%= latest %>). Repère pour les besoins de modes de garde
+    (tous les parents en emploi) et pour les situations de fragilité économique (aucun parent en emploi).
+  </p>
+
+  <% if commune.nil? || commune[:key] != :commune || territory_value(commune, latest, "children_2_5_total").nil? %>
+    <p class="text-sm text-gray-500">Données indisponibles pour ce territoire.</p>
+  <% else %>
+    <% [["lt2", "Enfants de moins de 2 ans"], ["2_5", "Enfants de 2 à 5 ans"]].each do |age, age_label| %>
+      <% total = territory_value(commune, latest, "children_#{age}_total") %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1"><%= age_label %> selon l'activité de leurs parents (<%= latest %>)</h3>
+        <p class="text-xs text-gray-500 mb-4"><%= fmt_count(total) %> enfants à <%= @territory_name %><%= small_count_flag(total) %>. Répartition en %.</p>
+
+        <div class="overflow-x-auto mb-4">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part des enfants…</th>
+                <% territories.each do |t| %>
+                  <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" title="<%= t[:name] %>"><%= t[:key] == :commune ? t[:name] : { epci: "EPCI", department: "Dép.", region: "Région", france: "France métro." }[t[:key]] %></th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% key_shares.each do |key, label| %>
+                <tr>
+                  <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900"><%= label %></td>
+                  <% territories.each do |t| %>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold text-gray-900' : 'text-gray-600' %>"><%= fmt_pct(territory_value(t, latest, "children_#{age}_#{key}")) %></td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <%= comparison_stacked_chart(territories, latest,
+              categories.map { |k, l, c| ["children_#{age}_#{k}_percentage", l, c] },
+              "#{age_label} selon l'activité des parents, par territoire") %>
+      </section>
+    <% end %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensement de la population <%= latest %>, tableau détaillé « enfants selon l'âge, le type de famille et l'activité des parents » (valeurs officielles à chaque échelle).</p>
+      <p>« En emploi » = actif ayant un emploi ; « sans emploi » = chômeur ou inactif. Tranches d'âge publiées par l'INSEE pour 2023 : moins de 2 ans et 2-5 ans (les séries antérieures utilisaient 0-2 et 3-5 ans, non comparables).</p>
+      <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
+    </div>
+  <% end %>
+</div>

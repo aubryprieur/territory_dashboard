@@ -261,7 +261,7 @@
               </div>
             </button>
 
-            <!-- Onglet Emploi des femmes -->
+            <!-- Onglet Emploi (activité, femmes, familles) -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
                     data-tab="employment"
@@ -269,37 +269,12 @@
               <div class="flex items-center space-x-3">
                 <div class="p-2 rounded-lg bg-gradient-to-r from-rose-100 to-pink-100 group-hover:from-rose-200 group-hover:to-pink-200 transition-all duration-300">
                   <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <g stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                      <!-- Cercle de Vénus -->
-                      <circle cx="12" cy="9" r="5"/>
-                      <!-- Croix en bas -->
-                      <path d="M12 19v-5"/>
-                      <path d="M9 17h6"/>
-                    </g>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                   </svg>
                 </div>
                 <div class="text-left">
-                  <div class="font-semibold">Emploi des femmes</div>
-                  <div class="text-xs text-gray-500">Activité des femmes</div>
-                </div>
-              </div>
-            </button>
-
-            <!-- Onglet Emploi des familles -->
-            <button data-dashboard-tabs-target="tab"
-                    data-action="click->dashboard-tabs#showTab"
-                    data-tab="family_employment"
-                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
-              <div class="flex items-center space-x-3">
-                <div class="p-2 rounded-lg bg-gradient-to-r from-teal-100 to-cyan-100 group-hover:from-teal-200 group-hover:to-cyan-200 transition-all duration-300">
-                  <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"></path>
-                  </svg>
-                </div>
-                <div class="text-left">
-                  <div class="font-semibold">Emploi des familles</div>
-                  <div class="text-xs text-gray-500">Activité professionnelle</div>
+                  <div class="font-semibold">Emploi</div>
+                  <div class="text-xs text-gray-500">Activité, femmes, familles</div>
                 </div>
               </div>
             </button>
@@ -403,13 +378,6 @@
         <div data-dashboard-tabs-target="content" data-tab="employment" class="hidden dashboard-panel">
           <div id="employment-content" data-section="employment">
             <%= render 'components/loader', section_name: 'emploi' %>
-          </div>
-        </div>
-
-        <!-- Panel Emploi Femmes -->
-        <div data-dashboard-tabs-target="content" data-tab="family_employment" class="hidden dashboard-panel">
-          <div id="family_employment-content" data-section="family_employment">
-            <%= render 'components/loader', section_name: 'emploi des femmes' %>
           </div>
         </div>
 

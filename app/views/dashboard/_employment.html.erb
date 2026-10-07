@@ -1,119 +1,278 @@
+<%#
+  Onglet Emploi — dashboard commune (analyse des besoins sociaux).
+  Regroupe l'emploi, l'activité, le chômage, l'emploi des femmes, la précarité et le temps partiel, l'emploi local, la mobilité
+  domicile-travail (INSEE RP 2012, 2017, 2023 — API /employment-activity/*) et l'emploi des
+  familles avec jeunes enfants (API /families/employment/*).
+%>
+<%
+  territories = comparison_territories("employment_data", {
+    commune: @emp_data, epci: @epci_emp_data, department: @department_emp_data,
+    region: @region_emp_data, france: @france_emp_data
+  })
+  years = comparison_years(@emp_data, "employment_data")
+  latest = comparison_latest_year(@emp_data, years)
+  comparison = comparison_start_year(@emp_data, years)
+  commune = territories.first
+  common = { territories: territories, years: years, latest: latest, comparison: comparison }
+%>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-4">L'emploi des femmes</h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Emploi et activité</h2>
+  <p class="text-xs text-gray-500 mb-4">Population de 15 à 64 ans selon sa situation déclarée au recensement. Le chômage « au sens du recensement » est déclaratif : il est plus élevé que le chômage au sens du BIT.</p>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
-        <tr>
-          <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Territoire
-          </th>
-          <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Taux d'activité (15-64 ans)
-          </th>
-          <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Taux d'emploi (15-64 ans)
-          </th>
-          <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Taux de temps partiel (15-64 ans)
-          </th>
-        </tr>
-      </thead>
-      <tbody class="bg-white divide-y divide-gray-200">
-        <!-- Ligne pour la commune -->
-        <tr>
-          <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-            <%= @territory_name %>
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-            <%= number_to_percentage(@employment_data&.dig("rates", "activity_rate") || 0, precision: 2) %>
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-            <%= number_to_percentage(@employment_data&.dig("rates", "employment_rate") || 0, precision: 2) %>
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-            <%= number_to_percentage(@employment_data&.dig("rates", "part_time_rate_15_64") || 0, precision: 2) %>
-          </td>
-        </tr>
+  <% if commune.nil? || commune[:key] != :commune %>
+    <p class="text-sm text-gray-500">Données emploi indisponibles pour ce territoire.</p>
+  <% else %>
+    <% ev = ->(key, year = latest) { territory_value(commune, year, key) } %>
 
-        <!-- Ligne pour l'EPCI si disponible -->
-        <% if @epci_employment_data.present? %>
-          <tr>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= epci_display_name %>">
-              <div class="truncate">
-                <%= display_territory_name(epci_display_name) %>
-              </div>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@epci_employment_data&.dig("rates", "activity_rate") || 0, precision: 2) %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@epci_employment_data&.dig("rates", "employment_rate") || 0, precision: 2) %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@epci_employment_data&.dig("rates", "part_time_rate_15_64") || 0, precision: 2) %>
-            </td>
-          </tr>
-        <% end %>
+    <!-- Synthèse -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <% [
+           ["Taux d'emploi 15-64 ans", "employment_rate_15_64", "indigo"],
+           ["Taux de chômage 15-64 ans", "unemployment_rate_15_64", "purple"],
+           ["Taux d'emploi des femmes", "employment_rate_15_64_women", "blue"],
+           ["Chômage des 15-24 ans", "unemployment_rate_15_24", "teal"]
+         ].each do |label, key, theme| %>
+        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-<%= theme %>-800 mb-1"><%= label %></h3>
+          <p class="text-2xl font-bold text-<%= theme %>-900"><%= fmt_pct(ev.(key)) %></p>
+          <p class="text-xs text-<%= theme %>-700"><%= fmt_trend(ev.(key, comparison), ev.(key)) %> depuis <%= comparison %></p>
+        </div>
+      <% end %>
+    </div>
 
-        <!-- Ligne pour le département si disponible -->
-        <% if @department_employment_data.present? %>
-          <tr>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= department_display_name %>">
-              <div class="truncate">
-                <%= display_territory_name(department_display_name) %>
-              </div>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@department_employment_data&.dig("rates", "activity_rate") || 0, precision: 2) %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@department_employment_data&.dig("rates", "employment_rate") || 0, precision: 2) %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@department_employment_data&.dig("rates", "part_time_rate_15_64") || 0, precision: 2) %>
-            </td>
-          </tr>
-        <% end %>
+    <!-- Situation de la population 15-64 ans -->
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Situation des 15-64 ans (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Répartition de la population de 15 à 64 ans, en %.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["employment_rate_15_64", "En emploi", "#1d4ed8"],
+            ["unemployed_pop_rate_15_64", "Au chômage", "#ef4444"],
+            ["students_rate_15_64", "Élèves, étudiants", "#93c5fd"],
+            ["retired_rate_15_64", "Retraités", "#9ca3af"],
+            ["homemakers_rate_15_64", "Au foyer", "#f59e0b"],
+            ["other_inactive_rate_15_64", "Autres inactifs", "#e5e7eb"]
+          ], "Situation de la population de 15 à 64 ans par territoire") %>
+    </section>
 
-        <!-- Ligne pour la région si disponible -->
-        <% if @region_employment_data.present? %>
-          <tr>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs" title="<%= region_display_name %>">
-              <div class="truncate">
-                <%= display_territory_name(region_display_name) %>
-              </div>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@region_employment_data&.dig("rates", "activity_rate") || 0, precision: 2) %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@region_employment_data&.dig("rates", "employment_rate") || 0, precision: 2) %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@region_employment_data&.dig("rates", "part_time_rate_15_64") || 0, precision: 2) %>
-            </td>
-          </tr>
-        <% end %>
+    <!-- 1. Emploi -->
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Taux d'emploi des 15-64 ans", theme: "indigo",
+          value_key: "employment_rate_15_64",
+          count_key: "employed_15_64", total_key: "pop_15_64", count_label: "personnes en emploi",
+          definition: "Part des 15-64 ans ayant un emploi. C'est l'indicateur le plus direct de l'accès à l'emploi des habitants.",
+          details: [
+            { label: "Femmes", share_key: "employment_rate_15_64_women" },
+            { label: "Hommes", share_key: "employment_rate_15_64_men" },
+            { label: "15-24 ans", share_key: "employment_rate_15_24" },
+            { label: "25-54 ans", share_key: "employment_rate_25_54" },
+            { label: "55-64 ans (seniors)", share_key: "employment_rate_55_64" }
+          ] %>
 
-        <!-- Ligne pour la France si disponible -->
-        <% if @france_employment_data.present? %>
-          <tr>
-            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-              France
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@france_employment_data&.dig("rates", "activity_rate") || 0, precision: 2) %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@france_employment_data&.dig("rates", "employment_rate") || 0, precision: 2) %>
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-              <%= number_to_percentage(@france_employment_data&.dig("rates", "part_time_rate_15_64") || 0, precision: 2) %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Taux d'emploi selon l'âge et le sexe (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Part des personnes ayant un emploi dans chaque groupe, en %.</p>
+      <%= comparison_grouped_bar_chart(territories, latest, [
+            ["employment_rate_15_24", "15-24 ans"], ["employment_rate_25_54", "25-54 ans"], ["employment_rate_55_64", "55-64 ans"],
+            ["employment_rate_15_64_women", "Femmes 15-64"], ["employment_rate_15_64_men", "Hommes 15-64"]
+          ], "Taux d'emploi par âge et sexe et par territoire") %>
+    </section>
+
+    <!-- 2. Chômage -->
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Taux de chômage des 15-64 ans", theme: "purple",
+          value_key: "unemployment_rate_15_64",
+          count_key: "unemployed_15_64", total_key: "active_15_64", count_label: "chômeurs parmi les actifs",
+          definition: "Part des chômeurs parmi les actifs (personnes en emploi ou au chômage), au sens du recensement.",
+          details: [
+            { label: "Femmes", share_key: "unemployment_rate_15_64_women" },
+            { label: "Hommes", share_key: "unemployment_rate_15_64_men" },
+            { label: "15-24 ans", share_key: "unemployment_rate_15_24" },
+            { label: "55-64 ans", share_key: "unemployment_rate_55_64" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Chômage des jeunes de 15-24 ans", theme: "purple",
+          value_key: "unemployment_rate_15_24",
+          count_key: "unemployed_15_24", total_key: "active_15_24", count_label: "jeunes chômeurs parmi les jeunes actifs",
+          definition: "Part des chômeurs parmi les jeunes actifs de 15 à 24 ans. À lire avec le taux de scolarisation des 18-24 ans (onglet Scolarisation)." %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de chômage selon le diplôme (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Actifs de 15 à 64 ans, en %. Détail disponible pour le seul millésime <%= latest %>.</p>
+      <%= comparison_grouped_bar_chart(territories, latest, [
+            ["unemployment_rate_no_diploma", "Sans diplôme"], ["unemployment_rate_bepc", "Brevet"],
+            ["unemployment_rate_cap_bep", "CAP-BEP"], ["unemployment_rate_bac", "Bac"],
+            ["unemployment_rate_bac2", "Bac+2"], ["unemployment_rate_bac3_4", "Bac+3/4"], ["unemployment_rate_bac5_plus", "Bac+5 ou +"]
+          ], "Taux de chômage par diplôme et par territoire") %>
+    </section>
+
+    <!-- 3. Emploi des femmes -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Emploi des femmes</h3>
+    <p class="text-xs text-gray-500 mb-4">Accès à l'emploi des femmes et écarts avec les hommes.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Taux d'emploi des femmes de 15-64 ans", theme: "blue",
+          value_key: "employment_rate_15_64_women",
+          count_key: "employed_15_64_women", total_key: "pop_15_64_women", count_label: "femmes en emploi",
+          definition: "Part des femmes de 15 à 64 ans ayant un emploi.",
+          details: [
+            { label: "Taux d'activité des femmes", share_key: "activity_rate_15_64_women" },
+            { label: "Taux de chômage des femmes", share_key: "unemployment_rate_15_64_women" },
+            { label: "Femmes de 25-54 ans en emploi", share_key: "employment_rate_25_54_women" },
+            { label: "Femmes au foyer (15-64 ans)", share_key: "homemakers_rate_15_64_women" },
+            { label: "Femmes salariées à temps partiel", share_key: "salaried_part_time_percentage_women" },
+            { label: "Femmes salariées en contrat court", share_key: "fixed_term_percentage_women" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Écart de taux d'emploi femmes - hommes", theme: "blue",
+          value_key: "employment_gap_women_men", value_format: :decimal, unit: "pts",
+          definition: "Taux d'emploi des femmes moins taux d'emploi des hommes (15-64 ans), en points. Plus la valeur est négative, plus l'écart au détriment des femmes est grand." %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Femmes au foyer", theme: "blue",
+          value_key: "homemakers_rate_15_64_women",
+          count_key: "homemakers_15_64_women", total_key: "pop_15_64_women", count_label: "femmes de 15-64 ans",
+          definition: "Part des femmes de 15 à 64 ans se déclarant au foyer (inactives, hors études et retraite). Repère pour les besoins de garde, d'accompagnement vers l'emploi et de mobilité." %>
+
+    <!-- 3 bis. Conditions d'emploi des habitants -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Précarité et temps partiel</h3>
+    <p class="text-xs text-gray-500 mb-4">Actifs occupés de 15 ans ou plus résidant sur le territoire, quel que soit leur lieu de travail.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Salariés en contrat à durée limitée", theme: "orange",
+          value_key: "fixed_term_percentage",
+          count_key: "res_fixed_term", total_key: "res_salaried", count_label: "salariés en contrat court",
+          definition: "Part des salariés en CDD, intérim, emploi aidé, apprentissage ou stage, parmi l'ensemble des salariés résidents. Repère de la précarité de l'emploi.",
+          details: [
+            { label: "Femmes", share_key: "fixed_term_percentage_women" },
+            { label: "Hommes", share_key: "fixed_term_percentage_men" },
+            { label: "Non-salariés (indépendants) parmi les actifs occupés", share_key: "non_salaried_percentage" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Salariés à temps partiel", theme: "orange",
+          value_key: "salaried_part_time_percentage",
+          count_key: "res_salaried_part_time", total_key: "res_salaried", count_label: "salariés à temps partiel",
+          definition: "Part des salariés résidents travaillant à temps partiel. Le temps partiel, souvent subi, concerne surtout les femmes et les jeunes ; il se traduit par des revenus d'activité plus faibles.",
+          details: [
+            { label: "Femmes salariées", share_key: "salaried_part_time_percentage_women" },
+            { label: "Hommes salariés", share_key: "salaried_part_time_percentage_men" },
+            { label: "Salariés de 15-24 ans", share_key: "salaried_part_time_percentage_15_24" },
+            { label: "Salariés de 55-64 ans", share_key: "salaried_part_time_percentage_55_64" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Écart de temps partiel femmes - hommes", theme: "orange",
+          value_key: "part_time_gap_women_men", value_format: :decimal, unit: "pts",
+          definition: "Part des femmes salariées à temps partiel moins celle des hommes salariés, en points." %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Temps partiel des salariés selon l'âge et le sexe (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Part des salariés à temps partiel dans chaque groupe, en %.</p>
+      <%= comparison_grouped_bar_chart(territories, latest, [
+            ["salaried_part_time_percentage_15_24", "15-24 ans"], ["salaried_part_time_percentage_25_54", "25-54 ans"],
+            ["salaried_part_time_percentage_55_64", "55-64 ans"],
+            ["salaried_part_time_percentage_women", "Femmes"], ["salaried_part_time_percentage_men", "Hommes"]
+          ], "Temps partiel des salariés par âge et sexe et par territoire") %>
+    </section>
+
+    <!-- 4. Catégories sociales -->
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Actifs selon la catégorie socioprofessionnelle (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Actifs de 15 à 64 ans (en emploi ou au chômage), en %.</p>
+      <% pcs = [["1", "Agriculteurs", "#84cc16"], ["2", "Artisans, commerçants, chefs d'entr.", "#f59e0b"], ["3", "Cadres, prof. intell. sup.", "#1e3a8a"],
+                ["4", "Professions intermédiaires", "#3b82f6"], ["5", "Employés", "#93c5fd"], ["6", "Ouvriers", "#ef4444"]] %>
+      <%= comparison_stacked_chart(territories, latest, pcs.map { |c, l, col| ["pcs_#{c}_active_percentage", l, col] }, "Actifs par catégorie socioprofessionnelle et par territoire") %>
+      <div class="overflow-x-auto mt-6">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie (<%= latest %>)</th>
+              <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Part des actifs</th>
+              <% territories.each do |t| %>
+                <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" title="<%= t[:name] %>">Chômage <%= t[:key] == :commune ? "commune" : { epci: "EPCI", department: "dép.", region: "région", france: "France métro." }[t[:key]] %></th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% pcs.each do |c, label, _| %>
+              <tr>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900"><%= label %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right font-semibold"><%= fmt_pct(ev.("pcs_#{c}_active_percentage")) %></td>
+                <% territories.each do |t| %>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold text-gray-900' : 'text-gray-600' %>"><%= fmt_pct(territory_value(t, latest, "unemployment_rate_pcs_#{c}")) %></td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-2">Chômage : part des chômeurs parmi les actifs de la catégorie (selon le dernier emploi occupé).</p>
+      </div>
+    </section>
+
+    <!-- 5. Emploi local -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Emploi local</h3>
+    <p class="text-xs text-gray-500 mb-4">Emplois situés sur le territoire, quel que soit le lieu de résidence des personnes qui les occupent.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Indicateur de concentration d'emploi", theme: "teal",
+          value_key: "employment_concentration", value_format: :decimal, unit: "emplois / 100 actifs occupés",
+          count_key: "jobs", count_label: "emplois sur le territoire",
+          definition: "Nombre d'emplois sur le territoire pour 100 actifs occupés qui y résident. Au-dessous de 100, le territoire est plutôt résidentiel : une partie des habitants travaille ailleurs.",
+          details: [
+            { label: "Emplois salariés", share_key: "salaried_percentage" },
+            { label: "Salariés à temps partiel", share_key: "part_time_salaried_percentage" },
+            { label: "Emplois occupés par des femmes", share_key: "women_jobs_percentage" }
+          ] %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Emplois selon le secteur d'activité (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Emplois au lieu de travail, en %.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["jobs_agriculture_percentage", "Agriculture", "#84cc16"],
+            ["jobs_industry_percentage", "Industrie", "#1e3a8a"],
+            ["jobs_construction_percentage", "Construction", "#f59e0b"],
+            ["jobs_trade_services_percentage", "Commerce, transports, services", "#93c5fd"],
+            ["jobs_public_services_percentage", "Adm. publique, enseignement, santé, social", "#0d9488"]
+          ], "Emplois par secteur et par territoire") %>
+    </section>
+
+    <!-- 6. Mobilité domicile-travail -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité domicile-travail</h3>
+    <p class="text-xs text-gray-500 mb-4">Actifs occupés de 15 ans ou plus résidant sur le territoire.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Actifs travaillant dans leur commune de résidence", theme: "teal",
+          value_key: "work_in_commune_percentage",
+          count_key: "work_in_commune", total_key: "workers", count_label: "actifs occupés",
+          definition: "Part des actifs occupés qui travaillent dans leur commune de résidence. Pour l'EPCI, le département ou la région, il s'agit aussi de la commune de résidence.",
+          details: [
+            { label: "Autre commune du département", share_key: "work_other_commune_dep_percentage" },
+            { label: "Autre département de la région", share_key: "work_other_dep_region_percentage" },
+            { label: "Autre région de métropole", share_key: "work_other_region_percentage" },
+            { label: "Hors métropole, y c. étranger", share_key: "work_abroad_overseas_percentage" }
+          ] %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Mode de transport principal pour aller travailler (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Actifs occupés, en %. Une forte dépendance à la voiture peut freiner l'accès à l'emploi des personnes non motorisées.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["commute_car_percentage", "Voiture, camion", "#1e3a8a"],
+            ["commute_public_percentage", "Transports en commun", "#0d9488"],
+            ["commute_two_wheels_percentage", "Deux-roues (vélo, moto)", "#f59e0b"],
+            ["commute_walk_percentage", "Marche", "#84cc16"],
+            ["commute_none_percentage", "Pas de transport", "#e5e7eb"]
+          ], "Mode de transport domicile-travail par territoire") %>
+    </section>
+
+    <div class="mb-8 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026).</p>
+      <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
+      <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
+    </div>
+  <% end %>
 </div>
+
+<!-- 7. Emploi des parents de jeunes enfants (2023) -->
+<%= render "dashboard/parents_activity" %>

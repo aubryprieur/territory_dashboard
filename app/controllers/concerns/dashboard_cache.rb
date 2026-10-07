@@ -188,6 +188,24 @@ module DashboardCache
     @france_education_data = cached_education_training_data(:france)
   end
 
+  # === EMPLOI ET ACTIVITÉ (commune, EPCI, département, région, France métropolitaine) ===
+  def cached_employment_activity_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "employment_activity_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::EmploymentActivityService.get_france : Api::EmploymentActivityService.public_send("get_#{level}", code)
+    end
+  end
+
+  # Charge les 5 territoires dans @emp_data, @epci_emp_data, ...
+  def load_employment_activity_comparison
+    @emp_data = cached_employment_activity_data(:commune, @territory_code)
+    @epci_emp_data = cached_employment_activity_data(:epci, @epci_code)
+    @department_emp_data = cached_employment_activity_data(:department, @department_code)
+    @region_emp_data = cached_employment_activity_data(:region, @region_code)
+    @france_emp_data = cached_employment_activity_data(:france)
+  end
+
   # === MÉTHODES CACHÉES POUR LES DONNÉES DE COMPARAISON FRANCE ===
 
   def cached_france_children_data
