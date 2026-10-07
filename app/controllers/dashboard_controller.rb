@@ -8,7 +8,7 @@ class DashboardController < ApplicationController
   before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families, :load_age_pyramid,
                                             :load_economic_data, :load_schooling, :load_childcare,
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
-                                            :load_family_employment, :load_households]
+                                            :load_family_employment, :load_households, :load_diplomas]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -166,6 +166,16 @@ class DashboardController < ApplicationController
     end
   end
 
+  def load_diplomas
+    # Diplômes et formation : commune + territoires de comparaison (INSEE RP 2012, 2017, 2023)
+    load_education_training_comparison
+
+    respond_to do |format|
+      format.html { render partial: 'diplomas' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
   def load_children_comparison
     # 🚀 Chargement spécifique pour la comparaison enfants avec cache
     @children_data = cached_children_data(@territory_code)
@@ -239,23 +249,11 @@ class DashboardController < ApplicationController
   end
 
   def load_schooling
-    # 🚀 Chargement des données de scolarité avec cache
-    @schooling_data = cached_schooling_data(@territory_code)
-
-    # Données de comparaison avec cache
-    load_comparison_data_for_schooling_cached
+    # Scolarisation (INSEE RP 2012, 2017, 2023) : commune + territoires de comparaison
+    load_education_training_comparison
 
     respond_to do |format|
-      format.html { render partial: 'schooling', locals: {
-        schooling_data: @schooling_data,
-        france_schooling_data: @france_schooling_data,
-        epci_schooling_data: @epci_schooling_data,
-        department_schooling_data: @department_schooling_data,
-        region_schooling_data: @region_schooling_data,
-        epci_code: @epci_code,
-        department_code: @department_code,
-        region_code: @region_code
-      }}
+      format.html { render partial: 'schooling' }
       format.json { render json: { status: 'success' } }
     end
   end

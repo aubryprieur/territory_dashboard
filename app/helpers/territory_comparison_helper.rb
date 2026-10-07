@@ -88,6 +88,8 @@ module TerritoryComparisonHelper
   # --------------------------------------------------------------- graphiques
   # Les canvas portent leur configuration ; dessinés par charts/families_charts.js.
   def comparison_line_chart(territories, years, key, unit: "%", height: 224)
+    # Ne garder que les millésimes où l'indicateur existe (ex. scolarisation à 2 ans : pas de 2012)
+    years = years.select { |y| territories.any? { |t| !territory_value(t, y, key).nil? } }
     config = {
       type: "line", unit: unit, labels: years,
       datasets: territories.map do |t|

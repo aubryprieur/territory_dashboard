@@ -1,0 +1,87 @@
+<%#
+  Scolarisation par âge — INSEE, recensements 2012, 2017, 2023 (API /education-training/*),
+  commune comparée à l'EPCI, au département, à la région et à la France métropolitaine.
+%>
+<%
+  territories = comparison_territories("education_data", {
+    commune: @education_data, epci: @epci_education_data, department: @department_education_data,
+    region: @region_education_data, france: @france_education_data
+  })
+  years = comparison_years(@education_data, "education_data")
+  latest = comparison_latest_year(@education_data, years)
+  comparison = comparison_start_year(@education_data, years)
+  commune = territories.first
+  common = { territories: territories, years: years, latest: latest, comparison: comparison }
+%>
+<% if commune && commune[:key] == :commune %>
+  <% ev = ->(key, year = latest) { territory_value(commune, year, key) } %>
+
+  <!-- Synthèse -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <% [
+         ["Enfants de 2 ans scolarisés", "schooling_rate_2", "yellow"],
+         ["15-17 ans scolarisés", "schooling_rate_15_17", "indigo"],
+         ["18-24 ans scolarisés", "schooling_rate_18_24", "purple"]
+       ].each do |label, key, theme| %>
+      <div class="bg-<%= theme %>-50 p-4 rounded-lg">
+        <h3 class="text-sm font-medium text-<%= theme %>-800 mb-1"><%= label %></h3>
+        <p class="text-2xl font-bold text-<%= theme %>-900"><%= fmt_pct(ev.(key)) %></p>
+        <p class="text-xs text-<%= theme %>-700"><%= fmt_trend(ev.(key, comparison), ev.(key)) %> depuis <%= comparison %></p>
+      </div>
+    <% end %>
+    <div class="bg-blue-50 p-4 rounded-lg">
+      <h3 class="text-sm font-medium text-blue-800 mb-1">18-24 ans non scolarisés</h3>
+      <p class="text-2xl font-bold text-blue-900"><%= fmt_count(ev.("not_enrolled_18_24")) %></p>
+      <p class="text-xs text-blue-700">jeunes en <%= latest %><%= small_count_flag(ev.("not_enrolled_18_24")) %></p>
+    </div>
+  </div>
+
+  <!-- Taux de scolarisation par âge -->
+  <section style="margin-bottom:2.5rem">
+    <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de scolarisation selon l'âge (<%= latest %>)</h3>
+    <p class="text-xs text-gray-500 mb-4">Part des personnes inscrites dans un établissement d'enseignement, par tranche d'âge, en %.</p>
+    <%= comparison_grouped_bar_chart(territories, latest, [
+          ["schooling_rate_2_5", "2-5 ans"], ["schooling_rate_6_10", "6-10 ans"], ["schooling_rate_11_14", "11-14 ans"],
+          ["schooling_rate_15_17", "15-17 ans"], ["schooling_rate_18_24", "18-24 ans"], ["schooling_rate_25_29", "25-29 ans"]
+        ], "Taux de scolarisation par tranche d'âge et par territoire") %>
+  </section>
+
+  <%= render "dashboard/territory_indicator", **common,
+        title: "Scolarisation à 2 ans", theme: "yellow",
+        value_key: "schooling_rate_2",
+        count_key: "enrolled_2", total_key: "pop_2", count_label: "enfants de 2 ans scolarisés",
+        definition: "Part des enfants de 2 ans scolarisés (toute petite section). Indicateur clé des politiques petite enfance et des réseaux d'éducation prioritaire. Données 2017 et 2023 (non publiées en 2012)." %>
+
+  <%= render "dashboard/territory_indicator", **common,
+        title: "Scolarisation des 3-5 ans", theme: "yellow",
+        value_key: "schooling_rate_3_5",
+        count_key: "enrolled_3_5", total_key: "pop_3_5", count_label: "enfants scolarisés",
+        definition: "Part des enfants de 3 à 5 ans scolarisés (instruction obligatoire dès 3 ans depuis 2019). Données 2017 et 2023 (non publiées en 2012)." %>
+
+  <%= render "dashboard/territory_indicator", **common,
+        title: "Scolarisation des 15-17 ans", theme: "indigo",
+        value_key: "schooling_rate_15_17",
+        count_key: "enrolled_15_17", total_key: "pop_15_17", count_label: "jeunes scolarisés",
+        definition: "Part des 15-17 ans scolarisés. Un taux bas peut signaler des sorties précoces du système scolaire (la formation est obligatoire jusqu'à 18 ans).",
+        details: [
+          { label: "Garçons", share_key: "schooling_rate_15_17_men" },
+          { label: "Filles", share_key: "schooling_rate_15_17_women" }
+        ] %>
+
+  <%= render "dashboard/territory_indicator", **common,
+        title: "Scolarisation des 18-24 ans", theme: "purple",
+        value_key: "schooling_rate_18_24",
+        count_key: "enrolled_18_24", total_key: "pop_18_24", count_label: "jeunes scolarisés",
+        definition: "Part des 18-24 ans poursuivant des études (enseignement supérieur, lycée, apprentissage en établissement).",
+        details: [
+          { label: "Hommes", share_key: "schooling_rate_18_24_men" },
+          { label: "Femmes", share_key: "schooling_rate_18_24_women" },
+          { label: "Jeunes non scolarisés", count_key: "not_enrolled_18_24" }
+        ] %>
+
+  <div class="mb-8 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+    <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points entre <%= comparison %> et <%= latest %>.</p>
+    <p>Scolarisation à 2 ans et à 3-5 ans : tableaux détaillés du recensement (2023 : valeurs officielles à chaque échelle ; 2017 : somme des communes pour l'EPCI, le département, la région et la France métropolitaine).</p>
+    <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
+  </div>
+<% end %>

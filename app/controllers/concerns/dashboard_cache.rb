@@ -170,6 +170,24 @@ module DashboardCache
     end
   end
 
+  # === SCOLARISATION ET DIPLÔMES (commune, EPCI, département, région, France métropolitaine) ===
+  def cached_education_training_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "education_training_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::EducationTrainingService.get_france : Api::EducationTrainingService.public_send("get_#{level}", code)
+    end
+  end
+
+  # Charge les 5 territoires dans @education_data, @epci_education_data, ...
+  def load_education_training_comparison
+    @education_data = cached_education_training_data(:commune, @territory_code)
+    @epci_education_data = cached_education_training_data(:epci, @epci_code)
+    @department_education_data = cached_education_training_data(:department, @department_code)
+    @region_education_data = cached_education_training_data(:region, @region_code)
+    @france_education_data = cached_education_training_data(:france)
+  end
+
   # === MÉTHODES CACHÉES POUR LES DONNÉES DE COMPARAISON FRANCE ===
 
   def cached_france_children_data

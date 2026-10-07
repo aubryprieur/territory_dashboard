@@ -56,6 +56,7 @@ export default class extends Controller {
       'births': 'naissances',
       'economy': 'données économiques',
       'schooling': 'scolarisation',
+      'diplomas': 'diplômes et formation',
       'childcare': 'petite enfance',
       'family-employment': 'emploi des familles',
       'women-employment': 'emploi des femmes',
