@@ -1,0 +1,99 @@
+<%#
+  Bloc indicateur de l'onglet Familles : carte de synthèse + tableau par territoire
+  sur les 3 millésimes + graphique d'évolution.
+
+  locals :
+    title       - titre du bloc
+    theme       - "indigo" | "purple" | "blue" (couleurs de la carte)
+    rate_key    - clé du taux dans family_data (ex. "couples_with_children_percentage")
+    count_key   - clé de l'effectif (ex. "couples_with_children")
+    details     - [{ label:, count_key:, share_key: }] lignes de détail sous la carte (optionnel)
+    definition  - phrase d'explication sous le titre (optionnel)
+%>
+<%
+  latest = family_latest_year
+  comparison = family_comparison_year
+  commune = families_territories.first
+  rate = family_value(commune, latest, rate_key)
+  rate_start = family_value(commune, comparison, rate_key)
+  count = family_value(commune, latest, count_key)
+  total = family_value(commune, latest, "total_families")
+  details ||= []
+  definition ||= nil
+%>
+<section class="mb-10" style="margin-bottom:2.5rem">
+  <h3 class="text-sm font-medium text-gray-700 mb-1"><%= title %> (<%= latest %>)</h3>
+  <% if definition %>
+    <p class="text-xs text-gray-500 mb-4"><%= definition %></p>
+  <% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+    <!-- Carte de synthèse -->
+    <div class="md:col-span-1">
+      <div class="bg-<%= theme %>-50 p-4 rounded-md h-full">
+        <h4 class="font-medium text-<%= theme %>-800"><%= title %></h4>
+        <div class="flex items-baseline mt-2">
+          <p class="text-2xl font-bold text-<%= theme %>-900"><%= family_pct(rate, precision: 2) %></p>
+          <p class="ml-2"><%= family_points_trend(rate_start, rate) %></p>
+        </div>
+        <p class="text-xs text-gray-500">depuis <%= comparison %></p>
+        <p class="text-sm text-<%= theme %>-700 mt-2">
+          <%= family_count(count) %> sur <%= family_count(total) %> familles<%= family_small_count_flag(count) %>
+        </p>
+
+        <% if details.any? %>
+          <div class="mt-3 space-y-1">
+            <% details.each do |d| %>
+              <% d_count = family_value(commune, latest, d[:count_key]) %>
+              <div class="flex items-baseline justify-between">
+                <p class="text-xs text-<%= theme %>-600"><%= d[:label] %></p>
+                <p class="text-xs text-<%= theme %>-700 font-medium">
+                  <%= family_count(d_count) %>
+                  <% if d[:share_key] %>(<%= family_pct(family_value(commune, latest, d[:share_key])) %>)<% end %>
+                  <%= family_small_count_flag(d_count) %>
+                </p>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Tableau : taux par territoire et par millésime -->
+    <div class="md:col-span-2">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
+              <% family_years.each do |y| %>
+                <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= y %></th>
+              <% end %>
+              <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= comparison %>→<%= latest %></th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% families_territories.each do |t| %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm <%= t[:main] ? 'font-medium' : '' %> text-gray-900" title="<%= t[:name] %>">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:9999px;margin-right:8px;background-color:<%= t[:color] %>"></span><%= display_territory_name(t[:name]) %>
+                </td>
+                <% family_years.each do |y| %>
+                  <td class="px-3 py-3 whitespace-nowrap text-sm text-right <%= y == latest ? 'font-semibold text-gray-900' : 'text-gray-600' %>">
+                    <%= family_pct(family_value(t, y, rate_key)) %>
+                  </td>
+                <% end %>
+                <td class="px-3 py-3 whitespace-nowrap text-right">
+                  <%= family_points_trend(family_value(t, comparison, rate_key), family_value(t, latest, rate_key)) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphique d'évolution -->
+  <%= families_line_chart(rate_key) %>
+</section>

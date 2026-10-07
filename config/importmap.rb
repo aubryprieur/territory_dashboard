@@ -26,6 +26,7 @@ pin "charts/historique_chart", to: "charts/historique_chart.js"
 pin "charts/economic_charts", to: "charts/economic_charts.js"
 pin "charts/births_chart", to: "charts/births_chart.js"
 pin "charts/domestic_violence_chart", to: "charts/domestic_violence_chart.js"
+pin "charts/families_charts", to: "charts/families_charts.js"
 pin "charts/family_employment_chart", to: "charts/family_employment_chart.js"
 pin "charts/births_projection_chart", to: "charts/births_projection_chart.js"
 
