@@ -11,6 +11,7 @@
     value_format - :pct (défaut, écarts en points), :points (écart déjà en points, 1 décimale)
                    ou :decimal (écarts en valeur)
     unit         - unité affichée après une valeur décimale (ex. "pers.")
+    decimals     - nombre de décimales des valeurs :decimal (défaut 2 ; 1 pour :points)
     count_key    - effectif à afficher sous la valeur (optionnel)
     total_key    - dénominateur à afficher "x sur y" (optionnel)
     count_label  - libellé de l'effectif (ex. "ménages")
@@ -27,12 +28,13 @@
   details ||= []
   commune = territories.first
   unit = "pts" if value_format == :points && unit.nil?
-  precision = value_format == :points ? 1 : 2
+  decimals ||= nil
+  precision = decimals || (value_format == :points ? 1 : 2)
   fmt_value = ->(v) { value_format == :pct ? fmt_pct(v) : (v.nil? ? "–" : "#{fmt_decimal(v, precision: precision)} #{unit}".strip) }
   trend = lambda do |a, b|
     case value_format
     when :pct, :points then fmt_trend(a, b)            # évolution en points, 1 décimale
-    else fmt_trend(a, b, unit: :value, precision: 2)
+    else fmt_trend(a, b, unit: :value, precision: precision)
     end
   end
   value = territory_value(commune, latest, value_key)

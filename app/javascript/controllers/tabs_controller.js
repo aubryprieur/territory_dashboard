@@ -53,6 +53,7 @@ export default class extends Controller {
       'families': 'familles',
       'employment': 'emploi',
       'households': 'ménages',
+      'housing': 'logement',
       'children': 'enfants',
       'births': 'naissances',
       'economy': 'données économiques',

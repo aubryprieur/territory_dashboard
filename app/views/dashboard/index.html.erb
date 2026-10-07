@@ -160,7 +160,25 @@
                 </div>
                 <div class="text-left">
                   <div class="font-semibold">Ménages</div>
-                  <div class="text-xs text-gray-500">Logement & isolement</div>
+                  <div class="text-xs text-gray-500">Composition & isolement</div>
+                </div>
+              </div>
+            </button>
+
+            <!-- Onglet Logement -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="housing"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-yellow-100 to-orange-100 group-hover:from-yellow-200 group-hover:to-orange-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Logement</div>
+                  <div class="text-xs text-gray-500">Parc, statut, suroccupation</div>
                 </div>
               </div>
             </button>
@@ -329,6 +347,13 @@
         <div data-dashboard-tabs-target="content" data-tab="households" class="hidden dashboard-panel">
           <div id="households-content" data-section="households">
             <%= render 'components/loader', section_name: 'ménages' %>
+          </div>
+        </div>
+
+        <!-- Panel Logement -->
+        <div data-dashboard-tabs-target="content" data-tab="housing" class="hidden dashboard-panel">
+          <div id="housing-content" data-section="housing">
+            <%= render 'components/loader', section_name: 'logement' %>
           </div>
         </div>
 

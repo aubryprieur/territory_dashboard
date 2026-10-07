@@ -206,6 +206,23 @@ module DashboardCache
     @france_emp_data = cached_employment_activity_data(:france)
   end
 
+  def cached_housing_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "housing_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::HousingService.get_france : Api::HousingService.public_send("get_#{level}", code)
+    end
+  end
+
+  # Charge les 5 territoires dans @housing_data, @epci_housing_data, ...
+  def load_housing_comparison
+    @housing_data = cached_housing_data(:commune, @territory_code)
+    @epci_housing_data = cached_housing_data(:epci, @epci_code)
+    @department_housing_data = cached_housing_data(:department, @department_code)
+    @region_housing_data = cached_housing_data(:region, @region_code)
+    @france_housing_data = cached_housing_data(:france)
+  end
+
   # === MÉTHODES CACHÉES POUR LES DONNÉES DE COMPARAISON FRANCE ===
 
   def cached_france_children_data

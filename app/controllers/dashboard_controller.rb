@@ -8,7 +8,8 @@ class DashboardController < ApplicationController
   before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families, :load_age_pyramid,
                                             :load_economic_data, :load_schooling, :load_childcare,
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
-                                            :load_family_employment, :load_households, :load_diplomas]
+                                            :load_family_employment, :load_households, :load_diplomas,
+                                            :load_housing]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -351,6 +352,17 @@ class DashboardController < ApplicationController
         # 🆕 Passer les données de projection
         childcare_coverage_projection: @childcare_coverage_projection
       }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_housing
+    # Onglet Logement (ABS) : parc, statut d'occupation, peuplement, mobilité résidentielle,
+    # conditions de vie (INSEE RP 2012, 2017, 2023 — API /housing/*)
+    load_housing_comparison
+
+    respond_to do |format|
+      format.html { render partial: 'housing' }
       format.json { render json: { status: 'success' } }
     end
   end

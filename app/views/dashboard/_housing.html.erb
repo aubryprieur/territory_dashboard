@@ -1,0 +1,219 @@
+<%#
+  Onglet Logement — dashboard commune (analyse des besoins sociaux).
+  Parc, statut d'occupation, taille et peuplement, mobilité résidentielle, conditions de vie.
+  Données : INSEE, recensements de la population 2012, 2017, 2023 (valeurs officielles par
+  territoire, via l'API /housing/* — DS_RP_LOGEMENT_PRINC et DS_RP_LOGEMENT_COMP).
+%>
+<%
+  territories = comparison_territories("housing_data", {
+    commune: @housing_data, epci: @epci_housing_data, department: @department_housing_data,
+    region: @region_housing_data, france: @france_housing_data
+  })
+  years = comparison_years(@housing_data, "housing_data")
+  latest = comparison_latest_year(@housing_data, years)
+  comparison = comparison_start_year(@housing_data, years)
+  commune = territories.first
+  common = { territories: territories, years: years, latest: latest, comparison: comparison }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Logement</h2>
+  <p class="text-xs text-gray-500 mb-4">Parc de logements et conditions de logement des ménages, au sens du recensement.</p>
+
+  <% if commune.nil? || commune[:key] != :commune %>
+    <p class="text-sm text-gray-500">Données logement indisponibles pour ce territoire.</p>
+  <% else %>
+    <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
+
+    <!-- Synthèse -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <% [
+           ["Locataires HLM", "tenants_social_percentage", "amber", "des résidences principales"],
+           ["Logements vacants", "vacancy_rate", "orange", "des logements"],
+           ["Logements suroccupés", "overcrowding_rate", "purple", "des résidences principales"],
+           ["Ménages sans voiture", "no_car_percentage", "teal", "des ménages"]
+         ].each do |label, key, theme, scope| %>
+        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-<%= theme %>-800 mb-1"><%= label %></h3>
+          <p class="text-2xl font-bold text-<%= theme %>-900"><%= fmt_pct(hv.(key)) %></p>
+          <p class="text-xs text-<%= theme %>-700"><%= scope %> · <%= fmt_trend(hv.(key, comparison), hv.(key)) %> depuis <%= comparison %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 1. Parc de logements -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Parc de logements</h3>
+    <p class="text-xs text-gray-500 mb-4"><%= fmt_count(hv.("dwellings")) %> logements en <%= latest %>, dont <%= fmt_count(hv.("dwellings_main")) %> résidences principales.</p>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Catégories de logements (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Part de chaque catégorie dans l'ensemble des logements, en %.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["main_rate", "Résidences principales", "#1d4ed8"],
+            ["secondary_rate", "Résidences secondaires et logements occasionnels", "#93c5fd"],
+            ["vacancy_rate", "Logements vacants", "#f59e0b"]
+          ], "Catégories de logements par territoire") %>
+    </section>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Logements vacants", theme: "orange",
+          value_key: "vacancy_rate",
+          count_key: "dwellings_vacant", total_key: "dwellings", count_label: "logements",
+          definition: "Part des logements inoccupés au moment du recensement (en vente, en location, en attente d'occupation ou sans affectation). Au-delà de 8 à 10 %, la vacance signale souvent un parc dégradé, inadapté ou un marché peu tendu.",
+          details: [
+            { label: "Résidences secondaires", share_key: "secondary_rate" },
+            { label: "Maisons (ensemble des logements)", share_key: "houses_percentage" },
+            { label: "Appartements (ensemble des logements)", share_key: "apartments_percentage" }
+          ] %>
+
+    <!-- 2. Statut d'occupation -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Statut d'occupation</h3>
+    <p class="text-xs text-gray-500 mb-4">Résidences principales selon le statut d'occupation du ménage.</p>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Statut d'occupation des résidences principales (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">En %.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["owners_percentage", "Propriétaires", "#1e3a8a"],
+            ["tenants_private_percentage", "Locataires du parc privé", "#3b82f6"],
+            ["tenants_social_percentage", "Locataires HLM", "#f59e0b"],
+            ["tenants_furnished_percentage", "Meublé, chambre d'hôtel", "#93c5fd"],
+            ["free_percentage", "Logés gratuitement", "#e5e7eb"]
+          ], "Statut d'occupation par territoire") %>
+    </section>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Locataires HLM", theme: "amber",
+          value_key: "tenants_social_percentage",
+          count_key: "main_tenants_social", total_key: "dwellings_main", count_label: "résidences principales",
+          definition: "Part des résidences principales occupées par un ménage locataire d'un logement HLM loué vide. Repère du poids du parc social et des publics qu'il accueille.",
+          details: [
+            { label: "Locataires du parc privé", share_key: "tenants_private_percentage" },
+            { label: "Locataires d'un meublé ou d'une chambre d'hôtel", share_key: "tenants_furnished_percentage" },
+            { label: "Logés gratuitement", share_key: "free_percentage" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Propriétaires occupants", theme: "amber",
+          value_key: "owners_percentage",
+          count_key: "main_owners", total_key: "dwellings_main", count_label: "résidences principales",
+          definition: "Part des résidences principales occupées par leur propriétaire. Une part élevée de propriétaires âgés ou modestes peut signaler des besoins d'adaptation ou de rénovation du logement." %>
+
+    <!-- 3. Taille et peuplement -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Taille et peuplement des logements</h3>
+    <p class="text-xs text-gray-500 mb-4">Adéquation entre la taille des logements et celle des ménages.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Logements suroccupés", theme: "purple",
+          value_key: "overcrowding_rate",
+          definition: "Part des résidences principales où le nombre de pièces est inférieur au besoin du ménage (une pièce de séjour, une pièce par couple, par adulte et par paire d'enfants). La suroccupation est un marqueur de mal-logement.",
+          details: [
+            { label: "Dont suroccupation accentuée", share_key: "severe_overcrowding_rate" },
+            { label: "Sous-occupation (toutes intensités)", share_key: "under_occupation_rate" },
+            { label: "Logements de 1 ou 2 pièces", share_key: "small_dwellings_percentage" }
+          ] %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Peuplement des résidences principales (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">En %. La sous-occupation concerne surtout des personnes âgées vivant seules ou en couple dans de grands logements.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["occ_over_severe_percentage", "Suroccupation accentuée", "#b91c1c"],
+            ["occ_over_moderate_percentage", "Suroccupation modérée", "#ef4444"],
+            ["occ_standard_percentage", "Peuplement normal", "#e5e7eb"],
+            ["occ_under_moderate_percentage", "Sous-occupation modérée", "#93c5fd"],
+            ["occ_under_severe_percentage", "Sous-occupation accentuée", "#3b82f6"],
+            ["occ_under_very_severe_percentage", "Sous-occupation très accentuée", "#1e3a8a"]
+          ], "Peuplement des résidences principales par territoire") %>
+    </section>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Taille des résidences principales (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Nombre de pièces, en %.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["rooms_r1_percentage", "1 pièce", "#fde68a"],
+            ["rooms_r2_percentage", "2 pièces", "#f59e0b"],
+            ["rooms_r3_percentage", "3 pièces", "#93c5fd"],
+            ["rooms_r4_percentage", "4 pièces", "#3b82f6"],
+            ["rooms_r5p_percentage", "5 pièces ou plus", "#1e3a8a"]
+          ], "Taille des résidences principales par territoire") %>
+    </section>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Nombre moyen de personnes par logement", theme: "purple",
+          value_key: "persons_per_dwelling", value_format: :decimal, unit: "pers.",
+          definition: "Population des ménages rapportée au nombre de résidences principales. Sa baisse traduit le desserrement des ménages (vieillissement, séparations, décohabitation)." %>
+
+    <!-- 4. Mobilité résidentielle -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité résidentielle</h3>
+    <p class="text-xs text-gray-500 mb-4">Ancienneté d'emménagement des ménages dans leur logement actuel.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Ménages emménagés depuis moins de 2 ans", theme: "blue",
+          value_key: "recent_movers_percentage",
+          count_key: "stay_lt2", total_key: "dwellings_main", count_label: "ménages",
+          definition: "Part des ménages installés dans leur logement depuis moins de 2 ans. Repère du renouvellement de la population et de l'attractivité résidentielle.",
+          details: [
+            { label: "Emménagés depuis 10 ans ou plus", share_key: "long_stay_percentage" },
+            { label: "Emménagés depuis 30 ans ou plus", share_key: "stay_ge30_percentage" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Ancienneté moyenne d'emménagement", theme: "blue",
+          value_key: "average_stay", value_format: :decimal, unit: "ans", decimals: 1,
+          definition: "Nombre moyen d'années depuis lequel les ménages occupent leur logement." %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Ancienneté moyenne d'emménagement selon le statut (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">En années. Une ancienneté élevée chez les locataires HLM peut signaler un parc social peu mobile (peu de logements libérés).</p>
+      <%= comparison_grouped_bar_chart(territories, latest, [
+            ["average_stay", "Ensemble"], ["average_stay_owners", "Propriétaires"],
+            ["average_stay_tenants", "Locataires"], ["average_stay_social", "Locataires HLM"]
+          ], "Ancienneté moyenne d'emménagement par statut et par territoire", unit: "ans") %>
+    </section>
+
+    <!-- 5. Conditions de vie -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Équipement et confort</h3>
+    <p class="text-xs text-gray-500 mb-4">Motorisation des ménages, chauffage et âge du parc.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Ménages sans voiture", theme: "teal",
+          value_key: "no_car_percentage",
+          count_key: "cars_0", total_key: "dwellings_main", count_label: "ménages",
+          definition: "Part des ménages ne disposant d'aucune voiture. À lire avec l'offre de transports en commun : hors grandes villes, l'absence de voiture freine l'accès à l'emploi, aux soins et aux services.",
+          details: [
+            { label: "Une voiture", share_key: "one_car_percentage" },
+            { label: "Deux voitures ou plus", share_key: "two_cars_percentage" },
+            { label: "Au moins un emplacement de stationnement", share_key: "parking_percentage" }
+          ] %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Combustible principal de chauffage (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Résidences principales, en %. Le fioul et le gaz en bouteille exposent davantage les ménages à la précarité énergétique.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["heat_town_gas_percentage", "Gaz de ville, réseau de chaleur", "#1d4ed8"],
+            ["heat_electric_percentage", "Électricité", "#93c5fd"],
+            ["heat_oil_percentage", "Fioul", "#ef4444"],
+            ["heat_bottled_gas_percentage", "Gaz en bouteille ou citerne", "#f59e0b"],
+            ["heat_other_percentage", "Autre (bois, pompe à chaleur...)", "#84cc16"]
+          ], "Combustible principal de chauffage par territoire") %>
+    </section>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Période de construction des résidences principales (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Logements achevés avant <%= latest.to_i - 2 %>, en %. Les logements anciens, surtout d'avant 1975 (premières réglementations thermiques), sont les plus exposés aux besoins de rénovation énergétique.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["built_lt1919_percentage", "Avant 1919", "#7c2d12"],
+            ["built_1919_1945_percentage", "1919 à 1945", "#c2410c"],
+            ["built_1946_1970_percentage", "1946 à 1970", "#f59e0b"],
+            ["built_1971_1990_percentage", "1971 à 1990", "#fde68a"],
+            ["built_1991_2005_percentage", "1991 à 2005", "#93c5fd"],
+            ["built_2006_plus_percentage", "2006 ou après", "#1d4ed8"]
+          ], "Période de construction par territoire") %>
+    </section>
+
+    <div class="mb-8 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Peuplement : exploitation complémentaire.</p>
+      <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
+      <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
+    </div>
+  <% end %>
+</div>
