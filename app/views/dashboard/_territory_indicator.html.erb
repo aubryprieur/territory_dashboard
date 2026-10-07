@@ -1,0 +1,105 @@
+<%#
+  Bloc indicateur générique : carte de synthèse + tableau (territoires x millésimes)
+  + graphique d'évolution. Utilise TerritoryComparisonHelper.
+
+  locals :
+    territories  - comparison_territories(...) (la commune en premier)
+    years, latest, comparison - millésimes ("2012", "2017", "2023"), dernier, comparaison
+    title        - titre du bloc
+    theme        - couleur Tailwind de la carte : "indigo" | "purple" | "blue" | "teal" ...
+    value_key    - clé de l'indicateur dans les données
+    value_format - :pct (défaut, écarts en points) ou :decimal (écarts en valeur)
+    unit         - unité affichée après une valeur décimale (ex. "pers.")
+    count_key    - effectif à afficher sous la valeur (optionnel)
+    total_key    - dénominateur à afficher "x sur y" (optionnel)
+    count_label  - libellé de l'effectif (ex. "ménages")
+    definition   - phrase d'explication (optionnel)
+    details      - [{ label:, count_key:, share_key: }] (optionnel)
+%>
+<%
+  value_format ||= :pct
+  unit ||= nil
+  count_key ||= nil
+  total_key ||= nil
+  count_label ||= ""
+  definition ||= nil
+  details ||= []
+  commune = territories.first
+  fmt_value = ->(v) { value_format == :pct ? fmt_pct(v) : (v.nil? ? "–" : "#{fmt_decimal(v)} #{unit}".strip) }
+  trend = ->(a, b) { value_format == :pct ? fmt_trend(a, b) : fmt_trend(a, b, unit: :value, precision: 2) }
+  value = territory_value(commune, latest, value_key)
+  count = count_key && territory_value(commune, latest, count_key)
+  total = total_key && territory_value(commune, latest, total_key)
+%>
+<section style="margin-bottom:2.5rem">
+  <h3 class="text-sm font-medium text-gray-700 mb-1"><%= title %> (<%= latest %>)</h3>
+  <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %></p><% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+    <div class="md:col-span-1">
+      <div class="bg-<%= theme %>-50 p-4 rounded-md h-full">
+        <h4 class="font-medium text-<%= theme %>-800"><%= title %></h4>
+        <div class="flex items-baseline mt-2">
+          <p class="text-2xl font-bold text-<%= theme %>-900"><%= value_format == :pct ? fmt_pct(value, precision: 2) : fmt_value.(value) %></p>
+          <p class="ml-2"><%= trend.(territory_value(commune, comparison, value_key), value) %></p>
+        </div>
+        <p class="text-xs text-gray-500">depuis <%= comparison %></p>
+        <% if count %>
+          <p class="text-sm text-<%= theme %>-700 mt-2">
+            <%= fmt_count(count) %><% if total %> sur <%= fmt_count(total) %><% end %> <%= count_label %><%= small_count_flag(count) %>
+          </p>
+        <% end %>
+        <% if details.any? %>
+          <div class="mt-3 space-y-1">
+            <% details.each do |d| %>
+              <% d_count = d[:count_key] && territory_value(commune, latest, d[:count_key]) %>
+              <div class="flex items-baseline justify-between">
+                <p class="text-xs text-<%= theme %>-600"><%= d[:label] %></p>
+                <p class="text-xs text-<%= theme %>-700 font-medium">
+                  <% if d_count %><%= fmt_count(d_count) %><% end %>
+                  <% if d[:share_key] %><%= d_count ? "(" : "" %><%= fmt_pct(territory_value(commune, latest, d[:share_key])) %><%= d_count ? ")" : "" %><% end %>
+                  <%= small_count_flag(d_count) %>
+                </p>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="md:col-span-2">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
+              <% years.each do |y| %>
+                <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= y %></th>
+              <% end %>
+              <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= comparison %>→<%= latest %></th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% territories.each do |t| %>
+              <tr>
+                <td class="px-4 py-3 whitespace-nowrap text-sm <%= t[:main] ? 'font-medium' : '' %> text-gray-900" title="<%= t[:name] %>">
+                  <%= territory_dot(t) %><%= display_territory_name(t[:name]) %>
+                </td>
+                <% years.each do |y| %>
+                  <td class="px-3 py-3 whitespace-nowrap text-sm text-right <%= y == latest ? 'font-semibold text-gray-900' : 'text-gray-600' %>">
+                    <%= fmt_value.(territory_value(t, y, value_key)) %>
+                  </td>
+                <% end %>
+                <td class="px-3 py-3 whitespace-nowrap text-right">
+                  <%= trend.(territory_value(t, comparison, value_key), territory_value(t, latest, value_key)) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <%= comparison_line_chart(territories, years, value_key, unit: (value_format == :pct ? "%" : unit.to_s)) %>
+</section>

@@ -155,6 +155,21 @@ module DashboardCache
     end
   end
 
+  # === MÉNAGES (commune, EPCI, département, région, France métropolitaine) ===
+  def cached_households_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "households_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      case level
+      when :commune then Api::HouseholdService.get_commune_households(code)
+      when :epci then Api::HouseholdService.get_epci_households(code)
+      when :department then Api::HouseholdService.get_department_households(code)
+      when :region then Api::HouseholdService.get_region_households(code)
+      when :france then Api::HouseholdService.get_france_households
+      end
+    end
+  end
+
   # === MÉTHODES CACHÉES POUR LES DONNÉES DE COMPARAISON FRANCE ===
 
   def cached_france_children_data

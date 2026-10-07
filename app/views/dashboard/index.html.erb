@@ -142,7 +142,25 @@
                 </div>
                 <div class="text-left">
                   <div class="font-semibold">Familles</div>
-                  <div class="text-xs text-gray-500">Ménages & enfants</div>
+                  <div class="text-xs text-gray-500">Types de familles</div>
+                </div>
+              </div>
+            </button>
+
+            <!-- Onglet Ménages -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="households"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-pink-100 to-rose-100 group-hover:from-pink-200 group-hover:to-rose-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Ménages</div>
+                  <div class="text-xs text-gray-500">Logement & isolement</div>
                 </div>
               </div>
             </button>
@@ -310,6 +328,13 @@
         <div data-dashboard-tabs-target="content" data-tab="families" class="hidden dashboard-panel">
           <div id="families-content" data-section="families">
             <%= render 'components/loader', section_name: 'familles' %>
+          </div>
+        </div>
+
+        <!-- Panel Ménages -->
+        <div data-dashboard-tabs-target="content" data-tab="households" class="hidden dashboard-panel">
+          <div id="households-content" data-section="households">
+            <%= render 'components/loader', section_name: 'ménages' %>
           </div>
         </div>
 

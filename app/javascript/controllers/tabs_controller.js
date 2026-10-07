@@ -51,6 +51,7 @@ export default class extends Controller {
     const sectionNames = {
       'population': 'population',
       'families': 'familles',
+      'households': 'ménages',
       'children': 'enfants',
       'births': 'naissances',
       'economy': 'données économiques',

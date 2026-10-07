@@ -8,7 +8,7 @@ class DashboardController < ApplicationController
   before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families, :load_age_pyramid,
                                             :load_economic_data, :load_schooling, :load_childcare,
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
-                                            :load_family_employment]
+                                            :load_family_employment, :load_households]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -148,6 +148,20 @@ class DashboardController < ApplicationController
         department_code: @department_code,
         region_code: @region_code
       }}
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_households
+    # Ménages : commune + territoires de comparaison (INSEE RP 2012, 2017, 2023)
+    @household_data = cached_households_data(:commune, @territory_code)
+    @epci_household_data = cached_households_data(:epci, @epci_code)
+    @department_household_data = cached_households_data(:department, @department_code)
+    @region_household_data = cached_households_data(:region, @region_code)
+    @france_household_data = cached_households_data(:france)
+
+    respond_to do |format|
+      format.html { render partial: 'households' }
       format.json { render json: { status: 'success' } }
     end
   end

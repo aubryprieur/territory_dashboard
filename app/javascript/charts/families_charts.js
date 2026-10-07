@@ -1,12 +1,22 @@
-// Graphiques de l'onglet Familles (dashboard commune).
-// Chaque <canvas data-families-chart="{...}"> porte sa configuration (générée par FamiliesHelper) :
-//   type "line"    : évolution d'un taux sur les millésimes, une courbe par territoire
-//   type "stacked" : barres horizontales empilées à 100 % (répartition par nombre d'enfants)
+// Graphiques de comparaison territoriale (onglets Familles, Ménages, ...).
+// Chaque <canvas data-families-chart="{...}"> porte sa configuration
+// (générée par FamiliesHelper / TerritoryComparisonHelper) :
+//   type "line"    : évolution d'un indicateur sur les millésimes, une courbe par territoire
+//   type "stacked" : barres horizontales empilées à 100 % (répartitions)
+//   type "bars"    : barres verticales groupées (catégories x territoires)
 
 const pct = (v, digits = 1) =>
   v === null || v === undefined ? "–" : `${Number(v).toFixed(digits).replace(".", ",")} %`;
 
+// Formatage selon l'unité de la configuration ("%" par défaut, "" pour une valeur décimale)
+const fmt = (unit, digits) => (v) =>
+  unit === "%" || unit === undefined ? pct(v, digits)
+    : v === null || v === undefined ? "–" : `${Number(v).toFixed(digits).replace(".", ",")}${unit ? " " + unit : ""}`;
+
 function lineChart(canvas, cfg) {
+  const isPct = cfg.unit === "%" || cfg.unit === undefined;
+  const tip = fmt(cfg.unit, isPct ? 1 : 2);
+  const tick = fmt(cfg.unit, isPct ? 0 : 1);
   return new Chart(canvas, {
     type: "line",
     data: {
@@ -30,11 +40,11 @@ function lineChart(canvas, cfg) {
       plugins: {
         datalabels: { display: false },
         legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } } },
-        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} : ${pct(ctx.parsed.y)}` } },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} : ${tip(ctx.parsed.y)}` } },
       },
       scales: {
         x: { grid: { display: false } },
-        y: { ticks: { callback: (v) => pct(v, 0) }, grid: { color: "#f3f4f6" } },
+        y: { ticks: { callback: (v) => tick(v) }, grid: { color: "#f3f4f6" } },
       },
     },
   });
@@ -71,6 +81,37 @@ function stackedChart(canvas, cfg) {
   });
 }
 
+function groupedBarChart(canvas, cfg) {
+  const tip = fmt(cfg.unit, 1);
+  return new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: cfg.labels,
+      datasets: cfg.datasets.map((d) => ({
+        label: d.label,
+        data: d.data,
+        backgroundColor: d.color,
+        borderRadius: 2,
+        maxBarThickness: 18,
+      })),
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        datalabels: { display: false },
+        legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} : ${tip(ctx.parsed.y)}` } },
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, ticks: { callback: (v) => fmt(cfg.unit, 0)(v) }, grid: { color: "#f3f4f6" } },
+      },
+    },
+  });
+}
+
 function initFamiliesCharts(root = document, attempt = 0) {
   const canvases = root.querySelectorAll("canvas[data-families-chart]");
   if (canvases.length === 0) return;
@@ -84,17 +125,17 @@ function initFamiliesCharts(root = document, attempt = 0) {
     try {
       const cfg = JSON.parse(canvas.dataset.familiesChart);
       if (canvas._familiesChart) canvas._familiesChart.destroy();
-      canvas._familiesChart = cfg.type === "stacked" ? stackedChart(canvas, cfg) : lineChart(canvas, cfg);
+      const build = { stacked: stackedChart, bars: groupedBarChart }[cfg.type] || lineChart;
+      canvas._familiesChart = build(canvas, cfg);
     } catch (error) {
       console.error("❌ Graphique familles :", error);
     }
   });
 }
 
+// Toute section chargée en asynchrone peut contenir ces graphiques (familles, ménages, ...)
 document.addEventListener("dashboard:sectionLoaded", (event) => {
-  if (event.detail && event.detail.section === "families") {
-    setTimeout(() => initFamiliesCharts(event.detail.container || document), 50);
-  }
+  setTimeout(() => initFamiliesCharts((event.detail && event.detail.container) || document), 50);
 });
 document.addEventListener("turbo:load", () => initFamiliesCharts());
 
