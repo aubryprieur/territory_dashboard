@@ -14,13 +14,13 @@ module TerritoryComparisonHelper
   }.freeze
 
   # sources : { commune: data, epci: data, department: data, region: data, france: data }
-  def comparison_territories(data_key, sources)
+  def comparison_territories(data_key, sources, france_name: "France métropolitaine")
     names = {
       commune: @territory_name,
       epci: (@epci_code.present? ? epci_display_name : nil),
       department: department_display_name,
       region: region_display_name,
-      france: "France métropolitaine"
+      france: france_name
     }
     COMPARISON_COLORS.keys.filter_map do |key|
       data = sources[key]
@@ -157,6 +157,23 @@ module TerritoryComparisonHelper
       ]
     }
     chart_canvas(config, 280, "Composantes de la variation annuelle de la population par période")
+  end
+
+  # Colonnes empilées (une colonne par année, un segment par catégorie) et courbe du total
+  # categories : [[clé, libellé, couleur], ...] ; total : [clé, libellé] (optionnel)
+  def territory_stacked_columns_chart(territory, years, categories, aria_label, total: nil, unit: "", digits: 0)
+    config = {
+      type: "components", unit: unit, digits: digits, suffix: "",
+      labels: years,
+      datasets: categories.map do |key, label, color|
+        { label: label, data: years.map { |y| territory_value(territory, y, key) }, color: color }
+      end
+    }
+    if total
+      config[:datasets] << { label: total.last, data: years.map { |y| territory_value(territory, y, total.first) },
+                             color: "#111827", line: true }
+    end
+    chart_canvas(config, 300, aria_label)
   end
 
   # Pyramide des âges (% de la population) : hommes à gauche, femmes à droite ;

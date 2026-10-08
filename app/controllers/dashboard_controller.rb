@@ -5,7 +5,7 @@ class DashboardController < ApplicationController
   include DashboardCache  # 🚀 Ajout du système de cache
 
   before_action :check_user_territory
-  before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families, :load_age_pyramid,
+  before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families,
                                             :load_economic_data, :load_schooling, :load_childcare,
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
                                             :load_family_employment, :load_households, :load_diplomas,
@@ -66,8 +66,6 @@ class DashboardController < ApplicationController
   def load_synthese
     # 🚀 Chargement des données de synthèse avec cache
     @population_data = cached_population_data(@territory_code)
-    @total_population = @population_data.present? ? @population_data.sum { |item| item["NB"].to_f }.round : 0
-    @historical_data = cached_historical_data(@territory_code)
     @births_data = cached_births_data(@territory_code)
     @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
     # Structure par âge, pyramide, PCS, mobilité, série longue 1968-2023 (API /population-structure/*)
@@ -89,9 +87,6 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html { render partial: 'synthese', locals: {
-        population_data: @population_data,
-        total_population: @total_population,
-        historical_data: @historical_data,
         births_data_filtered: @births_data_filtered,
         women_15_49: @women_15_49,
         births_projection_2035: @births_projection_2035,
@@ -111,16 +106,6 @@ class DashboardController < ApplicationController
         basic_info: @basic_info
       }}
       format.json { render json: { status: 'success' } }
-    end
-  end
-
-  def load_age_pyramid
-    # 🚀 Chargement spécifique des données de la pyramide des âges avec cache
-    @age_pyramid_data = cached_age_pyramid_data(@territory_code)
-
-    respond_to do |format|
-      format.json { render json: @age_pyramid_data }
-      format.html { render partial: 'age_pyramid', locals: { age_pyramid_data: @age_pyramid_data } }
     end
   end
 
@@ -262,98 +247,13 @@ class DashboardController < ApplicationController
   end
 
   def load_childcare
-    # 🚀 Chargement des données de garde d'enfants avec cache
-    @childcare_data = cached_childcare_data(@territory_code)
-
-    # Données de comparaison avec cache
-    load_comparison_data_for_childcare_cached
-
-    # 🆕 Calculer la projection du taux de couverture en 2035
-    # Il faut d'abord charger et calculer les données d'enfants
-    begin
-      @population_data = cached_population_data(@territory_code)
-      @births_data = cached_births_data(@territory_code)
-      @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
-
-      Rails.logger.debug "📊 load_childcare: population_data present? #{@population_data.present?}, births_filtered: #{@births_data_filtered.present?}"
-
-      if @population_data.present? && @births_data_filtered.present?
-        # Calculer les projections d'enfants 0-3 ans
-        @women_15_49 = calculate_women_15_49_from_population(@population_data)
-        Rails.logger.debug "📊 load_childcare: women_15_49 = #{@women_15_49}"
-
-        if @women_15_49 > 0
-          @births_projection_2035 = calculate_births_projection_2035(@women_15_49)
-          Rails.logger.debug "📊 load_childcare: births_projection_2035 = #{@births_projection_2035}"
-
-          # Générer les données de projection des naissances (2 scénarios)
-          @births_projection_data = generate_commune_births_projection_data(
-            @births_data_filtered,
-            @births_projection_2035,
-            @women_15_49
-          )
-
-          if @births_projection_data.present?
-            # Calculer la projection des enfants 0-3 ans
-            @children_0_3_projection_2035 = calculate_children_0_3_projection_2035_commune(@births_projection_data)
-
-            # Calculer le nombre actuel d'enfants 0-3 ans (version robuste)
-            @current_children_0_3 = calculate_under_3_count_safe(@population_data)
-            Rails.logger.debug "📊 load_childcare: current_children_0_3 = #{@current_children_0_3}, projected = #{@children_0_3_projection_2035}"
-
-            # 🆕 Calculer la projection du taux de couverture si les données sont disponibles
-            if @childcare_data.present? && @current_children_0_3 > 0 && @children_0_3_projection_2035.present? && @children_0_3_projection_2035.is_a?(Hash)
-              reference_year = @childcare_data&.dig("coverage_data")&.keys&.sort&.last
-              current_rate = @childcare_data&.dig("coverage_data", reference_year)&.dig("coverage_rates", "global")
-
-              if current_rate.present? && current_rate > 0
-                # Utiliser le scénario stable par défaut
-                projected_children_count = @children_0_3_projection_2035[:stable]
-
-                if projected_children_count.present? && projected_children_count > 0
-                  @childcare_coverage_projection = calculate_childcare_coverage_projection_2035(
-                    current_rate,
-                    @current_children_0_3,
-                    projected_children_count
-                  )
-                  Rails.logger.debug "📊 load_childcare: projection créée ✅"
-                else
-                  Rails.logger.debug "⚠️ load_childcare: projected_children_count is nil or zero"
-                end
-              else
-                Rails.logger.debug "⚠️ load_childcare: no childcare rate data"
-              end
-            else
-              Rails.logger.debug "⚠️ load_childcare: missing condition for projection - childcare: #{@childcare_data.present?}, current_children: #{@current_children_0_3}, projection: #{@children_0_3_projection_2035.present?}"
-            end
-          else
-            Rails.logger.debug "⚠️ load_childcare: births_projection_data is empty"
-          end
-        else
-          Rails.logger.debug "⚠️ load_childcare: women_15_49 is 0 or negative"
-        end
-      else
-        Rails.logger.debug "⚠️ load_childcare: missing population or births data"
-      end
-    rescue => e
-      Rails.logger.error "🔴 ERROR in load_childcare projection: #{e.class} - #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      # Continuer sans la projection en cas d'erreur
-    end
+    # Onglet Garde d'enfants : offre d'accueil du jeune enfant (Cnaf 2017-2023, API /childcare-offer/*).
+    # La projection du taux de couverture en 2035 est retirée pour l'instant
+    # (calculate_childcare_coverage_projection_2035 est conservée pour une prochaine version).
+    load_childcare_offer_comparison
 
     respond_to do |format|
-      format.html { render partial: 'childcare', locals: {
-        childcare_data: @childcare_data,
-        france_childcare_data: @france_childcare_data,
-        epci_childcare_data: @epci_childcare_data,
-        department_childcare_data: @department_childcare_data,
-        region_childcare_data: @region_childcare_data,
-        epci_code: @epci_code,
-        department_code: @department_code,
-        region_code: @region_code,
-        # 🆕 Passer les données de projection
-        childcare_coverage_projection: @childcare_coverage_projection
-      }}
+      format.html { render partial: 'childcare' }
       format.json { render json: { status: 'success' } }
     end
   end
@@ -545,39 +445,6 @@ class DashboardController < ApplicationController
     # Pour les autres cas, refuser l'accès
     Rails.logger.error "Access denied: No matching territory type"
     false
-  end
-
-  def prepare_age_pyramid_data(population_data)
-    return {} if population_data.blank?
-
-    age_groups = []
-    male_counts = []
-    female_counts = []
-
-    (0..100).each do |age|
-      age_str = age.to_s
-      male_count = population_data.select { |item| item["AGED100"].to_s == age_str && item["SEXE"].to_s == "1" }
-                                  .sum { |item| item["NB"].to_f }
-      female_count = population_data.select { |item| item["AGED100"].to_s == age_str && item["SEXE"].to_s == "2" }
-                                    .sum { |item| item["NB"].to_f }
-
-      label = (age == 100) ? "100+" : age.to_s
-
-      age_groups << label
-      male_counts << male_count.round
-      female_counts << female_count.round
-    end
-
-    # Inverser les groupes d'âge pour que les plus jeunes soient en bas
-    result = {
-      ageGroups: age_groups.reverse,
-      maleData: male_counts.reverse,
-      femaleData: female_counts.reverse
-    }
-
-    Rails.logger.debug "🔍 Age pyramid data prepared: #{result[:ageGroups].size} groups, #{result[:maleData].sum} males, #{result[:femaleData].sum} females"
-
-    result
   end
 
   # === MÉTHODES POUR CHARGER LES DONNÉES DE COMPARAISON AVEC CACHE ===

@@ -1,0 +1,178 @@
+<%#
+  Onglet Garde d'enfants — offre d'accueil du jeune enfant (Cnaf, data.caf.fr, 2017 à 2023).
+  Places et taux de couverture (places pour 100 enfants de moins de 3 ans) par mode d'accueil,
+  pour la commune (si la Cnaf la publie en détail), l'EPCI, le département, la région et la France
+  entière hors Mayotte (API /childcare-offer/*).
+%>
+<%
+  all_territories = comparison_territories("childcare_data", {
+    commune: @cc_data, epci: @epci_cc_data, department: @department_cc_data,
+    region: @region_cc_data, france: @france_cc_data
+  }, france_name: "France (hors Mayotte)")
+  years = all_territories.flat_map { |t| (t[:data]["available_years"] || []).map(&:to_s) }.uniq.sort
+  latest = years.last
+  comparison = years.reverse.find { |y| y.to_i <= latest.to_i - 5 } || years.first
+  commune = all_territories.find { |t| t[:key] == :commune }
+  commune_detailed = commune && territory_value(commune, latest, "detailed")
+  # Territoire de référence : la commune si la Cnaf la détaille, sinon l'EPCI (la commune passe en fin de liste)
+  focus = commune_detailed ? commune : (all_territories.find { |t| t[:key] == :epci } || all_territories.first)
+  territories = commune_detailed ? all_territories :
+    [focus.merge(main: true)] + all_territories.reject { |t| t[:key].in?([:commune, focus[:key]]) } +
+    (commune ? [commune.merge(main: false)] : [])
+  detailed = territories.select { |t| territory_value(t, latest, "detailed") }
+  # Tableaux : année de comparaison + 3 dernières années (le graphique garde 2017-2023)
+  table_years = ([comparison] + years.last(3)).uniq.sort
+  common = { territories: territories, years: years, latest: latest, comparison: comparison, table_years: table_years }
+  fv = ->(key, year = latest) { focus && territory_value(focus, year, key) }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Accueil du jeune enfant</h2>
+  <p class="text-xs text-gray-500 mb-4">Capacité d'accueil des enfants de moins de 3 ans par mode d'accueil, selon la Cnaf (<%= years.first %>-<%= latest %>).</p>
+
+  <% if focus.nil? || latest.nil? %>
+    <p class="text-sm text-gray-500">Données d'accueil du jeune enfant indisponibles pour ce territoire.</p>
+  <% else %>
+    <% unless commune_detailed %>
+      <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        La Cnaf ne publie le détail des places que pour environ 1 000 communes (les plus peuplées).
+        <% if commune && (last_rate_year = (commune[:data]["available_years"] || []).max) %>
+          Pour <strong><%= commune[:name] %></strong>, seul le taux de couverture global est disponible :
+          <strong><%= fmt_pct(territory_value(commune, last_rate_year, "rate_global")) %></strong> en <%= last_rate_year %>
+          (<%= display_territory_name(focus[:name]) %> : <%= fmt_pct(territory_value(focus, last_rate_year, "rate_global")) %>).
+        <% end %>
+        Les données détaillées ci-dessous portent sur <strong><%= display_territory_name(focus[:name]) %></strong>.
+      </div>
+    <% end %>
+
+    <!-- Synthèse -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-cyan-50 p-4 rounded-lg">
+        <h3 class="text-sm font-medium text-cyan-800 mb-1">Taux de couverture global</h3>
+        <p class="text-2xl font-bold text-cyan-800"><%= fmt_pct(fv.("rate_global")) %></p>
+        <p class="text-xs text-cyan-700">places pour 100 enfants de moins de 3 ans · <%= fmt_trend(fv.("rate_global", comparison), fv.("rate_global")) %> depuis <%= comparison %></p>
+      </div>
+      <div class="bg-indigo-50 p-4 rounded-lg">
+        <h3 class="text-sm font-medium text-indigo-800 mb-1">Places d'accueil</h3>
+        <p class="text-2xl font-bold text-indigo-900"><%= fmt_count(fv.("places_total")) %></p>
+        <p class="text-xs text-indigo-700">
+          <% p0, p1 = fv.("places_total", comparison), fv.("places_total") %>
+          <% if p0 && p1 && p0 > 0 %><%= p1 >= p0 ? "+" : "−" %><%= fmt_count((p1 - p0).abs) %> places (<%= p1 >= p0 ? "+" : "−" %><%= number_with_precision(((p1 - p0) / p0 * 100).abs, precision: 1) %> %) depuis <%= comparison %><% end %>
+        </p>
+      </div>
+      <% [["Accueil collectif (crèches)", "rate_eaje", "blue"], ["Assistantes maternelles", "rate_childminder", "purple"]].each do |label, key, theme| %>
+        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-<%= theme %>-800 mb-1"><%= label %></h3>
+          <p class="text-2xl font-bold text-<%= theme %>-900"><%= fmt_pct(fv.(key)) %></p>
+          <p class="text-xs text-<%= theme %>-700">taux de couverture · <%= fmt_trend(fv.(key, comparison), fv.(key)) %> depuis <%= comparison %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 1. Taux de couverture -->
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Taux de couverture global", theme: "indigo",
+          value_key: "rate_global",
+          count_key: "places_total", count_label: "places d'accueil",
+          definition: "Nombre de places d'accueil « formel » pour 100 enfants de moins de 3 ans : accueil collectif, préscolarisation, assistantes maternelles et garde à domicile. Il mesure la capacité théorique d'accueil, pas le recours effectif.",
+          details: [
+            { label: "Accueil collectif (EAJE)", share_key: "rate_eaje" },
+            { label: "Préscolarisation", share_key: "rate_preschool" },
+            { label: "Assistantes maternelles", share_key: "rate_childminder" },
+            { label: "Garde à domicile", share_key: "rate_home_care" }
+          ] %>
+
+    <% if detailed.any? %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Couverture par mode d'accueil (<%= latest %>)</h3>
+        <p class="text-xs text-gray-500 mb-4">Places pour 100 enfants de moins de 3 ans. La longueur totale de la barre correspond au taux de couverture global.</p>
+        <%= comparison_stacked_chart(detailed, latest, [
+              ["rate_eaje_psu", "Crèches financées par la PSU", "#1d4ed8"],
+              ["rate_eaje_hors_psu", "Micro-crèches et autres hors PSU", "#93c5fd"],
+              ["rate_preschool", "Préscolarisation (2 ans)", "#0d9488"],
+              ["rate_childminder", "Assistantes maternelles", "#7c3aed"],
+              ["rate_home_care", "Garde à domicile", "#f59e0b"]
+            ], "Taux de couverture par mode d'accueil et par territoire") %>
+      </section>
+    <% end %>
+
+    <!-- 2. Modes d'accueil -->
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Accueil collectif (EAJE)", theme: "blue",
+          value_key: "rate_eaje",
+          count_key: "places_eaje", count_label: "places en crèche ou micro-crèche",
+          definition: "Places en établissements d'accueil du jeune enfant pour 100 enfants de moins de 3 ans : crèches financées par la prestation de service unique (PSU, tarif selon les revenus) et structures hors PSU, surtout des micro-crèches financées par le complément de libre choix du mode de garde (Paje).",
+          details: [
+            { label: "Financé par la PSU", share_key: "rate_eaje_psu" },
+            { label: "Hors PSU (micro-crèches Paje...)", share_key: "rate_eaje_hors_psu" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Assistantes maternelles", theme: "purple",
+          value_key: "rate_childminder",
+          count_key: "places_childminder", count_label: "places chez des assistantes maternelles",
+          definition: "Places chez des assistantes maternelles pour 100 enfants de moins de 3 ans. Premier mode d'accueil en France, il recule depuis plusieurs années avec les départs à la retraite non remplacés.",
+          details: [
+            { label: "Garde à domicile", share_key: "rate_home_care" },
+            { label: "Accueil individuel (total)", share_key: "rate_individual" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Préscolarisation des enfants de 2 ans", theme: "teal",
+          value_key: "rate_preschool",
+          count_key: "places_preschool", count_label: "enfants de 2 ans scolarisés",
+          definition: "Enfants de 2 ans scolarisés en maternelle pour 100 enfants de moins de 3 ans. À rapprocher du taux de scolarisation à 2 ans (onglet Scolarisation)." %>
+
+    <!-- 3. Évolution des places -->
+    <% if territory_value(focus, latest, "detailed") %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Évolution du nombre de places à <%= display_territory_name(focus[:name]) %> (<%= years.first %>-<%= latest %>)</h3>
+        <p class="text-xs text-gray-500 mb-4">Nombre de places par mode d'accueil chaque année. Courbe : enfants de moins de 3 ans (estimés à partir des places et du taux de couverture).</p>
+        <%= territory_stacked_columns_chart(focus, years, [
+              ["places_eaje_psu", "Crèches PSU", "#1d4ed8"],
+              ["places_eaje_hors_psu", "Micro-crèches, hors PSU", "#93c5fd"],
+              ["places_preschool", "Préscolarisation", "#0d9488"],
+              ["places_childminder", "Assistantes maternelles", "#7c3aed"],
+              ["places_home_care", "Garde à domicile", "#f59e0b"]
+            ], "Évolution des places d'accueil par mode", total: ["children_under3_estimate", "Enfants de moins de 3 ans (estimation)"], unit: "") %>
+      </section>
+    <% end %>
+
+    <% if detailed.any? %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Places d'accueil par mode (<%= latest %>)</h3>
+        <p class="text-xs text-gray-500 mb-4">Nombre de places et évolution depuis <%= comparison %>.</p>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <% ["Territoire", "Crèches PSU", "Hors PSU", "Préscolarisation", "Assistantes mat.", "Garde à domicile", "Total", "Évolution du total"].each_with_index do |h, i| %>
+                  <th scope="col" class="px-3 py-3 <%= i.zero? ? 'text-left' : 'text-right' %> text-xs font-medium text-gray-500 uppercase tracking-wider"><%= h %></th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% detailed.each do |t| %>
+                <% t0, t1 = territory_value(t, comparison, "places_total"), territory_value(t, latest, "places_total") %>
+                <tr>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm <%= t[:main] ? 'font-medium' : '' %> text-gray-900" title="<%= t[:name] %>"><%= territory_dot(t) %><%= display_territory_name(t[:name]) %></td>
+                  <% %w[eaje_psu eaje_hors_psu preschool childminder home_care].each do |m| %>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-700"><%= fmt_count(territory_value(t, latest, "places_#{m}")) %></td>
+                  <% end %>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right font-semibold"><%= fmt_count(t1) %></td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t0 && t1 && t1 < t0 ? 'text-red-600' : 'text-green-700' %>">
+                    <%= t0 && t1 && t0 > 0 ? "#{t1 >= t0 ? '+' : '−'}#{number_with_precision(((t1 - t0) / t0 * 100).abs, precision: 1)} %" : "–" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% end %>
+
+    <div class="mb-2 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : Cnaf, data.caf.fr — accueil du jeune enfant, <%= years.first %> à <%= latest %>. France : France entière hors Mayotte.</p>
+      <p>Taux de couverture : places d'accueil formel pour 100 enfants de moins de 3 ans. Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
+    </div>
+  <% end %>
+</div>

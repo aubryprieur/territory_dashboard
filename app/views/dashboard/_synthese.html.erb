@@ -78,10 +78,8 @@
   </div>
 </div>
 
-<!-- Graphique d'évolution historique -->
-<% if historical_data.present? %>
-
-  <!-- Évolution de la population : voir le bloc « Évolution de la population depuis 1968 » ci-dessus -->
+<!-- Lecture de l'évolution de la population (graphique : bloc « Évolution de la population depuis 1968 » ci-dessus) et naissances -->
+<% if births_data_filtered.present? %>
 
   <!-- Bloc explicatif: Lecture du graphique population -->
   <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 rounded-lg p-6 mb-6 shadow-sm">
@@ -347,15 +345,7 @@
   <% end %>
 <% end %>
 
-<!-- Données JSON pour les graphiques (OBLIGATOIRE) -->
-<script type="application/json" id="population-data-json">
-<%= raw(population_data.to_json) %>
-</script>
-
-<script type="application/json" id="historical-data">
-<%= raw(historical_data.to_json) %>
-</script>
-
+<!-- Données JSON du graphique des naissances (charts_init.js) -->
 <script type="application/json" id="births-data-filtered">
 <%= raw(births_data_filtered.to_json) %>
 </script>

@@ -116,7 +116,9 @@ function groupedBarChart(canvas, cfg) {
 }
 
 function componentsChart(canvas, cfg) {
-  const tip = fmt(cfg.unit, 2);
+  const digits = cfg.digits ?? 2;
+  const tip = fmt(cfg.unit, digits);
+  const suffix = cfg.suffix ?? " par an";
   return new Chart(canvas, {
     type: "bar",
     data: {
@@ -135,11 +137,11 @@ function componentsChart(canvas, cfg) {
       plugins: {
         datalabels: { display: false },
         legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10, font: { size: 11 } } },
-        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} : ${tip(ctx.parsed.y)} par an` } },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} : ${tip(ctx.parsed.y)}${suffix}` } },
       },
       scales: {
         x: { stacked: true, grid: { display: false } },
-        y: { stacked: true, ticks: { callback: (v) => fmt(cfg.unit, 1)(v) }, grid: { color: "#f3f4f6" } },
+        y: { stacked: true, ticks: { callback: (v) => fmt(cfg.unit, Math.min(digits, 1))(v) }, grid: { color: "#f3f4f6" } },
       },
     },
   });

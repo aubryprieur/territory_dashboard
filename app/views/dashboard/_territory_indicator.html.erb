@@ -11,6 +11,7 @@
     value_format - :pct (défaut, écarts en points), :points (écart déjà en points, 1 décimale)
                    ou :decimal (écarts en valeur)
     unit         - unité affichée après une valeur décimale (ex. "pers.")
+    table_years  - millésimes affichés dans le tableau (défaut : tous ; le graphique garde tous les millésimes)
     decimals     - nombre de décimales des valeurs :decimal (défaut 2 ; 1 pour :points)
     count_key    - effectif à afficher sous la valeur (optionnel)
     total_key    - dénominateur à afficher "x sur y" (optionnel)
@@ -29,6 +30,7 @@
   commune = territories.first
   unit = "pts" if value_format == :points && unit.nil?
   decimals ||= nil
+  table_years ||= years
   precision = decimals || (value_format == :points ? 1 : 2)
   fmt_value = ->(v) { value_format == :pct ? fmt_pct(v) : (v.nil? ? "–" : "#{fmt_decimal(v, precision: precision)} #{unit}".strip) }
   trend = lambda do |a, b|
@@ -83,7 +85,7 @@
           <thead class="bg-gray-50">
             <tr>
               <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
-              <% years.each do |y| %>
+              <% table_years.each do |y| %>
                 <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= y %></th>
               <% end %>
               <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= comparison %>→<%= latest %></th>
@@ -95,7 +97,7 @@
                 <td class="px-4 py-3 whitespace-nowrap text-sm <%= t[:main] ? 'font-medium' : '' %> text-gray-900" title="<%= t[:name] %>">
                   <%= territory_dot(t) %><%= display_territory_name(t[:name]) %>
                 </td>
-                <% years.each do |y| %>
+                <% table_years.each do |y| %>
                   <td class="px-3 py-3 whitespace-nowrap text-sm text-right <%= y == latest ? 'font-semibold text-gray-900' : 'text-gray-600' %>">
                     <%= fmt_value.(territory_value(t, y, value_key)) %>
                   </td>

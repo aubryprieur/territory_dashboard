@@ -51,25 +51,10 @@ module DashboardCache
     end
   end
 
-  def cached_age_pyramid_data(territory_code)
-    cache_key = cache_key_for_territory(territory_code, 'age_pyramid')
-    cached_api_call(cache_key, expires_in: 6.hours) do
-      population_data = cached_population_data(territory_code)
-      prepare_age_pyramid_data(population_data)
-    end
-  end
-
   def cached_children_data(territory_code)
     cache_key = cache_key_for_territory(territory_code, 'children')
     cached_api_call(cache_key, expires_in: 4.hours) do
       Api::PopulationService.get_children_data(territory_code)
-    end
-  end
-
-  def cached_historical_data(territory_code)
-    cache_key = cache_key_for_territory(territory_code, 'historical')
-    cached_api_call(cache_key, expires_in: 12.hours) do
-      Api::HistoricalService.get_historical_data(territory_code)
     end
   end
 
@@ -238,6 +223,23 @@ module DashboardCache
     @department_pop_data = cached_population_structure_data(:department, @department_code)
     @region_pop_data = cached_population_structure_data(:region, @region_code)
     @france_pop_data = cached_population_structure_data(:france)
+  end
+
+  def cached_childcare_offer_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FE", "childcare_offer_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::ChildcareOfferService.get_france : Api::ChildcareOfferService.public_send("get_#{level}", code)
+    end
+  end
+
+  # Charge les 5 territoires dans @cc_data, @epci_cc_data, ...
+  def load_childcare_offer_comparison
+    @cc_data = cached_childcare_offer_data(:commune, @territory_code)
+    @epci_cc_data = cached_childcare_offer_data(:epci, @epci_code)
+    @department_cc_data = cached_childcare_offer_data(:department, @department_code)
+    @region_cc_data = cached_childcare_offer_data(:region, @region_code)
+    @france_cc_data = cached_childcare_offer_data(:france)
   end
 
   # === MÉTHODES CACHÉES POUR LES DONNÉES DE COMPARAISON FRANCE ===
@@ -550,7 +552,6 @@ module DashboardCache
       begin
         cached_population_data(territory_code)
         cached_children_data(territory_code)
-        cached_historical_data(territory_code)
         cached_revenue_data(territory_code)
 
         # Précharger aussi les données de comparaison les plus utilisées
