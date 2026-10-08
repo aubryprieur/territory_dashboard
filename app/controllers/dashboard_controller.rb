@@ -9,7 +9,7 @@ class DashboardController < ApplicationController
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
-                                            :load_revenues_poverty, :load_schools, :load_immigration]
+                                            :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -239,6 +239,17 @@ class DashboardController < ApplicationController
     end
   end
 
+  def load_local_economy
+    # Onglet Tissu économique : emplois au lieu de travail (INSEE RP) et établissements employeurs (Flores)
+    load_employment_activity_comparison
+    load_economic_fabric_comparison
+
+    respond_to do |format|
+      format.html { render partial: 'local_economy' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
   def load_immigration
     # Onglet Immigrés et étrangers (ABS) : parts dans la population, emploi, âge (INSEE, recensement 2023 —
     # API /immigration/*)
@@ -298,8 +309,6 @@ class DashboardController < ApplicationController
     # Onglet Emploi (ABS) : emploi, activité, chômage, femmes, emploi local, mobilité
     # (INSEE RP 2012, 2017, 2023) + emploi des parents de jeunes enfants (2023)
     load_employment_activity_comparison
-    # Tissu économique local : établissements et postes salariés (Flores 2017 et 2021)
-    load_economic_fabric_comparison
     # Familles (API /families/*) : enfants de moins de 6 ans selon l'activité des parents (2023)
     @family_data = cached_family_data(@territory_code)
     @epci_family_data = cached_epci_family_data(@epci_code)

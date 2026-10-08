@@ -1,0 +1,58 @@
+<%#
+  Onglet Tissu économique — dashboard commune (analyse des besoins sociaux).
+  Emplois situés sur le territoire (INSEE RP 2012, 2017, 2023 — API /employment-activity/*) et tissu
+  d'établissements employeurs (INSEE Flores 2017 et 2021 — API /economic-fabric/*, partial _economic_fabric).
+%>
+<%
+  territories = comparison_territories("employment_data", {
+    commune: @emp_data, epci: @epci_emp_data, department: @department_emp_data,
+    region: @region_emp_data, france: @france_emp_data
+  })
+  years = comparison_years(@emp_data, "employment_data")
+  latest = comparison_latest_year(@emp_data, years)
+  comparison = comparison_start_year(@emp_data, years)
+  commune = territories.first
+  common = { territories: territories, years: years, latest: latest, comparison: comparison }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Tissu économique</h2>
+  <p class="text-xs text-gray-500 mb-4">Emplois et entreprises implantés sur le territoire, quel que soit le lieu de résidence des personnes qui y travaillent : poids de l'emploi local, secteurs d'activité, taille des établissements, activités tournées vers les habitants.</p>
+
+  <% if commune.nil? || commune[:key] != :commune %>
+    <p class="text-sm text-gray-500">Données sur l'emploi local indisponibles pour ce territoire.</p>
+  <% else %>
+    <!-- 1. Emplois situés sur le territoire (recensement) -->
+    <h3 class="text-base font-medium text-gray-900 mb-1">Emplois sur le territoire</h3>
+    <p class="text-xs text-gray-500 mb-4">Emplois situés sur le territoire, quel que soit le lieu de résidence des personnes qui les occupent.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Indicateur de concentration d'emploi", theme: "teal",
+          value_key: "employment_concentration", value_format: :decimal, unit: "emplois / 100 actifs occupés",
+          count_key: "jobs", count_label: "emplois sur le territoire",
+          definition: "Nombre d'emplois sur le territoire pour 100 actifs occupés qui y résident. Au-dessous de 100, le territoire est plutôt résidentiel : une partie des habitants travaille ailleurs.",
+          details: [
+            { label: "Emplois salariés", share_key: "salaried_percentage" },
+            { label: "Salariés à temps partiel", share_key: "part_time_salaried_percentage" },
+            { label: "Emplois occupés par des femmes", share_key: "women_jobs_percentage" }
+          ] %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Emplois selon le secteur d'activité (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Emplois au lieu de travail, en %.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["jobs_agriculture_percentage", "Agriculture", "#84cc16"],
+            ["jobs_industry_percentage", "Industrie", "#1e3a8a"],
+            ["jobs_construction_percentage", "Construction", "#f59e0b"],
+            ["jobs_trade_services_percentage", "Commerce, transports, services", "#93c5fd"],
+            ["jobs_public_services_percentage", "Adm. publique, enseignement, santé, social", "#0d9488"]
+          ], "Emplois par secteur et par territoire") %>
+    </section>
+
+
+    <%= render "dashboard/economic_fabric" %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Sources : INSEE, recensements de la population <%= years.join(", ") %> (emplois au lieu de travail) ; INSEE, Flores (établissements et postes salariés).</p>
+    </div>
+  <% end %>
+</div>

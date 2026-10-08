@@ -1,6 +1,6 @@
 <%#
   Onglet Emploi — dashboard commune (analyse des besoins sociaux).
-  Regroupe l'emploi, l'activité, le chômage, l'emploi des femmes, la précarité et le temps partiel, l'emploi local, la mobilité
+  Regroupe l'emploi, l'activité, le chômage, l'emploi des femmes, la précarité et le temps partiel, la mobilité
   domicile-travail (INSEE RP 2012, 2017, 2023 — API /employment-activity/*) et l'emploi des
   familles avec jeunes enfants (API /families/employment/*).
 %>
@@ -211,36 +211,7 @@
       </div>
     </section>
 
-    <!-- 5. Emploi local -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Emploi local</h3>
-    <p class="text-xs text-gray-500 mb-4">Emplois situés sur le territoire, quel que soit le lieu de résidence des personnes qui les occupent.</p>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Indicateur de concentration d'emploi", theme: "teal",
-          value_key: "employment_concentration", value_format: :decimal, unit: "emplois / 100 actifs occupés",
-          count_key: "jobs", count_label: "emplois sur le territoire",
-          definition: "Nombre d'emplois sur le territoire pour 100 actifs occupés qui y résident. Au-dessous de 100, le territoire est plutôt résidentiel : une partie des habitants travaille ailleurs.",
-          details: [
-            { label: "Emplois salariés", share_key: "salaried_percentage" },
-            { label: "Salariés à temps partiel", share_key: "part_time_salaried_percentage" },
-            { label: "Emplois occupés par des femmes", share_key: "women_jobs_percentage" }
-          ] %>
-
-    <section style="margin-bottom:2.5rem">
-      <h3 class="text-sm font-medium text-gray-700 mb-1">Emplois selon le secteur d'activité (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Emplois au lieu de travail, en %.</p>
-      <%= comparison_stacked_chart(territories, latest, [
-            ["jobs_agriculture_percentage", "Agriculture", "#84cc16"],
-            ["jobs_industry_percentage", "Industrie", "#1e3a8a"],
-            ["jobs_construction_percentage", "Construction", "#f59e0b"],
-            ["jobs_trade_services_percentage", "Commerce, transports, services", "#93c5fd"],
-            ["jobs_public_services_percentage", "Adm. publique, enseignement, santé, social", "#0d9488"]
-          ], "Emplois par secteur et par territoire") %>
-    </section>
-
-    <%= render "dashboard/economic_fabric" %>
-
-    <!-- 6. Mobilité domicile-travail -->
+    <!-- 5. Mobilité domicile-travail (l'emploi local est dans l'onglet Tissu économique) -->
     <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité domicile-travail</h3>
     <p class="text-xs text-gray-500 mb-4">Actifs occupés de 15 ans ou plus résidant sur le territoire.</p>
 
@@ -276,5 +247,5 @@
   <% end %>
 </div>
 
-<!-- 7. Emploi des parents de jeunes enfants (2023) -->
+<!-- 6. Emploi des parents de jeunes enfants (2023) -->
 <%= render "dashboard/parents_activity" %>

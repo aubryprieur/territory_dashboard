@@ -1,6 +1,6 @@
 <%#
-  Bloc « Tissu économique local » de l'onglet Emploi : établissements actifs et postes salariés au 31 décembre
-  (INSEE, Flores 2017 et 2021 — API /economic-fabric/*). Rendu dans _employment.
+  Bloc « Établissements employeurs » de l'onglet Tissu économique : établissements actifs et postes salariés au 31 décembre
+  (INSEE, Flores 2017 et 2021 — API /economic-fabric/*). Rendu dans _local_economy.
 %>
 <%
   fabric = comparison_territories("economic_fabric_data", {
@@ -24,7 +24,7 @@
   end
 %>
 <% if f_main && f_latest %>
-  <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Tissu économique local</h3>
+  <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Établissements employeurs</h3>
   <p class="text-xs text-gray-500 mb-4">Établissements actifs employeurs et postes salariés situés sur le territoire au 31 décembre (Flores). La sphère présentielle regroupe les activités tournées vers les besoins des habitants (commerce de proximité, santé, action sociale, enseignement, services publics...) ; la sphère productive, celles qui produisent pour l'extérieur du territoire.</p>
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

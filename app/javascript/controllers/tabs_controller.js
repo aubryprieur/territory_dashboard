@@ -52,6 +52,7 @@ export default class extends Controller {
       'population': 'population',
       'families': 'familles',
       'employment': 'emploi',
+      'local_economy': 'tissu économique',
       'households': 'ménages',
       'housing': 'logement',
       'caf_benefits': 'prestations CAF',

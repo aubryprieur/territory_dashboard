@@ -92,6 +92,7 @@ Rails.application.routes.draw do
     get 'load_revenues_poverty', to: 'dashboard#load_revenues_poverty'
     get 'load_schools', to: 'dashboard#load_schools'
     get 'load_immigration', to: 'dashboard#load_immigration'
+    get 'load_local_economy', to: 'dashboard#load_local_economy'
     get 'load_diplomas', to: 'dashboard#load_diplomas'
     get 'load_children_comparison', to: 'dashboard#load_children_comparison'
     get 'load_schooling', to: 'dashboard#load_schooling'
