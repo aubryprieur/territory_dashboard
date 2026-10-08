@@ -9,7 +9,7 @@ class DashboardController < ApplicationController
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
-                                            :load_revenues_poverty]
+                                            :load_revenues_poverty, :load_schools]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -233,6 +233,17 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html { render partial: 'childcare' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_schools
+    # Onglet Éducation nationale (ABS) : IPS et déciles nationaux, valeur ajoutée, indice d'éloignement
+    # (DEPP — API /schools/*)
+    load_schools_data
+
+    respond_to do |format|
+      format.html { render partial: 'schools' }
       format.json { render json: { status: 'success' } }
     end
   end

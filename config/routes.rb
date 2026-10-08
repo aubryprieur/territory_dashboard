@@ -90,6 +90,7 @@ Rails.application.routes.draw do
     get 'load_housing', to: 'dashboard#load_housing'
     get 'load_caf_benefits', to: 'dashboard#load_caf_benefits'
     get 'load_revenues_poverty', to: 'dashboard#load_revenues_poverty'
+    get 'load_schools', to: 'dashboard#load_schools'
     get 'load_diplomas', to: 'dashboard#load_diplomas'
     get 'load_children_comparison', to: 'dashboard#load_children_comparison'
     get 'load_schooling', to: 'dashboard#load_schooling'

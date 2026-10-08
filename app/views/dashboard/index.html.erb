@@ -241,6 +241,24 @@
               </div>
             </button>
 
+            <!-- Onglet Éducation nationale -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="schools"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Éducation nationale</div>
+                  <div class="text-xs text-gray-500">IPS, valeur ajoutée</div>
+                </div>
+              </div>
+            </button>
+
 
             <!-- Onglet Garde d'enfants -->
             <button data-dashboard-tabs-target="tab"
@@ -400,6 +418,13 @@
         <div data-dashboard-tabs-target="content" data-tab="diplomas" class="hidden dashboard-panel">
           <div id="diplomas-content" data-section="diplomas">
             <%= render 'components/loader', section_name: 'diplômes et formation' %>
+          </div>
+        </div>
+
+        <!-- Panel Éducation nationale -->
+        <div data-dashboard-tabs-target="content" data-tab="schools" class="hidden dashboard-panel">
+          <div id="schools-content" data-section="schools">
+            <%= render 'components/loader', section_name: 'éducation nationale' %>
           </div>
         </div>
 

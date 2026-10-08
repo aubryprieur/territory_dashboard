@@ -6,6 +6,7 @@
 //   type "bars"    : barres verticales groupées (catégories x territoires)
 //   type "components" : barres empilées positives / négatives + courbe du total (composantes d'une variation)
 //   type "pyramid" : pyramide des âges (hommes à gauche, femmes à droite, référence en contour)
+//   type "positions" : établissements placés sur les déciles nationaux d'un indicateur (IPS, éloignement)
 
 const pct = (v, digits = 1) =>
   v === null || v === undefined ? "–" : `${Number(v).toFixed(digits).replace(".", ",")} %`;
@@ -18,8 +19,8 @@ const fmt = (unit, digits) => (v) =>
 
 function lineChart(canvas, cfg) {
   const isPct = cfg.unit === "%" || cfg.unit === undefined;
-  const tip = fmt(cfg.unit, isPct ? 1 : 2);
-  const tick = fmt(cfg.unit, isPct ? 0 : 1);
+  const tip = fmt(cfg.unit, cfg.digits ?? (isPct ? 1 : 2));
+  const tick = fmt(cfg.unit, isPct ? 0 : Math.min(cfg.digits ?? 1, 1));
   return new Chart(canvas, {
     type: "line",
     data: {
@@ -190,6 +191,93 @@ function pyramidChart(canvas, cfg) {
   });
 }
 
+// type "positions" : une ligne par type d'établissement, bandes des 10 déciles nationaux,
+// un point par établissement (commune en couleur, autres établissements de l'EPCI en gris)
+function positionsChart(canvas, cfg) {
+  const digits = cfg.digits ?? 1;
+  const num = (v) => Number(v).toFixed(digits).replace(".", ",");
+  const bandsPlugin = {
+    id: "decileBands",
+    beforeDatasetsDraw(chart) {
+      const { ctx, scales: { x, y } } = chart;
+      const h = 16;
+      ctx.save();
+      (cfg.bands || []).forEach((band, row) => {
+        if (!band) return;
+        const yc = y.getPixelForValue(row);
+        const edges = [x.min, ...band, x.max];
+        for (let k = 0; k < 10; k += 1) {
+          const a = Math.max(edges[k], x.min);
+          const b = Math.min(edges[k + 1], x.max);
+          if (b <= a) continue;
+          const x0 = x.getPixelForValue(a);
+          const x1 = x.getPixelForValue(b);
+          ctx.fillStyle = k % 2 === 0 ? "#e0e7ff" : "#eef2ff";
+          ctx.fillRect(x0, yc - h / 2, x1 - x0, h);
+          if (x1 - x0 > 16) {
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "10px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(`D${k + 1}`, (x0 + x1) / 2, yc + h / 2 + 11);
+          }
+        }
+        // médiane nationale
+        const xm = x.getPixelForValue(band[4]);
+        ctx.strokeStyle = "#4338ca";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(xm, yc - h / 2 - 3);
+        ctx.lineTo(xm, yc + h / 2 + 3);
+        ctx.stroke();
+      });
+      ctx.restore();
+    },
+  };
+  return new Chart(canvas, {
+    type: "scatter",
+    data: {
+      datasets: cfg.datasets.map((d) => ({
+        label: d.label,
+        data: d.data,
+        backgroundColor: d.color,
+        borderColor: d.main ? "#ffffff" : d.color,
+        borderWidth: d.main ? 2 : 0,
+        pointRadius: d.main ? 7 : 4,
+        pointHoverRadius: d.main ? 9 : 6,
+        order: d.main ? 0 : 1,
+      })),
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        datalabels: { display: false },
+        legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            title: (items) => items.map((i) => i.raw.label).join(" ; "),
+            label: (ctx) => {
+              const r = ctx.raw;
+              const decile = r.decile ? ` — ${r.decile === 1 ? "1er" : `${r.decile}e`} décile national` : "";
+              return `${r.commune ? `${r.commune} : ` : ""}${num(r.x)}${cfg.unit ? ` ${cfg.unit}` : ""}${decile}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { min: cfg.min, max: cfg.max, grid: { color: "#f3f4f6" }, ticks: { callback: (v) => num(v).replace(/,0+$/, "") } },
+        y: {
+          min: -0.7, max: cfg.rows.length - 0.3, reverse: true,
+          grid: { display: false },
+          afterBuildTicks: (axis) => { axis.ticks = cfg.rows.map((_, i) => ({ value: i })); },
+          ticks: { callback: (v) => cfg.rows[v] ?? "", font: { size: 11 } },
+        },
+      },
+    },
+    plugins: [bandsPlugin],
+  });
+}
+
 function initFamiliesCharts(root = document, attempt = 0) {
   const canvases = root.querySelectorAll("canvas[data-families-chart]");
   if (canvases.length === 0) return;
@@ -204,7 +292,7 @@ function initFamiliesCharts(root = document, attempt = 0) {
       const cfg = JSON.parse(canvas.dataset.familiesChart);
       if (canvas._familiesChart) canvas._familiesChart.destroy();
       const build = { stacked: stackedChart, bars: groupedBarChart, components: componentsChart,
-                      pyramid: pyramidChart }[cfg.type] || lineChart;
+                      pyramid: pyramidChart, positions: positionsChart }[cfg.type] || lineChart;
       canvas._familiesChart = build(canvas, cfg);
     } catch (error) {
       console.error("❌ Graphique familles :", error);

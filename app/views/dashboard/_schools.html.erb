@@ -1,0 +1,276 @@
+<%#
+  Onglet Éducation nationale — dashboard commune (analyse des besoins sociaux).
+  Données : ministère de l'Éducation nationale, DEPP (API /schools/*).
+    - IPS des écoles, collèges et lycées de la commune et position parmi les établissements du même type
+      en France (déciles nationaux) ; établissements de l'EPCI en contexte
+    - valeur ajoutée des collèges (DNB) et des lycées (bac)
+    - indice d'éloignement des collèges et lycées
+%>
+<%
+  data = @schools_data.is_a?(Hash) && @schools_data["error"].blank? ? @schools_data : {}
+  epci_data = @epci_schools_data.is_a?(Hash) && @epci_schools_data["error"].blank? ? @epci_schools_data : {}
+  national = data["national"].presence || epci_data["national"] || {}
+  main = data["establishments"] || []
+  main_uais = main.map { |s| s["uai"] }
+  others = (epci_data["establishments"] || []).reject { |s| main_uais.include?(s["uai"]) }
+  definitions = data["definitions"] || epci_data["definitions"] || {}
+  by_type = ->(list, type) { list.select { |s| s["school_type"] == type } }
+  colleges = by_type.(main, "college")
+  lycees = by_type.(main, "lycee")
+  epci_colleges = by_type.(others, "college")
+  epci_lycees = by_type.(others, "lycee")
+  ips_schools = main.select { |s| school_last(s, "ips").last }
+  low_ips = ips_schools.count { |s| (d = school_value(s, school_last(s, "ips").first, "ips_decile")) && d.to_i <= 2 }
+  remote_schools = main.select { |s| school_last(s, "remoteness").last }
+  epci_label = @epci_code.present? ? epci_display_name : "l'EPCI"
+
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Éducation nationale</h2>
+  <p class="text-xs text-gray-500 mb-4">Écoles, collèges et lycées publics et privés sous contrat de la commune : profil social des élèves, valeur ajoutée et éloignement, comparés à l'ensemble des établissements de France.</p>
+
+  <% if main.empty? && others.empty? %>
+    <p class="text-sm text-gray-500">Aucun établissement scolaire trouvé pour ce territoire.</p>
+  <% else %>
+
+    <!-- Synthèse -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-indigo-50 p-4 rounded-lg">
+        <h4 class="text-xs font-medium text-indigo-800">Établissements de la commune</h4>
+        <p class="text-2xl font-bold text-indigo-900"><%= main.size %></p>
+        <p class="text-xs text-gray-600">
+          <%= by_type.(main, "ecole").size %> école(s) élémentaire(s) ou primaire(s), <%= colleges.size %> collège(s), <%= lycees.size %> lycée(s)
+        </p>
+      </div>
+      <div class="bg-red-50 p-4 rounded-lg">
+        <h4 class="text-xs font-medium text-red-800">Public très défavorisé</h4>
+        <p class="text-2xl font-bold text-red-900"><%= low_ips %> sur <%= ips_schools.size %></p>
+        <p class="text-xs text-gray-600">établissements parmi les 20 % de France au public le plus défavorisé (IPS, déciles 1 et 2)</p>
+      </div>
+      <% if (c = colleges.max_by { |s| school_last(s, "dnb_success_rate").first.to_i }) && (va = school_last(c, "dnb_success_va")).last %>
+        <div class="bg-green-50 p-4 rounded-lg">
+          <h4 class="text-xs font-medium text-green-800">Valeur ajoutée au DNB <%= va.first %></h4>
+          <p class="text-2xl font-bold text-green-900"><%= fmt_va(va.last) %></p>
+          <p class="text-xs text-gray-600"><%= c["name"].to_s.titleize %> : réussite <%= fmt_pct(school_value(c, va.first, "dnb_success_rate"), precision: 0) %>, écart au taux attendu</p>
+        </div>
+      <% else %>
+        <div class="bg-green-50 p-4 rounded-lg">
+          <h4 class="text-xs font-medium text-green-800">Valeur ajoutée</h4>
+          <p class="text-sm text-gray-600 mt-2">Pas de collège dans la commune : voir les collèges de <%= epci_label %> ci-dessous.</p>
+        </div>
+      <% end %>
+      <% if (r = remote_schools.first) %>
+        <% ry, rv = school_last(r, "remoteness") %>
+        <div class="bg-orange-50 p-4 rounded-lg">
+          <h4 class="text-xs font-medium text-orange-800">Indice d'éloignement <%= ry %></h4>
+          <p class="text-2xl font-bold text-orange-900"><%= fmt_decimal(rv, precision: 1) %></p>
+          <p class="text-xs text-gray-600"><%= r["name"].to_s.titleize %> : <%= decile_label(school_value(r, ry, "remoteness_decile")) %> national (100 = moyenne)</p>
+        </div>
+      <% else %>
+        <div class="bg-orange-50 p-4 rounded-lg">
+          <h4 class="text-xs font-medium text-orange-800">Indice d'éloignement</h4>
+          <p class="text-sm text-gray-600 mt-2">Calculé pour les collèges et lycées uniquement.</p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 1. Indice de position sociale -->
+    <h3 class="text-base font-medium text-gray-900 mb-1">Profil social des élèves : indice de position sociale (IPS)</h3>
+    <p class="text-xs text-gray-500 mb-4"><%= definitions["ips"] %> Le décile situe l'établissement parmi tous les établissements du même type en France (public et privé) : le 1er décile regroupe les 10 % d'établissements au public le plus défavorisé, le 10e les 10 % au public le plus favorisé.</p>
+
+    <section style="margin-bottom:2rem">
+      <%= schools_positions_chart(main, others, national, key: "ips",
+            aria: "Position de l'IPS des établissements de la commune parmi les déciles nationaux") %>
+      <p class="text-xs text-gray-500 mt-2">Bandes : déciles nationaux de l'IPS (D1 à D10), trait : médiane nationale. Points en couleur : établissements de la commune ; en gris : autres établissements de <%= epci_label %>.</p>
+    </section>
+
+    <% ips_table = lambda do |list, show_commune| %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-gray-500 border-b">
+              <th class="py-2 pr-4 font-medium">Établissement</th>
+              <% if show_commune %><th class="py-2 pr-4 font-medium">Commune</th><% end %>
+              <th class="py-2 pr-4 font-medium">Secteur</th>
+              <th class="py-2 pr-4 font-medium text-right">IPS</th>
+              <th class="py-2 pr-4 font-medium text-right">Évolution</th>
+              <th class="py-2 pr-4 font-medium">Position nationale</th>
+              <th class="py-2 pr-4 font-medium text-right">Département</th>
+              <th class="py-2 font-medium text-right">France</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% list.select { |s| school_last(s, "ips").last }.sort_by { |s| [SchoolsHelper::SCHOOL_GROUPS.keys.index(s["group"]) || 9, school_last(s, "ips").last] }.each do |s| %>
+              <% y, v = school_last(s, "ips") %>
+              <% y0, v0 = school_first(s, "ips") %>
+              <tr class="border-b border-gray-100">
+                <td class="py-2 pr-4">
+                  <div class="font-medium text-gray-800"><%= s["name"].to_s.titleize %></div>
+                  <div class="text-xs text-gray-500"><%= school_group_label(s["group"]) %> · rentrée <%= rentree_label(y) %></div>
+                </td>
+                <% if show_commune %><td class="py-2 pr-4 text-gray-600"><%= s["commune_name"].to_s.titleize %></td><% end %>
+                <td class="py-2 pr-4 text-gray-600"><%= sector_label(s["sector"]) %></td>
+                <td class="py-2 pr-4 text-right font-semibold"><%= fmt_decimal(v, precision: 1) %></td>
+                <td class="py-2 pr-4 text-right"><%= y0 && y0 != y ? fmt_trend(v0, v, unit: :value, precision: 1) : "" %></td>
+                <td class="py-2 pr-4"><%= decile_badge(school_value(s, y, "ips_decile")) %></td>
+                <td class="py-2 pr-4 text-right text-gray-600"><%= fmt_decimal(school_value(s, y, "ips_departmental"), precision: 1) %></td>
+                <td class="py-2 text-right text-gray-600"><%= fmt_decimal(school_value(s, y, "ips_national"), precision: 1) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+
+    <section style="margin-bottom:1.5rem">
+      <% if ips_schools.any? %>
+        <% ips_table.call(main, false) %>
+      <% else %>
+        <p class="text-sm text-gray-500">Aucun établissement de la commune n'a d'IPS publié.</p>
+      <% end %>
+      <p class="text-xs text-gray-500 mt-2">Département et France : IPS moyen des établissements du même type (lycées : même type de lycée), pondéré par les effectifs d'élèves. Évolution depuis la première rentrée disponible.</p>
+    </section>
+
+
+    <!-- 2. Valeur ajoutée -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-6">Valeur ajoutée des collèges et des lycées</h3>
+    <p class="text-xs text-gray-500 mb-4"><%= definitions["va"] %> Elle mesure l'action propre de l'établissement, indépendamment du profil social de ses élèves.</p>
+
+    <% college_rows = colleges %>
+    <% if colleges.empty? && epci_colleges.any? { |s| school_last(s, "dnb_success_rate").last } %>
+      <section style="margin-bottom:2rem">
+        <h4 class="text-sm font-medium text-gray-700 mb-1">Collèges de <%= epci_label %> : diplôme national du brevet (DNB)</h4>
+        <p class="text-xs text-gray-500 mb-3">Pas de collège dans la commune. Chaque point est un collège de <%= epci_label %>, placé sur les déciles nationaux des collèges (dernière session) ; survoler un point pour voir son nom.</p>
+        <%= schools_metric_chart(epci_colleges, [], national, unit: "%", main_label: "Collèges de #{epci_label}",
+              rows: [{ key: "dnb_success_rate", label: "Taux de réussite", group: "college" }],
+              aria: "Taux de réussite au DNB des collèges de l'EPCI parmi les déciles nationaux") %>
+        <div class="mt-4"></div>
+        <%= schools_metric_chart(epci_colleges, [], national, unit: "pts", main_label: "Collèges de #{epci_label}",
+              rows: [{ key: "dnb_success_va", label: "Valeur ajoutée (réussite)", group: "college" }],
+              aria: "Valeur ajoutée des collèges de l'EPCI parmi les déciles nationaux") %>
+      </section>
+    <% end %>
+    <% if college_rows.any? %>
+      <% sessions = school_years(college_rows, "dnb_success_rate").last(4) %>
+      <section style="margin-bottom:2rem">
+        <h4 class="text-sm font-medium text-gray-700 mb-1">Collèges : diplôme national du brevet (DNB)</h4>
+        <p class="text-xs text-gray-500 mb-3">Taux de réussite au DNB et, entre parenthèses, valeur ajoutée (écart au taux attendu, en points). Centile : part des collèges de France dont la valeur ajoutée est inférieure.</p>
+        <div class="overflow-x-auto mb-4">
+          <table class="min-w-full text-sm">
+            <thead>
+              <tr class="text-left text-xs text-gray-500 border-b">
+                <th class="py-2 pr-4 font-medium">Collège</th>
+                <% sessions.each do |y| %><th class="py-2 pr-4 font-medium text-right">Session <%= y %></th><% end %>
+                <th class="py-2 pr-4 font-medium text-right">Note à l'écrit <%= sessions.last %></th>
+                <th class="py-2 font-medium">Valeur ajoutée <%= sessions.last %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% college_rows.select { |s| school_last(s, "dnb_success_rate").last }.each do |s| %>
+                <tr class="border-b border-gray-100">
+                  <td class="py-2 pr-4">
+                    <div class="font-medium text-gray-800"><%= s["name"].to_s.titleize %></div>
+                    <div class="text-xs text-gray-500"><%= s["commune_name"].to_s.titleize %> · <%= sector_label(s["sector"]) %> · <%= fmt_count(school_value(s, sessions.last, "dnb_candidates")) %> candidats</div>
+                  </td>
+                  <% sessions.each do |y| %>
+                    <td class="py-2 pr-4 text-right whitespace-nowrap">
+                      <%= fmt_pct(school_value(s, y, "dnb_success_rate"), precision: 0) %>
+                      <span class="text-xs">(<%= fmt_va(school_value(s, y, "dnb_success_va")) %>)</span>
+                    </td>
+                  <% end %>
+                  <td class="py-2 pr-4 text-right whitespace-nowrap">
+                    <%= fmt_decimal(school_value(s, sessions.last, "dnb_written_score"), precision: 1) %>/20
+                    <span class="text-xs">(<%= fmt_va_score(school_value(s, sessions.last, "dnb_written_va")) %>)</span>
+                  </td>
+                  <td class="py-2 text-xs text-gray-600"><%= va_percentile_text(school_value(s, sessions.last, "dnb_success_va_percentile")) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <%= schools_series_chart(college_rows.select { |s| school_last(s, "dnb_success_va").last }.first(8), "dnb_success_va",
+              "Valeur ajoutée du taux de réussite au DNB par session") %>
+        <p class="text-xs text-gray-500 mt-2">Valeur ajoutée du taux de réussite au DNB (en points) ; 0 = résultat conforme à l'attendu.</p>
+      </section>
+    <% end %>
+
+    <% lycee_main = lycees.any? ? lycees : epci_lycees %>
+    <% lycee_others = lycees.any? ? epci_lycees : [] %>
+    <% if lycee_main.any? { |s| school_last(s, "gt_success_rate").last || school_last(s, "pro_success_rate").last } %>
+      <section style="margin-bottom:2rem">
+        <h4 class="text-sm font-medium text-gray-700 mb-1">Lycées : baccalauréat<%= lycees.empty? ? " — lycées de #{epci_label}" : "" %></h4>
+        <p class="text-xs text-gray-500 mb-3">
+          Chaque point est un lycée, placé sur les déciles nationaux de l'ensemble des lycées (dernière session) ; survoler un point pour voir son nom.
+          <%= lycees.empty? ? "Pas de lycée dans la commune : lycées de #{epci_label}." : "En gris : les autres lycées de #{epci_label}." %>
+          Taux d'accès : part des élèves de 2nde qui obtiennent le bac dans l'établissement.
+        </p>
+        <%= schools_metric_chart(lycee_main, lycee_others, national, unit: "%",
+              main_label: (lycees.any? ? @territory_name : "Lycées de #{epci_label}"),
+              rows: [
+                { key: "gt_success_rate", label: "Réussite — voie générale et techno.", group: "lycee" },
+                { key: "pro_success_rate", label: "Réussite — voie professionnelle", group: "lycee" },
+                { key: "gt_access_rate", label: "Accès 2nde → bac — générale et techno.", group: "lycee" },
+                { key: "pro_access_rate", label: "Accès 2nde → bac — professionnelle", group: "lycee" }
+              ], aria: "Résultats au bac des lycées parmi les déciles nationaux") %>
+        <h4 class="text-sm font-medium text-gray-700 mb-1 mt-6">Valeur ajoutée des lycées</h4>
+        <p class="text-xs text-gray-500 mb-3">Écart au résultat attendu compte tenu du profil des élèves, en points ; à droite du trait (médiane nationale), le lycée fait mieux que la moitié des lycées de France.</p>
+        <%= schools_metric_chart(lycee_main, lycee_others, national, unit: "pts",
+              main_label: (lycees.any? ? @territory_name : "Lycées de #{epci_label}"),
+              rows: [
+                { key: "gt_success_va", label: "Réussite — voie générale et techno.", group: "lycee" },
+                { key: "pro_success_va", label: "Réussite — voie professionnelle", group: "lycee" },
+                { key: "gt_access_va", label: "Accès 2nde → bac — générale et techno.", group: "lycee" },
+                { key: "pro_access_va", label: "Accès 2nde → bac — professionnelle", group: "lycee" }
+              ], aria: "Valeur ajoutée des lycées parmi les déciles nationaux") %>
+      </section>
+    <% end %>
+
+    <!-- 3. Indice d'éloignement -->
+    <% remote_main = (colleges + lycees).select { |s| school_last(s, "remoteness").last } %>
+    <% remote_rows = remote_main.any? ? remote_main : (epci_colleges + epci_lycees).select { |s| school_last(s, "remoteness").last } %>
+    <% if remote_rows.any? %>
+      <h3 class="text-base font-medium text-gray-900 mb-1 mt-6">Indice d'éloignement</h3>
+      <p class="text-xs text-gray-500 mb-4"><%= definitions["remoteness"] %> Le 10e décile regroupe les 10 % d'établissements les plus éloignés des ressources.</p>
+      <section style="margin-bottom:2rem">
+        <%= schools_positions_chart(remote_main.any? ? remote_main : [], remote_main.any? ? (epci_colleges + epci_lycees) : [], national, key: "remoteness",
+              aria: "Indice d'éloignement des collèges et lycées parmi les déciles nationaux") %>
+        <% rem_years = school_years(remote_rows, "remoteness").last(4) %>
+        <div class="overflow-x-auto mt-4">
+          <table class="min-w-full text-sm">
+            <thead>
+              <tr class="text-left text-xs text-gray-500 border-b">
+                <th class="py-2 pr-4 font-medium">Établissement</th>
+                <% rem_years.each do |y| %><th class="py-2 pr-4 font-medium text-right">Rentrée <%= y %></th><% end %>
+                <th class="py-2 pr-4 font-medium">Position nationale</th>
+                <th class="py-2 font-medium text-right">Médiane France</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% remote_rows.each do |s| %>
+                <% y, _ = school_last(s, "remoteness") %>
+                <tr class="border-b border-gray-100">
+                  <td class="py-2 pr-4">
+                    <div class="font-medium text-gray-800"><%= s["name"].to_s.titleize %></div>
+                    <div class="text-xs text-gray-500"><%= s["commune_name"].to_s.titleize %> · <%= school_group_label(s["group"]) %></div>
+                  </td>
+                  <% rem_years.each do |yy| %><td class="py-2 pr-4 text-right"><%= fmt_decimal(school_value(s, yy, "remoteness"), precision: 1) %></td><% end %>
+                  <td class="py-2 pr-4"><%= decile_badge(school_value(s, y, "remoteness_decile")) %></td>
+                  <td class="py-2 text-right text-gray-600"><%= fmt_decimal(national.dig(s["group"], "remoteness", y.to_s, "d5"), precision: 1) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <% if remote_main.empty? %>
+          <p class="text-xs text-gray-500 mt-2">Pas de collège ni de lycée dans la commune : établissements de <%= epci_label %>.</p>
+        <% end %>
+      </section>
+    <% end %>
+  <% end %>
+
+
+  <div class="text-xs text-gray-500 border-t pt-3 mt-4">
+    <p>Source : ministère de l'Éducation nationale, DEPP (data.education.gouv.fr) — IPS des écoles (rentrées 2022 à 2024), des collèges et des lycées (rentrées 2023 à 2025), indicateurs de valeur ajoutée des collèges (DNB 2022 à 2025) et des lycées, indice d'éloignement (rentrées 2022 à 2025).</p>
+    <p>Les écoles maternelles n'ont pas d'IPS publié. Les déciles sont calculés parmi les établissements du même type de France entière, public et privé sous contrat.</p>
+  </div>
+</div>

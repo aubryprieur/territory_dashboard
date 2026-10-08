@@ -261,6 +261,19 @@ module DashboardCache
     end
   end
 
+  # Établissements scolaires (Éducation nationale) d'une commune ou d'un EPCI
+  def cached_schools_data(level, code)
+    return nil if code.blank?
+    cache_key = cache_key_for_territory(code, "schools_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) { Api::SchoolsService.public_send("get_#{level}", code) }
+  end
+
+
+  def load_schools_data
+    @schools_data = cached_schools_data(:commune, @territory_code)
+    @epci_schools_data = cached_schools_data(:epci, @epci_code)
+  end
+
   # Charge les 5 territoires dans @rev_data, @epci_rev_data, ...
   def load_revenues_poverty_comparison
     @rev_data = cached_revenues_poverty_data(:commune, @territory_code)
