@@ -9,7 +9,7 @@ class DashboardController < ApplicationController
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
-                                            :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy]
+                                            :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy, :load_equipment]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -246,6 +246,16 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html { render partial: 'local_economy' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_equipment
+    # Onglet Équipements : services de proximité, densités comparées, distances (INSEE, BPE 2025 — API /equipment/*)
+    @equipment_data = cached_equipment_data(:commune, @territory_code)
+
+    respond_to do |format|
+      format.html { render partial: 'equipment' }
       format.json { render json: { status: 'success' } }
     end
   end

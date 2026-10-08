@@ -303,6 +303,13 @@ module DashboardCache
     @france_fabric_data = cached_economic_fabric_data(:france)
   end
 
+  # Équipements et services (BPE 2025) : commune (avec densités comparées et distances calculées par l'API)
+  def cached_equipment_data(level, code)
+    return nil if code.blank?
+    cache_key = cache_key_for_territory(code, "equipment_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) { Api::EquipmentService.public_send("get_#{level}", code) }
+  end
+
   def load_schools_data
     @schools_data = cached_schools_data(:commune, @territory_code)
     @epci_schools_data = cached_schools_data(:epci, @epci_code)

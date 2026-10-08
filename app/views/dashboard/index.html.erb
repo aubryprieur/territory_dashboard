@@ -369,6 +369,25 @@
               </div>
             </button>
 
+            <!-- Onglet Équipements -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="equipment"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-teal-100 to-cyan-100 group-hover:from-teal-200 group-hover:to-cyan-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Équipements</div>
+                  <div class="text-xs text-gray-500">Services de proximité</div>
+                </div>
+              </div>
+            </button>
+
             <!-- Onglet Violences -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
@@ -504,6 +523,13 @@
         <div data-dashboard-tabs-target="content" data-tab="caf_benefits" class="hidden dashboard-panel">
           <div id="caf_benefits-content" data-section="caf_benefits">
             <%= render 'components/loader', section_name: 'prestations CAF' %>
+          </div>
+        </div>
+
+        <!-- Panel Équipements -->
+        <div data-dashboard-tabs-target="content" data-tab="equipment" class="hidden dashboard-panel">
+          <div id="equipment-content" data-section="equipment">
+            <%= render 'components/loader', section_name: 'équipements' %>
           </div>
         </div>
 

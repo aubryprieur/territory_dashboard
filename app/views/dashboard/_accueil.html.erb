@@ -286,8 +286,23 @@
       </div>
     </div>
     <div class="mb-6">
-      <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Sécurité</h4>
+      <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Cadre de vie et sécurité</h4>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <!-- Équipements -->
+        <button data-dashboard-tabs-target="tab"
+                data-action="click->dashboard-tabs#showTab"
+                data-tab="equipment"
+                class="group flex flex-col items-center space-y-2 px-4 py-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-teal-300 hover:scale-105">
+          <div class="p-3 bg-teal-100 rounded-lg group-hover:bg-teal-200 transition-colors">
+            <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-gray-700 group-hover:text-teal-600 transition-colors text-center">Équipements</span>
+          <span class="text-xs text-gray-500 text-center">Services de proximité</span>
+        </button>
+
         <!-- Violences -->
         <button data-dashboard-tabs-target="tab"
                 data-action="click->dashboard-tabs#showTab"

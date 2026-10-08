@@ -1,0 +1,140 @@
+<%#
+  Onglet Équipements — dashboard commune (analyse des besoins sociaux).
+  Données : INSEE, Base permanente des équipements 2025 (API /equipment/commune/*) : services clés (présence,
+  densité pour 10 000 habitants comparée aux territoires de référence, distance au plus proche s'ils sont absents)
+  et inventaire des équipements de la commune.
+%>
+<%
+  eq = @equipment_data.is_a?(Hash) && @equipment_data["error"].blank? ? @equipment_data : nil
+  services = eq ? eq["services"] : []
+  by_key = services.index_by { |s| s["key"] }
+  with_qpv = eq && eq.dig("totals", "count_qpv").to_i.positive?
+  ref_names = {
+    "epci" => (@epci_code.present? ? epci_display_name : nil), "department" => department_display_name,
+    "region" => region_display_name, "france" => "France métropolitaine"
+  }
+  ref_keys = %w[epci department region france].select { |k| eq && eq.dig("comparison_territories", k) && ref_names[k] }
+  density = ->(v) { v.nil? ? "–" : number_with_precision(v, precision: 1) }
+  absent = services.select { |s| s["nearest"] }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Équipements et services</h2>
+  <p class="text-xs text-gray-500 mb-4">Services de santé, de petite enfance, pour les personnes âgées, d'accès aux droits, commerces et équipements culturels et sportifs présents dans la commune, selon la Base permanente des équipements de l'INSEE.</p>
+
+  <% if eq.nil? %>
+    <p class="text-sm text-gray-500">Données sur les équipements indisponibles pour ce territoire.</p>
+  <% else %>
+    <% gp, ph = by_key["general_practitioner"], by_key["pharmacy"] %>
+    <!-- Synthèse -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-indigo-50 p-4 rounded-lg">
+        <h4 class="text-xs font-medium text-indigo-800">Équipements recensés (<%= eq["year"] %>)</h4>
+        <p class="text-2xl font-bold text-indigo-900"><%= fmt_count(eq.dig("totals", "count")) %></p>
+        <p class="text-xs text-gray-600"><%= with_qpv ? "dont #{fmt_count(eq.dig('totals', 'count_qpv'))} en quartier prioritaire" : "services, commerces, écoles, équipements de santé, de sport..." %></p>
+      </div>
+      <% [[gp, "Médecins généralistes", "teal"], [ph, "Pharmacies", "green"]].each do |s, label, theme| %>
+        <% next unless s %>
+        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
+          <h4 class="text-xs font-medium text-gray-700"><%= label %> pour 10 000 habitants</h4>
+          <p class="text-2xl font-bold text-gray-900"><%= density.(s["density"]) %></p>
+          <p class="text-xs text-gray-600"><%= fmt_count(s["count"]) %> dans la commune · France métropolitaine <%= density.(s.dig("comparison", "france")) %></p>
+        </div>
+      <% end %>
+      <div class="bg-orange-50 p-4 rounded-lg">
+        <h4 class="text-xs font-medium text-orange-800">Services clés absents de la commune</h4>
+        <p class="text-2xl font-bold text-orange-900"><%= absent.size %> sur <%= services.size %></p>
+        <p class="text-xs text-gray-600">distance au plus proche indiquée ci-dessous</p>
+      </div>
+    </div>
+
+    <!-- 1. Densités comparées -->
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-base font-medium text-gray-900 mb-1">Densité des services de proximité</h3>
+      <p class="text-xs text-gray-500 mb-4">Nombre pour 10 000 habitants (population <%= eq["population_year"] %>). En rouge, une densité inférieure à celle de la France métropolitaine. Les professionnels de santé libéraux sont comptés un par un.</p>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-gray-500 border-b">
+              <th class="py-2 pr-4 font-medium">Service</th>
+              <th class="py-2 pr-4 font-medium text-right">Nombre</th>
+              <th class="py-2 pr-4 font-medium text-right"><%= @territory_name %></th>
+              <% ref_keys.each do |k| %><th class="py-2 pr-4 font-medium text-right"><%= display_territory_name(ref_names[k]) %></th><% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% services.select { |s| s["density_compared"] }.each do |s| %>
+              <% fr = s.dig("comparison", "france") %>
+              <tr class="border-b border-gray-100">
+                <td class="py-2 pr-4 text-gray-800"><%= s["label"] %></td>
+                <td class="py-2 pr-4 text-right text-gray-600"><%= fmt_count(s["count"]) %></td>
+                <td class="py-2 pr-4 text-right font-semibold" style="<%= fr && s['density'] && s['density'] < fr ? 'color:#b91c1c' : '' %>"><%= density.(s["density"]) %></td>
+                <% ref_keys.each do |k| %><td class="py-2 pr-4 text-right text-gray-600"><%= density.(s.dig("comparison", k)) %></td><% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2. Services clés : présence ou distance -->
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-base font-medium text-gray-900 mb-1">Accès aux services essentiels</h3>
+      <p class="text-xs text-gray-500 mb-4">Pour chaque service : nombre dans la commune<%= with_qpv ? " (dont en quartier prioritaire)" : "" %> ou, s'il est absent, distance à vol d'oiseau depuis la mairie jusqu'au plus proche, et commune où il se trouve.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <% services.group_by { |s| s["theme"] }.each do |theme, list| %>
+          <div>
+            <h4 class="text-sm font-semibold text-gray-700 mb-2"><%= theme %></h4>
+            <ul class="text-sm divide-y divide-gray-200">
+              <% list.each do |s| %>
+                <li class="py-1 flex justify-between gap-4">
+                  <span class="text-gray-700"><%= s["label"] %></span>
+                  <% if s["count"].to_i.positive? %>
+                    <span class="whitespace-nowrap font-medium" style="color:#15803d">✓ <%= fmt_count(s["count"]) %><%= with_qpv && s["count_qpv"].to_i.positive? ? " (#{s['count_qpv']} QPV)" : "" %></span>
+                  <% elsif s["nearest"] %>
+                    <span class="whitespace-nowrap" style="color:#b45309">✗ <%= number_with_precision(s.dig("nearest", "distance_km"), precision: 1) %> km · <%= s.dig("nearest", "commune_name").to_s.titleize %></span>
+                  <% else %>
+                    <span class="whitespace-nowrap text-gray-400">✗ absent</span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <!-- 3. Inventaire -->
+    <section style="margin-bottom:1.5rem">
+      <h3 class="text-base font-medium text-gray-900 mb-1">Inventaire des équipements de la commune</h3>
+      <p class="text-xs text-gray-500 mb-4">Tous les équipements recensés, par domaine. Cliquer sur un domaine pour le détail.</p>
+      <% eq["inventory"].each do |dom| %>
+        <details class="mb-2 border border-gray-200 rounded-lg">
+          <summary class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-800 flex justify-between">
+            <span><%= dom["label"] %></span>
+            <span class="text-gray-500"><%= fmt_count(dom["count"]) %><%= with_qpv && dom["count_qpv"].to_i.positive? ? " · #{dom['count_qpv']} en QPV" : "" %></span>
+          </summary>
+          <div class="px-4 pb-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <% dom["subdomains"].each do |sub| %>
+              <div>
+                <h5 class="text-xs font-semibold text-gray-600 uppercase tracking-wide mt-2 mb-1"><%= sub["label"] %></h5>
+                <ul class="text-sm">
+                  <% sub["items"].sort_by { |i| -i["count"].to_i }.each do |i| %>
+                    <li class="flex justify-between gap-4 py-0.5">
+                      <span class="text-gray-700"><%= i["label"] %></span>
+                      <span class="text-gray-900 font-medium"><%= i["count"] %><%= with_qpv && i["count_qpv"].to_i.positive? ? " (#{i['count_qpv']} QPV)" : "" %></span>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
+    </section>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : <%= eq["source"] %>. Quartiers prioritaires de la politique de la ville : géographie 2024.</p>
+      <p>Distances à vol d'oiseau depuis la mairie de la commune : les temps de trajet réels peuvent être nettement plus longs.</p>
+    </div>
+  <% end %>
+</div>
