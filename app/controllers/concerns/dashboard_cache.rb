@@ -223,6 +223,23 @@ module DashboardCache
     @france_housing_data = cached_housing_data(:france)
   end
 
+  def cached_population_structure_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "population_structure_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::PopulationStructureService.get_france : Api::PopulationStructureService.public_send("get_#{level}", code)
+    end
+  end
+
+  # Charge les 5 territoires dans @pop_data, @epci_pop_data, ...
+  def load_population_structure_comparison
+    @pop_data = cached_population_structure_data(:commune, @territory_code)
+    @epci_pop_data = cached_population_structure_data(:epci, @epci_code)
+    @department_pop_data = cached_population_structure_data(:department, @department_code)
+    @region_pop_data = cached_population_structure_data(:region, @region_code)
+    @france_pop_data = cached_population_structure_data(:france)
+  end
+
   # === MÉTHODES CACHÉES POUR LES DONNÉES DE COMPARAISON FRANCE ===
 
   def cached_france_children_data

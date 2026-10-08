@@ -1,46 +1,6 @@
 <!-- app/views/dashboard/_synthese.html.erb -->
-<!-- Synthèse démographique -->
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-4">Synthèse démographique</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-indigo-50 p-4 rounded-lg">
-      <h3 class="text-sm font-medium text-indigo-800 mb-1">Population totale</h3>
-      <p class="text-2xl font-bold text-indigo-900">
-        <%= number_with_delimiter(total_population, delimiter: " ") %>
-      </p>
-    </div>
-    <div class="bg-green-50 p-4 rounded-lg">
-      <h3 class="text-sm font-medium text-green-800 mb-1">Enfants de moins de 3 ans</h3>
-      <p class="text-2xl font-bold text-green-900">
-        <%= number_with_delimiter(population_data&.select { |item| item["AGED100"].to_i < 3 }&.sum { |item| item["NB"].to_f }&.round || 0) %>
-      </p>
-      <p class="text-sm text-green-600">
-        <% under_3_count = population_data&.select { |item| item["AGED100"].to_i < 3 }&.sum { |item| item["NB"].to_f } || 0 %>
-        <% under_3_rate = total_population > 0 ? (under_3_count / total_population) * 100 : 0 %>
-        <%= number_to_percentage(under_3_rate, precision: 2) %> de la population
-      </p>
-    </div>
-    <div class="bg-purple-50 p-4 rounded-lg">
-      <h3 class="text-sm font-medium text-purple-800 mb-1">Enfants de 3 à 5 ans</h3>
-      <p class="text-2xl font-bold text-purple-900">
-        <%= number_with_delimiter(population_data&.select { |item| (3..5).include?(item["AGED100"].to_i) }&.sum { |item| item["NB"].to_f }&.round || 0) %>
-      </p>
-      <p class="text-sm text-purple-600">
-        <% three_to_five_count = population_data&.select { |item| (3..5).include?(item["AGED100"].to_i) }&.sum { |item| item["NB"].to_f } || 0 %>
-        <% three_to_five_rate = total_population > 0 ? (three_to_five_count / total_population) * 100 : 0 %>
-        <%= number_to_percentage(three_to_five_rate, precision: 2) %> de la population
-      </p>
-    </div>
-  </div>
-
-  <!-- Section pour la pyramide des âges -->
-  <div class="mt-6">
-    <h3 class="text-sm font-medium text-gray-700 mb-4">Pyramide des âges</h3>
-    <div class="h-96">
-      <canvas id="age-pyramid-chart"></canvas>
-    </div>
-  </div>
-</div>
+<!-- Population : structure, pyramide, évolution depuis 1968, PCS, mobilité (API /population-structure/*) -->
+<%= render "dashboard/population_structure" %>
 
 <!-- Bloc contextuel : Lecture de la pyramide des âges et petite enfance -->
 <div class="mt-6 bg-gradient-to-r from-sky-50 to-blue-50 border-l-4 border-sky-500 rounded-lg p-6 shadow-sm">
@@ -121,13 +81,7 @@
 <!-- Graphique d'évolution historique -->
 <% if historical_data.present? %>
 
-  <!-- Section 1: Évolution de la population -->
-  <div class="bg-white shadow rounded-lg p-6 mb-6">
-    <h2 class="text-lg font-medium text-gray-900 mb-4">Évolution de la population</h2>
-    <div class="h-64">
-      <canvas id="historical-chart"></canvas>
-    </div>
-  </div>
+  <!-- Évolution de la population : voir le bloc « Évolution de la population depuis 1968 » ci-dessus -->
 
   <!-- Bloc explicatif: Lecture du graphique population -->
   <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 rounded-lg p-6 mb-6 shadow-sm">

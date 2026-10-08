@@ -4,6 +4,8 @@
 //   type "line"    : évolution d'un indicateur sur les millésimes, une courbe par territoire
 //   type "stacked" : barres horizontales empilées à 100 % (répartitions)
 //   type "bars"    : barres verticales groupées (catégories x territoires)
+//   type "components" : barres empilées positives / négatives + courbe du total (composantes d'une variation)
+//   type "pyramid" : pyramide des âges (hommes à gauche, femmes à droite, référence en contour)
 
 const pct = (v, digits = 1) =>
   v === null || v === undefined ? "–" : `${Number(v).toFixed(digits).replace(".", ",")} %`;
@@ -44,7 +46,8 @@ function lineChart(canvas, cfg) {
       },
       scales: {
         x: { grid: { display: false } },
-        y: { ticks: { callback: (v) => tick(v) }, grid: { color: "#f3f4f6" } },
+        // graduations non entières (ex. 6,5 %) : une décimale pour éviter « 7 %, 7 % »
+        y: { ticks: { callback: (v) => (Number.isInteger(v) ? tick(v) : tip(v)) }, grid: { color: "#f3f4f6" } },
       },
     },
   });
@@ -112,6 +115,78 @@ function groupedBarChart(canvas, cfg) {
   });
 }
 
+function componentsChart(canvas, cfg) {
+  const tip = fmt(cfg.unit, 2);
+  return new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: cfg.labels,
+      datasets: cfg.datasets.map((d) =>
+        d.line
+          ? { type: "line", label: d.label, data: d.data, borderColor: d.color, backgroundColor: d.color,
+              borderWidth: 2, pointRadius: 4, tension: 0, order: 0 }
+          : { label: d.label, data: d.data, backgroundColor: d.color, stack: "components", maxBarThickness: 36, order: 1 }
+      ),
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        datalabels: { display: false },
+        legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} : ${tip(ctx.parsed.y)} par an` } },
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false } },
+        y: { stacked: true, ticks: { callback: (v) => fmt(cfg.unit, 1)(v) }, grid: { color: "#f3f4f6" } },
+      },
+    },
+  });
+}
+
+function pyramidChart(canvas, cfg) {
+  const neg = (arr) => arr.map((v) => (v === null || v === undefined ? null : -v));
+  const datasets = [
+    { label: `Hommes — ${cfg.main.name}`, data: neg(cfg.main.men), backgroundColor: "#3b82f6", order: 2 },
+    { label: `Femmes — ${cfg.main.name}`, data: cfg.main.women, backgroundColor: "#f472b6", order: 2 },
+  ];
+  if (cfg.reference) {
+    const ref = { backgroundColor: "rgba(0,0,0,0)", borderColor: "#111827", borderWidth: 1.5, grouped: false, order: 1 };
+    datasets.push({ ...ref, label: `${cfg.reference.name} (hommes)`, data: neg(cfg.reference.men) });
+    datasets.push({ ...ref, label: `${cfg.reference.name} (femmes)`, data: cfg.reference.women });
+  }
+  return new Chart(canvas, {
+    type: "bar",
+    data: { labels: cfg.labels, datasets: datasets.map((d) => ({ barPercentage: 1, categoryPercentage: 0.9, ...d })) },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        datalabels: { display: false },
+        legend: {
+          position: "bottom",
+          labels: {
+            boxWidth: 10, boxHeight: 10, font: { size: 11 },
+            // une seule entrée pour la référence
+            filter: (item) => !item.text.endsWith("(femmes)"),
+            generateLabels: (chart) =>
+              Chart.defaults.plugins.legend.labels.generateLabels(chart).map((l) =>
+                l.text.endsWith("(hommes)") ? { ...l, text: l.text.replace(" (hommes)", " (contour)") } : l),
+          },
+        },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label} : ${pct(Math.abs(ctx.parsed.x), 2)}` } },
+      },
+      scales: {
+        x: { stacked: false, ticks: { callback: (v) => pct(Math.abs(v), 1) }, grid: { color: "#f3f4f6" } },
+        y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+      },
+    },
+  });
+}
+
 function initFamiliesCharts(root = document, attempt = 0) {
   const canvases = root.querySelectorAll("canvas[data-families-chart]");
   if (canvases.length === 0) return;
@@ -125,7 +200,8 @@ function initFamiliesCharts(root = document, attempt = 0) {
     try {
       const cfg = JSON.parse(canvas.dataset.familiesChart);
       if (canvas._familiesChart) canvas._familiesChart.destroy();
-      const build = { stacked: stackedChart, bars: groupedBarChart }[cfg.type] || lineChart;
+      const build = { stacked: stackedChart, bars: groupedBarChart, components: componentsChart,
+                      pyramid: pyramidChart }[cfg.type] || lineChart;
       canvas._familiesChart = build(canvas, cfg);
     } catch (error) {
       console.error("❌ Graphique familles :", error);

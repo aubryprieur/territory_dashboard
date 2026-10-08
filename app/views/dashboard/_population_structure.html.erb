@@ -1,0 +1,223 @@
+<%#
+  Onglet Population — structure et évolution (analyse des besoins sociaux).
+  Données : INSEE, recensements (API /population-structure/*) :
+    - structure par âge, pyramide (2023), catégories socioprofessionnelles, mobilité résidentielle (2012, 2017, 2023)
+    - série longue 1968 → 2023 (population, solde naturel et solde migratoire)
+%>
+<%
+  territories = comparison_territories("population_data", {
+    commune: @pop_data, epci: @epci_pop_data, department: @department_pop_data,
+    region: @region_pop_data, france: @france_pop_data
+  })
+  years = comparison_years(@pop_data, "population_data")
+  latest = comparison_latest_year(@pop_data, years)
+  comparison = comparison_start_year(@pop_data, years)
+  commune = territories.first
+  france = territories.find { |t| t[:key] == :france }
+  common = { territories: territories, years: years, latest: latest, comparison: comparison }
+  labels = @pop_data.is_a?(Hash) ? (@pop_data["labels"] || {}) : {}
+%>
+<% if commune.nil? || commune[:key] != :commune %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-lg font-medium text-gray-900 mb-1">Population</h2>
+    <p class="text-sm text-gray-500">Données population indisponibles pour ce territoire.</p>
+  </div>
+<% else %>
+  <% pv = ->(key, year = latest) { territory_value(commune, year, key) } %>
+  <% history = territory_history(commune) %>
+  <% periods = history["periods"] || [] %>
+  <% last_period = periods.last || {} %>
+
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-lg font-medium text-gray-900 mb-1">Population</h2>
+    <p class="text-xs text-gray-500 mb-4">Population municipale au sens du recensement, structure par âge et évolution depuis 1968.</p>
+
+    <!-- Synthèse -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-indigo-50 p-4 rounded-lg">
+        <h3 class="text-sm font-medium text-indigo-800 mb-1">Population <%= latest %></h3>
+        <p class="text-2xl font-bold text-indigo-900"><%= fmt_count(pv.("pop")) %></p>
+        <p class="text-xs text-indigo-700">
+          <% if last_period["annual_growth_rate"] %>
+            <%= last_period["annual_growth_rate"] >= 0 ? "+" : "" %><%= number_with_precision(last_period["annual_growth_rate"], precision: 2) %> % par an depuis <%= last_period["start_year"] %>
+          <% end %>
+        </p>
+      </div>
+      <% [
+           ["Moins de 15 ans", "age_lt15_percentage", "blue"],
+           ["65 ans ou plus", "age_ge65_percentage", "purple"],
+           ["80 ans ou plus", "age_ge80_percentage", "teal"]
+         ].each do |label, key, theme| %>
+        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-<%= theme %>-800 mb-1"><%= label %></h3>
+          <p class="text-2xl font-bold text-<%= theme %>-900"><%= fmt_pct(pv.(key)) %></p>
+          <p class="text-xs text-<%= theme %>-700">de la population · <%= fmt_trend(pv.(key, comparison), pv.(key)) %> depuis <%= comparison %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 1. Évolution longue -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Évolution de la population depuis 1968</h3>
+    <p class="text-xs text-gray-500 mb-4">Recensements de 1968 à <%= latest %>, en géographie au 1er janvier 2026.</p>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Population en base 100 en 1968</h3>
+      <p class="text-xs text-gray-500 mb-4">Indice 100 = population de 1968 de chaque territoire : permet de comparer les dynamiques quelle que soit la taille.</p>
+      <%= history_index_chart(territories) %>
+    </section>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Moteurs de l'évolution à <%= commune[:name] %></h3>
+      <p class="text-xs text-gray-500 mb-4">Taux de variation annuel moyen de la population, décomposé entre le solde naturel (naissances moins décès) et le solde migratoire apparent (arrivées moins départs), en % par an.</p>
+      <%= history_components_chart(commune) %>
+      <div class="overflow-x-auto mt-6">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <% ["Période", "Population en fin de période", "Variation", "Var. annuelle", "dont solde naturel", "dont solde migratoire", "Natalité (‰)", "Mortalité (‰)"].each_with_index do |h, i| %>
+                <th scope="col" class="px-3 py-3 <%= i.zero? ? 'text-left' : 'text-right' %> text-xs font-medium text-gray-500 uppercase tracking-wider"><%= h %></th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% censuses = (history["censuses"] || []).to_h { |c| [c["year"], c] } %>
+            <% signed = ->(v, unit = " %") { v.nil? ? "–" : "#{v.positive? ? '+' : (v.negative? ? '−' : '')}#{number_with_precision(v.abs, precision: 2)}#{unit}" } %>
+            <% periods.each do |p| %>
+              <tr>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900"><%= p["period"] %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right"><%= fmt_count(censuses.dig(p["end_year"], "population")) %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right"><%= p["population_change"].nil? ? "–" : "#{p['population_change'].positive? ? '+' : (p['population_change'].negative? ? '−' : '')}#{fmt_count(p['population_change'].abs)}" %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right font-semibold"><%= signed.(p["annual_growth_rate"]) %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right" style="color:#0f766e"><%= signed.(p["annual_natural_rate"]) %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right" style="color:#b45309"><%= signed.(p["annual_migration_rate"]) %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-600"><%= p["birth_rate"] ? number_with_precision(p["birth_rate"], precision: 1) : "–" %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-600"><%= p["death_rate"] ? number_with_precision(p["death_rate"], precision: 1) : "–" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-2">
+          Solde migratoire apparent : écart entre la variation de population et le solde naturel (il inclut les ajustements de méthode du recensement).
+          <% if history["area_km2"] %>Densité <%= latest %> : <%= fmt_decimal(censuses.dig(latest.to_i, "density"), precision: 0) %> hab./km² (<%= fmt_decimal(history["area_km2"]) %> km²).<% end %>
+        </p>
+      </div>
+    </section>
+
+    <!-- 2. Pyramide des âges -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Structure par âge</h3>
+    <p class="text-xs text-gray-500 mb-4">Répartition de la population par âge et sexe.</p>
+
+    <% if pv.("pyr_women_0_4_percentage") %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Pyramide des âges (<%= latest %>)</h3>
+        <p class="text-xs text-gray-500 mb-4">Part de chaque tranche d'âge de 5 ans dans la population totale, en %. Contour : <%= france ? france[:name] : "référence" %>. Une barre qui dépasse le contour signale une tranche surreprésentée.</p>
+        <%= age_pyramid_chart(commune, france, latest, (labels["pyramid"] || {}).keys.presence || (0..90).step(5).map { |a| "#{a}_#{a + 4}" } + ["ge95"], labels["pyramid"] || {}) %>
+      </section>
+    <% end %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Population par grande tranche d'âge (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">En %.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["age_lt15_percentage", "Moins de 15 ans", "#93c5fd"],
+            ["age_15_24_percentage", "15-24 ans", "#3b82f6"],
+            ["age_25_39_percentage", "25-39 ans", "#1d4ed8"],
+            ["age_40_54_percentage", "40-54 ans", "#312e81"],
+            ["age_55_64_percentage", "55-64 ans", "#fde68a"],
+            ["age_65_79_percentage", "65-79 ans", "#f59e0b"],
+            ["age_ge80_percentage", "80 ans ou plus", "#b45309"]
+          ], "Population par grande tranche d'âge et par territoire") %>
+    </section>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Indice de vieillissement", theme: "purple",
+          value_key: "aging_index", value_format: :decimal, unit: "", decimals: 1,
+          count_key: "pop_ge65", count_label: "personnes de 65 ans ou plus",
+          definition: "Nombre de personnes de 65 ans ou plus pour 100 jeunes de moins de 20 ans. Au-dessus de 100, les seniors sont plus nombreux que les jeunes.",
+          details: [
+            { label: "65 ans ou plus", share_key: "age_ge65_percentage" },
+            { label: "80 ans ou plus", share_key: "age_ge80_percentage" },
+            { label: "Femmes parmi les 80 ans ou plus", share_key: "women_ge80_percentage" },
+            { label: "Moins de 20 ans", share_key: "age_lt20_percentage" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Rapport de dépendance", theme: "purple",
+          value_key: "dependency_ratio", value_format: :decimal, unit: "", decimals: 1,
+          definition: "Nombre de jeunes (moins de 20 ans) et de seniors (65 ans ou plus) pour 100 personnes de 20 à 64 ans. Plus il est élevé, plus la population d'âge actif est faible au regard des âges qui ont le plus besoin de services (petite enfance, école, accompagnement du vieillissement)." %>
+
+    <% if pv.("age_0_2") %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Enfance et jeunesse (<%= latest %>)</h3>
+        <p class="text-xs text-gray-500 mb-4">
+          Part de chaque tranche d'âge dans la population, en %. À <%= commune[:name] %> :
+          <%= (labels["childhood"] || {}).map { |k, l| "#{fmt_count(pv.("age_#{k}"))} #{l.sub(' ans', '')} ans" }.join(" · ") %>.
+        </p>
+        <%= comparison_grouped_bar_chart(territories, latest,
+              (labels["childhood"] || {}).map { |k, l| ["age_#{k}_percentage", l] },
+              "Enfance et jeunesse par tranche d'âge et par territoire") %>
+      </section>
+    <% end %>
+
+    <!-- 3. Catégories socioprofessionnelles -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Catégories socioprofessionnelles</h3>
+    <p class="text-xs text-gray-500 mb-4">Population de 15 ans ou plus selon la catégorie socioprofessionnelle (actuelle ou dernière exercée), y compris retraités et personnes sans activité.</p>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Population de 15 ans ou plus par catégorie (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">En %.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["pcs_1_percentage", "Agriculteurs", "#84cc16"],
+            ["pcs_2_percentage", "Artisans, commerçants, chefs d'entr.", "#f59e0b"],
+            ["pcs_3_percentage", "Cadres, prof. intell. sup.", "#1e3a8a"],
+            ["pcs_4_percentage", "Professions intermédiaires", "#3b82f6"],
+            ["pcs_5_percentage", "Employés", "#93c5fd"],
+            ["pcs_6_percentage", "Ouvriers", "#ef4444"],
+            ["pcs_7_percentage", "Retraités", "#9ca3af"],
+            ["pcs_9_percentage", "Autres sans activité professionnelle", "#e5e7eb"]
+          ], "Population de 15 ans ou plus par catégorie socioprofessionnelle et par territoire") %>
+    </section>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Employés et ouvriers", theme: "blue",
+          value_key: "working_class_percentage",
+          count_key: "pop_15p", count_label: "personnes de 15 ans ou plus",
+          definition: "Part des employés et des ouvriers (en activité ou au chômage) parmi les 15 ans ou plus. Repère du poids des catégories populaires.",
+          details: [
+            { label: "Ouvriers", share_key: "pcs_6_percentage" },
+            { label: "Employés", share_key: "pcs_5_percentage" },
+            { label: "Cadres", share_key: "pcs_3_percentage" },
+            { label: "Retraités", share_key: "pcs_7_percentage" },
+            { label: "Autres sans activité professionnelle", share_key: "pcs_9_percentage" }
+          ] %>
+
+    <!-- 4. Mobilité résidentielle -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité résidentielle</h3>
+    <p class="text-xs text-gray-500 mb-4">Lieu de résidence des habitants un an auparavant (personnes d'un an ou plus).</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Nouveaux arrivants", theme: "teal",
+          value_key: "newcomers_percentage",
+          count_key: "mig_other_commune", total_key: "mig_total", count_label: "habitants",
+          definition: "Part des habitants qui résidaient dans une autre commune (ou à l'étranger) un an auparavant. Repère de l'attractivité et des besoins d'accueil (inscriptions scolaires, accès aux droits, lien social).",
+          details: [
+            { label: "Venus de l'étranger", share_key: "from_abroad_percentage" },
+            { label: "Ont déménagé dans la commune", share_key: "moved_within_commune_percentage" },
+            { label: "Même logement qu'un an avant", share_key: "same_dwelling_percentage" }
+          ] %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Âge des nouveaux arrivants (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Répartition par âge des habitants arrivés d'une autre commune dans l'année, en %.</p>
+      <%= comparison_grouped_bar_chart(territories, latest,
+            (labels["newcomer_ages"] || {}).map { |k, l| ["newcomers_#{k}_percentage", l] },
+            "Âge des nouveaux arrivants par territoire") %>
+    </section>
+
+    <div class="mb-2 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026) ; pyramide des âges <%= latest %> ; catégories socioprofessionnelles : exploitation complémentaire.</p>
+      <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
+      <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
+    </div>
+  </div>
+<% end %>

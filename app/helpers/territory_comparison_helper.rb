@@ -125,6 +125,54 @@ module TerritoryComparisonHelper
     chart_canvas(config, height, aria_label)
   end
 
+  # ------------------------------------------------- population : série longue et pyramide
+  # Série historique (API /population-structure/* -> "history") d'un territoire
+  def territory_history(territory)
+    territory && territory[:data].is_a?(Hash) ? (territory[:data]["history"] || {}) : {}
+  end
+
+  # Population en base 100 au premier recensement (1968), une courbe par territoire
+  def history_index_chart(territories)
+    years = territory_history(territories.first)["censuses"]&.map { |c| c["year"] } || []
+    config = {
+      type: "line", unit: "", labels: years,
+      datasets: territories.map do |t|
+        by_year = (territory_history(t)["censuses"] || []).to_h { |c| [c["year"], c["index_base_100"]] }
+        { label: t[:name], data: years.map { |y| by_year[y] }, color: t[:color], main: t[:main] }
+      end
+    }
+    chart_canvas(config, 260, "Évolution de la population depuis #{years.first} (base 100) par territoire")
+  end
+
+  # Taux de variation annuel moyen par période : part due au solde naturel et au solde migratoire
+  def history_components_chart(territory)
+    periods = territory_history(territory)["periods"] || []
+    config = {
+      type: "components", unit: "%",
+      labels: periods.map { |p| p["period"] },
+      datasets: [
+        { label: "Dû au solde naturel (naissances - décès)", data: periods.map { |p| p["annual_natural_rate"] }, color: "#0d9488" },
+        { label: "Dû au solde migratoire apparent (arrivées - départs)", data: periods.map { |p| p["annual_migration_rate"] }, color: "#f59e0b" },
+        { label: "Variation annuelle totale", data: periods.map { |p| p["annual_growth_rate"] }, color: "#312e81", line: true }
+      ]
+    }
+    chart_canvas(config, 280, "Composantes de la variation annuelle de la population par période")
+  end
+
+  # Pyramide des âges (% de la population) : hommes à gauche, femmes à droite ;
+  # le territoire de référence (France métropolitaine) en contour
+  def age_pyramid_chart(main, reference, year, groups, labels)
+    values = ->(t, sex) { t ? groups.map { |g| territory_value(t, year, "pyr_#{sex}_#{g}_percentage") } : [] }
+    config = {
+      type: "pyramid",
+      labels: groups.map { |g| labels[g] || g }.reverse,
+      main: { name: main[:name], men: values.(main, "men").reverse, women: values.(main, "women").reverse },
+      reference: reference && { name: reference[:name], men: values.(reference, "men").reverse,
+                                women: values.(reference, "women").reverse }
+    }
+    chart_canvas(config, 480, "Pyramide des âges #{year}")
+  end
+
   private
 
   def chart_canvas(config, height, aria_label)
