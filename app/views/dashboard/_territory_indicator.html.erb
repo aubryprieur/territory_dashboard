@@ -8,7 +8,8 @@
     title        - titre du bloc
     theme        - couleur Tailwind de la carte : "indigo" | "purple" | "blue" | "teal" ...
     value_key    - clé de l'indicateur dans les données
-    value_format - :pct (défaut, écarts en points), :points (écart déjà en points, 1 décimale)
+    value_format - :pct (défaut, écarts en points), :points (écart déjà en points, 1 décimale),
+                   :euros (montant en euros, écart en euros)
                    ou :decimal (écarts en valeur)
     unit         - unité affichée après une valeur décimale (ex. "pers.")
     table_years  - millésimes affichés dans le tableau (défaut : tous ; le graphique garde tous les millésimes)
@@ -32,10 +33,17 @@
   decimals ||= nil
   table_years ||= years
   precision = decimals || (value_format == :points ? 1 : 2)
-  fmt_value = ->(v) { value_format == :pct ? fmt_pct(v) : (v.nil? ? "–" : "#{fmt_decimal(v, precision: precision)} #{unit}".strip) }
+  fmt_value = lambda do |v|
+    case value_format
+    when :pct then fmt_pct(v)
+    when :euros then v.nil? ? "–" : "#{fmt_count(v)} €"
+    else v.nil? ? "–" : "#{fmt_decimal(v, precision: precision)} #{unit}".strip
+    end
+  end
   trend = lambda do |a, b|
     case value_format
     when :pct, :points then fmt_trend(a, b)            # évolution en points, 1 décimale
+    when :euros then fmt_trend(a, b, unit: :euros)
     else fmt_trend(a, b, unit: :value, precision: precision)
     end
   end
@@ -52,7 +60,7 @@
       <div class="bg-<%= theme %>-50 p-4 rounded-md h-full">
         <h4 class="font-medium text-<%= theme %>-800"><%= title %></h4>
         <div class="flex items-baseline mt-2">
-          <p class="text-2xl font-bold text-<%= theme %>-900"><%= value_format == :pct ? fmt_pct(value, precision: 2) : fmt_value.(value) %></p>
+          <p class="text-2xl font-bold text-<%= theme %>-900"><%= value_format == :pct ? fmt_pct(value, precision: decimals || 1) : fmt_value.(value) %></p>
           <p class="ml-2"><%= trend.(territory_value(commune, comparison, value_key), value) %></p>
         </div>
         <p class="text-xs text-gray-500">depuis <%= comparison %></p>
@@ -113,5 +121,5 @@
     </div>
   </div>
 
-  <%= comparison_line_chart(territories, years, value_key, unit: (value_format == :pct ? "%" : unit.to_s)) %>
+  <%= comparison_line_chart(territories, years, value_key, unit: (value_format == :pct ? "%" : (value_format == :euros ? "€" : unit.to_s))) %>
 </section>

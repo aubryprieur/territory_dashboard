@@ -61,15 +61,16 @@ module TerritoryComparisonHelper
     value.nil? ? "–" : number_with_precision(value, precision: precision)
   end
 
-  # Écart entre deux valeurs : "↓ −2,3 pts" (taux) ou "↓ −0,09" (autres)
+  # Écart entre deux valeurs : "↓ −2,3 pts" (taux), "↑ +3 050 €" (unit: :euros) ou "↓ −0,09" (autres)
   def fmt_trend(start_value, end_value, unit: :points, precision: 1)
     return "" if start_value.nil? || end_value.nil?
 
-    diff = (end_value - start_value).round(precision)
+    diff = (end_value - start_value).round(unit == :euros ? 0 : precision)
     arrow = diff.positive? ? "↑" : (diff.negative? ? "↓" : "→")
     sign = diff.positive? ? "+" : (diff.negative? ? "−" : "")
     suffix = unit == :points ? (diff.abs >= 2 ? " pts" : " pt") : ""
-    content_tag(:span, "#{arrow} #{sign}#{number_with_precision(diff.abs, precision: precision)}#{suffix}",
+    amount = unit == :euros ? "#{fmt_count(diff.abs)} €" : number_with_precision(diff.abs, precision: precision)
+    content_tag(:span, "#{arrow} #{sign}#{amount}#{suffix}",
                 class: "text-xs text-gray-600 whitespace-nowrap")
   end
 
@@ -101,12 +102,19 @@ module TerritoryComparisonHelper
 
   # Barres horizontales empilées (100 %) : une barre par territoire, un segment par catégorie.
   # categories : [[clé_du_taux, libellé, couleur], ...]
-  def comparison_stacked_chart(territories, year, categories, aria_label)
+  # normalize: true ramène chaque barre à 100 % (parts recalculées sur la somme des catégories affichées)
+  def comparison_stacked_chart(territories, year, categories, aria_label, normalize: false)
     config = {
       type: "stacked",
       labels: territories.map { |t| t[:name] },
       datasets: categories.map do |key, label, color|
-        { label: label, data: territories.map { |t| territory_value(t, year, key) }, color: color }
+        data = territories.map do |t|
+          v = territory_value(t, year, key)
+          next v unless normalize && v
+          sum = categories.sum { |k, _| territory_value(t, year, k).to_f }
+          sum.positive? ? (v * 100.0 / sum).round(1) : nil
+        end
+        { label: label, data: data, color: color }
       end
     }
     chart_canvas(config, 70 + territories.size * 44, aria_label)

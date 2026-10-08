@@ -58,12 +58,6 @@ module DashboardCache
     end
   end
 
-  def cached_revenue_data(territory_code)
-    cache_key = cache_key_for_territory(territory_code, 'revenue')
-    cached_api_call(cache_key, expires_in: 8.hours) do
-      Api::RevenueService.get_median_revenues(territory_code)
-    end
-  end
 
   def cached_schooling_data(territory_code)
     cache_key = cache_key_for_territory(territory_code, 'schooling')
@@ -259,6 +253,23 @@ module DashboardCache
     @france_caf_data = cached_caf_benefits_data(:france)
   end
 
+  def cached_revenues_poverty_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "revenues_poverty_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::RevenuesPovertyService.get_france : Api::RevenuesPovertyService.public_send("get_#{level}", code)
+    end
+  end
+
+  # Charge les 5 territoires dans @rev_data, @epci_rev_data, ...
+  def load_revenues_poverty_comparison
+    @rev_data = cached_revenues_poverty_data(:commune, @territory_code)
+    @epci_rev_data = cached_revenues_poverty_data(:epci, @epci_code)
+    @department_rev_data = cached_revenues_poverty_data(:department, @department_code)
+    @region_rev_data = cached_revenues_poverty_data(:region, @region_code)
+    @france_rev_data = cached_revenues_poverty_data(:france)
+  end
+
   # === MÉTHODES CACHÉES POUR LES DONNÉES DE COMPARAISON FRANCE ===
 
   def cached_france_children_data
@@ -268,12 +279,6 @@ module DashboardCache
     end
   end
 
-  def cached_france_revenue_data
-    cache_key = cache_key_for_france('revenue')
-    cached_api_call(cache_key, expires_in: 1.day) do
-      Api::RevenueService.get_median_revenues_france
-    end
-  end
 
   def cached_france_schooling_data
     cache_key = cache_key_for_france('schooling')
@@ -327,13 +332,6 @@ module DashboardCache
     end
   end
 
-  def cached_epci_revenue_data(epci_code)
-    return nil if epci_code.blank?
-    cache_key = cache_key_for_territory(epci_code, 'epci_revenue')
-    cached_api_call(cache_key, expires_in: 8.hours) do
-      Api::RevenueService.get_median_revenues_epci(epci_code)
-    end
-  end
 
   def cached_epci_schooling_data(epci_code)
     return nil if epci_code.blank?
@@ -393,13 +391,6 @@ module DashboardCache
     end
   end
 
-  def cached_department_revenue_data(department_code)
-    return nil if department_code.blank?
-    cache_key = cache_key_for_territory(department_code, 'dept_revenue')
-    cached_api_call(cache_key, expires_in: 8.hours) do
-      Api::RevenueService.get_median_revenues_department(department_code)
-    end
-  end
 
   def cached_department_schooling_data(department_code)
     return nil if department_code.blank?
@@ -467,13 +458,6 @@ module DashboardCache
     end
   end
 
-  def cached_region_revenue_data(region_code)
-    return nil if region_code.blank?
-    cache_key = cache_key_for_territory(region_code, 'region_revenue')
-    cached_api_call(cache_key, expires_in: 12.hours) do
-      Api::RevenueService.get_median_revenues_region(region_code)
-    end
-  end
 
   def cached_region_schooling_data(region_code)
     return nil if region_code.blank?
@@ -569,15 +553,12 @@ module DashboardCache
       begin
         cached_population_data(territory_code)
         cached_children_data(territory_code)
-        cached_revenue_data(territory_code)
 
         # Précharger aussi les données de comparaison les plus utilisées
         cached_france_children_data
-        cached_france_revenue_data
 
         if epci_code.present?
           cached_epci_children_data(epci_code)
-          cached_epci_revenue_data(epci_code)
         end
 
         Rails.logger.info "✅ Préchargement terminé pour #{territory_code}"

@@ -12,7 +12,8 @@ const pct = (v, digits = 1) =>
 
 // Formatage selon l'unité de la configuration ("%" par défaut, "" pour une valeur décimale)
 const fmt = (unit, digits) => (v) =>
-  unit === "%" || unit === undefined ? pct(v, digits)
+  unit === "€" ? (v === null || v === undefined ? "–" : `${Math.round(Number(v)).toLocaleString("fr-FR")} €`)
+  : unit === "%" || unit === undefined ? pct(v, digits)
     : v === null || v === undefined ? "–" : `${Number(v).toFixed(digits).replace(".", ",")}${unit ? " " + unit : ""}`;
 
 function lineChart(canvas, cfg) {

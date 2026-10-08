@@ -241,24 +241,6 @@
               </div>
             </button>
 
-            <!-- Onglet Revenus -->
-            <button data-dashboard-tabs-target="tab"
-                    data-action="click->dashboard-tabs#showTab"
-                    data-tab="economic_data"
-                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
-              <div class="flex items-center space-x-3">
-                <div class="p-2 rounded-lg bg-gradient-to-r from-green-100 to-emerald-100 group-hover:from-green-200 group-hover:to-emerald-200 transition-all duration-300">
-                  <!-- ✅ NOUVELLE ICÔNE: Euro (€) -->
-                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <div class="text-left">
-                  <div class="font-semibold">Revenus</div>
-                  <div class="text-xs text-gray-500">Économie</div>
-                </div>
-              </div>
-            </button>
 
             <!-- Onglet Garde d'enfants -->
             <button data-dashboard-tabs-target="tab"
@@ -293,6 +275,24 @@
                 <div class="text-left">
                   <div class="font-semibold">Emploi</div>
                   <div class="text-xs text-gray-500">Activité, femmes, familles</div>
+                </div>
+              </div>
+            </button>
+
+            <!-- Onglet Revenus et pauvreté -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="revenues_poverty"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-yellow-100 to-orange-100 group-hover:from-yellow-200 group-hover:to-orange-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Revenus et pauvreté</div>
+                  <div class="text-xs text-gray-500">Niveau de vie, inégalités</div>
                 </div>
               </div>
             </button>
@@ -403,12 +403,6 @@
           </div>
         </div>
 
-        <!-- Panel Économie -->
-        <div data-dashboard-tabs-target="content" data-tab="economic_data" class="hidden dashboard-panel">
-          <div id="economic_data-content" data-section="economic_data">
-            <%= render 'components/loader', section_name: 'données économiques' %>
-          </div>
-        </div>
 
         <!-- Panel Garde d'enfants -->
         <div data-dashboard-tabs-target="content" data-tab="childcare" class="hidden dashboard-panel">
@@ -421,6 +415,13 @@
         <div data-dashboard-tabs-target="content" data-tab="employment" class="hidden dashboard-panel">
           <div id="employment-content" data-section="employment">
             <%= render 'components/loader', section_name: 'emploi' %>
+          </div>
+        </div>
+
+        <!-- Panel Revenus et pauvreté -->
+        <div data-dashboard-tabs-target="content" data-tab="revenues_poverty" class="hidden dashboard-panel">
+          <div id="revenues_poverty-content" data-section="revenues_poverty">
+            <%= render 'components/loader', section_name: 'revenus et pauvreté' %>
           </div>
         </div>
 

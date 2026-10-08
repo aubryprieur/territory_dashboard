@@ -61,7 +61,6 @@ import "charts/epci_communes_chart"
 // =========================================
 
 // Cities Charts - Chargement normal pour les dashboards communes
-import "charts/economic_charts"
 import "charts/births_chart"
 import "charts/domestic_violence_chart"
 import "charts/families_charts"

@@ -22,7 +22,6 @@ pin "utils/initialization_guard", to: "utils/initialization_guard.js"
 pin "maps/map_manager", to: "maps/map_manager.js"
 
 # Commune Dashboard
-pin "charts/economic_charts", to: "charts/economic_charts.js"
 pin "charts/births_chart", to: "charts/births_chart.js"
 pin "charts/domestic_violence_chart", to: "charts/domestic_violence_chart.js"
 pin "charts/families_charts", to: "charts/families_charts.js"

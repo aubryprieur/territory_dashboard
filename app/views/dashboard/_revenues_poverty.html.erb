@@ -1,0 +1,153 @@
+<%#
+  Onglet Revenus et pauvreté — dashboard commune (analyse des besoins sociaux).
+  Données : INSEE, Filosofi 2017 à 2021 (chiffres clés) et 2023 (API /revenues-poverty/*).
+  En 2023, l'INSEE ne publie pour les communes et EPCI que le niveau de vie médian et le taux de pauvreté :
+  le détail (pauvreté par âge et statut d'occupation, déciles, structure du revenu) est présenté pour la
+  dernière année détaillée de la commune (2021 en général).
+%>
+<%
+  territories = comparison_territories("revenues_data", {
+    commune: @rev_data, epci: @epci_rev_data, department: @department_rev_data,
+    region: @region_rev_data, france: @france_rev_data
+  })
+  years = territories.flat_map { |t| (t[:data]["available_years"] || []).map(&:to_s) }.uniq.sort
+  latest = years.last
+  comparison = years.reverse.find { |y| y.to_i <= latest.to_i - 5 } || years.first
+  commune = territories.find { |t| t[:key] == :commune }
+  # Dernière année où la commune a le détail (déciles, pauvreté par âge et statut, structure du revenu)
+  detail_year = commune && years.reverse.find { |y| territory_value(commune, y, "detailed") }
+  detail_years = detail_year ? years.select { |y| y <= detail_year } : []
+  common = { territories: territories, years: years, latest: latest, comparison: comparison,
+             table_years: ([comparison] + years.last(3)).uniq.sort }
+  common_detail = detail_year && { territories: territories, years: detail_years, latest: detail_year,
+                                   comparison: (detail_years.reverse.find { |y| y.to_i <= detail_year.to_i - 3 } || detail_years.first),
+                                   table_years: detail_years.last(3) }
+  labels = @rev_data.is_a?(Hash) ? (@rev_data["labels"] || {}) : {}
+  # Bloc 2023 par âge des individus : départements, régions, France seulement
+  with_individual = territories.select { |t| territory_value(t, latest, "poverty_rate_ind_lt18") }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Revenus et pauvreté</h2>
+  <p class="text-xs text-gray-500 mb-4">Niveau de vie des ménages (revenu disponible par unité de consommation) et pauvreté monétaire, d'après les sources fiscales et sociales (Filosofi).</p>
+
+  <% if commune.nil? || latest.nil? %>
+    <p class="text-sm text-gray-500">Données de revenus indisponibles pour ce territoire.</p>
+  <% else %>
+    <% cv = ->(key, year = latest) { territory_value(commune, year, key) } %>
+
+    <!-- Synthèse -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-indigo-50 p-4 rounded-lg">
+        <h3 class="text-sm font-medium text-indigo-800 mb-1">Niveau de vie médian <%= latest %></h3>
+        <p class="text-2xl font-bold text-indigo-900"><%= cv.("median_living_standard") ? "#{fmt_count(cv.("median_living_standard"))} €" : "–" %></p>
+        <p class="text-xs text-indigo-700">par an et par unité de consommation · <%= fmt_trend(cv.("median_living_standard", comparison), cv.("median_living_standard"), unit: :euros) %> depuis <%= comparison %></p>
+      </div>
+      <div class="bg-purple-50 p-4 rounded-lg">
+        <h3 class="text-sm font-medium text-purple-800 mb-1">Taux de pauvreté <%= latest %></h3>
+        <p class="text-2xl font-bold text-purple-900"><%= fmt_pct(cv.("poverty_rate")) %></p>
+        <p class="text-xs text-purple-700">au seuil de 60 % du niveau de vie médian · <%= fmt_trend(cv.("poverty_rate", comparison), cv.("poverty_rate")) %> depuis <%= comparison %></p>
+      </div>
+      <% if detail_year %>
+        <div class="bg-orange-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-orange-800 mb-1">Pauvreté des locataires <%= detail_year %></h3>
+          <p class="text-2xl font-bold text-orange-900"><%= fmt_pct(cv.("poverty_rate_tenants", detail_year)) %></p>
+          <p class="text-xs text-orange-700">propriétaires : <%= fmt_pct(cv.("poverty_rate_owners", detail_year)) %></p>
+        </div>
+        <div class="bg-teal-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-teal-800 mb-1">Écart de revenus D9/D1 <%= detail_year %></h3>
+          <p class="text-2xl font-bold text-teal-800"><%= fmt_decimal(cv.("interdecile_ratio", detail_year), precision: 1) %></p>
+          <p class="text-xs text-teal-700">les 10 % les plus aisés ont au moins <%= fmt_decimal(cv.("interdecile_ratio", detail_year), precision: 1) %> fois le niveau de vie des 10 % les plus modestes</p>
+        </div>
+      <% end %>
+    </div>
+
+    <% if detail_year && detail_year != latest %>
+      <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        En <%= latest %>, l'INSEE ne publie pour les communes et les intercommunalités que le niveau de vie médian et le taux de pauvreté.
+        Le détail (pauvreté selon l'âge et le statut d'occupation, déciles, composition des revenus) est présenté pour <strong><%= detail_year %></strong>, dernière année disponible pour <%= commune[:name] %>.
+      </div>
+    <% elsif detail_year.nil? %>
+      <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        Le détail des revenus de <%= commune[:name] %> n'est pas diffusé par l'INSEE (secret statistique pour les communes de moins d'environ 1 000 ménages fiscaux).
+      </div>
+    <% end %>
+
+    <!-- 1. Niveau de vie et pauvreté -->
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Niveau de vie médian", theme: "indigo",
+          value_key: "median_living_standard", value_format: :euros,
+          definition: "Revenu disponible du ménage (après impôts et prestations) divisé par le nombre d'unités de consommation : la moitié des habitants vit avec moins, l'autre moitié avec plus. Montants annuels en euros courants (non corrigés de l'inflation)." %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Taux de pauvreté", theme: "purple",
+          value_key: "poverty_rate",
+          definition: "Part des personnes dont le niveau de vie est inférieur à 60 % du niveau de vie médian de France métropolitaine (environ 1 300 € par mois pour une personne seule en 2023)." %>
+
+    <% if detail_year %>
+      <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Qui est touché par la pauvreté ? (<%= detail_year %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Taux de pauvreté selon le statut d'occupation du logement et l'âge du référent fiscal du ménage.</p>
+
+      <%= render "dashboard/territory_indicator", **common_detail,
+            title: "Taux de pauvreté des locataires", theme: "orange",
+            value_key: "poverty_rate_tenants",
+            definition: "Part des personnes pauvres parmi celles vivant dans un ménage locataire (parc social et privé confondus).",
+            details: [{ label: "Propriétaires", share_key: "poverty_rate_owners" }] %>
+
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de pauvreté selon l'âge du référent fiscal (<%= detail_year %>)</h3>
+        <p class="text-xs text-gray-500 mb-4">En %. Le référent fiscal est le déclarant principal du ménage.</p>
+        <%= comparison_grouped_bar_chart(territories, detail_year,
+              (labels["reference_ages"] || {}).map { |k, l| ["poverty_rate_ref_#{k}", l] },
+              "Taux de pauvreté par âge du référent fiscal et par territoire") %>
+      </section>
+
+      <!-- 2. Inégalités -->
+      <%= render "dashboard/territory_indicator", **common_detail,
+            title: "Rapport interdécile D9/D1", theme: "teal",
+            value_key: "interdecile_ratio", value_format: :decimal, unit: "", decimals: 1,
+            definition: "Rapport entre le niveau de vie plancher des 10 % les plus aisés (D9) et le niveau de vie plafond des 10 % les plus modestes (D1). Mesure de l'écart des revenus sur le territoire." %>
+
+      <!-- 3. Structure du revenu -->
+      <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">D'où viennent les revenus ? (<%= detail_year %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Répartition des revenus des ménages avant impôts, en %. La part des prestations y est un peu plus faible que dans l'indicateur ci-dessous, que l'INSEE rapporte au revenu disponible (après impôts).</p>
+
+      <section style="margin-bottom:2.5rem">
+        <%= comparison_stacked_chart(territories, detail_year, [
+              ["share_salaries", "Salaires", "#1d4ed8"],
+              ["share_self_employment", "Revenus non salariés", "#93c5fd"],
+              ["share_unemployment_benefits", "Indemnités de chômage", "#f59e0b"],
+              ["share_pensions", "Pensions et retraites", "#9ca3af"],
+              ["share_property_income", "Revenus du patrimoine", "#0d9488"],
+              ["share_social_benefits", "Prestations sociales", "#ef4444"]
+            ], "Composition des revenus avant impôts par territoire", normalize: true) %>
+      </section>
+
+      <%= render "dashboard/territory_indicator", **common_detail,
+            title: "Part des prestations sociales dans le revenu", theme: "purple",
+            value_key: "share_social_benefits",
+            definition: "Part des prestations sociales (familiales, logement, minima sociaux) dans le revenu disponible des ménages. Repère de la dépendance aux transferts sociaux.",
+            details: [
+              { label: "Prestations familiales", share_key: "share_family_benefits" },
+              { label: "Prestations logement", share_key: "share_housing_benefits" },
+              { label: "Minima sociaux", share_key: "share_minimum_income" },
+              { label: "Indemnités de chômage", share_key: "share_unemployment_benefits" }
+            ] %>
+    <% end %>
+
+    <!-- 4. Pauvreté par âge des individus (2023, départements, régions, France) -->
+    <% if with_individual.any? %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de pauvreté selon l'âge des personnes (<%= latest %>)</h3>
+        <p class="text-xs text-gray-500 mb-4">En %. Publié par l'INSEE pour les départements, les régions et la France uniquement. Le taux des moins de 18 ans mesure la pauvreté des enfants.</p>
+        <%= comparison_grouped_bar_chart(with_individual, latest,
+              (labels["individual_ages"] || {}).map { |k, l| ["poverty_rate_ind_#{k}", l] },
+              "Taux de pauvreté par âge et par territoire") %>
+      </section>
+    <% end %>
+
+    <div class="mb-2 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, Filosofi <%= years.first %> à <%= latest %> (pas de diffusion 2022 dans ces fichiers). Évolutions en points de pourcentage pour les taux, en euros courants pour les niveaux de vie.</p>
+      <p>Les séries 2017-2021 et 2023 proviennent de deux diffusions de l'INSEE ; les communes sont arrondies dans la diffusion 2023.</p>
+    </div>
+  <% end %>
+</div>

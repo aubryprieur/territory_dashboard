@@ -1,15 +1,15 @@
 class DashboardController < ApplicationController
   include UserAuthorization
-  include RevenueAnalysisHelper
   include TerritoryNamesHelper
   include DashboardCache  # 🚀 Ajout du système de cache
 
   before_action :check_user_territory
   before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families,
-                                            :load_economic_data, :load_schooling, :load_childcare,
+                                            :load_schooling, :load_childcare,
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
                                             :load_family_employment, :load_households, :load_diplomas,
-                                            :load_housing, :load_caf_benefits]
+                                            :load_housing, :load_caf_benefits,
+                                            :load_revenues_poverty]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -214,27 +214,6 @@ class DashboardController < ApplicationController
     end
   end
 
-  def load_economic_data
-    # 🚀 Chargement des données économiques avec cache
-    @revenue_data = cached_revenue_data(@territory_code)
-
-    # Données de comparaison avec cache
-    load_comparison_data_for_economy_cached
-
-    respond_to do |format|
-      format.html { render partial: 'economic_data', locals: {
-        revenue_data: @revenue_data,
-        france_revenue_data: @france_revenue_data,
-        epci_revenue_data: @epci_revenue_data,
-        department_revenue_data: @department_revenue_data,
-        region_revenue_data: @region_revenue_data,
-        epci_code: @epci_code,
-        department_code: @department_code,
-        region_code: @region_code
-      }}
-      format.json { render json: { status: 'success' } }
-    end
-  end
 
   def load_schooling
     # Scolarisation (INSEE RP 2012, 2017, 2023) : commune + territoires de comparaison
@@ -254,6 +233,17 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html { render partial: 'childcare' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_revenues_poverty
+    # Onglet Revenus et pauvreté (ABS) : niveau de vie, pauvreté, inégalités, structure du revenu
+    # (INSEE, Filosofi 2017-2021 et 2023 — API /revenues-poverty/*)
+    load_revenues_poverty_comparison
+
+    respond_to do |format|
+      format.html { render partial: 'revenues_poverty' }
       format.json { render json: { status: 'success' } }
     end
   end
@@ -481,12 +471,6 @@ class DashboardController < ApplicationController
     @region_children_data = cached_region_children_data(@region_code)
   end
 
-  def load_comparison_data_for_economy_cached
-    @france_revenue_data = cached_france_revenue_data
-    @epci_revenue_data = cached_epci_revenue_data(@epci_code)
-    @department_revenue_data = cached_department_revenue_data(@department_code)
-    @region_revenue_data = cached_region_revenue_data(@region_code)
-  end
 
   def load_comparison_data_for_schooling_cached
     @france_schooling_data = cached_france_schooling_data
