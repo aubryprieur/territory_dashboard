@@ -242,6 +242,23 @@ module DashboardCache
     @france_cc_data = cached_childcare_offer_data(:france)
   end
 
+  def cached_caf_benefits_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "caf_benefits_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::CafBenefitsService.get_france : Api::CafBenefitsService.public_send("get_#{level}", code)
+    end
+  end
+
+  # Charge les 5 territoires dans @caf_data, @epci_caf_data, ...
+  def load_caf_benefits_comparison
+    @caf_data = cached_caf_benefits_data(:commune, @territory_code)
+    @epci_caf_data = cached_caf_benefits_data(:epci, @epci_code)
+    @department_caf_data = cached_caf_benefits_data(:department, @department_code)
+    @region_caf_data = cached_caf_benefits_data(:region, @region_code)
+    @france_caf_data = cached_caf_benefits_data(:france)
+  end
+
   # === MÉTHODES CACHÉES POUR LES DONNÉES DE COMPARAISON FRANCE ===
 
   def cached_france_children_data

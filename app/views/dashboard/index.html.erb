@@ -297,6 +297,24 @@
               </div>
             </button>
 
+            <!-- Onglet Prestations CAF -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="caf_benefits"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-green-100 to-emerald-100 group-hover:from-green-200 group-hover:to-emerald-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Prestations CAF</div>
+                  <div class="text-xs text-gray-500">RSA, logement, familles</div>
+                </div>
+              </div>
+            </button>
+
             <!-- Onglet Violences -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
@@ -403,6 +421,13 @@
         <div data-dashboard-tabs-target="content" data-tab="employment" class="hidden dashboard-panel">
           <div id="employment-content" data-section="employment">
             <%= render 'components/loader', section_name: 'emploi' %>
+          </div>
+        </div>
+
+        <!-- Panel Prestations CAF -->
+        <div data-dashboard-tabs-target="content" data-tab="caf_benefits" class="hidden dashboard-panel">
+          <div id="caf_benefits-content" data-section="caf_benefits">
+            <%= render 'components/loader', section_name: 'prestations CAF' %>
           </div>
         </div>
 

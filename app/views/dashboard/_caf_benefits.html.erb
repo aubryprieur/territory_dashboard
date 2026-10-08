@@ -1,0 +1,163 @@
+<%#
+  Onglet Prestations CAF — dashboard commune (analyse des besoins sociaux).
+  Données : Cnaf, data.caf.fr, foyers allocataires au 31 décembre 2020 à 2024 (API /caf-benefits/*).
+  Taux rapportés au recensement 2023 du territoire (ménages, population, familles).
+%>
+<%
+  territories = comparison_territories("caf_data", {
+    commune: @caf_data, epci: @epci_caf_data, department: @department_caf_data,
+    region: @region_caf_data, france: @france_caf_data
+  })
+  years = comparison_years(@caf_data, "caf_data")
+  latest = comparison_latest_year(@caf_data, years)
+  comparison = comparison_start_year(@caf_data, years)
+  commune = territories.first
+  table_years = ([comparison] + years.last(3)).uniq.sort
+  common = { territories: territories, years: years, latest: latest, comparison: comparison, table_years: table_years }
+  labels = @caf_data.is_a?(Hash) ? (@caf_data.dig("labels", "benefits") || {}) : {}
+  euros = ->(v) { v.nil? ? "–" : "#{fmt_count(v)} €" }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Prestations CAF</h2>
+  <p class="text-xs text-gray-500 mb-4">Foyers allocataires et personnes couvertes au 31 décembre (<%= years.first %>-<%= latest %>). Les taux rapportent les effectifs CAF à la population et aux ménages du recensement 2023.</p>
+
+  <% if commune.nil? || commune[:key] != :commune %>
+    <p class="text-sm text-gray-500">Données CAF indisponibles pour ce territoire.</p>
+  <% else %>
+    <% cv = ->(key, year = latest) { territory_value(commune, year, key) } %>
+
+    <!-- Synthèse -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <% [
+           ["Population couverte par la CAF", "population_covered_rate", "indigo"],
+           ["Population couverte par le RSA", "rsa_population_rate", "purple"],
+           ["Couverte par la prime d'activité", "ppa_population_rate", "blue"],
+           ["Couverte par une aide au logement", "housing_population_rate", "teal"]
+         ].each do |label, key, theme| %>
+        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-<%= theme %>-800 mb-1"><%= label %></h3>
+          <p class="text-2xl font-bold text-<%= theme %>-900"><%= fmt_pct(cv.(key)) %></p>
+          <p class="text-xs text-<%= theme %>-700">de la population · <%= fmt_trend(cv.(key, comparison), cv.(key)) %> depuis <%= comparison %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 1. Couverture par la CAF -->
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Population couverte par la CAF", theme: "indigo",
+          value_key: "population_covered_rate",
+          count_key: "all_persons", count_label: "personnes couvertes (allocataires, conjoints, enfants)",
+          definition: "Part de la population vivant dans un foyer qui perçoit au moins une prestation de la CAF (allocataire, conjoint, enfants et autres personnes à charge).",
+          details: [
+            { label: "Ménages allocataires", count_key: "all_households", share_key: "households_covered_rate" }
+          ] %>
+
+    <!-- 2. Précarité : RSA et prime d'activité -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Minima sociaux et bas revenus d'activité</h3>
+    <p class="text-xs text-gray-500 mb-4">Le RSA garantit un revenu minimum ; la prime d'activité complète les revenus des travailleurs modestes.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Population couverte par le RSA", theme: "purple",
+          value_key: "rsa_population_rate",
+          count_key: "rsa_persons", count_label: "personnes couvertes par le RSA",
+          definition: "Part de la population vivant dans un foyer allocataire du revenu de solidarité active. C'est l'un des repères les plus directs de la pauvreté monétaire sur un territoire.",
+          details: [
+            { label: "Foyers allocataires du RSA", count_key: "rsa_households", share_key: "rsa_households_rate" },
+            { label: "Part des allocataires CAF", share_key: "rsa_share" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Population couverte par la prime d'activité", theme: "blue",
+          value_key: "ppa_population_rate",
+          count_key: "ppa_persons", count_label: "personnes couvertes par la prime d'activité",
+          definition: "Part de la population vivant dans un foyer qui perçoit la prime d'activité : travailleurs aux revenus modestes, souvent à temps partiel ou en contrat court.",
+          details: [
+            { label: "Foyers allocataires", count_key: "ppa_households", share_key: "ppa_households_rate" },
+            { label: "Part des allocataires CAF", share_key: "ppa_share" }
+          ] %>
+
+    <!-- 3. Logement -->
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Population couverte par une aide au logement", theme: "teal",
+          value_key: "housing_population_rate",
+          count_key: "housing_persons", count_label: "personnes couvertes par une aide au logement",
+          definition: "Part de la population vivant dans un foyer qui perçoit une aide au logement (APL, ALF ou ALS). Repère du poids du logement dans le budget des ménages modestes.",
+          details: [
+            { label: "Foyers allocataires", count_key: "housing_households", share_key: "housing_households_rate" },
+            { label: "dont APL (parc conventionné)", share_key: "apl_housing_share" },
+            { label: "dont ALF (familles)", share_key: "alf_housing_share" },
+            { label: "dont ALS (personnes seules, étudiants...)", share_key: "als_housing_share" }
+          ] %>
+
+    <!-- 4. Familles et handicap -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Familles et handicap</h3>
+    <p class="text-xs text-gray-500 mb-4">Prestations familiales et liées au handicap.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Familles monoparentales percevant l'ASF", theme: "orange",
+          value_key: "asf_single_parent_rate",
+          count_key: "asf_households", count_label: "foyers percevant l'allocation de soutien familial",
+          definition: "Foyers percevant l'allocation de soutien familial (parent qui élève seul un enfant sans pension alimentaire, ou orphelin) pour 100 familles monoparentales du recensement. Repère de la fragilité des familles monoparentales.",
+          details: [
+            { label: "Familles avec enfants percevant les allocations familiales", share_key: "af_families_rate" },
+            { label: "Foyers percevant la Paje (jeunes enfants)", count_key: "paje_households" },
+            { label: "dont complément mode de garde (CMG)", count_key: "cmg_households" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Bénéficiaires de l'AAH", theme: "amber",
+          value_key: "aah_rate",
+          count_key: "aah_beneficiaries", count_label: "bénéficiaires de l'allocation aux adultes handicapés",
+          definition: "Bénéficiaires de l'allocation aux adultes handicapés pour 100 personnes de 20 à 64 ans. La Cnaf ne publie pas les prestations liées au handicap à l'échelle communale : la commune apparaît sans valeur." %>
+
+    <!-- 5. Poids des prestations -->
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Poids de chaque prestation parmi les foyers allocataires (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Part des foyers allocataires de la CAF qui perçoivent chaque prestation, en % (un foyer peut en percevoir plusieurs).</p>
+      <%= comparison_grouped_bar_chart(territories, latest, [
+            ["housing_share", "Aides au logement"], ["ppa_share", "Prime d'activité"], ["af_share", "Allocations familiales"],
+            ["rsa_share", "RSA"], ["paje_share", "Paje"], ["asf_share", "ASF"], ["aah_share", "AAH"]
+          ], "Poids des prestations parmi les allocataires par territoire") %>
+    </section>
+
+    <!-- 6. Détail des prestations de la commune -->
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Prestations versées à <%= commune[:name] %></h3>
+      <p class="text-xs text-gray-500 mb-4">Foyers allocataires, personnes couvertes et montant mensuel moyen par foyer au 31 décembre <%= latest %> ; évolution du nombre de foyers depuis <%= comparison %>. Effectifs communaux arrondis à 5 par la Cnaf. Montant de l'allocation de rentrée scolaire non affiché (versée en août).</p>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <% ["Prestation", "Foyers #{comparison}", "Foyers #{latest}", "Évolution", "Personnes couvertes", "Montant moyen / mois"].each_with_index do |h, i| %>
+                <th scope="col" class="px-3 py-3 <%= i.zero? ? 'text-left' : 'text-right' %> text-xs font-medium text-gray-500 uppercase tracking-wider"><%= h %></th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% %w[all rsa ppa housing apl alf als af cf ars asf paje cmg prepare].each do |b| %>
+              <% f0, f1 = cv.("#{b}_households", comparison), cv.("#{b}_households") %>
+              <% next if f1.nil? %>
+              <tr class="<%= b == 'all' ? 'bg-gray-50 font-semibold' : '' %>">
+                <td class="px-3 py-2 text-sm text-gray-900 <%= %w[apl alf als cmg].include?(b) ? 'pl-8 text-gray-600' : '' %>"><%= labels[b] || b %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-600"><%= fmt_count(f0) %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right"><%= fmt_count(f1) %><%= small_count_flag(f1) %></td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-700">
+                  <%= f0 && f1 && f0 > 0 ? "#{f1 >= f0 ? '+' : '−'}#{number_with_precision(((f1 - f0) / f0 * 100).abs, precision: 1)} %" : "–" %>
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right"><%= fmt_count(cv.("#{b}_persons")) %></td>
+                <%# ARS : versée en août, le montant de décembre n'est pas représentatif %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right"><%= b == "ars" ? "–" : euros.(cv.("#{b}_households").to_f > 0 && cv.("#{b}_amount") ? (cv.("#{b}_amount") / cv.("#{b}_households")).round : nil) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="mb-2 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : Cnaf, data.caf.fr — foyers allocataires et personnes couvertes au 31 décembre <%= years.first %> à <%= latest %> ; INSEE, recensement 2023 (dénominateurs). Régions et France métropolitaine : somme des départements.</p>
+      <p>Les taux de toutes les années sont rapportés aux populations de 2023 : leurs évolutions reflètent surtout celle du nombre d'allocataires. Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
+      <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+</div>

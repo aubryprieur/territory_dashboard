@@ -9,7 +9,7 @@ class DashboardController < ApplicationController
                                             :load_economic_data, :load_schooling, :load_childcare,
                                             :load_employment, :load_domestic_violence, :load_children_comparison,
                                             :load_family_employment, :load_households, :load_diplomas,
-                                            :load_housing]
+                                            :load_housing, :load_caf_benefits]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -254,6 +254,17 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html { render partial: 'childcare' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_caf_benefits
+    # Onglet Prestations CAF (ABS) : allocataires, RSA, prime d'activité, aides au logement, AAH, familles
+    # (Cnaf, décembre 2020-2024 — API /caf-benefits/*)
+    load_caf_benefits_comparison
+
+    respond_to do |format|
+      format.html { render partial: 'caf_benefits' }
       format.json { render json: { status: 'success' } }
     end
   end
