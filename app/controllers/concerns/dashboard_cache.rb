@@ -286,6 +286,23 @@ module DashboardCache
     @france_immigration_data = cached_immigration_data(:france)
   end
 
+  # Tissu économique local (Flores 2017 et 2021) : onglets Emploi et Garde d'enfants
+  def cached_economic_fabric_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "economic_fabric_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::EconomicFabricService.get_france : Api::EconomicFabricService.public_send("get_#{level}", code)
+    end
+  end
+
+  def load_economic_fabric_comparison
+    @fabric_data = cached_economic_fabric_data(:commune, @territory_code)
+    @epci_fabric_data = cached_economic_fabric_data(:epci, @epci_code)
+    @department_fabric_data = cached_economic_fabric_data(:department, @department_code)
+    @region_fabric_data = cached_economic_fabric_data(:region, @region_code)
+    @france_fabric_data = cached_economic_fabric_data(:france)
+  end
+
   def load_schools_data
     @schools_data = cached_schools_data(:commune, @territory_code)
     @epci_schools_data = cached_schools_data(:epci, @epci_code)

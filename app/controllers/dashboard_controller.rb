@@ -230,6 +230,8 @@ class DashboardController < ApplicationController
     # La projection du taux de couverture en 2035 est retirée pour l'instant
     # (calculate_childcare_coverage_projection_2035 est conservée pour une prochaine version).
     load_childcare_offer_comparison
+    # Familles employant une assistante maternelle (Flores 2021)
+    load_economic_fabric_comparison
 
     respond_to do |format|
       format.html { render partial: 'childcare' }
@@ -296,6 +298,8 @@ class DashboardController < ApplicationController
     # Onglet Emploi (ABS) : emploi, activité, chômage, femmes, emploi local, mobilité
     # (INSEE RP 2012, 2017, 2023) + emploi des parents de jeunes enfants (2023)
     load_employment_activity_comparison
+    # Tissu économique local : établissements et postes salariés (Flores 2017 et 2021)
+    load_economic_fabric_comparison
     # Familles (API /families/*) : enfants de moins de 6 ans selon l'activité des parents (2023)
     @family_data = cached_family_data(@territory_code)
     @epci_family_data = cached_epci_family_data(@epci_code)

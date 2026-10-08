@@ -1,0 +1,40 @@
+<%#
+  Onglet Garde d'enfants : familles employant une assistante maternelle (INSEE, Flores 2021 — particuliers
+  employeurs d'assistants maternels, API /economic-fabric/*). Rendu dans _childcare.
+%>
+<%
+  cm = comparison_territories("economic_fabric_data", {
+    commune: @fabric_data, epci: @epci_fabric_data, department: @department_fabric_data,
+    region: @region_fabric_data, france: @france_fabric_data
+  })
+  cm_year = cm.flat_map { |t| (t[:data]["available_years"] || []).map(&:to_s) }.max
+%>
+<% if cm.any? && cm_year %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-lg font-medium text-gray-900 mb-1">Familles employant une assistante maternelle (<%= cm_year %>)</h2>
+    <p class="text-xs text-gray-500 mb-4">Particuliers employeurs d'au moins une assistante maternelle au 31 décembre, rapportés aux enfants de moins de 5 ans (recensement 2023). Ordre de grandeur du recours effectif aux assistantes maternelles, à rapprocher des places disponibles ci-dessus ; une famille peut aussi employer une assistante maternelle pour un enfant scolarisé.</p>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-gray-500 border-b">
+            <th class="py-2 pr-4 font-medium">Territoire</th>
+            <th class="py-2 pr-4 font-medium text-right">Familles employeuses</th>
+            <th class="py-2 pr-4 font-medium text-right">Enfants de moins de 5 ans</th>
+            <th class="py-2 font-medium text-right">Pour 100 enfants de moins de 5 ans</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% cm.each do |t| %>
+            <tr class="border-b border-gray-100 <%= t[:main] ? 'font-semibold' : '' %>">
+              <td class="py-2 pr-4"><%= territory_dot(t) %><%= t[:name] %></td>
+              <td class="py-2 pr-4 text-right"><%= fmt_count(territory_value(t, cm_year, "childminder_employers")) %></td>
+              <td class="py-2 pr-4 text-right"><%= fmt_count(territory_value(t, cm_year, "children_under_5")) %></td>
+              <td class="py-2 text-right"><%= fmt_decimal(territory_value(t, cm_year, "childminder_employers_per_100_children"), precision: 1) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-gray-500 mt-3">Source : INSEE, Flores <%= cm_year %> ; recensement de la population 2023. L'évolution depuis 2017 n'est pas présentée : la hausse observée partout entre les deux millésimes (+40 % en France métropolitaine) paraît peu vraisemblable au regard de la baisse du nombre d'assistantes maternelles et tient sans doute à la source.</p>
+  </div>
+<% end %>
