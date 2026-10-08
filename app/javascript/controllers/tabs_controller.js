@@ -57,6 +57,7 @@ export default class extends Controller {
       'caf_benefits': 'prestations CAF',
       'revenues_poverty': 'revenus et pauvreté',
       'schools': 'éducation nationale',
+      'immigration': 'immigrés et étrangers',
       'children': 'enfants',
       'births': 'naissances',
       'economy': 'données économiques',

@@ -269,6 +269,23 @@ module DashboardCache
   end
 
 
+  # Immigrés et étrangers (recensement 2023) : commune, EPCI, département, région, France métropolitaine
+  def cached_immigration_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "immigration_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::ImmigrationService.get_france : Api::ImmigrationService.public_send("get_#{level}", code)
+    end
+  end
+
+  def load_immigration_comparison
+    @immigration_data = cached_immigration_data(:commune, @territory_code)
+    @epci_immigration_data = cached_immigration_data(:epci, @epci_code)
+    @department_immigration_data = cached_immigration_data(:department, @department_code)
+    @region_immigration_data = cached_immigration_data(:region, @region_code)
+    @france_immigration_data = cached_immigration_data(:france)
+  end
+
   def load_schools_data
     @schools_data = cached_schools_data(:commune, @territory_code)
     @epci_schools_data = cached_schools_data(:epci, @epci_code)
