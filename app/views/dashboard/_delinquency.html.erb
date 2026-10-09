@@ -1,0 +1,104 @@
+<%#
+  Onglet Délinquance — dashboard commune (analyse des besoins sociaux).
+  Crimes et délits enregistrés par la police et la gendarmerie (SSMSI, 2016-2025 — API /delinquency/*).
+  Les petits effectifs communaux ne sont pas diffusés par le SSMSI : la valeur de la commune est alors « n.d. ».
+  Comparaison limitée aux échelles publiées par le SSMSI : commune, département, région.
+%>
+<%
+  territories = comparison_territories("delinquency_data", {
+    commune: @delinquency_data, department: @department_delinquency_data, region: @region_delinquency_data
+  })
+  commune = territories.find { |t| t[:key] == :commune }
+  years = territories.flat_map { |t| (t[:data]["available_years"] || []).map(&:to_s) }.uniq.sort
+  latest = years.last
+  comparison = years.reverse.find { |y| y.to_i <= latest.to_i - 5 } || years.first
+  indicators = (@delinquency_data.is_a?(Hash) && @delinquency_data["indicators"]) || {}
+  common = { territories: territories, years: years, latest: latest, comparison: comparison,
+             table_years: ([comparison] + years.last(3)).uniq.sort }
+  rate = ->(t, key, year = latest) { t && territory_value(t, year, "#{key}_rate") }
+  diffused = ->(key, year = latest) { commune && territory_value(commune, year, "#{key}_diffused") }
+  per = ->(key) { indicators.dig(key, "per") || "habitants" }
+  fmt_rate = ->(v) { v.nil? ? "–" : number_with_precision(v, precision: 1) }
+  department = territories.find { |t| t[:key] == :department }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Délinquance et tranquillité publique</h2>
+  <p class="text-xs text-gray-500 mb-4">Crimes et délits enregistrés par la police et la gendarmerie, comptés au lieu où ils ont été commis. Ces chiffres reflètent aussi la propension des victimes à porter plainte et l'activité des services : une hausse peut traduire une meilleure révélation des faits (violences intrafamiliales, violences sexuelles).</p>
+
+  <% if commune.nil? || latest.nil? %>
+    <p class="text-sm text-gray-500">Données de délinquance indisponibles pour ce territoire.</p>
+  <% else %>
+    <!-- Synthèse -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <% [["intrafamily_violence", "Violences intrafamiliales", "red"], ["other_physical_violence", "Violences hors cadre familial", "orange"],
+          ["burglary", "Cambriolages de logement", "indigo"], ["vandalism", "Destructions et dégradations", "purple"]].each do |key, label, theme| %>
+        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
+          <h4 class="text-xs font-medium text-<%= theme %>-800"><%= label %> (<%= latest %>)</h4>
+          <p class="text-2xl font-bold text-<%= theme %>-900"><%= diffused.(key) ? "#{fmt_rate.(rate.(commune, key))} ‰" : "n.d." %></p>
+          <p class="text-xs text-gray-600">pour 1 000 <%= per.(key) %> · <%= department ? display_territory_name(department[:name]) : "Département" %> <%= fmt_rate.(rate.(department, key)) %> ‰</p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Vue d'ensemble -->
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-base font-medium text-gray-900 mb-1">Vue d'ensemble (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Taux pour 1 000 habitants (pour 1 000 logements pour les cambriolages). En rouge, un taux communal supérieur à celui du département. « n.d. » : effectif trop faible, non diffusé pour la commune.</p>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-gray-500 border-b">
+              <th class="py-2 pr-4 font-medium">Indicateur</th>
+              <th class="py-2 pr-4 font-medium text-right">Nombre</th>
+              <% territories.each do |t| %><th class="py-2 pr-4 font-medium text-right"><%= display_territory_name(t[:name]) %></th><% end %>
+              <th class="py-2 font-medium text-right">Évolution <%= comparison %>-<%= latest %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% indicators.group_by { |_, i| i["theme"] }.each do |theme, list| %>
+              <tr><td colspan="<%= territories.size + 3 %>" class="pt-4 pb-1 text-xs font-semibold text-gray-600 uppercase tracking-wide"><%= theme %></td></tr>
+              <% list.each do |key, ind| %>
+                <% next if territories.all? { |t| rate.(t, key).nil? } %>
+                <% cv, fr = rate.(commune, key), rate.(department, key) %>
+                <tr class="border-b border-gray-100">
+                  <td class="py-2 pr-4 text-gray-800"><%= ind["label"] %><% if ind["per"] %> <span class="text-xs text-gray-500">(‰ logements)</span><% end %></td>
+                  <td class="py-2 pr-4 text-right text-gray-600"><%= diffused.(key) ? fmt_count(territory_value(commune, latest, "#{key}_count")) : "n.d." %></td>
+                  <% territories.each do |t| %>
+                    <% v = rate.(t, key) %>
+                    <td class="py-2 pr-4 text-right <%= t[:main] ? 'font-semibold' : 'text-gray-600' %>" style="<%= t[:main] && v && fr && v > fr ? 'color:#b91c1c' : '' %>">
+                      <%= t[:main] && !diffused.(key) ? "n.d." : fmt_rate.(v) %>
+                    </td>
+                  <% end %>
+                  <td class="py-2 text-right"><%= cv && rate.(commune, key, comparison) ? fmt_trend(rate.(commune, key, comparison), cv, unit: :value, precision: 1) : "" %></td>
+                </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Détail et évolution -->
+    <h3 class="text-base font-medium text-gray-900 mb-1">Évolution <%= years.first %>-<%= latest %></h3>
+    <p class="text-xs text-gray-500 mb-4">Taux pour 1 000 habitants (logements pour les cambriolages).</p>
+    <% [
+         ["intrafamily_violence", "red", "Victimes de violences physiques commises au sein de la famille (conjoints, ex-conjoints, enfants, autres membres), enregistrées par la police et la gendarmerie."],
+         ["sexual_violence", "purple", "Victimes de viols, tentatives, agressions et harcèlements sexuels enregistrés. Une part importante des faits enregistrés est ancienne ou concerne des mineurs."],
+         ["other_physical_violence", "orange", "Victimes de coups et blessures volontaires et autres violences physiques commises hors du cadre familial."],
+         ["burglary", "indigo", "Cambriolages de logements (résidences principales et secondaires), pour 1 000 logements."],
+         ["vandalism", "green", "Destructions et dégradations volontaires de biens publics et privés (incendies, dégradations de véhicules, de mobilier urbain...)."],
+         ["drug_use", "blue", "Personnes mises en cause pour usage de stupéfiants, y compris par amende forfaitaire délictuelle : l'indicateur reflète surtout l'activité des services."]
+       ].each do |key, theme, definition| %>
+      <% next unless territories.any? { |t| rate.(t, key) } %>
+      <%= render "dashboard/territory_indicator", **common,
+            title: indicators.dig(key, "label") || key, theme: theme,
+            value_key: "#{key}_rate", value_format: :decimal, unit: "‰", decimals: 1,
+            definition: definition + (diffused.(key) ? "" : " Effectif de la commune trop faible : non diffusé.") %>
+    <% end %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : SSMSI, ministère de l'Intérieur — bases communale, départementale et régionale des crimes et délits enregistrés, <%= years.first %>-<%= latest %> (géographie 2026).</p>
+      <p>Les faits non signalés aux forces de sécurité n'apparaissent pas : les enquêtes de victimation montrent que seule une partie des victimes porte plainte.</p>
+    </div>
+  <% end %>
+</div>

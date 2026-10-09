@@ -54,6 +54,7 @@ export default class extends Controller {
       'employment': 'emploi',
       'local_economy': 'tissu économique',
       'equipment': 'équipements',
+      'delinquency': 'délinquance',
       'households': 'ménages',
       'housing': 'logement',
       'caf_benefits': 'prestations CAF',

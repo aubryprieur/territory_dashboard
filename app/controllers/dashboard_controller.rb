@@ -6,7 +6,7 @@ class DashboardController < ApplicationController
   before_action :check_user_territory
   before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families,
                                             :load_schooling, :load_childcare,
-                                            :load_employment, :load_domestic_violence, :load_children_comparison,
+                                            :load_employment, :load_delinquency, :load_children_comparison,
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
                                             :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy, :load_equipment]
@@ -360,21 +360,12 @@ class DashboardController < ApplicationController
     end
   end
 
-  def load_domestic_violence
-    # 🚀 Chargement des données de sécurité/violence domestique avec cache
-    @safety_data = cached_safety_data(@territory_code)
-
-    # Données de comparaison avec cache
-    load_comparison_data_for_safety_cached
+  def load_delinquency
+    # Onglet Délinquance : crimes et délits enregistrés (SSMSI 2016-2025 — API /delinquency/*)
+    load_delinquency_comparison
 
     respond_to do |format|
-      format.html { render partial: 'domestic_violence', locals: {
-        safety_data: @safety_data,
-        department_safety_data: @department_safety_data,
-        region_safety_data: @region_safety_data,
-        department_code: @department_code,
-        region_code: @region_code
-      }}
+      format.html { render partial: 'delinquency' }
       format.json { render json: { status: 'success' } }
     end
   end

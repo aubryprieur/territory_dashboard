@@ -388,10 +388,10 @@
               </div>
             </button>
 
-            <!-- Onglet Violences -->
+            <!-- Onglet Délinquance -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
-                    data-tab="domestic_violence"
+                    data-tab="delinquency"
                     class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
               <div class="flex items-center space-x-3">
                 <div class="p-2 rounded-lg bg-gradient-to-r from-red-100 to-orange-100 group-hover:from-red-200 group-hover:to-orange-200 transition-all duration-300">
@@ -400,8 +400,8 @@
                   </svg>
                 </div>
                 <div class="text-left">
-                  <div class="font-semibold">Violences</div>
-                  <div class="text-xs text-gray-500">Violences intrafamiliales</div>
+                  <div class="font-semibold">Délinquance</div>
+                  <div class="text-xs text-gray-500">Tranquillité publique</div>
                 </div>
               </div>
             </button>
@@ -534,9 +534,9 @@
         </div>
 
         <!-- Panel Violences -->
-        <div data-dashboard-tabs-target="content" data-tab="domestic_violence" class="hidden dashboard-panel">
-          <div id="domestic_violence-content" data-section="domestic_violence">
-            <%= render 'components/loader', section_name: 'violences domestiques' %>
+        <div data-dashboard-tabs-target="content" data-tab="delinquency" class="hidden dashboard-panel">
+          <div id="delinquency-content" data-section="delinquency">
+            <%= render 'components/loader', section_name: 'délinquance' %>
           </div>
         </div>
 

@@ -310,6 +310,22 @@ module DashboardCache
     cached_api_call(cache_key, expires_in: 12.hours) { Api::EquipmentService.public_send("get_#{level}", code) }
   end
 
+  # Délinquance enregistrée (SSMSI 2016-2025) : commune, EPCI, département, région, France métropolitaine
+  def cached_delinquency_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "delinquency_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::DelinquencyService.get_france : Api::DelinquencyService.public_send("get_#{level}", code)
+    end
+  end
+
+  def load_delinquency_comparison
+    # Échelles publiées par le SSMSI uniquement : commune, département, région
+    @delinquency_data = cached_delinquency_data(:commune, @territory_code)
+    @department_delinquency_data = cached_delinquency_data(:department, @department_code)
+    @region_delinquency_data = cached_delinquency_data(:region, @region_code)
+  end
+
   def load_schools_data
     @schools_data = cached_schools_data(:commune, @territory_code)
     @epci_schools_data = cached_schools_data(:epci, @epci_code)

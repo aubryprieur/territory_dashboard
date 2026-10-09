@@ -100,7 +100,7 @@ Rails.application.routes.draw do
     get 'load_childcare', to: 'dashboard#load_childcare'
     get 'load_employment', to: 'dashboard#load_employment'
     get 'load_family_employment', to: 'dashboard#load_family_employment'
-    get 'load_domestic_violence', to: 'dashboard#load_domestic_violence'
+    get 'load_delinquency', to: 'dashboard#load_delinquency'
     get 'clear_cache', to: 'dashboard#clear_cache'
   end
 
