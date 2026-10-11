@@ -9,7 +9,8 @@ class DashboardController < ApplicationController
                                             :load_employment, :load_delinquency, :load_children_comparison,
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
-                                            :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy, :load_equipment]
+                                            :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy, :load_equipment,
+                                            :load_health]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -253,8 +254,20 @@ class DashboardController < ApplicationController
     end
   end
 
+  def load_health
+    # Onglet Santé : accès aux médecins généralistes (APL), densité de professionnels de santé libéraux,
+    # accès aux services de santé (BPE) — uniquement des données disponibles à la commune
+    load_sdg_comparison # APL médecins généralistes (INSEE / SDES)
+    load_health_professionals_comparison
+    @equipment_data = cached_equipment_data(:commune, @territory_code)
+
+    respond_to do |format|
+      format.html { render partial: 'health' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
   def load_equipment
-    load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # Onglet Équipements : services de proximité, densités comparées, distances (INSEE, BPE 2025 — API /equipment/*)
     @equipment_data = cached_equipment_data(:commune, @territory_code)
 
@@ -301,6 +314,7 @@ class DashboardController < ApplicationController
     # Onglet Prestations CAF (ABS) : allocataires, RSA, prime d'activité, aides au logement, AAH, familles
     # (Cnaf, décembre 2020-2024 — API /caf-benefits/*)
     load_caf_benefits_comparison
+    load_health_insurance_comparison # complémentaire santé solidaire (Cnam / Insee)
 
     respond_to do |format|
       format.html { render partial: 'caf_benefits' }

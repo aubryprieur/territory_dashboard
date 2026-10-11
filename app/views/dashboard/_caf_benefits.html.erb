@@ -1,5 +1,5 @@
 <%#
-  Onglet Prestations CAF — dashboard commune (analyse des besoins sociaux).
+  Onglet Accès aux droits (prestations CAF, puis complémentaire santé solidaire : _health_insurance) — dashboard commune (analyse des besoins sociaux).
   Données : Cnaf, data.caf.fr, foyers allocataires au 31 décembre 2020 à 2024 (API /caf-benefits/*).
   Taux rapportés au recensement 2023 du territoire (ménages, population, familles).
 %>
@@ -161,3 +161,6 @@
     </div>
   <% end %>
 </div>
+
+<!-- Complémentaire santé solidaire (Cnam / Insee) -->
+<%= render "dashboard/health_insurance" %>

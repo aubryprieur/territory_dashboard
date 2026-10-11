@@ -1,0 +1,102 @@
+<%#
+  Onglet Santé — dashboard commune (analyse des besoins sociaux).
+    - accès aux médecins généralistes (APL — INSEE / SDES, indicateurs de développement durable)
+    - densité de professionnels de santé libéraux (Observatoire des territoires, API /health-professionals/*)
+    - présence ou distance des services de santé (INSEE, BPE 2025, API /equipment/*)
+  La complémentaire santé solidaire est dans l'onglet Accès aux droits.
+%>
+<%
+  pro_territories = comparison_territories("health_professionals_data", {
+    commune: @health_pro_data, epci: @epci_health_pro_data, department: @department_health_pro_data,
+    region: @region_health_pro_data, france: @france_health_pro_data
+  })
+  pro_commune = pro_territories.find { |t| t[:key] == :commune }
+  pro_france = pro_territories.find { |t| t[:key] == :france }
+  pro_year = pro_commune && comparison_latest_year(@health_pro_data, comparison_years(@health_pro_data, "health_professionals_data"))
+  professions = (@health_pro_data.is_a?(Hash) && @health_pro_data["professions"]) || {}
+  primary = (@health_pro_data.is_a?(Hash) && @health_pro_data["primary_care"]) || []
+  denominators = (@health_pro_data.is_a?(Hash) && @health_pro_data["denominators"]) || {}
+
+  eq = @equipment_data.is_a?(Hash) && @equipment_data["error"].blank? ? @equipment_data : nil
+  health_services = eq ? eq["services"].select { |s| s["theme"] == "Santé" } : []
+  with_qpv = eq && eq.dig("totals", "count_qpv").to_i.positive?
+  pharmacy = health_services.find { |s| s["key"] == "pharmacy" }
+
+  dens = ->(v) { v.nil? ? "–" : number_with_precision(v, precision: 1, separator: ",", delimiter: " ") }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Santé</h2>
+  <p class="text-xs text-gray-500 mb-4">Offre de soins de proximité. La complémentaire santé solidaire est présentée dans l'onglet Accès aux droits.</p>
+
+  <!-- 1. Accès aux médecins généralistes -->
+  <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Accès aux médecins généralistes</h3>
+  <%= render "dashboard/sdg_indicator", key: "gp_accessibility", theme: "red",
+        title: "Accessibilité aux médecins généralistes", value_format: :decimal, unit: "", decimals: 1,
+        definition: "Accessibilité potentielle localisée (APL) : nombre de consultations de médecine générale accessibles par an et par habitant, en tenant compte de l'activité des médecins, de leur distance et des besoins de la population selon l'âge. Sous 2,5, la zone est considérée comme sous-dotée." %>
+
+  <!-- 2. Professionnels de santé libéraux -->
+  <% if pro_commune %>
+    <%
+      rows = primary.map { |k| [k, professions[k]] } + professions.reject { |k, _| primary.include?(k) }.to_a
+    %>
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-base font-medium text-gray-900 mb-1">Professionnels de santé libéraux (<%= pro_year %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Nombre de professionnels libéraux pour 100 000 habitants (pédiatres : pour 100 000 enfants de moins de 15 ans ; gynécologues et sages-femmes : pour 100 000 femmes de 15 ans ou plus). En rouge, une densité inférieure à celle de la France métropolitaine. Dans une petite commune, la présence d'un seul professionnel fait varier fortement la densité : la comparer à l'EPCI.</p>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profession</th>
+              <% pro_territories.each do |t| %>
+                <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= t[:name] %></th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% rows.each_with_index do |(key, label), i| %>
+              <% if i == primary.size %>
+                <tr><td colspan="<%= pro_territories.size + 1 %>" class="px-4 pt-4 pb-1 text-xs font-semibold text-gray-500 uppercase">Médecins spécialistes</td></tr>
+              <% end %>
+              <% fr = pro_france && territory_value(pro_france, pro_year, "#{key}_density") %>
+              <tr>
+                <td class="px-4 py-2 text-sm text-gray-900"><%= label %><%= denominators[key] ? " *" : "" %></td>
+                <% pro_territories.each do |t| %>
+                  <% v = territory_value(t, pro_year, "#{key}_density") %>
+                  <% low = t[:key] == :commune && fr && v && v < fr %>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= dens.(v) %></td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">* Pédiatres : pour 100 000 enfants de moins de 15 ans ; gynécologues et sages-femmes : pour 100 000 femmes de 15 ans ou plus.</p>
+    </section>
+  <% end %>
+
+  <!-- 3. Services de santé : présence ou distance -->
+  <% if health_services.any? %>
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-base font-medium text-gray-900 mb-1">Services de santé de proximité (<%= eq["year"] %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Nombre dans la commune<%= with_qpv ? " (dont en quartier prioritaire)" : "" %> ou, s'il est absent, distance à vol d'oiseau depuis la mairie jusqu'au plus proche.<% if pharmacy %> Pharmacies : <%= dens.(pharmacy["density"]) %> pour 10 000 habitants (France métropolitaine <%= dens.(pharmacy.dig("comparison", "france")) %>).<% end %></p>
+      <ul class="text-sm divide-y divide-gray-200 md:w-2/3">
+        <% health_services.each do |s| %>
+          <li class="py-1 flex justify-between gap-4">
+            <span class="text-gray-700"><%= s["label"] %></span>
+            <% if s["count"].to_i.positive? %>
+              <span class="whitespace-nowrap font-medium" style="color:#15803d">✓ <%= fmt_count(s["count"]) %><%= with_qpv && s["count_qpv"].to_i.positive? ? " (#{s['count_qpv']} QPV)" : "" %></span>
+            <% elsif s["nearest"] %>
+              <span class="whitespace-nowrap" style="color:#b45309">✗ <%= number_with_precision(s.dig("nearest", "distance_km"), precision: 1) %> km · <%= s.dig("nearest", "commune_name").to_s.titleize %></span>
+            <% else %>
+              <span class="whitespace-nowrap text-gray-400">✗ absent</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+    <p>Sources : accessibilité aux médecins généralistes : DREES, via INSEE / SDES (indicateurs territoriaux de développement durable) ; professionnels de santé libéraux : Observatoire des territoires (ANCT) — RPPS, Adeli, INSEE BPE 2025 et recensement 2023, France métropolitaine = moyenne des régions pondérée par la population ; services de santé : INSEE, Base permanente des équipements 2025.</p>
+  </div>
+</div>

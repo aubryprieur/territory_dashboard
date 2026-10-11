@@ -48,6 +48,7 @@
     end
   end
   value = territory_value(commune, latest, value_key)
+  single_year = comparison.to_s == latest.to_s  # un seul millésime : ni évolution, ni courbe
   count = count_key && territory_value(commune, latest, count_key)
   total = total_key && territory_value(commune, latest, total_key)
 %>
@@ -61,9 +62,9 @@
         <h4 class="font-medium text-<%= theme %>-800"><%= title %></h4>
         <div class="flex items-baseline mt-2">
           <p class="text-2xl font-bold text-<%= theme %>-900"><%= value_format == :pct ? fmt_pct(value, precision: decimals || 1) : fmt_value.(value) %></p>
-          <p class="ml-2"><%= trend.(territory_value(commune, comparison, value_key), value) %></p>
+          <% unless single_year %><p class="ml-2"><%= trend.(territory_value(commune, comparison, value_key), value) %></p><% end %>
         </div>
-        <p class="text-xs text-gray-500">depuis <%= comparison %></p>
+        <% unless single_year %><p class="text-xs text-gray-500">depuis <%= comparison %></p><% end %>
         <% if count %>
           <p class="text-sm text-<%= theme %>-700 mt-2">
             <%= fmt_count(count) %><% if total %> sur <%= fmt_count(total) %><% end %> <%= count_label %><%= small_count_flag(count) %>
@@ -98,7 +99,7 @@
               <% table_years.each do |y| %>
                 <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= y %></th>
               <% end %>
-              <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= comparison %>→<%= latest %></th>
+              <% unless single_year %><th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= comparison %>→<%= latest %></th><% end %>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -112,9 +113,11 @@
                     <%= fmt_value.(territory_value(t, y, value_key)) %>
                   </td>
                 <% end %>
-                <td class="px-3 py-3 whitespace-nowrap text-right">
-                  <%= trend.(territory_value(t, comparison, value_key), territory_value(t, latest, value_key)) %>
-                </td>
+                <% unless single_year %>
+                  <td class="px-3 py-3 whitespace-nowrap text-right">
+                    <%= trend.(territory_value(t, comparison, value_key), territory_value(t, latest, value_key)) %>
+                  </td>
+                <% end %>
               </tr>
             <% end %>
           </tbody>
@@ -123,6 +126,8 @@
     </div>
   </div>
 
-  <%= comparison_line_chart(territories, years, value_key, unit: (value_format == :pct ? "%" : (value_format == :euros ? "€" : unit.to_s)),
-                            digits: (decimals if value_format == :decimal)) %>
+  <% unless single_year %>
+    <%= comparison_line_chart(territories, years, value_key, unit: (value_format == :pct ? "%" : (value_format == :euros ? "€" : unit.to_s)),
+                              digits: (decimals if value_format == :decimal)) %>
+  <% end %>
 </section>

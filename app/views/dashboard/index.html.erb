@@ -351,7 +351,7 @@
               </div>
             </button>
 
-            <!-- Onglet Prestations CAF -->
+            <!-- Onglet Accès aux droits (prestations CAF, complémentaire santé solidaire) -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
                     data-tab="caf_benefits"
@@ -363,8 +363,26 @@
                   </svg>
                 </div>
                 <div class="text-left">
-                  <div class="font-semibold">Prestations CAF</div>
-                  <div class="text-xs text-gray-500">RSA, logement, familles</div>
+                  <div class="font-semibold">Accès aux droits</div>
+                  <div class="text-xs text-gray-500">Prestations CAF, C2S</div>
+                </div>
+              </div>
+            </button>
+
+            <!-- Onglet Santé -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="health"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-red-100 to-pink-100 group-hover:from-red-200 group-hover:to-pink-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Santé</div>
+                  <div class="text-xs text-gray-500">Offre de soins</div>
                 </div>
               </div>
             </button>
@@ -519,10 +537,17 @@
           </div>
         </div>
 
-        <!-- Panel Prestations CAF -->
+        <!-- Panel Accès aux droits (prestations CAF, complémentaire santé solidaire) -->
         <div data-dashboard-tabs-target="content" data-tab="caf_benefits" class="hidden dashboard-panel">
           <div id="caf_benefits-content" data-section="caf_benefits">
-            <%= render 'components/loader', section_name: 'prestations CAF' %>
+            <%= render 'components/loader', section_name: 'accès aux droits' %>
+          </div>
+        </div>
+
+        <!-- Panel Santé -->
+        <div data-dashboard-tabs-target="content" data-tab="health" class="hidden dashboard-panel">
+          <div id="health-content" data-section="health">
+            <%= render 'components/loader', section_name: 'santé' %>
           </div>
         </div>
 

@@ -270,7 +270,7 @@
           <span class="text-xs text-gray-500 text-center">Niveau de vie, inégalités</span>
         </button>
 
-        <!-- Prestations CAF -->
+        <!-- Accès aux droits -->
         <button data-dashboard-tabs-target="tab"
                 data-action="click->dashboard-tabs#showTab"
                 data-tab="caf_benefits"
@@ -280,14 +280,28 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
             </svg>
           </div>
-          <span class="text-sm font-semibold text-gray-700 group-hover:text-green-600 transition-colors text-center">Prestations CAF</span>
-          <span class="text-xs text-gray-500 text-center">RSA, logement, familles</span>
+          <span class="text-sm font-semibold text-gray-700 group-hover:text-green-600 transition-colors text-center">Accès aux droits</span>
+          <span class="text-xs text-gray-500 text-center">Prestations CAF, C2S</span>
         </button>
       </div>
     </div>
     <div class="mb-6">
       <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Cadre de vie et sécurité</h4>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <!-- Santé -->
+        <button data-dashboard-tabs-target="tab"
+                data-action="click->dashboard-tabs#showTab"
+                data-tab="health"
+                class="group flex flex-col items-center space-y-2 px-4 py-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-red-300 hover:scale-105">
+          <div class="p-3 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-gray-700 group-hover:text-red-600 transition-colors text-center">Santé</span>
+          <span class="text-xs text-gray-500 text-center">Offre de soins</span>
+        </button>
+
         <!-- Équipements -->
         <button data-dashboard-tabs-target="tab"
                 data-action="click->dashboard-tabs#showTab"

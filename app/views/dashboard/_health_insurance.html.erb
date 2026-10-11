@@ -1,0 +1,54 @@
+<%#
+  Complémentaire santé solidaire (C2S) — Cnam, bénéficiaires du régime général au 1er janvier 2022 et 2025
+  (diffusion Insee, API /health-insurance/*). Seules les communes découpées en IRIS sont publiées : EPCI,
+  département, région et France = ensemble de leurs communes publiées. Rendu dans l'onglet Accès aux droits.
+%>
+<%
+  c2s_territories = comparison_territories("health_insurance_data", {
+    commune: @c2s_data, epci: @epci_c2s_data, department: @department_c2s_data,
+    region: @region_c2s_data, france: @france_c2s_data
+  }).map { |t| t[:key] == :commune ? t : t.merge(name: "#{t[:name]} *") }
+  c2s_commune = c2s_territories.find { |t| t[:key] == :commune }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Complémentaire santé solidaire</h2>
+  <p class="text-xs text-gray-500 mb-4">Assurés du régime général de l'assurance maladie bénéficiant de la complémentaire santé solidaire (C2S), au 1er janvier. Sans participation (ex-CMU-C) : ressources inférieures à environ 850 € par mois pour une personne seule ; avec participation (ex-ACS) : jusqu'à 35 % au-dessus de ce plafond.</p>
+
+  <% if c2s_commune.nil? %>
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-600">
+      Données non publiées pour <%= @territory_name %> : la Cnam et l'INSEE ne diffusent la complémentaire santé solidaire que pour les communes découpées en IRIS (en général de plus de 5 000 habitants).
+    </div>
+  <% else %>
+    <%
+      c2s_years = comparison_years(@c2s_data, "health_insurance_data")
+      c2s_latest = comparison_latest_year(@c2s_data, c2s_years)
+      c2s_common = { territories: c2s_territories, years: c2s_years, latest: c2s_latest,
+                     comparison: c2s_years.first, table_years: c2s_years }
+    %>
+    <%= render "dashboard/territory_indicator", **c2s_common,
+          title: "Bénéficiaires de la C2S sans participation", theme: "green",
+          value_key: "c2s_free_rate",
+          count_key: "c2s_free", total_key: "insured", count_label: "assurés du régime général",
+          definition: "Part des assurés du régime général couverts par la complémentaire santé solidaire gratuite (ex-CMU-C). Repère de la précarité et de l'accès aux soins des ménages les plus modestes.",
+          details: [
+            { label: "C2S avec participation (ex-ACS)", share_key: "c2s_paid_rate" },
+            { label: "Ensemble de la C2S", share_key: "c2s_rate" },
+            { label: "Moins de 18 ans couverts par la C2S gratuite", share_key: "c2s_free_lt18_rate" },
+            { label: "60 ans ou plus couverts par la C2S gratuite", share_key: "c2s_free_ge60_rate" }
+          ] %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">C2S sans participation selon l'âge (<%= c2s_latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Part des assurés de chaque âge couverts par la C2S gratuite, en %.</p>
+      <%= comparison_grouped_bar_chart(c2s_territories, c2s_latest, [
+            ["c2s_free_lt18_rate", "Moins de 18 ans"], ["c2s_free_18_24_rate", "18-24 ans"],
+            ["c2s_free_25_49_rate", "25-49 ans"], ["c2s_free_50_59_rate", "50-59 ans"], ["c2s_free_ge60_rate", "60 ans ou plus"]
+          ], "C2S sans participation par âge et par territoire") %>
+    </section>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : Cnam, bénéficiaires du régime général de l'assurance maladie au 1er janvier (diffusion INSEE, données au niveau Iris). Champ : régime général (hors MSA, MGEN et régimes spéciaux) ; les taux sont rapportés aux assurés du régime général, pas à toute la population.</p>
+      <p>* Ensemble des communes découpées en IRIS du territoire (<%= fmt_count(c2s_territories.find { |t| t[:key] == :france }&.then { |t| territory_value(t, c2s_latest, "communes") }) %> communes en France métropolitaine), seules publiées : comparaison indicative, ces communes sont plus urbaines que la moyenne. Évolution 2022 → 2025 affichée pour la commune seulement, et seulement si elle figure dans l'édition 2022, qui couvre deux fois moins de communes.</p>
+    </div>
+  <% end %>
+</div>

@@ -369,6 +369,38 @@ module DashboardCache
     @france_social_housing_data = cached_social_housing_data(:france)
   end
 
+  # Santé : professionnels, complémentaire santé solidaire, affections de longue durée
+  def cached_health_data(service, level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "#{service.name.demodulize.underscore}_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? service.get_france : service.public_send("get_#{level}", code)
+    end
+  end
+
+  def load_health_professionals_comparison
+    s = Api::HealthProfessionalsService
+    @health_pro_data = cached_health_data(s, :commune, @territory_code)
+    @epci_health_pro_data = cached_health_data(s, :epci, @epci_code)
+    @department_health_pro_data = cached_health_data(s, :department, @department_code)
+    @region_health_pro_data = cached_health_data(s, :region, @region_code)
+    @france_health_pro_data = cached_health_data(s, :france)
+  end
+
+  def load_health_insurance_comparison
+    s = Api::HealthInsuranceService
+    @c2s_data = cached_health_data(s, :commune, @territory_code)
+    @epci_c2s_data = cached_health_data(s, :epci, @epci_code)
+    @department_c2s_data = cached_health_data(s, :department, @department_code)
+    @region_c2s_data = cached_health_data(s, :region, @region_code)
+    @france_c2s_data = cached_health_data(s, :france)
+  end
+
+  def load_ald_comparison
+    @department_ald_data = cached_health_data(Api::AldService, :department, @department_code)
+    @france_ald_data = cached_health_data(Api::AldService, :france)
+  end
+
   def load_sdg_comparison
     @sdg_data = cached_sdg_data(:commune, @territory_code)
     @epci_sdg_data = cached_sdg_data(:epci, @epci_code)
