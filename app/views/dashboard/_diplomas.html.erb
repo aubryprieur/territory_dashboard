@@ -115,10 +115,20 @@
           count_key: "cap_bep", total_key: "non_enrolled_15_plus", count_label: "personnes",
           definition: "Part des 15 ans ou plus non scolarisés dont le diplôme le plus élevé est un CAP, un BEP ou équivalent (filières professionnelles courtes)." %>
 
+    <!-- Insertion des jeunes (INSEE / SDES, indicateurs de développement durable) -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Insertion des jeunes</h3>
+    <p class="text-xs text-gray-500 mb-4">Sortie du système scolaire et insertion des jeunes adultes (INSEE / SDES, indicateurs territoriaux de développement durable).</p>
+    <%= render "dashboard/sdg_indicator", key: "young_no_diploma_rate", theme: "red",
+          title: "Jeunes sortis du système scolaire sans diplôme",
+          definition: "Part des 20-24 ans ayant terminé leurs études qui n'ont aucun diplôme (ou seulement le brevet). Repère du décrochage scolaire et des besoins d'accompagnement vers la qualification." %>
+    <%= render "dashboard/sdg_indicator", key: "young_neet_rate", theme: "orange",
+          title: "Jeunes non insérés",
+          definition: "Part des 18-24 ans non scolarisés qui ne sont ni en emploi ni en études. Public cible des missions locales, du Contrat d'engagement jeune et des dispositifs d'insertion." %>
+
     <div class="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026).</p>
-      <p>Champ : population de 15 ans ou plus non scolarisée. La part des sans diplôme est plus élevée chez les personnes âgées, ce qui pèse sur les territoires vieillissants.</p>
-      <p>Les évolutions sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Insertion des jeunes : INSEE / SDES, indicateurs territoriaux de développement durable (recensement).</p>
+      <p>Champ : population de 15 ans ou plus non scolarisée (insertion des jeunes : 18-24 et 20-24 ans). La part des sans diplôme est plus élevée chez les personnes âgées, ce qui pèse sur les territoires vieillissants.</p>
+      <p>Les évolutions sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>. Indicateurs INSEE / SDES : évolution entre les millésimes indiqués dans leur tableau.</p>
       <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
     </div>
   <% end %>

@@ -1,0 +1,11 @@
+<%#
+  Bloc indicateur de développement durable (API /sdg-indicators/*) : rend _territory_indicator avec les millésimes
+  propres à l'indicateur. locals : key, title, theme, definition, value_format (:pct par défaut), unit, decimals.
+%>
+<% common = sdg_common(key) %>
+<% if common %>
+  <%= render "dashboard/territory_indicator", **common,
+        title: title, theme: theme, value_key: key, definition: definition,
+        value_format: (local_assigns[:value_format] || :pct), unit: local_assigns[:unit],
+        decimals: local_assigns[:decimals] %>
+<% end %>

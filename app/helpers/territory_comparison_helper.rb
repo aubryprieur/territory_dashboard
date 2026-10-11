@@ -62,13 +62,13 @@ module TerritoryComparisonHelper
   end
 
   # Écart entre deux valeurs : "↓ −2,3 pts" (taux), "↑ +3 050 €" (unit: :euros) ou "↓ −0,09" (autres)
-  def fmt_trend(start_value, end_value, unit: :points, precision: 1)
+  def fmt_trend(start_value, end_value, unit: :points, precision: 1, suffix: nil)
     return "" if start_value.nil? || end_value.nil?
 
     diff = (end_value - start_value).round(unit == :euros ? 0 : precision)
     arrow = diff.positive? ? "↑" : (diff.negative? ? "↓" : "→")
     sign = diff.positive? ? "+" : (diff.negative? ? "−" : "")
-    suffix = unit == :points ? (diff.abs >= 2 ? " pts" : " pt") : ""
+    suffix = unit == :points ? (diff.abs >= 2 ? " pts" : " pt") : (suffix.present? ? " #{suffix}" : "")
     amount = unit == :euros ? "#{fmt_count(diff.abs)} €" : number_with_precision(diff.abs, precision: precision)
     content_tag(:span, "#{arrow} #{sign}#{amount}#{suffix}",
                 class: "text-xs text-gray-600 whitespace-nowrap")
@@ -88,7 +88,7 @@ module TerritoryComparisonHelper
 
   # --------------------------------------------------------------- graphiques
   # Les canvas portent leur configuration ; dessinés par charts/families_charts.js.
-  def comparison_line_chart(territories, years, key, unit: "%", height: 224)
+  def comparison_line_chart(territories, years, key, unit: "%", height: 224, digits: nil)
     # Ne garder que les millésimes où l'indicateur existe (ex. scolarisation à 2 ans : pas de 2012)
     years = years.select { |y| territories.any? { |t| !territory_value(t, y, key).nil? } }
     config = {
@@ -97,6 +97,7 @@ module TerritoryComparisonHelper
         { label: t[:name], data: years.map { |y| territory_value(t, y, key) }, color: t[:color], main: t[:main] }
       end
     }
+    config[:digits] = digits unless digits.nil?
     chart_canvas(config, height, "Évolution #{years.join(', ')} par territoire")
   end
 

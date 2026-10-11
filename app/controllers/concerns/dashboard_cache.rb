@@ -326,6 +326,23 @@ module DashboardCache
     @region_delinquency_data = cached_delinquency_data(:region, @region_code)
   end
 
+  # Indicateurs de développement durable (INSEE / SDES) répartis dans plusieurs onglets
+  def cached_sdg_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "sdg_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::SdgIndicatorsService.get_france : Api::SdgIndicatorsService.public_send("get_#{level}", code)
+    end
+  end
+
+  def load_sdg_comparison
+    @sdg_data = cached_sdg_data(:commune, @territory_code)
+    @epci_sdg_data = cached_sdg_data(:epci, @epci_code)
+    @department_sdg_data = cached_sdg_data(:department, @department_code)
+    @region_sdg_data = cached_sdg_data(:region, @region_code)
+    @france_sdg_data = cached_sdg_data(:france)
+  end
+
   def load_schools_data
     @schools_data = cached_schools_data(:commune, @territory_code)
     @epci_schools_data = cached_schools_data(:epci, @epci_code)

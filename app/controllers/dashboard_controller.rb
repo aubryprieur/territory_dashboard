@@ -64,6 +64,7 @@ class DashboardController < ApplicationController
   # === ACTIONS ASYNCHRONES POUR CHAQUE SECTION (AVEC CACHE) ===
 
   def load_synthese
+    load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # 🚀 Chargement des données de synthèse avec cache
     @population_data = cached_population_data(@territory_code)
     @births_data = cached_births_data(@territory_code)
@@ -155,6 +156,7 @@ class DashboardController < ApplicationController
   end
 
   def load_diplomas
+    load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # Diplômes et formation : commune + territoires de comparaison (INSEE RP 2012, 2017, 2023)
     load_education_training_comparison
 
@@ -240,6 +242,7 @@ class DashboardController < ApplicationController
   end
 
   def load_local_economy
+    load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # Onglet Tissu économique : emplois au lieu de travail (INSEE RP) et établissements employeurs (Flores)
     load_employment_activity_comparison
     load_economic_fabric_comparison
@@ -251,6 +254,7 @@ class DashboardController < ApplicationController
   end
 
   def load_equipment
+    load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # Onglet Équipements : services de proximité, densités comparées, distances (INSEE, BPE 2025 — API /equipment/*)
     @equipment_data = cached_equipment_data(:commune, @territory_code)
 
@@ -316,6 +320,7 @@ class DashboardController < ApplicationController
   end
 
   def load_employment
+    load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # Onglet Emploi (ABS) : emploi, activité, chômage, femmes, emploi local, mobilité
     # (INSEE RP 2012, 2017, 2023) + emploi des parents de jeunes enfants (2023)
     load_employment_activity_comparison

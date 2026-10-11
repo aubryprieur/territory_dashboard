@@ -44,7 +44,7 @@
     case value_format
     when :pct, :points then fmt_trend(a, b)            # évolution en points, 1 décimale
     when :euros then fmt_trend(a, b, unit: :euros)
-    else fmt_trend(a, b, unit: :value, precision: precision)
+    else fmt_trend(a, b, unit: :value, precision: precision, suffix: (unit if unit.to_s.length <= 5))  # unité courte : km, min
     end
   end
   value = territory_value(commune, latest, value_key)
@@ -121,5 +121,6 @@
     </div>
   </div>
 
-  <%= comparison_line_chart(territories, years, value_key, unit: (value_format == :pct ? "%" : (value_format == :euros ? "€" : unit.to_s))) %>
+  <%= comparison_line_chart(territories, years, value_key, unit: (value_format == :pct ? "%" : (value_format == :euros ? "€" : unit.to_s)),
+                            digits: (decimals if value_format == :decimal)) %>
 </section>

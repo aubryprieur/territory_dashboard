@@ -214,9 +214,14 @@
             "Âge des nouveaux arrivants par territoire") %>
     </section>
 
+    <!-- 5. Participation électorale -->
+    <%= render "dashboard/sdg_indicator", key: "presidential_turnout", theme: "indigo",
+          title: "Participation électorale",
+          definition: "Votants au 1er tour de l'élection présidentielle parmi les inscrits. Repère de l'engagement citoyen et du sentiment d'éloignement des institutions." %>
+
     <div class="mb-2 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026) ; pyramide des âges <%= latest %> ; catégories socioprofessionnelles : exploitation complémentaire.</p>
-      <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
+      <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026) ; pyramide des âges <%= latest %> ; catégories socioprofessionnelles : exploitation complémentaire. Participation électorale : ministère de l'Intérieur, via INSEE / SDES (indicateurs territoriaux de développement durable).</p>
+      <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>. Indicateurs INSEE / SDES : évolution entre les millésimes indiqués dans leur tableau.</p>
       <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
     </div>
   </div>

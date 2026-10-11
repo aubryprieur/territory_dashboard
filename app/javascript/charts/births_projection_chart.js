@@ -16,13 +16,8 @@ window.initializeBirthsProjectionChart = function() {
   console.log("Data element:", dataElement);
   console.log("Chart.js disponible ?", typeof Chart !== "undefined");
 
-  if (!chartElement || !dataElement || typeof Chart === "undefined") {
-    console.error("❌ PROBLÈME : Un des éléments manque !");
-    console.error("  - Canvas:", !!chartElement);
-    console.error("  - Data JSON:", !!dataElement);
-    console.error("  - Chart.js:", typeof Chart !== "undefined");
-    return;
-  }
+  // Bloc de projection retiré de l'onglet Population (à repenser) : rien à dessiner
+  if (!chartElement || !dataElement || typeof Chart === "undefined") return;
 
   try {
     const existingChart = Chart.getChart(chartElement);

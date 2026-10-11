@@ -76,6 +76,11 @@
       </div>
     </section>
 
+    <!-- 1 bis. Accessibilité aux médecins généralistes (APL) -->
+    <%= render "dashboard/sdg_indicator", key: "gp_accessibility", theme: "teal",
+          title: "Accessibilité aux médecins généralistes", value_format: :decimal, unit: "", decimals: 1,
+          definition: "Accessibilité potentielle localisée (APL) : nombre de consultations de médecine générale accessibles par an et par habitant, en tenant compte de l'activité des médecins, de leur distance et des besoins de la population selon l'âge. Sous 2,5, la zone est considérée comme sous-dotée." %>
+
     <!-- 2. Services clés : présence ou distance -->
     <section style="margin-bottom:2.5rem">
       <h3 class="text-base font-medium text-gray-900 mb-1">Accès aux services essentiels</h3>
@@ -133,7 +138,7 @@
     </section>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Source : <%= eq["source"] %>. Quartiers prioritaires de la politique de la ville : géographie 2024.</p>
+      <p>Source : <%= eq["source"] %>. Quartiers prioritaires de la politique de la ville : géographie 2024. Accessibilité aux médecins généralistes : DREES, via INSEE / SDES (indicateurs territoriaux de développement durable).</p>
       <p>Distances à vol d'oiseau depuis la mairie de la commune : les temps de trajet réels peuvent être nettement plus longs.</p>
     </div>
   <% end %>
