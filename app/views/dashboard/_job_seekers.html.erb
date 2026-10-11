@@ -1,0 +1,51 @@
+<%#
+  Demandeurs d'emploi inscrits à France Travail, catégories A, B, C (Dares, données communales, 4e trimestre,
+  API /job-seekers/*) : évolution depuis 2015, nombre pour 100 actifs, profil (âge, sexe). Rendu dans _employment.
+%>
+<%
+  js_territories = comparison_territories("job_seekers_data", {
+    commune: @job_seekers_data, epci: @epci_job_seekers_data, department: @department_job_seekers_data,
+    region: @region_job_seekers_data, france: @france_job_seekers_data
+  })
+  js_commune = js_territories.find { |t| t[:key] == :commune }
+%>
+<% if js_commune %>
+  <%
+    js_years = comparison_years(@job_seekers_data, "job_seekers_data")
+    js_latest = comparison_latest_year(@job_seekers_data, js_years)
+    js_comparison = comparison_start_year(@job_seekers_data, js_years)
+    js_common = { territories: js_territories, years: js_years, latest: js_latest, comparison: js_comparison,
+                  table_years: [js_years.first, js_comparison, js_latest].uniq }
+    census = (@job_seekers_data["census_years"] || []).map(&:to_s)
+    base_year = @job_seekers_data["base_year"].to_s
+  %>
+  <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Demandeurs d'emploi inscrits à France Travail</h3>
+  <p class="text-xs text-gray-500 mb-4">
+    Demandeurs d'emploi en catégories A, B, C (tenus de rechercher un emploi, sans emploi ou en activité réduite), moyenne du 4e trimestre de chaque année.
+    Source administrative, complémentaire du chômage au sens du recensement : elle est annuelle et plus récente.
+  </p>
+
+  <%= render "dashboard/territory_indicator", **js_common.merge(comparison: js_years.first),
+        title: "Évolution des demandeurs d'emploi depuis #{base_year}", theme: "pink",
+        value_key: "abc_index", value_format: :decimal, unit: "", decimals: 1,
+        count_key: "abc", count_label: "demandeurs d'emploi en catégories A, B, C",
+        definition: "Indice base 100 en #{base_year} : nombre de demandeurs d'emploi rapporté à celui de #{base_year}, pour comparer les dynamiques quelle que soit la taille du territoire. 92 signifie une baisse de 8 % depuis #{base_year}, 110 une hausse de 10 %." %>
+
+  <% if census.size >= 1 %>
+    <%= render "dashboard/territory_indicator", **js_common.merge(years: census, latest: census.last,
+                                                                  comparison: census.first, table_years: census),
+          title: "Demandeurs d'emploi pour 100 actifs", theme: "pink",
+          value_key: "abc_per_100_active", value_format: :decimal, unit: "", decimals: 1,
+          definition: "Demandeurs d'emploi en catégories A, B, C pour 100 actifs de 15 à 64 ans du recensement, aux années de recensement. Plus large que le taux de chômage : il inclut les demandeurs en activité réduite (catégories B et C)." %>
+  <% end %>
+
+  <%= render "dashboard/territory_indicator", **js_common,
+        title: "Jeunes de moins de 25 ans parmi les demandeurs d'emploi", theme: "pink",
+        value_key: "lt25_share",
+        count_key: "abc_lt25", count_label: "demandeurs de moins de 25 ans",
+        definition: "Part des moins de 25 ans parmi les demandeurs d'emploi en catégories A, B, C. Repère pour l'accompagnement des jeunes (mission locale, Contrat d'engagement jeune).",
+        details: [
+          { label: "50 ans ou plus", share_key: "ge50_share" },
+          { label: "Femmes", share_key: "women_share" }
+        ] %>
+<% end %>

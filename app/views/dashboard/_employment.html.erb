@@ -110,6 +110,9 @@
           title: "Chômeurs de longue durée",
           definition: "Part des chômeurs qui recherchent un emploi depuis plus d'un an (recensement). Repère des besoins d'accompagnement renforcé vers l'emploi." %>
 
+    <!-- 2 bis. Demandeurs d'emploi inscrits à France Travail (Dares) -->
+    <%= render "dashboard/job_seekers" %>
+
     <!-- 3. Emploi des femmes -->
     <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Emploi des femmes</h3>
     <p class="text-xs text-gray-500 mb-4">Accès à l'emploi des femmes et écarts avec les hommes.</p>
@@ -252,7 +255,7 @@
           definition: "Distance médiane par la route entre le domicile et le lieu de travail des actifs occupés." %>
 
     <div class="mb-8 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Chômage de longue durée et trajets domicile-travail : INSEE / SDES, indicateurs territoriaux de développement durable.</p>
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Chômage de longue durée et trajets domicile-travail : INSEE / SDES, indicateurs territoriaux de développement durable. Demandeurs d'emploi : Dares, France Travail (catégories A, B, C, moyenne du 4e trimestre, données brutes arrondies à 5 ; EPCI, département et région : somme des communes).</p>
       <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>. Indicateurs INSEE / SDES : évolution entre les millésimes indiqués dans leur tableau.</p>
       <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
     </div>

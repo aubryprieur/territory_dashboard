@@ -324,6 +324,7 @@ class DashboardController < ApplicationController
     # Onglet Emploi (ABS) : emploi, activité, chômage, femmes, emploi local, mobilité
     # (INSEE RP 2012, 2017, 2023) + emploi des parents de jeunes enfants (2023)
     load_employment_activity_comparison
+    load_job_seekers_comparison # demandeurs d'emploi inscrits à France Travail (Dares)
     # Familles (API /families/*) : enfants de moins de 6 ans selon l'activité des parents (2023)
     @family_data = cached_family_data(@territory_code)
     @epci_family_data = cached_epci_family_data(@epci_code)

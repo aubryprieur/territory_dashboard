@@ -335,6 +335,23 @@ module DashboardCache
     end
   end
 
+  def cached_job_seekers_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "job_seekers_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::JobSeekersService.get_france : Api::JobSeekersService.public_send("get_#{level}", code)
+    end
+  end
+
+  # Demandeurs d'emploi (Dares) des 5 territoires
+  def load_job_seekers_comparison
+    @job_seekers_data = cached_job_seekers_data(:commune, @territory_code)
+    @epci_job_seekers_data = cached_job_seekers_data(:epci, @epci_code)
+    @department_job_seekers_data = cached_job_seekers_data(:department, @department_code)
+    @region_job_seekers_data = cached_job_seekers_data(:region, @region_code)
+    @france_job_seekers_data = cached_job_seekers_data(:france)
+  end
+
   def load_sdg_comparison
     @sdg_data = cached_sdg_data(:commune, @territory_code)
     @epci_sdg_data = cached_sdg_data(:epci, @epci_code)
