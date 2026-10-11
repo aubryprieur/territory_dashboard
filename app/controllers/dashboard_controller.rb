@@ -312,6 +312,7 @@ class DashboardController < ApplicationController
     # Onglet Logement (ABS) : parc, statut d'occupation, peuplement, mobilité résidentielle,
     # conditions de vie (INSEE RP 2012, 2017, 2023 — API /housing/*)
     load_housing_comparison
+    load_social_housing_comparison # parc locatif social (SDES, RPLS)
 
     respond_to do |format|
       format.html { render partial: 'housing' }

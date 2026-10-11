@@ -352,6 +352,23 @@ module DashboardCache
     @france_job_seekers_data = cached_job_seekers_data(:france)
   end
 
+  def cached_social_housing_data(level, code = nil)
+    return nil if level != :france && code.blank?
+    cache_key = cache_key_for_territory(code || "FM", "social_housing_#{level}")
+    cached_api_call(cache_key, expires_in: 12.hours) do
+      level == :france ? Api::SocialHousingService.get_france : Api::SocialHousingService.public_send("get_#{level}", code)
+    end
+  end
+
+  # Parc locatif social (RPLS) des 5 territoires
+  def load_social_housing_comparison
+    @social_housing_data = cached_social_housing_data(:commune, @territory_code)
+    @epci_social_housing_data = cached_social_housing_data(:epci, @epci_code)
+    @department_social_housing_data = cached_social_housing_data(:department, @department_code)
+    @region_social_housing_data = cached_social_housing_data(:region, @region_code)
+    @france_social_housing_data = cached_social_housing_data(:france)
+  end
+
   def load_sdg_comparison
     @sdg_data = cached_sdg_data(:commune, @territory_code)
     @epci_sdg_data = cached_sdg_data(:epci, @epci_code)
