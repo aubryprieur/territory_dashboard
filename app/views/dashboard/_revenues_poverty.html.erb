@@ -105,6 +105,13 @@
       <%= render "dashboard/territory_indicator", **common_detail,
             title: "Rapport interdécile D9/D1", theme: "teal",
             value_key: "interdecile_ratio", value_format: :decimal, unit: "", decimals: 1,
+            details: [
+              { label: "1er décile (D1)", euros_key: "d1" },
+              { label: "1er quartile (Q1)", euros_key: "q1" },
+              { label: "Médiane", euros_key: "median_living_standard" },
+              { label: "3e quartile (Q3)", euros_key: "q3" },
+              { label: "9e décile (D9)", euros_key: "d9" }
+            ],
             definition: "Rapport entre le niveau de vie plancher des 10 % les plus aisés (D9) et le niveau de vie plafond des 10 % les plus modestes (D1). Mesure de l'écart des revenus sur le territoire." %>
 
       <!-- 3. Structure du revenu -->

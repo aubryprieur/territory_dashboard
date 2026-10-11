@@ -18,7 +18,7 @@
     total_key    - dénominateur à afficher "x sur y" (optionnel)
     count_label  - libellé de l'effectif (ex. "ménages")
     definition   - phrase d'explication (optionnel)
-    details      - [{ label:, count_key:, share_key: }] (optionnel)
+    details      - [{ label:, count_key:, share_key:, euros_key: }] (optionnel ; euros_key : montant en €)
 %>
 <%
   value_format ||= :pct
@@ -72,12 +72,14 @@
         <% if details.any? %>
           <div class="mt-3 space-y-1">
             <% details.each do |d| %>
+              <% next if d[:euros_key] && territory_value(commune, latest, d[:euros_key]).nil? %>
               <% d_count = d[:count_key] && territory_value(commune, latest, d[:count_key]) %>
               <div class="flex items-baseline justify-between">
                 <p class="text-xs text-<%= theme %>-600"><%= d[:label] %></p>
                 <p class="text-xs text-<%= theme %>-700 font-medium">
                   <% if d_count %><%= fmt_count(d_count) %><% end %>
                   <% if d[:share_key] %><%= d_count ? "(" : "" %><%= fmt_pct(territory_value(commune, latest, d[:share_key])) %><%= d_count ? ")" : "" %><% end %>
+                  <% if d[:euros_key] %><% e = territory_value(commune, latest, d[:euros_key]) %><%= e.nil? ? "–" : "#{fmt_count(e)} €" %><% end %>
                   <%= small_count_flag(d_count) %>
                 </p>
               </div>

@@ -58,7 +58,7 @@ module TerritoryComparisonHelper
   end
 
   def fmt_decimal(value, precision: 2)
-    value.nil? ? "–" : number_with_precision(value, precision: precision)
+    value.nil? ? "–" : number_with_precision(value, precision: precision, delimiter: " ")
   end
 
   # Écart entre deux valeurs : "↓ −2,3 pts" (taux), "↑ +3 050 €" (unit: :euros) ou "↓ −0,09" (autres)

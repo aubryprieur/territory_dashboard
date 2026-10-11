@@ -15,7 +15,8 @@ const pct = (v, digits = 1) =>
 const fmt = (unit, digits) => (v) =>
   unit === "€" ? (v === null || v === undefined ? "–" : `${Math.round(Number(v)).toLocaleString("fr-FR")} €`)
   : unit === "%" || unit === undefined ? pct(v, digits)
-    : v === null || v === undefined ? "–" : `${Number(v).toFixed(digits).replace(".", ",")}${unit ? " " + unit : ""}`;
+    : v === null || v === undefined ? "–"
+      : `${Number(v).toLocaleString("fr-FR", { minimumFractionDigits: digits, maximumFractionDigits: digits })}${unit ? " " + unit : ""}`;
 
 function lineChart(canvas, cfg) {
   const isPct = cfg.unit === "%" || cfg.unit === undefined;
