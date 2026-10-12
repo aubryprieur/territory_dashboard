@@ -267,8 +267,10 @@ class DashboardController < ApplicationController
   end
 
   def load_local_life
-    # Onglet Vie locale : pratique sportive en club (INJEP — API /sports/*), participation électorale (INSEE / SDES)
+    # Onglet Vie locale : pratique sportive en club (INJEP — API /sports/*), vie associative (RNA — API /associations/*),
+    # participation électorale (INSEE / SDES)
     load_sports_comparison
+    load_associations_comparison
     load_sdg_comparison
 
     respond_to do |format|

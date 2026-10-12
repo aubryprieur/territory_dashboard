@@ -1,0 +1,88 @@
+<%#
+  Vie associative — Répertoire national des associations (RNA, ministère de l'Intérieur, export Waldec du
+  1er octobre 2026 ; API /associations/*). Associations rattachées à la commune de leur siège.
+  Rendu dans l'onglet Vie locale.
+%>
+<%
+  as_territories = comparison_territories("associations_data", {
+    commune: @associations_data, epci: @epci_associations_data, department: @department_associations_data,
+    region: @region_associations_data, france: @france_associations_data
+  }, france_name: "France métropolitaine*")
+  as_commune = as_territories.find { |t| t[:key] == :commune }
+  as_france = as_territories.find { |t| t[:key] == :france }
+  as_local_law = %w[57 67 68].include?(@department_code.to_s)
+%>
+<section style="margin-bottom:2.5rem">
+  <h3 class="text-base font-medium text-gray-900 mb-1">Vie associative</h3>
+  <% if as_local_law %>
+    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-sm text-gray-700">
+      En Moselle, dans le Bas-Rhin et le Haut-Rhin, les associations relèvent du droit local et sont inscrites au registre du tribunal judiciaire : elles ne figurent pas dans le Répertoire national des associations.
+    </div>
+  <% elsif as_commune.nil? %>
+    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-sm text-gray-700">
+      Aucune association ayant son siège dans la commune n'est enregistrée au Répertoire national des associations.
+    </div>
+  <% else %>
+    <%
+      as_year = (@associations_data["stock_year"] || comparison_latest_year(@associations_data, [])).to_s
+      as_avg = ->(t, k) { t[:data].dig("creations_avg_5y", k) }
+      as_period = @associations_data.dig("creations_avg_5y", "period").to_s
+      as_themes = @associations_data["themes"] || {}
+    %>
+    <p class="text-xs text-gray-500 mb-4">Associations en activité au 1er octobre <%= as_year %>, rattachées à la commune de leur siège. Repère du tissu associatif et de son orientation ; une association peut agir au-delà de sa commune de siège (les grandes villes accueillent les sièges d'associations départementales ou nationales). En rouge, une valeur inférieure à la France métropolitaine.</p>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Indicateur</th>
+            <% as_territories.each do |t| %>
+              <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= t[:name] %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr>
+            <td class="px-4 py-2 text-sm text-gray-900">Associations en activité</td>
+            <% as_territories.each do |t| %>
+              <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>"><%= fmt_count(territory_value(t, as_year, "active")) %></td>
+            <% end %>
+          </tr>
+          <% [["Associations pour 1 000 habitants", ->(t) { territory_value(t, as_year, "active_per_1000") }],
+              ["Créations d'associations par an pour 1 000 habitants (moyenne #{as_period})", ->(t) { as_avg.(t, "per_1000") }]].each do |label, getter| %>
+            <% fr = as_france && getter.(as_france) %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
+              <% as_territories.each do |t| %>
+                <% v = getter.(t) %>
+                <% low = t[:key] == :commune && fr && v && v < fr %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= fmt_decimal(v, precision: (label.start_with?("Créations") ? 2 : 1)) %></td>
+              <% end %>
+            </tr>
+          <% end %>
+          <tr>
+            <td class="px-4 py-2 text-sm text-gray-900">Créations d'associations par an (moyenne <%= as_period %>)</td>
+            <% as_territories.each do |t| %>
+              <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>"><% n = as_avg.(t, "value") %><%= fmt_decimal(n, precision: (n && n < 100 ? 1 : 0)) %></td>
+            <% end %>
+          </tr>
+          <tr class="bg-gray-50">
+            <td colspan="<%= as_territories.size + 1 %>" class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Répartition par grande catégorie (premier objet social déclaré)</td>
+          </tr>
+          <% as_themes.each do |theme, label| %>
+            <% share = theme.sub("theme_", "share_") %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
+              <% as_territories.each do |t| %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>">
+                  <%= fmt_pct(territory_value(t, as_year, share)) %>
+                  <% if t[:key] == :commune %><span class="text-xs text-gray-400 font-normal">(<%= fmt_count(territory_value(t, as_year, theme)) %>)</span><% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-gray-500 mt-2">* France métropolitaine hors Moselle, Bas-Rhin et Haut-Rhin (associations de droit local absentes du répertoire) ; la région Grand Est est calculée de la même façon. Associations déclarées ou modifiées depuis 2009 (fichier Waldec), en activité au 1er octobre <%= as_year %> ; population du recensement <%= @associations_data["population_year"] %>. Le répertoire n'enregistre pas toujours les dissolutions : une partie des associations recensées peut être en sommeil.</p>
+  <% end %>
+</section>
