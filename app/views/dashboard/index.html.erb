@@ -406,6 +406,24 @@
               </div>
             </button>
 
+            <!-- Onglet Vie locale -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="local_life"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 group-hover:from-indigo-200 group-hover:to-purple-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Vie locale</div>
+                  <div class="text-xs text-gray-500">Sport, participation</div>
+                </div>
+              </div>
+            </button>
+
             <!-- Onglet Délinquance -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
@@ -558,7 +576,14 @@
           </div>
         </div>
 
-        <!-- Panel Violences -->
+        <!-- Panel Vie locale -->
+        <div data-dashboard-tabs-target="content" data-tab="local_life" class="hidden dashboard-panel">
+          <div id="local_life-content" data-section="local_life">
+            <%= render 'components/loader', section_name: 'vie locale' %>
+          </div>
+        </div>
+
+        <!-- Panel Délinquance -->
         <div data-dashboard-tabs-target="content" data-tab="delinquency" class="hidden dashboard-panel">
           <div id="delinquency-content" data-section="delinquency">
             <%= render 'components/loader', section_name: 'délinquance' %>

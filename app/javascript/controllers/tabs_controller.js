@@ -55,6 +55,7 @@ export default class extends Controller {
       'local_economy': 'tissu économique',
       'equipment': 'équipements',
       'health': 'santé',
+      'local_life': 'vie locale',
       'delinquency': 'délinquance',
       'households': 'ménages',
       'housing': 'logement',

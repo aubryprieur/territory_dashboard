@@ -10,7 +10,7 @@ class DashboardController < ApplicationController
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
                                             :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy, :load_equipment,
-                                            :load_health]
+                                            :load_health, :load_local_life]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -65,7 +65,6 @@ class DashboardController < ApplicationController
   # === ACTIONS ASYNCHRONES POUR CHAQUE SECTION (AVEC CACHE) ===
 
   def load_synthese
-    load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # 🚀 Chargement des données de synthèse avec cache
     @population_data = cached_population_data(@territory_code)
     @births_data = cached_births_data(@territory_code)
@@ -267,10 +266,20 @@ class DashboardController < ApplicationController
     end
   end
 
+  def load_local_life
+    # Onglet Vie locale : pratique sportive en club (INJEP — API /sports/*), participation électorale (INSEE / SDES)
+    load_sports_comparison
+    load_sdg_comparison
+
+    respond_to do |format|
+      format.html { render partial: 'local_life' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
   def load_equipment
     # Onglet Équipements : services de proximité, densités comparées, distances (INSEE, BPE 2025 — API /equipment/*)
     @equipment_data = cached_equipment_data(:commune, @territory_code)
-    load_sports_comparison # licences sportives (INJEP — API /sports/*)
 
     respond_to do |format|
       format.html { render partial: 'equipment' }

@@ -1,0 +1,22 @@
+<%#
+  Onglet Vie locale — dashboard commune (analyse des besoins sociaux).
+    - pratique sportive en club (INJEP, licences 2023 — API /sports/*, partial _sports)
+    - participation électorale (ministère de l'Intérieur, via INSEE / SDES — indicateurs de développement durable)
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Vie locale</h2>
+  <p class="text-xs text-gray-500 mb-4">Participation des habitants à la vie sociale, sportive et citoyenne de la commune.</p>
+
+  <!-- 1. Pratique sportive en club -->
+  <%= render "dashboard/sports" %>
+
+  <!-- 2. Participation électorale -->
+  <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Participation citoyenne</h3>
+  <%= render "dashboard/sdg_indicator", key: "presidential_turnout", theme: "indigo",
+        title: "Participation électorale",
+        definition: "Votants au 1er tour de l'élection présidentielle parmi les inscrits. Repère de l'engagement citoyen et du sentiment d'éloignement des institutions." %>
+
+  <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+    <p>Sources : licences sportives : INJEP — MEOS, recensement des licences et clubs sportifs (Observatoire des territoires) ; participation électorale : ministère de l'Intérieur, via INSEE / SDES (indicateurs territoriaux de développement durable).</p>
+  </div>
+</div>
