@@ -396,6 +396,15 @@ module DashboardCache
     @france_c2s_data = cached_health_data(s, :france)
   end
 
+  def load_sports_comparison
+    s = Api::SportsService
+    @sports_data = cached_health_data(s, :commune, @territory_code)
+    @epci_sports_data = cached_health_data(s, :epci, @epci_code)
+    @department_sports_data = cached_health_data(s, :department, @department_code)
+    @region_sports_data = cached_health_data(s, :region, @region_code)
+    @france_sports_data = cached_health_data(s, :france)
+  end
+
   def load_ald_comparison
     @department_ald_data = cached_health_data(Api::AldService, :department, @department_code)
     @france_ald_data = cached_health_data(Api::AldService, :france)

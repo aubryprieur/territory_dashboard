@@ -1,0 +1,60 @@
+<%#
+  Pratique sportive — licences sportives 2023 (INJEP — MEOS, diffusion Observatoire des territoires, API /sports/*).
+  Licences comptées à la commune de résidence du licencié. Rendu dans l'onglet Équipements.
+%>
+<%
+  sp_territories = comparison_territories("sports_data", {
+    commune: @sports_data, epci: @epci_sports_data, department: @department_sports_data,
+    region: @region_sports_data, france: @france_sports_data
+  })
+  sp_commune = sp_territories.find { |t| t[:key] == :commune }
+  sp_france = sp_territories.find { |t| t[:key] == :france }
+%>
+<% if sp_commune %>
+  <% sp_year = comparison_latest_year(@sports_data, comparison_years(@sports_data, "sports_data")) %>
+  <%
+    rows = [
+      ["licence_rate", "Licenciés pour 100 habitants", :rate],
+      ["licence_rate_0_14", "Licenciés de moins de 15 ans pour 100 enfants de moins de 15 ans", :rate],
+      ["licence_rate_15_29", "Licenciés de 15-29 ans pour 100 jeunes de 15-29 ans", :rate],
+      ["licence_rate_30_59", "Licenciés de 30-59 ans pour 100 habitants de 30-59 ans", :rate],
+      ["licence_rate_60p", "Licenciés de 60 ans ou plus pour 100 habitants de 60 ans ou plus", :rate],
+      ["girls_share_0_14", "Part des filles parmi les licenciés de moins de 15 ans", :share],
+      ["women_share_15_29", "Part des femmes parmi les licenciés de 15-29 ans", :share],
+      ["women_share_30_59", "Part des femmes parmi les licenciés de 30-59 ans", :share],
+      ["women_share_60p", "Part des femmes parmi les licenciés de 60 ans ou plus", :share]
+    ]
+  %>
+  <section style="margin-bottom:2.5rem">
+    <h3 class="text-base font-medium text-gray-900 mb-1">Pratique sportive en club (<%= sp_year %>)</h3>
+    <p class="text-xs text-gray-500 mb-4">Licences délivrées par les fédérations sportives, comptées dans la commune de résidence du licencié. Repère de l'accès des habitants à une pratique encadrée et de la place des filles et des femmes dans le sport. En rouge, une valeur inférieure à la France métropolitaine.</p>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Indicateur</th>
+            <% sp_territories.each do |t| %>
+              <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= t[:name] %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% rows.each do |key, label, kind| %>
+            <% fr = sp_france && territory_value(sp_france, sp_year, key) %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
+              <% sp_territories.each do |t| %>
+                <% v = territory_value(t, sp_year, key) %>
+                <% low = t[:key] == :commune && fr && v && v < fr %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= low ? 'color:#b91c1c' : '' %>">
+                  <%= v.nil? ? "–" : (kind == :share ? fmt_pct(v) : number_with_precision(v, precision: 1, separator: ",")) %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-gray-500 mt-2">Source : INJEP — MEOS, recensement des licences et clubs sportifs <%= sp_year %> (Observatoire des territoires). France : valeurs nationales publiées par l'Observatoire des territoires. Une personne peut détenir plusieurs licences.</p>
+  </section>
+<% end %>

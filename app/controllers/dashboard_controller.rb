@@ -270,6 +270,7 @@ class DashboardController < ApplicationController
   def load_equipment
     # Onglet Équipements : services de proximité, densités comparées, distances (INSEE, BPE 2025 — API /equipment/*)
     @equipment_data = cached_equipment_data(:commune, @territory_code)
+    load_sports_comparison # licences sportives (INJEP — API /sports/*)
 
     respond_to do |format|
       format.html { render partial: 'equipment' }
