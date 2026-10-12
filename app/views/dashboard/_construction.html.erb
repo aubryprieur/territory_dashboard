@@ -1,0 +1,85 @@
+<%#
+  Construction neuve de logements — SDES, base Sitadel (API /construction/*) : logements commencés et autorisés,
+  moyennes annuelles sur cinq ans, pour 1 000 habitants, répartition par type, courbe 2013-2024.
+  Rendu à la suite du parc locatif social, dans l'onglet Logement.
+%>
+<%
+  cn_territories = comparison_territories("construction_data", {
+    commune: @construction_data, epci: @epci_construction_data, department: @department_construction_data,
+    region: @region_construction_data, france: @france_construction_data
+  })
+  cn_commune = cn_territories.find { |t| t[:key] == :commune }
+  cn_france = cn_territories.find { |t| t[:key] == :france }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Construction neuve</h2>
+  <p class="text-xs text-gray-500 mb-4">Logements autorisés (permis de construire) et commencés (ouverture de chantier), d'après la base Sitadel. Repère de la dynamique résidentielle et de la capacité du territoire à accueillir de nouveaux ménages. En rouge, une valeur inférieure à la France métropolitaine.</p>
+
+  <% if cn_commune.nil? %>
+    <p class="text-sm text-gray-500">Données de construction neuve non disponibles pour la commune.</p>
+  <% else %>
+    <%
+      cs = ->(t, kind, key) { t[:data].dig("summary", kind, key) }
+      cn_started = @construction_data.dig("summary", "started", "period")
+      cn_authorised = @construction_data.dig("summary", "authorised", "period")
+      cn_types = @construction_data["types"] || {}
+      cn_years = (@construction_data["started_years"] || []).map(&:to_s)
+      cell = ->(t) { t[:key] == :commune ? 'font-semibold' : 'text-gray-600' }
+      fmt_avg = ->(v) { fmt_decimal(v, precision: (v && v < 100 ? 1 : 0)) }
+    %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Indicateur</th>
+            <% cn_territories.each do |t| %>
+              <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= t[:name] %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% [["started", "commencés", cn_started], ["authorised", "autorisés", cn_authorised]].each do |kind, verb, period| %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900">Logements <%= verb %> par an (moyenne <%= period %>)</td>
+              <% cn_territories.each do |t| %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= cell.(t) %>"><%= fmt_avg.(cs.(t, kind, "avg")) %></td>
+              <% end %>
+            </tr>
+            <% fr = cn_france && cs.(cn_france, kind, "avg_per_1000") %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900">Logements <%= verb %> par an pour 1 000 habitants</td>
+              <% cn_territories.each do |t| %>
+                <% v = cs.(t, kind, "avg_per_1000") %>
+                <% low = t[:key] == :commune && fr && v && v < fr %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= cell.(t) %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= fmt_decimal(v, precision: 1) %></td>
+              <% end %>
+            </tr>
+          <% end %>
+          <tr class="bg-gray-50">
+            <td colspan="<%= cn_territories.size + 1 %>" class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Répartition des logements commencés (<%= cn_started %>)</td>
+          </tr>
+          <% cn_types.each do |type, label| %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
+              <% cn_territories.each do |t| %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= cell.(t) %>"><%= fmt_pct(t[:data].dig("summary", "started", "shares", type)) %></td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="text-sm font-medium text-gray-900 mt-6 mb-2">Logements commencés pour 1 000 habitants, <%= cn_years.first %>-<%= cn_years.last %></h3>
+    <%= comparison_line_chart(cn_territories, cn_years, "started_per_1000", unit: "", digits: 1) %>
+    <p class="text-xs text-gray-500 mt-2">
+      <%= @territory_name %>, logements commencés par année :
+      <%= cn_years.map { |y| "#{y} : #{fmt_count(territory_value(cn_commune, y, 'started_total'))}" }.join(" · ") %>.
+    </p>
+
+    <div class="pt-4 mt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : SDES, base Sitadel — logements autorisés et commencés, données annuelles communales (septembre 2026). Logements commencés publiés jusqu'en <%= cn_years.last %>. Taux calculés sur la population du recensement le plus proche (2012, 2017 ou 2023). Dans une petite commune, une seule opération peut faire varier fortement les chiffres d'une année à l'autre.</p>
+      <p>Individuel groupé : maisons construites dans une même opération (lotissement, programme) ; résidence : résidences services pour étudiants, personnes âgées ou tourisme.</p>
+    </div>
+  <% end %>
+</div>
