@@ -441,6 +441,15 @@ module DashboardCache
     @france_tax_households_data = cached_health_data(s, :france)
   end
 
+  # Carte IRIS d'un indicateur pour la commune (nil si la commune n'est pas découpée en IRIS)
+  def cached_iris_map(indicator)
+    return nil if @territory_code.blank?
+    data = cached_api_call(cache_key_for_territory(@territory_code, "iris_map_#{indicator}"), expires_in: 12.hours) do
+      Api::IrisMapService.get_commune(@territory_code, indicator)
+    end
+    data.is_a?(Hash) && data["irisee"] ? data : nil
+  end
+
   def load_ald_comparison
     @department_ald_data = cached_health_data(Api::AldService, :department, @department_code)
     @france_ald_data = cached_health_data(Api::AldService, :france)

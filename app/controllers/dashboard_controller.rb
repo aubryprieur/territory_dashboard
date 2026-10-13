@@ -119,6 +119,7 @@ class DashboardController < ApplicationController
 
     # Données de comparaison avec cache
     load_comparison_data_for_families_cached
+    @iris_single_parent_map = cached_iris_map("single_parent_share") # carte IRIS
 
     respond_to do |format|
       format.html { render partial: 'families', locals: {

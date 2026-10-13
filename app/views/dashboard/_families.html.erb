@@ -47,6 +47,12 @@
             { label: "Mères seules avec enfant(s)", count_key: "single_mothers", share_key: "single_mothers_percentage" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: @iris_single_parent_map,
+          definition: "Un parent vivant seul avec au moins un enfant, en % des familles de l'IRIS.",
+          commune_latest: { year: latest, value: family_value(commune, latest, "single_parent_families_percentage"),
+                            count: family_value(commune, latest, "single_parent_families"),
+                            total: family_value(commune, latest, "total_families") } %>
+
     <%= render "dashboard/families_indicator",
           title: "Familles nombreuses",
           theme: "blue",
