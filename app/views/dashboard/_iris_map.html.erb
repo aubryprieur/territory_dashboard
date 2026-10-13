@@ -28,12 +28,12 @@
       <div class="mt-2 flex flex-wrap" style="column-gap:1rem;row-gap:0.25rem">
         <% iris_legend(reference, unit).each do |c| %>
           <div class="flex items-center text-xs text-gray-600">
-            <span style="display:inline-block;width:14px;height:14px;background:<%= c[:color] %>;border:1px solid #9ca3af;margin-right:6px"></span>
+            <span style="display:inline-block;width:14px;height:14px;background:<%= c[:color] %>;border:1px solid #374151;margin-right:6px"></span>
             <%= c[:label].capitalize %> : <%= c[:range] %>
           </div>
         <% end %>
         <div class="flex items-center text-xs text-gray-600">
-          <span style="display:inline-block;width:14px;height:14px;background:#ffffff;border:1px solid #9ca3af;margin-right:6px"></span>Sans valeur
+          <span style="display:inline-block;width:14px;height:14px;background:<%= IrisMapHelper::IRIS_NO_DATA_SWATCH %>;border:1px solid #9ca3af;margin-right:6px"></span>Sans valeur
         </div>
       </div>
       <p class="text-xs text-gray-500 mt-1">Survolez un IRIS pour afficher son nom, son code et sa valeur.</p>
@@ -63,11 +63,12 @@
               <% end %>
               <%
                 v1 = values.dig(latest, "value"); v0 = values.dig(first, "value")
-                cls = !is_commune && iris_class(v1, reference)
+                small = values.dig(latest, "total") && values.dig(latest, "total") < IrisMapHelper::IRIS_MIN_TOTAL
+                cls = !is_commune && !small && iris_class(v1, reference)
               %>
               <tr class="<%= is_commune ? 'bg-gray-50 font-semibold' : '' %>">
                 <td class="px-3 py-2 text-sm text-gray-900">
-                  <% unless is_commune %><span style="display:inline-block;width:10px;height:10px;background:<%= cls ? cls[:color] : IrisMapHelper::IRIS_NO_DATA %>;border:1px solid #d1d5db;margin-right:6px"></span><% end %><%= name %>
+                  <% unless is_commune %><span style="display:inline-block;width:10px;height:10px;background:<%= cls ? cls[:color] : IrisMapHelper::IRIS_NO_DATA_SWATCH %>;border:1px solid #d1d5db;margin-right:6px"></span><% end %><%= name %>
                 </td>
                 <% if first != latest %><td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-600"><%= fmt_iris(v0, unit) %></td><% end %>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-right"><%= fmt_iris(v1, unit) %></td>

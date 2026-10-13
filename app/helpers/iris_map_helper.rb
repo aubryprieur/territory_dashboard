@@ -6,11 +6,13 @@ module IrisMapHelper
   IRIS_CLASSES = [
     { max: 0.75, color: "#2166ac", label: "nettement inférieur" },
     { max: 0.92, color: "#92c5de", label: "inférieur" },
-    { max: 1.08, color: "#e7e5e4", label: "proche de la commune" },
+    { max: 1.08, color: "#fde9a9", label: "proche de la commune" },
     { max: 1.25, color: "#f4a582", label: "supérieur" },
     { max: Float::INFINITY, color: "#b2182b", label: "nettement supérieur" }
   ].freeze
-  IRIS_NO_DATA = "#ffffff".freeze  # IRIS sans valeur (zones d'activité, sans habitants) : blanc hachuré par le contour
+  IRIS_NO_DATA = "url(#iris-hatch)".freeze  # gris hachuré : IRIS sans valeur ou effectif trop faible
+  IRIS_NO_DATA_SWATCH = "repeating-linear-gradient(45deg,#e5e7eb 0 3px,#9ca3af 3px 4px)".freeze
+  IRIS_MIN_TOTAL = 0  # aucun seuil : tous les IRIS sont colorés, même avec de petits effectifs (choix d'Aubry)
 
   def iris_value(feature, year, key = "value")
     feature.dig("values", year.to_s, key)
@@ -70,21 +72,26 @@ module IrisMapHelper
 
     shapes = features.map do |f|
       value = iris_value(f, year)
-      cls = iris_class(value, reference)
+      total = iris_value(f, year, "total")
+      too_small = !total.nil? && total < IRIS_MIN_TOTAL
+      cls = too_small ? nil : iris_class(value, reference)
       d = iris_rings(f["geometry"]).map { |ring| "M" + ring.map { |lon, lat| project.(lon, lat).join(",") }.join("L") + "Z" }.join
       count = iris_value(f, year, "count")
-      total = iris_value(f, year, "total")
       tip = "#{f['iris_name']} (IRIS #{f['iris_code']}) : #{fmt_iris(value, unit)}"
       tip += " — #{fmt_count(count)} sur #{fmt_count(total)}" if count && total
       tip += " — pas de valeur (IRIS sans population concernée)" if value.nil?
+      tip += " — effectif trop faible pour être coloré" if value && too_small
       content_tag(:path, content_tag(:title, tip), d: d, fill: cls ? cls[:color] : IRIS_NO_DATA,
-                  class: "iris-shape", stroke: "#6b7280", "stroke-width": 0.6, "stroke-linejoin": "round",
-                  "fill-rule": "evenodd")
+                  class: "iris-shape", stroke: "#374151", "stroke-width": 1, "stroke-linejoin": "round",
+                  "vector-effect": "non-scaling-stroke", "fill-rule": "evenodd")
     end
 
     # survol : contour renforcé de l'IRIS (le détail s'affiche dans l'info-bulle)
-    style = content_tag(:style, ".iris-shape{cursor:pointer}.iris-shape:hover{stroke:#111827;stroke-width:2}")
-    content_tag(:svg, safe_join([style] + shapes), viewBox: "0 0 #{w} #{height}", width: "100%",
+    style = content_tag(:style, ".iris-shape{cursor:pointer}.iris-shape:hover{stroke:#000000;stroke-width:3}")
+    hatch = content_tag(:defs, content_tag(:pattern,
+      safe_join([tag.rect(width: 6, height: 6, fill: "#e5e7eb"), tag.path(d: "M0,6 L6,0", stroke: "#9ca3af", "stroke-width": 1)]),
+      id: "iris-hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse"))
+    content_tag(:svg, safe_join([style, hatch] + shapes), viewBox: "0 0 #{w} #{height}", width: "100%",
                 style: "max-width:#{w}px;height:auto", role: "img",
                 "aria-label": "Carte des IRIS : #{map.dig('indicator', 'label')}")
   end
