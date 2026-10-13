@@ -45,6 +45,10 @@
             { label: "Vacance de plus de 3 mois", share_key: "vacancy_3m_rate" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("social_turnover_rate"),
+          definition: "Emménagements dans l'année en % des logements sociaux de l'IRIS (effectifs estimés à partir du taux publié).",
+          commune_latest: { year: sh_latest, value: sv.("mobility_rate") } %>
+
     <%= render "dashboard/territory_indicator", **sh_common,
           title: "Loyer moyen du parc social", theme: "amber",
           value_key: "avg_rent_m2", value_format: :decimal, unit: "€/m²", decimals: 2,

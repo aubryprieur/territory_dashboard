@@ -37,6 +37,11 @@
           title: "Demandeurs d'emploi pour 100 actifs", theme: "pink",
           value_key: "abc_per_100_active", value_format: :decimal, unit: "", decimals: 1,
           definition: "Demandeurs d'emploi en catégories A, B, C pour 100 actifs de 15 à 64 ans du recensement, aux années de recensement. Plus large que le taux de chômage : il inclut les demandeurs en activité réduite (catégories B et C)." %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("job_seekers_abc"),
+          definition: "Demandeurs d'emploi inscrits en catégories A, B, C au 31 décembre, pour 100 actifs de 15 à 64 ans de l'IRIS (recensement 2022).",
+          commune_latest: { year: census.last, value: territory_value(js_commune, census.last, "abc_per_100_active"),
+                            count: territory_value(js_commune, census.last, "abc") } %>
   <% end %>
 
   <%= render "dashboard/territory_indicator", **js_common,

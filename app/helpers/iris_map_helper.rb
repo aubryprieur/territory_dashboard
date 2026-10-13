@@ -41,7 +41,15 @@ module IrisMapHelper
   end
 
   def fmt_iris(v, unit = "%")
-    v.nil? ? "–" : "#{number_with_precision(v, precision: 1, separator: ',', delimiter: ' ')}#{unit == '%' ? ' %' : ''}"
+    return "–" if v.nil?
+    return "#{number_with_delimiter(v.round, delimiter: ' ')} €" if unit == "€"
+    "#{number_with_precision(v, precision: 1, separator: ',', delimiter: ' ')}#{unit == '%' ? ' %' : ''}"
+  end
+
+  # Écart entre deux millésimes : points pour un taux, euros pour un montant
+  def iris_trend(v0, v1, unit)
+    return "–" if v0.nil? || v1.nil?
+    unit == "€" ? fmt_trend(v0, v1, unit: :euros) : fmt_trend(v0, v1)
   end
 
   def iris_rings(geometry)

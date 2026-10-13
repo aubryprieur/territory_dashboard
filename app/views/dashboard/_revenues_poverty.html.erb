@@ -78,10 +78,18 @@
           value_key: "median_living_standard", value_format: :euros,
           definition: "Revenu disponible du ménage (après impôts et prestations) divisé par le nombre d'unités de consommation : la moitié des habitants vit avec moins, l'autre moitié avec plus. Montants annuels en euros courants (non corrigés de l'inflation)." %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("median_income"),
+          definition: "Revenu disponible médian par unité de consommation, en euros par an.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "median_living_standard") } %>
+
     <%= render "dashboard/territory_indicator", **common,
           title: "Taux de pauvreté", theme: "purple",
           value_key: "poverty_rate",
           definition: "Part des personnes dont le niveau de vie est inférieur à 60 % du niveau de vie médian de France métropolitaine (environ 1 300 € par mois pour une personne seule en 2023)." %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("poverty_rate"),
+          definition: "Part des personnes vivant sous le seuil de pauvreté (60 % du niveau de vie médian). L'Insee ne publie le taux que pour les IRIS assez peuplés.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "poverty_rate") } %>
 
     <% if detail_year %>
       <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Qui est touché par la pauvreté ? (<%= detail_year %>)</h3>
@@ -139,6 +147,10 @@
               { label: "Minima sociaux", share_key: "share_minimum_income" },
               { label: "Indemnités de chômage", share_key: "share_unemployment_benefits" }
             ] %>
+
+      <%= render "dashboard/iris_map", map: cached_iris_map("social_benefits_share"),
+            definition: "Part des prestations sociales (familiales, logement, minima sociaux) dans le revenu disponible des ménages de l'IRIS.",
+            commune_latest: { year: latest, value: territory_value(commune, latest, "share_social_benefits") } %>
     <% end %>
 
     <!-- 4. Pauvreté par âge des individus (2023, départements, régions, France) -->

@@ -37,6 +37,11 @@
             { label: "60 ans ou plus couverts par la C2S gratuite", share_key: "c2s_free_ge60_rate" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("c2s_free_rate"),
+          definition: "Assurés du régime général bénéficiant de la C2S sans participation, en % des assurés de l'IRIS.",
+          commune_latest: { year: c2s_latest, value: territory_value(c2s_commune, c2s_latest, "c2s_free_rate"),
+                            count: territory_value(c2s_commune, c2s_latest, "c2s_free"), total: territory_value(c2s_commune, c2s_latest, "insured") } %>
+
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">C2S sans participation selon l'âge (<%= c2s_latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Part des assurés de chaque âge couverts par la C2S gratuite, en %.</p>
