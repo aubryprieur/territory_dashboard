@@ -246,6 +246,7 @@ class DashboardController < ApplicationController
     # Onglet Tissu économique : emplois au lieu de travail (INSEE RP) et établissements employeurs (Flores)
     load_employment_activity_comparison
     load_economic_fabric_comparison
+    load_business_creations_comparison # créations d'entreprises (Insee, SIDE)
 
     respond_to do |format|
       format.html { render partial: 'local_economy' }

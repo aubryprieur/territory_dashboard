@@ -51,12 +51,14 @@
 
     <%= render "dashboard/economic_fabric" %>
 
+    <%= render "dashboard/business_creations" %>
+
     <%= render "dashboard/sdg_indicator", key: "ess_jobs_share", theme: "green",
           title: "Emplois de l'économie sociale et solidaire",
           definition: "Part des emplois salariés du territoire dans les associations, coopératives, mutuelles et fondations. Repère du tissu associatif et des acteurs de l'action sociale." %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Sources : INSEE, recensements de la population <%= years.join(", ") %> (emplois au lieu de travail) ; INSEE, Flores (établissements et postes salariés) ; économie sociale et solidaire : INSEE / SDES, indicateurs territoriaux de développement durable.</p>
+      <p>Sources : INSEE, recensements de la population <%= years.join(", ") %> (emplois au lieu de travail) ; INSEE, Flores (établissements et postes salariés) ; INSEE, SIDE (créations d'entreprises) ; économie sociale et solidaire : INSEE / SDES, indicateurs territoriaux de développement durable.</p>
     </div>
   <% end %>
 </div>

@@ -1,0 +1,82 @@
+<%#
+  Créations d'entreprises — Insee, SIDE (API /business-creations/*) : moyenne annuelle sur cinq ans, pour
+  1 000 habitants, part des entreprises individuelles, répartition par grand secteur, courbe 2019-2025.
+  Rendu dans l'onglet Tissu économique, après les établissements employeurs.
+%>
+<%
+  bc_territories = comparison_territories("business_creations_data", {
+    commune: @business_creations_data, epci: @epci_business_creations_data,
+    department: @department_business_creations_data, region: @region_business_creations_data,
+    france: @france_business_creations_data
+  })
+  bc_commune = bc_territories.find { |t| t[:key] == :commune }
+  bc_france = bc_territories.find { |t| t[:key] == :france }
+%>
+<% if bc_commune %>
+  <%
+    bs = ->(t, key) { t[:data].dig("summary", key) }
+    bc_period = @business_creations_data.dig("summary", "period")
+    bc_sectors = @business_creations_data["sectors"] || {}
+    bc_years = (@business_creations_data["available_years"] || []).map(&:to_s)
+    cell = ->(t) { t[:key] == :commune ? 'font-semibold' : 'text-gray-600' }
+    fr = bc_france && bs.(bc_france, "avg_per_1000")
+  %>
+  <section style="margin-bottom:2.5rem">
+    <h3 class="text-base font-medium text-gray-900 mb-1">Créations d'entreprises (<%= bc_period %>)</h3>
+    <p class="text-xs text-gray-500 mb-4">Entreprises créées dans l'année, rattachées à la commune de leur siège, micro-entrepreneurs compris. Repère du dynamisme entrepreneurial et de l'installation d'activités à son compte. En rouge, une valeur inférieure à la France métropolitaine.</p>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Indicateur</th>
+            <% bc_territories.each do |t| %>
+              <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= t[:name] %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr>
+            <td class="px-4 py-2 text-sm text-gray-900">Créations d'entreprises par an (moyenne <%= bc_period %>)</td>
+            <% bc_territories.each do |t| %>
+              <% v = bs.(t, "avg") %>
+              <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= cell.(t) %>"><%= fmt_decimal(v, precision: (v && v < 100 ? 1 : 0)) %></td>
+            <% end %>
+          </tr>
+          <tr>
+            <td class="px-4 py-2 text-sm text-gray-900">Créations par an pour 1 000 habitants</td>
+            <% bc_territories.each do |t| %>
+              <% v = bs.(t, "avg_per_1000") %>
+              <% low = t[:key] == :commune && fr && v && v < fr %>
+              <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= cell.(t) %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= fmt_decimal(v, precision: 1) %></td>
+            <% end %>
+          </tr>
+          <tr>
+            <td class="px-4 py-2 text-sm text-gray-900">Part des entreprises individuelles (micro-entrepreneurs compris)</td>
+            <% bc_territories.each do |t| %>
+              <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= cell.(t) %>"><%= fmt_pct(bs.(t, "individual_share")) %></td>
+            <% end %>
+          </tr>
+          <tr class="bg-gray-50">
+            <td colspan="<%= bc_territories.size + 1 %>" class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Répartition par grand secteur (<%= bc_period %>)</td>
+          </tr>
+          <% bc_sectors.each do |key, label| %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
+              <% bc_territories.each do |t| %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= cell.(t) %>"><%= fmt_pct(t[:data].dig("summary", "sector_shares", key)) %></td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 class="text-sm font-medium text-gray-900 mt-6 mb-2">Créations d'entreprises pour 1 000 habitants, <%= bc_years.first %>-<%= bc_years.last %></h4>
+    <%= comparison_line_chart(bc_territories, bc_years, "created_per_1000", unit: "", digits: 1) %>
+    <p class="text-xs text-gray-500 mt-2">
+      <%= @territory_name %>, créations par année :
+      <%= bc_years.map { |y| "#{y} : #{fmt_count(territory_value(bc_commune, y, 'created'))}" }.join(" · ") %>.
+    </p>
+    <p class="text-xs text-gray-500 mt-2">Source : Insee, Système d'information sur la démographie d'entreprises (SIDE), créations d'entreprises <%= bc_years.first %>-<%= bc_years.last %>, champ marchand non agricole. Taux calculés sur la population du recensement le plus proche (2017 ou 2023). La plupart des créations sont des micro-entreprises sans salarié, dont une partie n'a pas ou peu d'activité.</p>
+  </section>
+<% end %>
