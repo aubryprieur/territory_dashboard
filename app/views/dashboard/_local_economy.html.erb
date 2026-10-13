@@ -26,8 +26,8 @@
     <p class="text-xs text-gray-500 mb-4">Emplois situés sur le territoire, quel que soit le lieu de résidence des personnes qui les occupent.</p>
 
     <%= render "dashboard/territory_indicator", **common,
-          title: "Indicateur de concentration d'emploi", theme: "teal",
-          value_key: "employment_concentration", value_format: :decimal, unit: "emplois / 100 actifs occupés",
+          title: "Concentration d'emploi : emplois pour 100 actifs occupés", theme: "teal",
+          value_key: "employment_concentration", value_format: :decimal, unit: "", decimals: 1,
           count_key: "jobs", count_label: "emplois sur le territoire",
           definition: "Nombre d'emplois sur le territoire pour 100 actifs occupés qui y résident. Au-dessous de 100, le territoire est plutôt résidentiel : une partie des habitants travaille ailleurs.",
           details: [
