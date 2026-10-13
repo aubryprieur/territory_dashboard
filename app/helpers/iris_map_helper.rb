@@ -6,11 +6,11 @@ module IrisMapHelper
   IRIS_CLASSES = [
     { max: 0.75, color: "#2166ac", label: "nettement inférieur" },
     { max: 0.92, color: "#92c5de", label: "inférieur" },
-    { max: 1.08, color: "#f0f0f0", label: "proche de la commune" },
+    { max: 1.08, color: "#e7e5e4", label: "proche de la commune" },
     { max: 1.25, color: "#f4a582", label: "supérieur" },
     { max: Float::INFINITY, color: "#b2182b", label: "nettement supérieur" }
   ].freeze
-  IRIS_NO_DATA = "#d4d4d8".freeze
+  IRIS_NO_DATA = "#ffffff".freeze  # IRIS sans valeur (zones d'activité, sans habitants) : blanc hachuré par le contour
 
   def iris_value(feature, year, key = "value")
     feature.dig("values", year.to_s, key)
@@ -49,7 +49,7 @@ module IrisMapHelper
   end
 
   # SVG de la carte : polygones, étiquettes de valeur, info-bulle (title)
-  def iris_map_svg(map, year, width: 520, max_height: 460)
+  def iris_map_svg(map, year, width: 900, max_height: 600)
     features = map["features"] || []
     reference = map.dig("commune", "values", year.to_s, "value")
     unit = map.dig("indicator", "unit")
@@ -74,22 +74,17 @@ module IrisMapHelper
       d = iris_rings(f["geometry"]).map { |ring| "M" + ring.map { |lon, lat| project.(lon, lat).join(",") }.join("L") + "Z" }.join
       count = iris_value(f, year, "count")
       total = iris_value(f, year, "total")
-      tip = "#{f['iris_name']} : #{fmt_iris(value, unit)}"
-      tip += " (#{fmt_count(count)} sur #{fmt_count(total)})" if count && total
+      tip = "#{f['iris_name']} (IRIS #{f['iris_code']}) : #{fmt_iris(value, unit)}"
+      tip += " — #{fmt_count(count)} sur #{fmt_count(total)}" if count && total
+      tip += " — pas de valeur (IRIS sans population concernée)" if value.nil?
       content_tag(:path, content_tag(:title, tip), d: d, fill: cls ? cls[:color] : IRIS_NO_DATA,
-                  stroke: "#ffffff", "stroke-width": 1.5, "fill-rule": "evenodd")
+                  class: "iris-shape", stroke: "#6b7280", "stroke-width": 0.6, "stroke-linejoin": "round",
+                  "fill-rule": "evenodd")
     end
 
-    labels = features.filter_map do |f|
-      lon, lat = f["label"]
-      next if lon.nil?
-      x, y = project.(lon, lat)
-      content_tag(:text, fmt_iris(iris_value(f, year), unit), x: x, y: y, "text-anchor": "middle", "dominant-baseline": "middle",
-                  "font-size": 11, "font-weight": 600, fill: "#111827", stroke: "#ffffff", "stroke-width": 3,
-                  "paint-order": "stroke", style: "pointer-events:none")
-    end
-
-    content_tag(:svg, safe_join(shapes + labels), viewBox: "0 0 #{w} #{height}", width: "100%",
+    # survol : contour renforcé de l'IRIS (le détail s'affiche dans l'info-bulle)
+    style = content_tag(:style, ".iris-shape{cursor:pointer}.iris-shape:hover{stroke:#111827;stroke-width:2}")
+    content_tag(:svg, safe_join([style] + shapes), viewBox: "0 0 #{w} #{height}", width: "100%",
                 style: "max-width:#{w}px;height:auto", role: "img",
                 "aria-label": "Carte des IRIS : #{map.dig('indicator', 'label')}")
   end
