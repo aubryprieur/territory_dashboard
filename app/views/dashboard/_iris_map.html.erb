@@ -24,10 +24,10 @@
     <h3 class="text-sm font-medium text-gray-700 mb-1"><%= map.dig("indicator", "label") %> par IRIS (<%= latest %>)</h3>
     <p class="text-xs text-gray-500 mb-4"><%= definition %> Les IRIS sont les quartiers statistiques de l'Insee (environ 2 000 habitants). Couleur : écart de chaque IRIS à l'ensemble de la commune (<%= fmt_iris(reference, unit) %> en <%= latest %>).</p>
     <div>
-      <div class="border border-gray-200 rounded-lg p-3 bg-white">
+      <div class="border border-gray-200 rounded-lg p-4 bg-white" style="display:flex;justify-content:center;align-items:center">
         <%= iris_map_svg(map, latest) %>
       </div>
-      <div class="mt-2 flex flex-wrap" style="column-gap:1rem;row-gap:0.25rem">
+      <div class="mt-2 flex flex-wrap" style="column-gap:1rem;row-gap:0.25rem;justify-content:center">
         <% iris_legend(reference, unit).each do |c| %>
           <div class="flex items-center text-xs text-gray-600">
             <span style="display:inline-block;width:14px;height:14px;background:<%= c[:color] %>;border:1px solid #374151;margin-right:6px"></span>
@@ -38,7 +38,7 @@
           <span style="display:inline-block;width:14px;height:14px;background:<%= IrisMapHelper::IRIS_NO_DATA_SWATCH %>;border:1px solid #9ca3af;margin-right:6px"></span>Sans valeur
         </div>
       </div>
-      <p class="text-xs text-gray-500 mt-1">Survolez un IRIS pour afficher son nom, son code et sa valeur.</p>
+      <p class="text-xs text-gray-500 mt-1" style="text-align:center">Survolez un IRIS pour afficher son nom, son code et sa valeur.</p>
       <div class="overflow-x-auto mt-4">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">

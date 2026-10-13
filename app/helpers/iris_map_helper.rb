@@ -99,7 +99,7 @@ module IrisMapHelper
     # survol : contour renforcé de l'IRIS (le détail s'affiche dans l'info-bulle)
     style = content_tag(:style, ".iris-shape{cursor:pointer}.iris-shape:hover{stroke:#000000;stroke-width:3}")
     content_tag(:svg, safe_join([style] + shapes), viewBox: "0 0 #{w} #{height}", width: "100%",
-                style: "max-width:#{w}px;height:auto", role: "img",
+                style: "display:block;margin:0 auto;max-width:#{w}px;height:auto", role: "img",
                 "aria-label": "Carte des IRIS : #{map.dig('indicator', 'label')}")
   end
 end
