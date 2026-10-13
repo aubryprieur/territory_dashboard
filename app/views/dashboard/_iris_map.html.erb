@@ -1,6 +1,6 @@
 <%#
   Carte IRIS d'un indicateur (API /iris/map/commune/{code}?indicator=…) : carte SVG colorée selon l'écart de
-  chaque IRIS à la commune, et tableau 2017 / 2022 avec effectifs. N'apparaît que si la commune compte au
+  chaque IRIS à la commune, et, à droite, tableau des 5 IRIS les plus élevés et des 5 plus faibles (tous au-delà de 12 IRIS : sinon liste complète). N'apparaît que si la commune compte au
   moins deux IRIS.
   locals : map (réponse de l'API, ou nil), definition (optionnel),
            commune_latest (optionnel) : { year:, value:, count:, total: } chiffre communal le plus récent, affiché
@@ -18,71 +18,87 @@
     features = (map["features"] || []).sort_by { |f| -(iris_value(f, latest) || -1) }
     count_label = map.dig("indicator", "count_label")
     additive = map.dig("indicator", "additive") != false  # sinon : pas d'effectif (médiane, taux publiés tels quels)
-    ncols = 2 + (first != latest ? 2 : 0) + (additive ? 1 : 0)
   %>
   <section style="margin-bottom:2.5rem">
     <h3 class="text-sm font-medium text-gray-700 mb-1"><%= map.dig("indicator", "label") %> par IRIS (<%= latest %>)</h3>
     <p class="text-xs text-gray-500 mb-4"><%= definition %> Les IRIS sont les quartiers statistiques de l'Insee (environ 2 000 habitants). Couleur : écart de chaque IRIS à l'ensemble de la commune (<%= fmt_iris(reference, unit) %> en <%= latest %>).</p>
-    <div>
-      <div class="border border-gray-200 rounded-lg p-4 bg-white" style="display:flex;justify-content:center;align-items:center">
-        <%= iris_map_svg(map, latest) %>
-      </div>
-      <div class="mt-2 flex flex-wrap" style="column-gap:1rem;row-gap:0.25rem;justify-content:center">
-        <% iris_legend(reference, unit).each do |c| %>
-          <div class="flex items-center text-xs text-gray-600">
-            <span style="display:inline-block;width:14px;height:14px;background:<%= c[:color] %>;border:1px solid #374151;margin-right:6px"></span>
-            <%= c[:label].capitalize %> : <%= c[:range] %>
-          </div>
-        <% end %>
-        <div class="flex items-center text-xs text-gray-600">
-          <span style="display:inline-block;width:14px;height:14px;background:<%= IrisMapHelper::IRIS_NO_DATA_SWATCH %>;border:1px solid #9ca3af;margin-right:6px"></span>Sans valeur
+    <style>
+      .iris-layout{display:grid;grid-template-columns:1fr;gap:1.5rem;align-items:start}
+      @media (min-width:900px){.iris-layout{grid-template-columns:3fr 2fr}}
+    </style>
+    <div class="iris-layout">
+      <!-- Carte -->
+      <div>
+        <div class="border border-gray-200 rounded-lg p-3 bg-white" style="display:flex;justify-content:center;align-items:center">
+          <%= iris_map_svg(map, latest) %>
         </div>
+        <div class="mt-2 flex flex-wrap" style="column-gap:1rem;row-gap:0.25rem;justify-content:center">
+          <% iris_legend(reference, unit).each do |c| %>
+            <div class="flex items-center text-xs text-gray-600">
+              <span style="display:inline-block;width:12px;height:12px;background:<%= c[:color] %>;border:1px solid #374151;margin-right:5px"></span><%= c[:range] %>
+            </div>
+          <% end %>
+          <div class="flex items-center text-xs text-gray-600">
+            <span style="display:inline-block;width:12px;height:12px;background:<%= IrisMapHelper::IRIS_NO_DATA_SWATCH %>;border:1px solid #9ca3af;margin-right:5px"></span>Sans valeur
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1" style="text-align:center">Survolez un IRIS pour afficher son nom, son code et sa valeur.</p>
       </div>
-      <p class="text-xs text-gray-500 mt-1" style="text-align:center">Survolez un IRIS pour afficher son nom, son code et sa valeur.</p>
-      <div class="overflow-x-auto mt-4">
+
+      <!-- Tableau : 5 IRIS les plus élevés, 5 les plus faibles, commune -->
+      <div>
+        <%
+          ranked = features.reject { |f| iris_value(f, latest).nil? }  # IRIS sans valeur : sur la carte seulement
+          split = ranked.size > 12
+          groups = split ? [["Les 5 IRIS les plus élevés", ranked.first(5)], ["Les 5 IRIS les plus faibles", ranked.last(5).reverse]] : [[nil, ranked]]
+          two_years = first != latest
+          ncols = 2 + (two_years ? 1 : 0) + (additive ? 1 : 0)
+          th = "px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+          td = "px-2 py-2 whitespace-nowrap text-xs text-right"
+        %>
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IRIS</th>
-              <% if first != latest %><th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= first %></th><% end %>
-              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= latest %></th>
-              <% if first != latest %><th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Évolution</th><% end %>
-              <% if additive %><th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Effectif <%= latest %></th><% end %>
+              <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IRIS</th>
+              <th class="<%= th %>"><%= latest %></th>
+              <% if two_years %><th class="<%= th %>">Depuis <%= first %></th><% end %>
+              <% if additive %><th class="<%= th %>">Effectif</th><% end %>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <%
-              # Grandes villes : 10 IRIS les plus élevés et 10 les plus faibles (la carte montre tous les IRIS)
-              ranked = features.reject { |f| iris_value(f, latest).nil? }  # IRIS sans valeur : sur la carte seulement
-              shown = ranked.size > 25 ? ranked.first(10) + [:gap] + ranked.last(10) : ranked
-              rows = shown.map { |f| f == :gap ? [:gap] : [f["iris_name"], f["values"] || {}, false, f] } +
-                     [[(additive ? "Commune — somme des IRIS (#{latest})" : "Ensemble de la commune (#{latest})"), map.dig("commune", "values") || {}, true, nil]]
-            %>
-            <% rows.each do |name, values, is_commune, f| %>
-              <% if name == :gap %>
-                <tr><td colspan="<%= ncols %>" class="px-3 py-2 text-xs text-gray-500 text-center">… <%= ranked.size - 20 %> autres IRIS (voir la carte) — ci-dessus les 10 plus élevés, ci-dessous les 10 plus faibles …</td></tr>
-                <% next %>
+            <% groups.each do |label, list| %>
+              <% if label %>
+                <tr><td colspan="<%= ncols %>" class="px-2 pt-3 text-xs font-semibold text-gray-700"><%= label %></td></tr>
               <% end %>
-              <%
-                v1 = values.dig(latest, "value"); v0 = values.dig(first, "value")
-                small = values.dig(latest, "total") && values.dig(latest, "total") < IrisMapHelper::IRIS_MIN_TOTAL
-                cls = !is_commune && !small && iris_class(v1, reference)
-              %>
-              <tr class="<%= is_commune ? 'bg-gray-50 font-semibold' : '' %>">
-                <td class="px-3 py-2 text-sm text-gray-900">
-                  <% unless is_commune %><span style="display:inline-block;width:10px;height:10px;background:<%= cls ? cls[:color] : IrisMapHelper::IRIS_NO_DATA_SWATCH %>;border:1px solid #d1d5db;margin-right:6px"></span><% end %><%= name %>
-                </td>
-                <% if first != latest %><td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-600"><%= fmt_iris(v0, unit) %></td><% end %>
-                <td class="px-3 py-2 whitespace-nowrap text-sm text-right"><%= fmt_iris(v1, unit) %></td>
-                <% if first != latest %><td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-600"><%= iris_trend(v0, v1, unit) %></td><% end %>
-                <% if additive %><td class="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-600"><%= values.dig(latest, "count") ? "#{fmt_count(values.dig(latest, 'count'))} sur #{fmt_count(values.dig(latest, 'total'))}" : "–" %></td><% end %>
-              </tr>
+              <% list.each do |f| %>
+                <%
+                  values = f["values"] || {}
+                  v1 = values.dig(latest, "value"); v0 = values.dig(first, "value")
+                  cls = iris_class(v1, reference)
+                %>
+                <tr>
+                  <td class="px-2 py-2 text-xs text-gray-900">
+                    <span style="display:inline-block;width:9px;height:9px;background:<%= cls ? cls[:color] : IrisMapHelper::IRIS_NO_DATA_SWATCH %>;border:1px solid #9ca3af;margin-right:5px"></span><%= f["iris_name"] %>
+                  </td>
+                  <td class="<%= td %> font-medium"><%= fmt_iris(v1, unit) %></td>
+                  <% if two_years %><td class="<%= td %> text-gray-600"><%= iris_trend(v0, v1, unit) %></td><% end %>
+                  <% if additive %><td class="<%= td %> text-gray-600"><%= values.dig(latest, "count") ? "#{fmt_count(values.dig(latest, 'count'))} / #{fmt_count(values.dig(latest, 'total'))}" : "–" %></td><% end %>
+                </tr>
+              <% end %>
             <% end %>
+            <% cv = map.dig("commune", "values") || {} %>
+            <tr class="bg-gray-50 font-semibold">
+              <td class="px-2 py-2 text-xs text-gray-900"><%= additive ? "Commune (somme des IRIS)" : "Ensemble de la commune" %></td>
+              <td class="<%= td %>"><%= fmt_iris(cv.dig(latest, "value"), unit) %></td>
+              <% if two_years %><td class="<%= td %> text-gray-600"><%= iris_trend(cv.dig(first, "value"), cv.dig(latest, "value"), unit) %></td><% end %>
+              <% if additive %><td class="<%= td %> text-gray-600"><%= cv.dig(latest, "count") ? "#{fmt_count(cv.dig(latest, 'count'))} / #{fmt_count(cv.dig(latest, 'total'))}" : "–" %></td><% end %>
+            </tr>
           </tbody>
         </table>
-        <% if additive %><p class="text-xs text-gray-500 mt-2">Effectif : <%= count_label %> sur le total de l'IRIS.</p><% end %>
+        <% if split %><p class="text-xs text-gray-500 mt-2"><%= ranked.size - 10 %> autres IRIS sur la carte.</p><% end %>
+        <% if additive %><p class="text-xs text-gray-500 mt-1">Effectif : <%= count_label %> / total de l'IRIS.</p><% end %>
         <% if commune_latest && commune_latest[:year].to_s != latest.to_s %>
-          <p class="text-xs text-gray-600 mt-2 bg-gray-50 border border-gray-200 rounded p-2">Le dernier millésime disponible à l'IRIS est <%= latest %> ; les chiffres communaux affichés plus haut sont en <%= commune_latest[:year] %> (<%= fmt_iris(commune_latest[:value], unit) %><% if commune_latest[:count] && commune_latest[:total] %>, soit <%= fmt_count(commune_latest[:count]) %> sur <%= fmt_count(commune_latest[:total]) %><% end %>). <% if additive %>Les deux sources donnent la même valeur pour un même millésime (<%= first %> : <%= fmt_iris(map.dig("commune", "values", first, "value"), unit) %>).<% end %></p>
+          <p class="text-xs text-gray-600 mt-2 bg-gray-50 border border-gray-200 rounded p-2">Dernier millésime à l'IRIS : <%= latest %>. Chiffre communal affiché plus haut : <%= commune_latest[:year] %> (<%= fmt_iris(commune_latest[:value], unit) %><% if commune_latest[:count] && commune_latest[:total] %>, soit <%= fmt_count(commune_latest[:count]) %> sur <%= fmt_count(commune_latest[:total]) %><% end %>).<% if additive && two_years %> Même valeur pour un même millésime (<%= first %> : <%= fmt_iris(cv.dig(first, "value"), unit) %>).<% end %></p>
         <% end %>
         <p class="text-xs text-gray-500 mt-2">Source : <%= map["source"] %> (<%= years.join(" et ") %>).</p>
       </div>
