@@ -134,6 +134,15 @@
     </section>
 
     <%= render "dashboard/territory_indicator", **common,
+          title: "Jeunes de 15 à 24 ans", theme: "blue",
+          value_key: "age_15_24_percentage", count_key: "pop_15_24", total_key: "pop", count_label: "jeunes de 15-24 ans",
+          definition: "Part des 15-24 ans dans la population : âge des études, de l'entrée dans la vie active et de la décohabitation. Repère pour les politiques jeunesse (mobilité, logement, insertion, mission locale).",
+          details: [
+            { label: "Moins de 15 ans", share_key: "age_lt15_percentage" },
+            { label: "25-39 ans", share_key: "age_25_39_percentage" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
           title: "Indice de vieillissement", theme: "purple",
           value_key: "aging_index", value_format: :decimal, unit: "", decimals: 1,
           count_key: "pop_ge65", count_label: "personnes de 65 ans ou plus",
