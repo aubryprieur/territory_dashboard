@@ -10,8 +10,10 @@ module IrisMapHelper
     { max: 1.25, color: "#f4a582", label: "supérieur" },
     { max: Float::INFINITY, color: "#b2182b", label: "nettement supérieur" }
   ].freeze
-  IRIS_NO_DATA = "url(#iris-hatch)".freeze  # gris hachuré : IRIS sans valeur ou effectif trop faible
-  IRIS_NO_DATA_SWATCH = "repeating-linear-gradient(45deg,#e5e7eb 0 3px,#9ca3af 3px 4px)".freeze
+  # IRIS sans valeur (pas de population concernée : zones d'activité, gare…) : gris uni. Un motif hachuré SVG
+  # (url(#…)) n'était pas résolu dans le dashboard : la zone apparaissait vide et sans info-bulle.
+  IRIS_NO_DATA = "#c4c4c4".freeze
+  IRIS_NO_DATA_SWATCH = IRIS_NO_DATA
   IRIS_MIN_TOTAL = 0  # aucun seuil : tous les IRIS sont colorés, même avec de petits effectifs (choix d'Aubry)
 
   def iris_value(feature, year, key = "value")
@@ -88,10 +90,7 @@ module IrisMapHelper
 
     # survol : contour renforcé de l'IRIS (le détail s'affiche dans l'info-bulle)
     style = content_tag(:style, ".iris-shape{cursor:pointer}.iris-shape:hover{stroke:#000000;stroke-width:3}")
-    hatch = content_tag(:defs, content_tag(:pattern,
-      safe_join([tag.rect(width: 6, height: 6, fill: "#e5e7eb"), tag.path(d: "M0,6 L6,0", stroke: "#9ca3af", "stroke-width": 1)]),
-      id: "iris-hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse"))
-    content_tag(:svg, safe_join([style, hatch] + shapes), viewBox: "0 0 #{w} #{height}", width: "100%",
+    content_tag(:svg, safe_join([style] + shapes), viewBox: "0 0 #{w} #{height}", width: "100%",
                 style: "max-width:#{w}px;height:auto", role: "img",
                 "aria-label": "Carte des IRIS : #{map.dig('indicator', 'label')}")
   end
