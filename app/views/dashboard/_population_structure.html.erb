@@ -154,6 +154,11 @@
             { label: "Moins de 20 ans", share_key: "age_lt20_percentage" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("age_65p_share"),
+          definition: "Personnes de 65 ans ou plus, en % de la population de l'IRIS.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "age_ge65_percentage"),
+                            count: territory_value(commune, latest, "pop_ge65"), total: territory_value(commune, latest, "pop") } %>
+
     <%= render "dashboard/territory_indicator", **common,
           title: "Rapport de dépendance", theme: "purple",
           value_key: "dependency_ratio", value_format: :decimal, unit: "", decimals: 1,

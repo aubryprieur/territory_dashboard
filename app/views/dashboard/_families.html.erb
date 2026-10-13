@@ -47,7 +47,7 @@
             { label: "Mères seules avec enfant(s)", count_key: "single_mothers", share_key: "single_mothers_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: @iris_single_parent_map,
+    <%= render "dashboard/iris_map", map: cached_iris_map("single_parent_share"),
           definition: "Un parent vivant seul avec au moins un enfant, en % des familles de l'IRIS.",
           commune_latest: { year: latest, value: family_value(commune, latest, "single_parent_families_percentage"),
                             count: family_value(commune, latest, "single_parent_families"),
@@ -63,6 +63,12 @@
             { label: "3 enfants", count_key: "families_with_3_children", share_key: "families_3_children_percentage" },
             { label: "4 enfants ou plus", count_key: "families_with_4_plus_children", share_key: "families_4_plus_children_percentage" }
           ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("large_family_share"),
+          definition: "Familles avec 3 enfants ou plus de moins de 25 ans, en % des familles de l'IRIS.",
+          commune_latest: { year: latest, value: family_value(commune, latest, "large_families_percentage"),
+                            count: family_value(commune, latest, "total_large_families"),
+                            total: family_value(commune, latest, "total_families") } %>
 
     <!-- Familles recomposées (2023 uniquement) -->
     <% blended_rate = family_value(commune, latest, "blended_families_percentage") %>

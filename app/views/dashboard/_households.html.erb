@@ -112,6 +112,11 @@
             { label: "80 ans ou plus vivant seuls", count_key: "living_alone_80_plus", share_key: "living_alone_rate_80_plus" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("alone_80p_share"),
+          definition: "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de l'IRIS.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "living_alone_rate_80_plus"),
+                            count: territory_value(commune, latest, "living_alone_80_plus"), total: nil } %>
+
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Personnes vivant seules selon l'âge (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Part des personnes vivant seules dans chaque tranche d'âge (population des ménages), en %.</p>

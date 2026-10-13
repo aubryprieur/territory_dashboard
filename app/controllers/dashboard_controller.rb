@@ -2,6 +2,7 @@ class DashboardController < ApplicationController
   include UserAuthorization
   include TerritoryNamesHelper
   include DashboardCache  # 🚀 Ajout du système de cache
+  helper_method :cached_iris_map  # cartes IRIS appelées depuis les vues
 
   before_action :check_user_territory
   before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families,
@@ -119,7 +120,6 @@ class DashboardController < ApplicationController
 
     # Données de comparaison avec cache
     load_comparison_data_for_families_cached
-    @iris_single_parent_map = cached_iris_map("single_parent_share") # carte IRIS
 
     respond_to do |format|
       format.html { render partial: 'families', locals: {

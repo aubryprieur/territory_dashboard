@@ -90,11 +90,21 @@
             { label: "55-64 ans", share_key: "unemployment_rate_55_64" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("unemployment_rate"),
+          definition: "Chômeurs de 15-64 ans au sens du recensement, en % des actifs de 15-64 ans de l'IRIS.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "unemployment_rate_15_64"),
+                            count: territory_value(commune, latest, "unemployed_15_64"), total: territory_value(commune, latest, "active_15_64") } %>
+
     <%= render "dashboard/territory_indicator", **common,
           title: "Chômage des jeunes de 15-24 ans", theme: "purple",
           value_key: "unemployment_rate_15_24",
           count_key: "unemployed_15_24", total_key: "active_15_24", count_label: "jeunes chômeurs parmi les jeunes actifs",
           definition: "Part des chômeurs parmi les jeunes actifs de 15 à 24 ans. À lire avec le taux de scolarisation des 18-24 ans (onglet Scolarisation)." %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("youth_unemployment_rate"),
+          definition: "Chômeurs de 15-24 ans, en % des actifs de 15-24 ans de l'IRIS.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "unemployment_rate_15_24"),
+                            count: territory_value(commune, latest, "unemployed_15_24"), total: territory_value(commune, latest, "active_15_24") } %>
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de chômage selon le diplôme (<%= latest %>)</h3>

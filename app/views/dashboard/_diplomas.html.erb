@@ -97,6 +97,11 @@
             { label: "Hommes", share_key: "no_diploma_percentage_men" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("no_diploma_share"),
+          definition: "15 ans ou plus non scolarisés sans diplôme ou avec le CEP, en % des 15 ans ou plus non scolarisés de l'IRIS.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "no_diploma_percentage"),
+                            count: territory_value(commune, latest, "no_diploma"), total: territory_value(commune, latest, "non_enrolled_15_plus") } %>
+
     <!-- Diplômés du supérieur -->
     <%= render "dashboard/territory_indicator", **common,
           title: "Diplômés de l'enseignement supérieur", theme: "blue",

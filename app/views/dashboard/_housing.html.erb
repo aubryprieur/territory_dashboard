@@ -92,6 +92,11 @@
             { label: "Logés gratuitement", share_key: "free_percentage" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("social_housing_share"),
+          definition: "Résidences principales louées vides en HLM, en % des résidences principales de l'IRIS.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "tenants_social_percentage"),
+                            count: territory_value(commune, latest, "main_tenants_social"), total: territory_value(commune, latest, "dwellings_main") } %>
+
     <%= render "dashboard/territory_indicator", **common,
           title: "Propriétaires occupants", theme: "amber",
           value_key: "owners_percentage",
@@ -184,6 +189,11 @@
             { label: "Deux voitures ou plus", share_key: "two_cars_percentage" },
             { label: "Au moins un emplacement de stationnement", share_key: "parking_percentage" }
           ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("no_car_share"),
+          definition: "Ménages sans voiture, en % des ménages de l'IRIS.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "no_car_percentage"),
+                            count: territory_value(commune, latest, "cars_0"), total: territory_value(commune, latest, "dwellings_main") } %>
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Combustible principal de chauffage (<%= latest %>)</h3>
