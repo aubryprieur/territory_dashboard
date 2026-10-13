@@ -432,6 +432,15 @@ module DashboardCache
     @france_business_creations_data = cached_health_data(s, :france)
   end
 
+  def load_tax_households_comparison
+    s = Api::TaxHouseholdsService
+    @tax_households_data = cached_health_data(s, :commune, @territory_code)
+    @epci_tax_households_data = cached_health_data(s, :epci, @epci_code)
+    @department_tax_households_data = cached_health_data(s, :department, @department_code)
+    @region_tax_households_data = cached_health_data(s, :region, @region_code)
+    @france_tax_households_data = cached_health_data(s, :france)
+  end
+
   def load_ald_comparison
     @department_ald_data = cached_health_data(Api::AldService, :department, @department_code)
     @france_ald_data = cached_health_data(Api::AldService, :france)

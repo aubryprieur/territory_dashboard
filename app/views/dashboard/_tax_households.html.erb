@@ -1,0 +1,54 @@
+<%#
+  Foyers fiscaux — DGFiP, IRCOM (API /tax-households/*), revenus 2021 et 2024 : foyers imposés, revenu fiscal
+  de référence moyen, retraites et salaires, foyers aux revenus les plus modestes. Rendu après l'onglet Revenus.
+%>
+<%
+  tx_territories = comparison_territories("tax_households_data", {
+    commune: @tax_households_data, epci: @epci_tax_households_data, department: @department_tax_households_data,
+    region: @region_tax_households_data, france: @france_tax_households_data
+  })
+  tx_commune = tx_territories.find { |t| t[:key] == :commune }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Foyers fiscaux et impôt sur le revenu</h2>
+  <p class="text-xs text-gray-500 mb-4">Déclarations de revenus traitées par l'administration fiscale. Un foyer fiscal correspond à une déclaration : un couple non marié ni pacsé forme deux foyers, un jeune rattaché à ses parents n'en forme pas. Le revenu fiscal de référence (RFR) est le revenu déclaré après abattements, avant impôt et prestations sociales.</p>
+
+  <% if tx_commune.nil? %>
+    <p class="text-sm text-gray-500">Données fiscales non disponibles pour la commune.</p>
+  <% else %>
+    <%
+      tx_years = comparison_years(@tax_households_data, "tax_households_data")
+      tx_latest = comparison_latest_year(@tax_households_data, tx_years)
+      tx_common = { territories: tx_territories, years: tx_years, latest: tx_latest, comparison: tx_years.first }
+      tx_detailed = !territory_value(tx_commune, tx_latest, "low_rfr_share").nil?
+    %>
+
+    <%= render "dashboard/territory_indicator", **tx_common,
+          title: "Part des foyers fiscaux imposés", theme: "indigo",
+          value_key: "taxed_share", count_key: "taxed_households", total_key: "households", count_label: "foyers imposés",
+          definition: "Foyers redevables d'un impôt sur le revenu positif après réductions et crédits d'impôt. Une part faible signale des revenus modestes, ou des réductions et crédits d'impôt importants (emploi à domicile, garde d'enfants).",
+          details: [
+            { label: "Revenu fiscal de référence moyen par foyer", euros_key: "rfr_avg" },
+            { label: "Impôt net moyen par foyer", euros_key: "net_tax_avg" },
+            { label: "Foyers déclarant des salaires", share_key: "wage_share" },
+            { label: "Foyers déclarant des retraites ou pensions", share_key: "pension_share" }
+          ] %>
+
+    <% if tx_detailed %>
+      <%= render "dashboard/territory_indicator", **tx_common,
+            title: "Foyers fiscaux au revenu fiscal de référence inférieur à 10 000 €", theme: "purple",
+            value_key: "low_rfr_share", count_key: "hh_0_10k", total_key: "households", count_label: "foyers",
+            definition: "Part des foyers dont le revenu fiscal de référence annuel ne dépasse pas 10 000 €. Repère des foyers aux revenus déclarés très modestes, avant prestations sociales. Le seuil n'est pas corrigé de l'inflation : une partie de la baisse depuis 2021 vient de la hausse générale des revenus.",
+            details: [
+              { label: "RFR inférieur à 15 000 €", share_key: "lt15k_share" },
+              { label: "RFR de 50 000 € ou plus", share_key: "ge50k_share" }
+            ] %>
+    <% else %>
+      <p class="text-sm text-gray-500 mb-6">La répartition des foyers par tranche de revenu fiscal n'est publiée que pour les communes d'environ 2 000 foyers ou plus.</p>
+    <% end %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : DGFiP, impôt sur le revenu par collectivité territoriale (IRCOM), revenus <%= tx_years.join(" et ") %> (déclarations <%= tx_years.map { |y| y.to_i + 1 }.join(" et ") %>). Montants en euros courants. France métropolitaine : somme des régions métropolitaines. Communauté d'agglomération ou de communes : tranches de revenu non calculées si l'une de ses communes n'est pas détaillée.</p>
+    </div>
+  <% end %>
+</div>

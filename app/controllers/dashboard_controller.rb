@@ -316,6 +316,7 @@ class DashboardController < ApplicationController
     # Onglet Revenus et pauvreté (ABS) : niveau de vie, pauvreté, inégalités, structure du revenu
     # (INSEE, Filosofi 2017-2021 et 2023 — API /revenues-poverty/*)
     load_revenues_poverty_comparison
+    load_tax_households_comparison # foyers fiscaux (DGFiP, IRCOM)
 
     respond_to do |format|
       format.html { render partial: 'revenues_poverty' }
