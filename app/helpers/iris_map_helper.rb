@@ -2,17 +2,18 @@
 # de la commune (somme de ses IRIS, même millésime). Coordonnées WGS84 projetées en équirectangulaire corrigé
 # de la latitude, suffisant à l'échelle d'une commune.
 module IrisMapHelper
-  # 5 classes d'écart relatif à la commune : couleurs divergentes lisibles par les daltoniens
+  # 5 classes d'écart relatif à la commune. Palette divergente indigo ↔ corail, dans les teintes du dashboard ;
+  # « proche de la commune » en sable clair, distinct du gris des IRIS sans valeur.
   IRIS_CLASSES = [
-    { max: 0.75, color: "#2166ac", label: "nettement inférieur" },
-    { max: 0.92, color: "#92c5de", label: "inférieur" },
-    { max: 1.08, color: "#fde9a9", label: "proche de la commune" },
-    { max: 1.25, color: "#f4a582", label: "supérieur" },
-    { max: Float::INFINITY, color: "#b2182b", label: "nettement supérieur" }
+    { max: 0.75, color: "#4338ca", label: "nettement inférieur" },   # indigo 700
+    { max: 0.92, color: "#a5b4fc", label: "inférieur" },             # indigo 300
+    { max: 1.08, color: "#f5ede0", label: "proche de la commune" },  # sable
+    { max: 1.25, color: "#fb923c", label: "supérieur" },             # orange 400
+    { max: Float::INFINITY, color: "#e11d48", label: "nettement supérieur" } # rose 600
   ].freeze
-  # IRIS sans valeur (pas de population concernée : zones d'activité, gare…) : gris uni. Un motif hachuré SVG
-  # (url(#…)) n'était pas résolu dans le dashboard : la zone apparaissait vide et sans info-bulle.
-  IRIS_NO_DATA = "#c4c4c4".freeze
+  # IRIS sans valeur (pas de population concernée : zones d'activité, gare…) : gris ardoise uni (un motif SVG
+  # url(#…) n'était pas résolu dans le dashboard : la zone apparaissait vide et sans info-bulle).
+  IRIS_NO_DATA = "#cbd5e1".freeze
   IRIS_NO_DATA_SWATCH = IRIS_NO_DATA
   IRIS_MIN_TOTAL = 0  # aucun seuil : tous les IRIS sont colorés, même avec de petits effectifs (choix d'Aubry)
 
@@ -92,13 +93,14 @@ module IrisMapHelper
       tip += " — pas de valeur (IRIS sans population concernée)" if value.nil?
       tip += " — effectif trop faible pour être coloré" if value && too_small
       content_tag(:path, content_tag(:title, tip), d: d, fill: cls ? cls[:color] : IRIS_NO_DATA,
-                  class: "iris-shape", stroke: "#374151", "stroke-width": 1, "stroke-linejoin": "round",
+                  class: "iris-shape", stroke: "#ffffff", "stroke-width": 1.2, "stroke-linejoin": "round",
                   "vector-effect": "non-scaling-stroke", "fill-rule": "evenodd")
     end
 
     # survol : contour renforcé de l'IRIS (le détail s'affiche dans l'info-bulle)
-    style = content_tag(:style, ".iris-shape{cursor:pointer}.iris-shape:hover{stroke:#000000;stroke-width:3}")
-    content_tag(:svg, safe_join([style] + shapes), viewBox: "0 0 #{w} #{height}", width: "100%",
+    style = content_tag(:style, ".iris-svg .iris-shape{cursor:pointer;transition:opacity .15s,stroke-width .15s}" \
+      ".iris-svg:hover .iris-shape{opacity:.55}.iris-svg .iris-shape:hover{opacity:1;stroke:#0f172a;stroke-width:2.5}")
+    content_tag(:svg, safe_join([style] + shapes), class: "iris-svg", viewBox: "0 0 #{w} #{height}", width: "100%",
                 style: "display:block;margin:0 auto;max-width:#{w}px;height:auto", role: "img",
                 "aria-label": "Carte des IRIS : #{map.dig('indicator', 'label')}")
   end
