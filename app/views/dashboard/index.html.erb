@@ -387,6 +387,24 @@
               </div>
             </button>
 
+            <!-- Onglet Seniors -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="seniors"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-yellow-100 to-orange-100 group-hover:to-orange-200 transition-all duration-300">
+                  <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Seniors</div>
+                  <div class="text-xs text-gray-500">Retraités, fragilités</div>
+                </div>
+              </div>
+            </button>
+
             <!-- Onglet Équipements -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
@@ -566,6 +584,13 @@
         <div data-dashboard-tabs-target="content" data-tab="health" class="hidden dashboard-panel">
           <div id="health-content" data-section="health">
             <%= render 'components/loader', section_name: 'santé' %>
+          </div>
+        </div>
+
+        <!-- Panel Seniors -->
+        <div data-dashboard-tabs-target="content" data-tab="seniors" class="hidden dashboard-panel">
+          <div id="seniors-content" data-section="seniors">
+            <%= render 'components/loader', section_name: 'seniors' %>
           </div>
         </div>
 

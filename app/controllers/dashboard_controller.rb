@@ -11,7 +11,7 @@ class DashboardController < ApplicationController
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
                                             :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy, :load_equipment,
-                                            :load_health, :load_local_life]
+                                            :load_health, :load_local_life, :load_seniors]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -265,6 +265,19 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html { render partial: 'health' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_seniors
+    # Onglet Seniors : fragilité sociale, ressources, parcours et santé des retraités et des 55 ans ou plus
+    # (Observatoire interrégimes des situations de fragilité — API /senior-fragilities/*), vaccination antigrippale
+    # (API /fragilities/*)
+    load_senior_fragilities_comparison
+    load_fragilities_comparison
+
+    respond_to do |format|
+      format.html { render partial: 'seniors' }
       format.json { render json: { status: 'success' } }
     end
   end

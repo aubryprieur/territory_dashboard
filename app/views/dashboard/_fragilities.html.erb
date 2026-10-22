@@ -1,25 +1,30 @@
 <%#
-  Tableau d'indicateurs de l'Observatoire interrégimes des situations de fragilité (API /fragilities/*) sur les
-  5 territoires. Un seul millésime (2025 ; APL 2024), pourcentages publiés sans effectifs.
-  locals : title, definition (optionnel), rows : [[clé, libellé, :worse_if_higher | :worse_if_lower, format]]
-           (format : :pct par défaut, :decimal pour l'APL), note (optionnel)
+  Tableau d'indicateurs de l'Observatoire interrégimes des situations de fragilité sur les 5 territoires.
+  Un seul millésime (2025 ; APL 2024), valeurs publiées.
+  locals : title, definition (optionnel), rows : [[clé, libellé, :worse_if_higher | :worse_if_lower | :neutral, format]]
+           (format : :pct par défaut, :decimal pour l'APL, :score, :count, :signed_pct), note (optionnel),
+           dataset : :fragilities (API /fragilities/*, défaut) ou :senior_fragilities (API /senior-fragilities/*)
 %>
 <%
   definition ||= nil
   note ||= nil
+  dataset ||= :fragilities
   fr_apl = rows.any? { |r| r[0].to_s.start_with?("apl_") }
-  fr_territories = comparison_territories("fragilities_data", {
-    commune: @fragilities_data, epci: @epci_fragilities_data, department: @department_fragilities_data,
-    region: @region_fragilities_data, france: @france_fragilities_data
+  fr_key = "#{dataset}_data"
+  fr_main = instance_variable_get("@#{dataset}_data")
+  fr_territories = comparison_territories(fr_key, {
+    commune: fr_main, epci: instance_variable_get("@epci_#{dataset}_data"),
+    department: instance_variable_get("@department_#{dataset}_data"),
+    region: instance_variable_get("@region_#{dataset}_data"), france: instance_variable_get("@france_#{dataset}_data")
   }, france_name: fr_apl ? "France métropolitaine" : "France")
   fr_commune = fr_territories.find { |t| t[:key] == :commune }
   fr_france = fr_territories.find { |t| t[:key] == :france }
 %>
 <% if fr_commune %>
-  <% fr_year = comparison_latest_year(@fragilities_data, comparison_years(@fragilities_data, "fragilities_data")) %>
+  <% fr_year = comparison_latest_year(fr_main, comparison_years(fr_main, fr_key)) %>
   <section style="margin-bottom:2.5rem">
     <h3 class="text-base font-medium text-gray-900 mb-1"><%= title %></h3>
-    <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %> En rouge, une situation moins favorable que la France métropolitaine.</p><% end %>
+    <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %> En rouge, une situation moins favorable qu'en France.</p><% end %>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
@@ -38,10 +43,10 @@
               <% fr_territories.each do |t| %>
                 <%
                   v = territory_value(t, fr_year, key)
-                  worse = t[:key] == :commune && fv && v && (direction == :worse_if_lower ? v < fv : v > fv)
+                  worse = t[:key] == :commune && direction != :neutral && fv && v && (direction == :worse_if_lower ? v < fv : v > fv)
                 %>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= worse ? 'color:#b91c1c' : '' %>">
-                  <% if v.nil? %><span class="text-gray-400" title="Secret statistique : effectif trop faible">s</span><% elsif format == :decimal %><%= fmt_decimal(v, precision: 1) %><% else %><%= fmt_pct(v) %><% end %>
+                  <% if v.nil? %><span class="text-gray-400" title="Secret statistique : effectif trop faible">s</span><% elsif format == :decimal %><%= fmt_decimal(v, precision: 1) %><% elsif format == :score %><%= fmt_decimal(v, precision: 2) %><% elsif format == :count %><%= fmt_count(v) %><% elsif format == :signed_pct %><%= v.positive? ? "+" : "" %><%= fmt_pct(v) %><% else %><%= fmt_pct(v) %><% end %>
                 </td>
               <% end %>
             </tr>
@@ -49,6 +54,6 @@
         </tbody>
       </table>
     </div>
-    <p class="text-xs text-gray-500 mt-2">Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), <%= fr_year %><%= note ? " ; #{note}" : "" %>. s : secret statistique (effectif trop faible dans la commune).<%= fr_apl ? " France métropolitaine : valeur publiée par l'ANCT." : " France : valeur nationale publiée par l'Observatoire (France entière, outre-mer compris)." %></p>
+    <p class="text-xs text-gray-500 mt-2">Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA)<%= dataset == :senior_fragilities ? ", interrégime" : "" %>, <%= fr_year %><%= note ? " ; #{note}" : "" %>. s : secret statistique (effectif trop faible dans la commune).<%= fr_apl ? " France métropolitaine : valeur publiée par l'ANCT." : " France : valeur nationale publiée par l'Observatoire (France entière, outre-mer compris)." %></p>
   </section>
 <% end %>
