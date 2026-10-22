@@ -1,0 +1,161 @@
+<%#
+  Onglet Synthèse — synthèse des fragilités de la commune (API /fragility-synthesis/commune/*).
+  38 indicateurs (taux) en 8 enjeux ; rang de la commune parmi toutes les communes et parmi les communes de même
+  densité (grille INSEE à 7 niveaux) ; 100 = plus touchée. Alerte : parmi les 20 % les plus touchées de la catégorie.
+%>
+<%
+  syn = @fragility_synthesis.is_a?(Hash) && @fragility_synthesis["error"].blank? ? @fragility_synthesis : nil
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Synthèse des enjeux de fragilité</h2>
+  <% if syn.nil? %>
+    <p class="text-sm text-gray-500">Synthèse non disponible pour cette commune.</p>
+  <% else %>
+    <%
+      inds = syn["indicators"]
+      themes = syn["themes"]
+      dens = syn.dig("density", "label")
+      by_theme = inds.group_by { |i| i["theme"] }
+      level_style = {
+        "high" => ["Enjeu fort", "#fee2e2", "#b91c1c"], "moderate" => ["Enjeu modéré", "#ffedd5", "#c2410c"],
+        "low" => ["Enjeu faible", "#ecfdf5", "#047857"], "not_evaluable" => ["Non évaluable", "#f3f4f6", "#6b7280"]
+      }
+      fmt_v = lambda do |i, v = i["value"]|
+        next "–" if v.nil?
+        case i["unit"]
+        when "%" then fmt_pct(v)
+        when "€" then "#{fmt_count(v)} €"
+        when "‰" then "#{fmt_decimal(v, precision: 1)} ‰"
+        else fmt_decimal(v, precision: 1)
+        end
+      end
+      rank_of = ->(i) { i["rank_density"] || i["rank_france"] }
+      position = lambda do |r|
+        next "" if r.nil?
+        if r >= 80 then "parmi les #{[(100 - r).ceil, 1].max} % les plus touchées"
+        elsif r <= 20 then "parmi les #{[r.ceil, 1].max} % les moins touchées"
+        else "dans la moyenne"
+        end
+      end
+      high = themes.select { |t| t["level"] == "high" }.map { |t| t["label"].downcase }
+      moderate = themes.select { |t| t["level"] == "moderate" }.map { |t| t["label"].downcase }
+      alerts = inds.select { |i| i["alert"] }.sort_by { |i| -rank_of.(i) }
+      strengths = inds.select { |i| i["strength"] }.sort_by { |i| rank_of.(i) }
+      not_eval = themes.select { |t| t["level"] == "not_evaluable" }.map { |t| t["label"].downcase }
+    %>
+    <p class="text-xs text-gray-500 mb-4">Chaque indicateur situe <%= @territory_name %> parmi les communes de même nature (catégorie de densité INSEE : <strong><%= dens || "non classée" %></strong>) et parmi toutes les communes de France. Un indicateur est en alerte quand la commune fait partie des 20 % de communes de sa catégorie les plus touchées. Seuls des taux sont comparés ; les effectifs de la commune sont indiqués pour dimensionner les actions.</p>
+
+    <div style="margin:0 0 1.5rem;padding:14px 18px;border-left:4px solid #6366f1;background:#eef2ff;border-radius:8px" class="text-sm text-gray-800">
+      <% if high.any? || moderate.any? %>
+        À <%= @territory_name %>, les enjeux de fragilité se concentrent sur <strong><%= (high.presence || moderate).to_sentence(last_word_connector: " et ", two_words_connector: " et ") %></strong><% if high.any? && moderate.any? %>, et dans une moindre mesure sur <%= moderate.to_sentence(last_word_connector: " et ", two_words_connector: " et ") %><% end %>.
+      <% else %>
+        À <%= @territory_name %>, aucun enjeu ne ressort nettement par rapport aux communes de même densité.
+      <% end %>
+      <%= alerts.size %> indicateur<%= alerts.size > 1 ? "s" : "" %> sur <%= inds.count { |i| i["value"] } %> placent la commune parmi les 20 % de communes de sa catégorie les plus touchées.
+      <% if strengths.any? %>Points forts : <%= strengths.first(3).map { |i| i["label"].sub(/\A./, &:downcase) }.join(" ; ") %>.<% end %>
+      <% if not_eval.any? %><span class="text-gray-500">Non évaluable faute de données publiées : <%= not_eval.join(", ") %>.</span><% end %>
+    </div>
+
+    <h3 class="text-base font-medium text-gray-900 mb-2">Enjeux</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:2rem">
+      <% themes.each do |t| %>
+        <% lbl, bg, fg = level_style[t["level"]] %>
+        <a href="#fs-<%= t['key'] %>" style="display:block;border-radius:12px;padding:14px 16px;background:<%= bg %>;text-decoration:none">
+          <div class="text-sm font-semibold text-gray-900"><%= t["label"] %></div>
+          <div style="color:<%= fg %>;font-weight:600;font-size:0.95rem;margin-top:2px"><%= lbl %></div>
+          <div class="text-xs text-gray-600" style="margin-top:4px">
+            <% if t["available"].zero? %>aucun indicateur publié<% else %><%= t["alerts"] %> en alerte sur <%= t["available"] %> indicateur<%= t["available"] > 1 ? "s" : "" %><%= t["strengths"].positive? ? " · #{t['strengths']} point#{t['strengths'] > 1 ? 's' : ''} fort#{t['strengths'] > 1 ? 's' : ''}" : "" %><% end %>
+          </div>
+        </a>
+      <% end %>
+    </div>
+
+    <% if alerts.any? || strengths.any? %>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;margin-bottom:2rem">
+        <div>
+          <h3 class="text-base font-medium text-gray-900 mb-2">Écarts les plus marqués</h3>
+          <ul class="text-sm space-y-2">
+            <% alerts.first(10).each do |i| %>
+              <li style="border-left:3px solid #ef4444;padding-left:10px">
+                <div class="text-gray-900"><%= i["label"] %> : <strong><%= fmt_v.(i) %></strong><span class="text-gray-500"> (France <%= fmt_v.(i, i["france_value"]) %>)</span></div>
+                <div class="text-xs text-gray-500"><%= position.(rank_of.(i)) %> des communes de même densité</div>
+              </li>
+            <% end %>
+            <% if alerts.empty? %><li class="text-gray-500">Aucun indicateur en alerte.</li><% end %>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-base font-medium text-gray-900 mb-2">Points forts</h3>
+          <ul class="text-sm space-y-2">
+            <% strengths.first(5).each do |i| %>
+              <li style="border-left:3px solid #10b981;padding-left:10px">
+                <div class="text-gray-900"><%= i["label"] %> : <strong><%= fmt_v.(i) %></strong><span class="text-gray-500"> (France <%= fmt_v.(i, i["france_value"]) %>)</span></div>
+                <div class="text-xs text-gray-500"><%= position.(rank_of.(i)) %> des communes de même densité</div>
+              </li>
+            <% end %>
+            <% if strengths.empty? %><li class="text-gray-500">Aucun indicateur parmi les 20 % les plus favorables.</li><% end %>
+          </ul>
+        </div>
+      </div>
+    <% end %>
+
+    <h3 class="text-base font-medium text-gray-900 mb-1">Tous les indicateurs</h3>
+    <p class="text-xs text-gray-500 mb-3">Rang : 0 = commune la moins touchée, 100 = la plus touchée (zone rouge : 20 % les plus touchées ; zone verte : 20 % les moins touchées). Médiane : valeur de la commune du milieu de la catégorie de densité.</p>
+    <% themes.each do |t| %>
+      <% rows = by_theme[t["key"]] || [] %>
+      <section id="fs-<%= t['key'] %>" style="margin-bottom:1.5rem">
+        <h4 class="text-sm font-semibold text-gray-800 mb-1"><%= t["label"] %> <span style="color:<%= level_style[t['level']][2] %>;font-weight:500">· <%= level_style[t["level"]][0].downcase %></span></h4>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Indicateur</th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase"><%= @territory_name %></th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Médiane catégorie</th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">France</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase" style="min-width:180px">Rang dans la catégorie</th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Rang France</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% rows.each do |i| %>
+                <% r = i["rank_density"] %>
+                <tr>
+                  <td class="px-3 py-2 text-sm text-gray-900"><%= i["label"] %> <span class="text-xs text-gray-400">(<%= i["year"] %>)</span>
+                    <% if i["tab"] %><button type="button" data-action="click->dashboard-tabs#showTab" data-tab="<%= i['tab'] %>" class="text-xs" style="color:#6366f1;margin-left:4px">voir</button><% end %>
+                  </td>
+                  <% if i["value"].nil? %>
+                    <td colspan="5" class="px-3 py-2 text-xs text-gray-400">non publié pour la commune (secret statistique ou commune trop petite)</td>
+                  <% else %>
+                    <td class="px-3 py-2 text-sm text-right font-semibold" style="<%= i['alert'] ? 'color:#b91c1c' : (i['strength'] ? 'color:#047857' : '') %>">
+                      <%= fmt_v.(i) %><% if i["count"] %><div class="text-xs text-gray-500 font-normal"><%= fmt_count(i["count"]) %></div><% end %>
+                    </td>
+                    <td class="px-3 py-2 text-sm text-right text-gray-600"><%= fmt_v.(i, i["density_median"]) %></td>
+                    <td class="px-3 py-2 text-sm text-right text-gray-600"><%= fmt_v.(i, i["france_value"]) %></td>
+                    <td class="px-3 py-2">
+                      <% if r %>
+                        <div style="position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,#d1fae5 0 20%,#f3f4f6 20% 80%,#fee2e2 80% 100%)" title="Rang <%= r.round %> sur 100 parmi <%= i['density_n'] %> communes">
+                          <span style="position:absolute;top:-3px;left:calc(<%= r %>% - 4px);width:8px;height:16px;border-radius:3px;background:<%= i['alert'] ? '#b91c1c' : (i['strength'] ? '#047857' : '#4b5563') %>"></span>
+                        </div>
+                        <div class="text-xs text-gray-500" style="margin-top:3px"><%= position.(r) %> · <%= i["density_n"] %> communes</div>
+                      <% else %><span class="text-xs text-gray-400">commune non classée</span><% end %>
+                    </td>
+                    <td class="px-3 py-2 text-sm text-right text-gray-600"><%= i["rank_france"]&.round %></td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% end %>
+
+    <% if syn["population"].to_f.positive? && syn["population"].to_f < 1000 %>
+      <p class="text-xs mb-3" style="color:#b45309">Commune de moins de 1 000 habitants : les taux reposent sur de petits effectifs et le rang peut varier fortement d'une année à l'autre.</p>
+    <% end %>
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Méthode : pour chaque indicateur, la commune est classée parmi les communes de France ayant une valeur publiée, puis parmi celles de même catégorie de densité (grille communale de densité INSEE à 7 niveaux, 2025) ; chaque commune compte pour une. Rang 100 = situation la plus défavorable (taux le plus élevé, ou le plus faible pour les indicateurs où un taux bas est défavorable : emploi, revenu, scolarisation, accueil du jeune enfant, accès aux soins, licences sportives, foyers imposés, places d'hébergement). Niveau d'un enjeu : fort si au moins la moitié de ses indicateurs sont en alerte, modéré si au moins un quart, non évaluable si moins de la moitié des indicateurs sont publiés pour la commune. Aucun score global n'est calculé.</p>
+      <p>Sources : <%= syn["source"] %>. Millésime de chaque indicateur entre parenthèses. France : France métropolitaine ou France entière selon la source.</p>
+    </div>
+  <% end %>
+</div>

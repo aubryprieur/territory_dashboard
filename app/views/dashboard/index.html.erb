@@ -111,6 +111,24 @@
               </div>
             </button>
 
+            <!-- Onglet Synthèse des fragilités -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="fragility"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-red-100 to-pink-100 transition-all duration-300">
+                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Synthèse</div>
+                  <div class="text-xs text-gray-500">Enjeux de fragilité</div>
+                </div>
+              </div>
+            </button>
+
             <!-- Onglet Population -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
@@ -469,6 +487,13 @@
         <div data-dashboard-tabs-target="content" data-tab="accueil" class="hidden dashboard-panel">
           <div id="accueil-content" data-section="accueil">
             <%= render 'dashboard/accueil', basic_info: @basic_info %>
+          </div>
+        </div>
+
+        <!-- Panel Synthèse des fragilités -->
+        <div data-dashboard-tabs-target="content" data-tab="fragility" class="hidden dashboard-panel">
+          <div id="fragility-content" data-section="fragility">
+            <%= render 'components/loader', section_name: 'synthèse des fragilités' %>
           </div>
         </div>
 

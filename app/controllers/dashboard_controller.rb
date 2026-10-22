@@ -11,7 +11,7 @@ class DashboardController < ApplicationController
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
                                             :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy, :load_equipment,
-                                            :load_health, :load_local_life, :load_seniors, :load_youth, :load_disability]
+                                            :load_health, :load_local_life, :load_seniors, :load_youth, :load_disability, :load_fragility]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -294,6 +294,18 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html { render partial: 'youth' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_fragility
+    # Onglet Synthèse : synthèse des fragilités (38 indicateurs, rangs national et par densité — API /fragility-synthesis/*)
+    @fragility_synthesis = cached_api_call(cache_key_for_territory(@territory_code, "fragility_synthesis"), expires_in: 12.hours) do
+      Api::FragilitySynthesisService.get_commune(@territory_code)
+    end
+
+    respond_to do |format|
+      format.html { render partial: 'fragility_synthesis' }
       format.json { render json: { status: 'success' } }
     end
   end

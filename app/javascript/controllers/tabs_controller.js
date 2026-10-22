@@ -59,6 +59,7 @@ export default class extends Controller {
       'seniors': 'seniors',
       'youth': 'enfance, jeunesse',
       'disability': 'handicap',
+      'fragility': 'synthèse des fragilités',
       'delinquency': 'délinquance',
       'households': 'ménages',
       'housing': 'logement',

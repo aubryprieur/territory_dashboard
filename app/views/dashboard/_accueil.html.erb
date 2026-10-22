@@ -74,6 +74,22 @@
     </div>
 
     <div class="mb-6">
+      <button data-dashboard-tabs-target="tab"
+              data-action="click->dashboard-tabs#showTab"
+              data-tab="fragility"
+              class="w-full flex items-center gap-4 px-5 py-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-200 text-left">
+        <div class="p-3 bg-red-100 rounded-lg">
+          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-gray-800">Synthèse des enjeux de fragilité</div>
+          <div class="text-xs text-gray-500">38 indicateurs en 8 enjeux, comparés aux communes de même densité : où se concentrent les fragilités, points forts</div>
+        </div>
+      </button>
+    </div>
+    <div class="mb-6">
       <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Population et familles</h4>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         <!-- Population -->
