@@ -4,12 +4,14 @@
   locals : title, definition (optionnel), rows : [[clé, libellé, :worse_if_higher | :worse_if_lower | :neutral, format]]
            (format : :pct par défaut, :decimal pour l'APL, :score, :count, :signed_pct), note (optionnel),
            dataset : :fragilities (API /fragilities/*, défaut) ou :senior_fragilities (API /senior-fragilities/*),
+           france_name : libellé de la colonne France (optionnel),
            show_source : false pour ne pas répéter la source sous chaque tableau (onglet Seniors)
 %>
 <%
   definition ||= nil
   note ||= nil
   dataset ||= :fragilities
+  france_name ||= nil
   show_source = true if local_assigns[:show_source].nil?
   fr_apl = rows.any? { |r| r[0].to_s.start_with?("apl_") }
   fr_key = "#{dataset}_data"
@@ -18,7 +20,7 @@
     commune: fr_main, epci: instance_variable_get("@epci_#{dataset}_data"),
     department: instance_variable_get("@department_#{dataset}_data"),
     region: instance_variable_get("@region_#{dataset}_data"), france: instance_variable_get("@france_#{dataset}_data")
-  }, france_name: fr_apl ? "France métropolitaine" : "France")
+  }, france_name: france_name || (fr_apl ? "France métropolitaine" : "France"))
   fr_commune = fr_territories.find { |t| t[:key] == :commune }
   fr_france = fr_territories.find { |t| t[:key] == :france }
 %>

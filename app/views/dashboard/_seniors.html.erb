@@ -78,6 +78,42 @@
             ["no_flu_vaccine_65p_rate", "65 ans ou plus sans vaccination antigrippale", :worse_if_higher],
             ["no_flu_vaccine_75p_rate", "75 ans ou plus sans vaccination antigrippale", :worse_if_higher]
           ] %>
+
+    <%
+      ec = @elderly_care_data.is_a?(Hash) && @elderly_care_data["error"].blank? ? @elderly_care_data : nil
+      ec_year = ec && ec["latest_year"]
+      ecv = ->(key) { ec && ec.dig("elderly_care_data", ec_year.to_s, key) }
+      eq_services = @equipment_data.is_a?(Hash) && @equipment_data["error"].blank? ? @equipment_data["services"].to_a : []
+      nearest = ->(key) { eq_services.find { |s| s["key"] == key }&.dig("nearest") }
+      near_txt = ->(n) { n ? " (le plus proche à #{number_with_precision(n['distance_km'], precision: 1, separator: ',')} km, #{n['commune_name'].to_s.titleize})" : "" }
+    %>
+    <% if ec %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-base font-medium text-gray-900 mb-1">Hébergement et services à domicile</h3>
+        <p class="text-xs text-gray-500 mb-3">Établissements d'hébergement pour personnes âgées (Ehpad, résidences autonomie, petites unités de vie) et services d'accompagnement à domicile implantés dans la commune. Un service à domicile intervient aussi dans les communes voisines : son absence dans la commune ne signifie pas une absence de service.</p>
+        <ul class="text-sm text-gray-800 space-y-1" style="margin-bottom:1rem">
+          <li>
+            <% if ecv.("housing_facilities").to_i.positive? %>
+              <strong><%= fmt_count(ecv.("housing_facilities")) %></strong> établissement<%= ecv.("housing_facilities").to_i > 1 ? "s" : "" %> d'hébergement, <strong><%= fmt_count(ecv.("housing_places")) %></strong> places<%= ecv.("housing_no_capacity").to_i.positive? ? " (capacité inconnue pour #{ecv.("housing_no_capacity").to_i})" : "" %>
+            <% else %>
+              Aucun établissement d'hébergement pour personnes âgées dans la commune<%= near_txt.(nearest.("elderly_housing")) %>
+            <% end %>
+          </li>
+          <li>
+            <% nurse = ecv.("home_nursing_services").to_i; help = ecv.("home_help_services").to_i %>
+            <% if nurse + help > 0 %>
+              <strong><%= nurse %></strong> service<%= nurse > 1 ? "s" : "" %> de soins infirmiers à domicile et <strong><%= help %></strong> service<%= help > 1 ? "s" : "" %> d'aide à domicile implantés dans la commune
+            <% else %>
+              Aucun service de soins ou d'aide à domicile implanté dans la commune<%= near_txt.(nearest.("elderly_home_care")) %>
+            <% end %>
+          </li>
+          <li class="text-gray-600"><%= fmt_count(ecv.("pop_75p")) %> personnes de 75 ans ou plus (recensement <%= ec["population_year"] %>)</li>
+        </ul>
+        <%= render "dashboard/fragilities", show_source: false, dataset: :elderly_care, title: "Taux d'équipement en hébergement",
+              france_name: "France métropolitaine",
+              rows: [["places_per_1000_75p", "Places d'hébergement pour 1 000 personnes de 75 ans ou plus", :worse_if_lower, :decimal]] %>
+      </section>
+    <% end %>
   <% end %>
 
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">

@@ -275,6 +275,8 @@ class DashboardController < ApplicationController
     # (API /fragilities/*)
     load_senior_fragilities_comparison
     load_fragilities_comparison
+    load_elderly_care_comparison # hébergement et services à domicile (BPE)
+    @equipment_data = cached_equipment_data(:commune, @territory_code) # distance au plus proche
 
     respond_to do |format|
       format.html { render partial: 'seniors' }
