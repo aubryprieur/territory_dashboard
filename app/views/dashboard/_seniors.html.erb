@@ -38,7 +38,7 @@
       <% end %>
     </div>
 
-    <%= render "dashboard/fragilities", dataset: :senior_fragilities, title: "Fragilité sociale des retraités",
+    <%= render "dashboard/fragilities", show_source: false, dataset: :senior_fragilities, title: "Fragilité sociale des retraités",
           definition: "Indicateur composite de l'Observatoire : le score de fragilité sociale cumule plusieurs facteurs de risque (âge, faibles ressources, veuvage, santé…). Un retraité est dit « à risque » au-delà d'un seuil fixé par l'Observatoire. Ces indicateurs servent à cibler la prévention de la perte d'autonomie.",
           rows: [
             ["social_fragility_score", "Score moyen de fragilité sociale", :worse_if_higher, :score],
@@ -46,7 +46,7 @@
             ["retirees_change_rate", "Évolution du nombre de retraités depuis 2017", :neutral, :signed_pct]
           ] %>
 
-    <%= render "dashboard/fragilities", dataset: :senior_fragilities, title: "Ressources des retraités",
+    <%= render "dashboard/fragilities", show_source: false, dataset: :senior_fragilities, title: "Ressources des retraités",
           definition: "Le minimum vieillesse (allocation de solidarité aux personnes âgées) complète les plus petites pensions. L'exonération ou le taux réduit de CSG signalent de faibles revenus fiscaux. La complémentaire santé solidaire sans participation est réservée aux plus modestes.",
           rows: [
             ["min_old_age_rate", "Retraités au minimum vieillesse", :worse_if_higher],
@@ -55,7 +55,7 @@
             ["css_free_rate", "55 ans ou plus avec la complémentaire santé solidaire sans participation", :worse_if_higher]
           ] %>
 
-    <%= render "dashboard/fragilities", dataset: :senior_fragilities, title: "Parcours et situation familiale",
+    <%= render "dashboard/fragilities", show_source: false, dataset: :senior_fragilities, title: "Parcours et situation familiale",
           definition: "La pension de réversion est versée au conjoint survivant : elle signale le veuvage, souvent associé à l'isolement et à une baisse de revenus. Les retraites pour invalidité ou inaptitude et les carrières incomplètes reflètent des parcours professionnels marqués par l'usure ou les interruptions.",
           rows: [
             ["survivor_pension_rate", "Bénéficiaires d'une pension de réversion", :worse_if_higher],
@@ -63,18 +63,17 @@
             ["incomplete_career_rate", "Partis à l'âge du taux plein avec une carrière incomplète", :worse_if_higher]
           ] %>
 
-    <%= render "dashboard/fragilities", dataset: :senior_fragilities, title: "Santé et recours aux soins des 55 ans ou plus",
+    <%= render "dashboard/fragilities", show_source: false, dataset: :senior_fragilities, title: "Santé et recours aux soins des 55 ans ou plus",
           definition: "Assurés de 55 ans ou plus. Sans recours aux soins : aucun soin remboursé sur la période observée. Le score de non-recours (2024) mesure la fragilité liée au renoncement aux soins.",
-          note: "score de non-recours : #{sf['care_nonuse_year']}",
-          rows: [
+                    rows: [
             ["no_gp_rate", "Sans médecin traitant déclaré", :worse_if_higher],
             ["no_care_rate", "Sans recours aux soins", :worse_if_higher],
             ["ald_rate", "En affection de longue durée (ALD)", :worse_if_higher],
             ["care_nonuse_score", "Score moyen de fragilité liée au non-recours aux soins", :worse_if_higher, :score]
           ] %>
 
-    <%= render "dashboard/fragilities", title: "Vaccination antigrippale",
-          definition: "Personnes âgées éligibles n'ayant pas été vaccinées contre la grippe au cours des 24 derniers mois (régime général pour les 65 ans ou plus).",
+    <%= render "dashboard/fragilities", show_source: false, title: "Vaccination antigrippale",
+          definition: "Personnes âgées éligibles n'ayant pas été vaccinées contre la grippe au cours des 24 derniers mois Les deux indicateurs n'ont pas la même définition : 65 ans ou plus du régime général d'une part, 75 ans ou plus éligibles à la vaccination d'autre part ; ils ne se comparent donc pas entre eux.",
           rows: [
             ["no_flu_vaccine_65p_rate", "65 ans ou plus sans vaccination antigrippale", :worse_if_higher],
             ["no_flu_vaccine_75p_rate", "75 ans ou plus sans vaccination antigrippale", :worse_if_higher]
@@ -82,6 +81,6 @@
   <% end %>
 
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-    <p>Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), Géofragilité, données 2025 (score de non-recours aux soins : 2024 ; nombre de retraités 2017 pour l'évolution). Population : retraités et assurés de 55 ans ou plus, tous régimes. « s » : secret statistique (effectif trop faible). France : France entière, outre-mer compris ; valeurs publiées par l'Observatoire, sauf le minimum vieillesse (moyenne des départements pondérée par le nombre de retraités). Effectifs de retraités : commune seulement. Part des retraités à risque et évolution du nombre de retraités : EPCI, département, région et France calculés en additionnant les communes non soumises au secret.</p>
+    <p>Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), Géofragilité, données 2025 (score de non-recours aux soins : 2024 ; nombre de retraités 2017 pour l'évolution). Population : retraités et assurés de 55 ans ou plus, tous régimes. « s » : secret statistique (effectif trop faible). En rouge : situation moins favorable qu'en France. France : France entière, outre-mer compris ; valeurs publiées par l'Observatoire, sauf le minimum vieillesse (moyenne des départements pondérée par le nombre de retraités). Effectifs de retraités : commune seulement. Part des retraités à risque et évolution du nombre de retraités : EPCI, département, région et France calculés en additionnant les communes non soumises au secret.</p>
   </div>
 </div>

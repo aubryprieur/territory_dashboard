@@ -3,12 +3,14 @@
   Un seul millésime (2025 ; APL 2024), valeurs publiées.
   locals : title, definition (optionnel), rows : [[clé, libellé, :worse_if_higher | :worse_if_lower | :neutral, format]]
            (format : :pct par défaut, :decimal pour l'APL, :score, :count, :signed_pct), note (optionnel),
-           dataset : :fragilities (API /fragilities/*, défaut) ou :senior_fragilities (API /senior-fragilities/*)
+           dataset : :fragilities (API /fragilities/*, défaut) ou :senior_fragilities (API /senior-fragilities/*),
+           show_source : false pour ne pas répéter la source sous chaque tableau (onglet Seniors)
 %>
 <%
   definition ||= nil
   note ||= nil
   dataset ||= :fragilities
+  show_source = true if local_assigns[:show_source].nil?
   fr_apl = rows.any? { |r| r[0].to_s.start_with?("apl_") }
   fr_key = "#{dataset}_data"
   fr_main = instance_variable_get("@#{dataset}_data")
@@ -54,6 +56,8 @@
         </tbody>
       </table>
     </div>
+    <% if show_source %>
     <p class="text-xs text-gray-500 mt-2">Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA)<%= dataset == :senior_fragilities ? ", interrégime" : "" %>, <%= fr_year %><%= note ? " ; #{note}" : "" %>. s : secret statistique (effectif trop faible dans la commune).<%= fr_apl ? " France métropolitaine : valeur publiée par l'ANCT." : " France : valeur nationale publiée par l'Observatoire (France entière, outre-mer compris)." %></p>
+    <% end %>
   </section>
 <% end %>
