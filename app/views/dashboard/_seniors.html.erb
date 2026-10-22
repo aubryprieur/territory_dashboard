@@ -63,6 +63,20 @@
             ["incomplete_career_rate", "Partis à l'âge du taux plein avec une carrière incomplète", :worse_if_higher]
           ] %>
 
+    <%
+      hh_years = comparison_years(@household_data, "household_data")
+      hh_latest = @household_data.is_a?(Hash) && @household_data["error"].blank? ? comparison_latest_year(@household_data, hh_years) : nil
+      hh = ->(key) { hh_latest && @household_data.dig("household_data", hh_latest.to_s, key) }
+    %>
+    <% if hh_latest %>
+      <h3 class="text-base font-medium text-gray-900 mb-1">Isolement des 80 ans ou plus</h3>
+      <p class="text-xs text-gray-500 mb-2">À <%= @territory_name %>, <strong><%= fmt_pct(hh.("living_alone_rate_80_plus")) %></strong> des personnes de 80 ans ou plus vivent seules (<%= fmt_count(hh.("living_alone_80_plus")) %> personnes, recensement <%= hh_latest %>). Détail et comparaisons dans l'onglet Ménages.</p>
+      <%= render "dashboard/iris_map", map: cached_iris_map("alone_80p_share"),
+            definition: "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de l'IRIS.",
+            commune_latest: { year: hh_latest, value: hh.("living_alone_rate_80_plus"),
+                              count: hh.("living_alone_80_plus"), total: nil } %>
+    <% end %>
+
     <%= render "dashboard/fragilities", show_source: false, dataset: :senior_fragilities, title: "Santé et recours aux soins des 55 ans ou plus",
           definition: "Assurés de 55 ans ou plus. Sans recours aux soins : aucun soin remboursé sur la période observée. Le score de non-recours (2024) mesure la fragilité liée au renoncement aux soins.",
                     rows: [
@@ -87,6 +101,10 @@
       nearest = ->(key) { eq_services.find { |s| s["key"] == key }&.dig("nearest") }
       near_txt = ->(n) { n ? " (le plus proche à #{number_with_precision(n['distance_km'], precision: 1, separator: ',')} km, #{n['commune_name'].to_s.titleize})" : "" }
     %>
+    <%= render "dashboard/sports", title: "Pratique sportive en club des 60 ans ou plus",
+          only: %w[licence_rate_60p women_share_60p],
+          intro: "Repère du maintien d'une activité physique encadrée, facteur de prévention de la perte d'autonomie." %>
+
     <% if ec %>
       <section style="margin-bottom:2.5rem">
         <h3 class="text-base font-medium text-gray-900 mb-1">Hébergement et services à domicile</h3>

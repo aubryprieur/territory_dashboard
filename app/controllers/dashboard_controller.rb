@@ -277,6 +277,8 @@ class DashboardController < ApplicationController
     load_fragilities_comparison
     load_elderly_care_comparison # hébergement et services à domicile (BPE)
     @equipment_data = cached_equipment_data(:commune, @territory_code) # distance au plus proche
+    @household_data = cached_households_data(:commune, @territory_code) # carte IRIS des 80 ans ou plus seuls
+    load_sports_comparison # licences sportives des 60 ans ou plus
 
     respond_to do |format|
       format.html { render partial: 'seniors' }

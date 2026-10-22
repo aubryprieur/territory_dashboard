@@ -1,8 +1,12 @@
 <%#
   Pratique sportive — licences sportives 2023 (INJEP — MEOS, diffusion Observatoire des territoires, API /sports/*).
-  Licences comptées à la commune de résidence du licencié. Rendu dans l'onglet Équipements.
+  Licences comptées à la commune de résidence du licencié. Rendu dans les onglets Vie locale et Seniors.
+  locals (optionnels) : only (liste de clés à afficher), title, intro
 %>
 <%
+  only ||= nil
+  title ||= nil
+  intro ||= nil
   sp_territories = comparison_territories("sports_data", {
     commune: @sports_data, epci: @epci_sports_data, department: @department_sports_data,
     region: @region_sports_data, france: @france_sports_data
@@ -24,10 +28,11 @@
       ["women_share_30_59", "Part des femmes parmi les licenciés de 30-59 ans", :share],
       ["women_share_60p", "Part des femmes parmi les licenciés de 60 ans ou plus", :share]
     ]
+    rows = rows.select { |r| only.include?(r[0]) } if only
   %>
   <section style="margin-bottom:2.5rem">
-    <h3 class="text-base font-medium text-gray-900 mb-1">Pratique sportive en club (<%= sp_year %>)</h3>
-    <p class="text-xs text-gray-500 mb-4">Licences délivrées par les fédérations sportives, comptées dans la commune de résidence du licencié. Repère de l'accès des habitants à une pratique encadrée et de la place des filles et des femmes dans le sport. En rouge, une valeur inférieure à la France métropolitaine.</p>
+    <h3 class="text-base font-medium text-gray-900 mb-1"><%= title || "Pratique sportive en club" %> (<%= sp_year %>)</h3>
+    <p class="text-xs text-gray-500 mb-4"><%= intro %> Licences délivrées par les fédérations sportives, comptées dans la commune de résidence du licencié. Repère de l'accès des habitants à une pratique encadrée et de la place des filles et des femmes dans le sport. En rouge, une valeur inférieure à la France métropolitaine.</p>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
