@@ -13,6 +13,7 @@
     t && row[:ds][:latest] ? territory_value(t, row[:ds][:latest], row[:key]) : nil
   }
   shown = rows.select { |r| val.(r, :commune) }
+  hidden = rows - shown
 %>
 <% if shown.any? %>
   <section style="margin-bottom:2.5rem">
@@ -48,5 +49,8 @@
         </tbody>
       </table>
     </div>
+    <% if hidden.any? %>
+      <p class="text-xs text-gray-500 mt-2">Non publié pour <%= @territory_name %> : <%= hidden.map { |r| r[:label].sub(/\A./, &:downcase) }.join(" ; ") %>.</p>
+    <% end %>
   </section>
 <% end %>

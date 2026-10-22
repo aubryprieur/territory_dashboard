@@ -34,8 +34,7 @@
       ["15-17 ans", cv.(edu, "pop_15_17"), "recensement #{edu[:latest]}"],
       ["18-24 ans", cv.(edu, "pop_18_24"), "recensement #{edu[:latest]}"],
       ["Pass Sport activés (6-17 ans)", cv.(pass, "activations_6_17"), "campagne #{pass[:latest]}-#{pass[:latest].to_i + 1}"],
-      ["Foyers percevant l'allocation de rentrée scolaire", cv.(caf, "ars_households"), "CAF, #{caf[:latest]}"],
-      ["Enfants bénéficiaires de l'AEEH", cv.(caf, "aeeh_beneficiaries"), "CAF, #{caf[:latest]}"]
+      ["Foyers percevant l'allocation de rentrée scolaire", cv.(caf, "ars_households"), "CAF, #{caf[:latest]}"]
     ].select { |_, v, _| v }
   %>
   <% if cards.any? %>
@@ -57,7 +56,7 @@
         ] %>
 
   <%= render "dashboard/youth_table", title: "Conditions de vie",
-        definition: "Pauvreté : part des personnes vivant sous le seuil de pauvreté (Filosofi, publié pour les communes assez peuplées). Allocation de rentrée scolaire : foyers bénéficiaires pour 100 familles avec enfants (ordre de grandeur, sous condition de ressources). En rouge, une situation moins favorable qu'en France.",
+        definition: "Pauvreté : part des personnes vivant sous le seuil de pauvreté (Filosofi ; le détail par âge n'est publié que pour les communes les plus peuplées). Allocation de rentrée scolaire : foyers bénéficiaires pour 100 familles avec enfants (ordre de grandeur, sous condition de ressources). En rouge, une situation moins favorable qu'en France.",
         rows: [
           { label: "Taux de pauvreté des moins de 18 ans", ds: rev, key: "poverty_rate_ind_lt18", direction: :worse_if_higher },
           { label: "Taux de pauvreté des 18-29 ans", ds: rev, key: "poverty_rate_ind_18_29", direction: :worse_if_higher },
@@ -117,6 +116,6 @@
   <% end %>
 
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-    <p>Sources : INSEE, recensements de la population (effectifs, scolarisation, emploi, personnes seules) ; INSEE, Filosofi (pauvreté) ; Cnaf, data.caf.fr (allocation de rentrée scolaire, AEEH) ; Cnam / INSEE (complémentaire santé solidaire) ; INSEE / SDES, indicateurs territoriaux de développement durable (sans diplôme, non insérés) ; INJEP — MEOS, licences sportives (Observatoire des territoires) ; ministère des Sports, pass Sport 2024, activations du 4 juin 2024 au 3 février 2025 par commune de résidence (data.gouv.fr) ; INSEE, Base permanente des équipements. « – » : donnée non disponible. France : France métropolitaine, sauf indicateurs publiés pour la France entière.</p>
+    <p>Sources : INSEE, recensements de la population (effectifs, scolarisation, emploi, personnes seules) ; INSEE, Filosofi (pauvreté) ; Cnaf, data.caf.fr (allocation de rentrée scolaire) ; Cnam / INSEE (complémentaire santé solidaire) ; INSEE / SDES, indicateurs territoriaux de développement durable (sans diplôme, non insérés) ; INJEP — MEOS, licences sportives (Observatoire des territoires) ; ministère des Sports, pass Sport 2024, activations du 4 juin 2024 au 3 février 2025 par commune de résidence (data.gouv.fr) ; INSEE, Base permanente des équipements. « – » : donnée non disponible. France : France métropolitaine, sauf indicateurs publiés pour la France entière.</p>
   </div>
 </div>
