@@ -1,0 +1,83 @@
+<%#
+  Onglet Handicap — dashboard commune (analyse des besoins sociaux).
+    - AAH et AEEH (Cnaf, data.caf.fr, API /caf-benefits/*) : non publiées à la commune, présentées pour l'EPCI,
+      le département, la région et la France ;
+    - établissements et services pour personnes handicapées implantés dans la commune (INSEE, BPE, API /equipment/*).
+%>
+<%
+  territories = comparison_territories("caf_data", {
+    commune: @caf_data, epci: @epci_caf_data, department: @department_caf_data,
+    region: @region_caf_data, france: @france_caf_data
+  })
+  years = comparison_years(@caf_data, "caf_data")
+  latest = comparison_latest_year(@caf_data, years)
+  comparison = comparison_start_year(@caf_data, years)
+  common = { territories: territories, years: years, latest: latest, comparison: comparison,
+             table_years: ([comparison] + years.last(3)).uniq.compact.sort }
+
+  eq = @equipment_data.is_a?(Hash) && @equipment_data["error"].blank? ? @equipment_data : nil
+  d6_counts = {}
+  if eq
+    eq["inventory"].to_a.each do |dom|
+      dom["subdomains"].to_a.each { |sub| sub["items"].to_a.each { |i| d6_counts[i["typequ"]] = i["count"].to_i if i["typequ"].to_s.start_with?("D6") } }
+    end
+  end
+  d6_types = [
+    ["D601", "Enfants handicapés : hébergement (instituts médico-éducatifs…)"],
+    ["D602", "Enfants handicapés : services à domicile ou ambulatoires (Sessad, CAMSP…)"],
+    ["D603", "Adultes handicapés : accueil et hébergement (foyers, MAS, FAM…)"],
+    ["D604", "Adultes handicapés : services d'aide (SAVS, SAMSAH…)"],
+    ["D605", "Travail protégé (Esat)"],
+    ["D606", "Adultes handicapés : services de soins à domicile"],
+    ["D607", "Services d'aide aux déficients visuels ou auditifs"]
+  ]
+  disability = eq && eq["services"].to_a.find { |s| s["key"] == "disability" }
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Handicap</h2>
+  <div style="margin:0 0 1.5rem;padding:12px 16px;border-left:4px solid #fcd34d;background:#fffbeb;border-radius:8px" class="text-sm text-gray-700">
+    La plupart des données sur le handicap ne sont diffusées qu'à l'échelle du département : prestation de compensation du handicap (PCH), AAH et AEEH pour la commune, orientations et décisions de la maison départementale des personnes handicapées (MDPH), places en établissement. Pour obtenir des chiffres à l'échelle de la commune, il faut se rapprocher du conseil départemental et de la MDPH, ainsi que de la CAF. Cet onglet présente ce qui est publié : les allocations de la CAF à partir de l'intercommunalité, et les établissements et services implantés dans la commune.
+  </div>
+
+  <% if @caf_data.present? && latest %>
+    <h3 class="text-base font-medium text-gray-900 mb-1">Allocations liées au handicap</h3>
+    <p class="text-xs text-gray-500 mb-4">La CAF ne publie pas ces allocations pour les communes : la ligne de la commune reste vide, la comparaison commence à l'intercommunalité.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Bénéficiaires de l'allocation aux adultes handicapés (AAH)", theme: "amber",
+          value_key: "aah_rate",
+          count_key: "aah_beneficiaries", count_label: "bénéficiaires de l'AAH",
+          definition: "Bénéficiaires de l'AAH pour 100 personnes de 20 à 64 ans. L'AAH garantit un revenu minimum aux adultes dont le taux d'incapacité est reconnu par la MDPH (au moins 80 %, ou 50 à 79 % avec une restriction d'accès à l'emploi)." %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Bénéficiaires de l'allocation d'éducation de l'enfant handicapé (AEEH)", theme: "orange",
+          value_key: "aeeh_rate",
+          count_key: "aeeh_beneficiaries", count_label: "bénéficiaires de l'AEEH",
+          definition: "Bénéficiaires de l'AEEH pour 100 jeunes de moins de 20 ans (ordre de grandeur). L'AEEH aide les familles à faire face aux frais d'éducation et de soins d'un enfant handicapé de moins de 20 ans." %>
+  <% end %>
+
+  <% if eq %>
+    <section style="margin-bottom:2rem">
+      <h3 class="text-base font-medium text-gray-900 mb-1">Établissements et services pour personnes handicapées dans la commune</h3>
+      <p class="text-xs text-gray-500 mb-3">Nombre d'établissements et de services implantés dans la commune (INSEE, Base permanente des équipements <%= eq["year"] %>). Un service à domicile ou ambulatoire intervient aussi dans les communes voisines.</p>
+      <table class="min-w-full divide-y divide-gray-200" style="max-width:720px">
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% d6_types.each do |code, label| %>
+            <% n = d6_counts[code].to_i %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-800"><%= label %></td>
+              <td class="px-4 py-2 text-sm text-right <%= n.positive? ? 'font-semibold text-gray-900' : 'text-gray-400' %>"><%= n %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <% if disability && disability["count"].to_i.zero? && disability["nearest"] %>
+        <p class="text-sm mt-3" style="color:#b45309">Aucun établissement ou service dans la commune : le plus proche est à <%= number_with_precision(disability.dig("nearest", "distance_km"), precision: 1, separator: ",") %> km (<%= disability.dig("nearest", "commune_name").to_s.titleize %>).</p>
+      <% end %>
+    </section>
+  <% end %>
+
+  <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+    <p>Sources : Cnaf, data.caf.fr — bénéficiaires de l'AAH et de l'AEEH au 31 décembre (EPCI, départements ; régions et France métropolitaine : somme des départements) ; INSEE, recensement 2023 (dénominateurs) ; INSEE, Base permanente des équipements. Données départementales complémentaires : conseil départemental, MDPH, CNSA.</p>
+  </div>
+</div>

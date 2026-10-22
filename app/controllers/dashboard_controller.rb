@@ -11,7 +11,7 @@ class DashboardController < ApplicationController
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
                                             :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy, :load_equipment,
-                                            :load_health, :load_local_life, :load_seniors, :load_youth]
+                                            :load_health, :load_local_life, :load_seniors, :load_youth, :load_disability]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -294,6 +294,17 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html { render partial: 'youth' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_disability
+    # Onglet Handicap : AAH et AEEH (Cnaf, non communales), établissements et services pour personnes handicapées (BPE)
+    load_caf_benefits_comparison
+    @equipment_data = cached_equipment_data(:commune, @territory_code)
+
+    respond_to do |format|
+      format.html { render partial: 'disability' }
       format.json { render json: { status: 'success' } }
     end
   end

@@ -58,6 +58,7 @@ export default class extends Controller {
       'local_life': 'vie locale',
       'seniors': 'seniors',
       'youth': 'enfance, jeunesse',
+      'disability': 'handicap',
       'delinquency': 'délinquance',
       'households': 'ménages',
       'housing': 'logement',
