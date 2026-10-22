@@ -7,10 +7,11 @@
 <%
   definition ||= nil
   note ||= nil
+  fr_apl = rows.any? { |r| r[0].to_s.start_with?("apl_") }
   fr_territories = comparison_territories("fragilities_data", {
     commune: @fragilities_data, epci: @epci_fragilities_data, department: @department_fragilities_data,
     region: @region_fragilities_data, france: @france_fragilities_data
-  }, france_name: "France métropolitaine*")
+  }, france_name: fr_apl ? "France métropolitaine" : "France")
   fr_commune = fr_territories.find { |t| t[:key] == :commune }
   fr_france = fr_territories.find { |t| t[:key] == :france }
 %>
@@ -48,6 +49,6 @@
         </tbody>
       </table>
     </div>
-    <p class="text-xs text-gray-500 mt-2">Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), <%= fr_year %><%= note ? " ; #{note}" : "" %>. s : secret statistique (effectif trop faible dans la commune). * France métropolitaine : moyenne des régions pondérée par la population.</p>
+    <p class="text-xs text-gray-500 mt-2">Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), <%= fr_year %><%= note ? " ; #{note}" : "" %>. s : secret statistique (effectif trop faible dans la commune).<%= fr_apl ? " France métropolitaine : valeur publiée par l'ANCT." : " France : valeur nationale publiée par l'Observatoire (France entière, outre-mer compris)." %></p>
   </section>
 <% end %>
