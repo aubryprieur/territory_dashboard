@@ -261,6 +261,7 @@ class DashboardController < ApplicationController
     load_sdg_comparison # APL médecins généralistes (INSEE / SDES)
     load_health_professionals_comparison
     @equipment_data = cached_equipment_data(:commune, @territory_code)
+    load_fragilities_comparison # Observatoire des situations de fragilité
 
     respond_to do |format|
       format.html { render partial: 'health' }
@@ -330,6 +331,7 @@ class DashboardController < ApplicationController
     # (Cnaf, décembre 2020-2024 — API /caf-benefits/*)
     load_caf_benefits_comparison
     load_health_insurance_comparison # complémentaire santé solidaire (Cnam / Insee)
+    load_fragilities_comparison # C2S toutes communes (Observatoire des fragilités)
 
     respond_to do |format|
       format.html { render partial: 'caf_benefits' }

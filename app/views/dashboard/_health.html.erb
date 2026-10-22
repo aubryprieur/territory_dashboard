@@ -34,6 +34,14 @@
         title: "Accessibilité aux médecins généralistes", value_format: :decimal, unit: "", decimals: 1,
         definition: "Accessibilité potentielle localisée (APL) : nombre de consultations de médecine générale accessibles par an et par habitant, en tenant compte de l'activité des médecins, de leur distance et des besoins de la population selon l'âge. Sous 2,5, la zone est considérée comme sous-dotée." %>
 
+  <%= render "dashboard/fragilities", title: "Accessibilité aux médecins de moins de 65 ans et aux dentistes",
+        definition: "Même mesure (APL) limitée aux médecins généralistes de moins de 65 ans, pour anticiper les départs en retraite, et appliquée aux chirurgiens-dentistes.",
+        note: "ANCT, accessibilité potentielle localisée #{@fragilities_data&.dig('apl_year')}",
+        rows: [
+          ["apl_gp_under65", "Médecins généralistes de moins de 65 ans (consultations par an et par habitant)", :worse_if_lower, :decimal],
+          ["apl_dentists", "Chirurgiens-dentistes (équivalents temps plein pour 100 000 habitants)", :worse_if_lower, :decimal]
+        ] %>
+
   <!-- 2. Professionnels de santé libéraux -->
   <% if pro_commune %>
     <%
@@ -96,7 +104,25 @@
     </section>
   <% end %>
 
+  <%= render "dashboard/fragilities", title: "Recours aux soins et prévention",
+        definition: "Bénéficiaires de l'assurance maladie n'ayant pas eu recours à un professionnel ou à un dépistage. Repère du renoncement aux soins et des besoins de prévention.",
+        rows: [
+          ["no_gp_rate", "Sans médecin traitant déclaré (16 ans ou plus)", :worse_if_higher],
+          ["no_dentist_rate", "Sans consultation dentaire depuis 24 mois (16 ans ou plus)", :worse_if_higher],
+          ["no_gynecologist_rate", "Femmes de 20 à 64 ans sans consultation de gynécologue depuis 24 mois", :worse_if_higher],
+          ["no_cervical_screening_rate", "Femmes de 25 à 65 ans sans dépistage du cancer du col de l'utérus", :worse_if_higher],
+          ["no_mammography_rate", "Femmes de 50 à 74 ans sans mammographie depuis 24 mois", :worse_if_higher],
+          ["no_colorectal_screening_rate", "50-74 ans sans dépistage du cancer colorectal", :worse_if_higher]
+        ] %>
+
+  <%= render "dashboard/fragilities", title: "État de santé",
+        definition: "Part des bénéficiaires de 16 ans ou plus en affection de longue durée (maladie chronique grave : diabète, cancer, maladie cardiovasculaire…) ou percevant une pension d'invalidité. Régimes général et agricole réunis.",
+        rows: [
+          ["ald_rate", "En affection de longue durée (ALD)", :worse_if_higher],
+          ["invalidity_rate", "Bénéficiaires d'une pension d'invalidité", :worse_if_higher]
+        ] %>
+
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-    <p>Sources : accessibilité aux médecins généralistes : DREES, via INSEE / SDES (indicateurs territoriaux de développement durable) ; professionnels de santé libéraux : Observatoire des territoires (ANCT) — RPPS, Adeli, INSEE BPE 2025 et recensement 2023, France métropolitaine = moyenne des régions pondérée par la population ; services de santé : INSEE, Base permanente des équipements 2025.</p>
+    <p>Sources : accessibilité aux médecins généralistes : DREES, via INSEE / SDES (indicateurs territoriaux de développement durable) ; professionnels de santé libéraux : Observatoire des territoires (ANCT) — RPPS, Adeli, INSEE BPE 2025 et recensement 2023, France métropolitaine = moyenne des régions pondérée par la population ; services de santé : INSEE, Base permanente des équipements 2025 ; recours aux soins, prévention, ALD, invalidité : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), 2025 ; APL des médecins de moins de 65 ans et des dentistes : ANCT, 2024.</p>
   </div>
 </div>

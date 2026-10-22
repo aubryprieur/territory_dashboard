@@ -1,0 +1,53 @@
+<%#
+  Tableau d'indicateurs de l'Observatoire interrégimes des situations de fragilité (API /fragilities/*) sur les
+  5 territoires. Un seul millésime (2025 ; APL 2024), pourcentages publiés sans effectifs.
+  locals : title, definition (optionnel), rows : [[clé, libellé, :worse_if_higher | :worse_if_lower, format]]
+           (format : :pct par défaut, :decimal pour l'APL), note (optionnel)
+%>
+<%
+  definition ||= nil
+  note ||= nil
+  fr_territories = comparison_territories("fragilities_data", {
+    commune: @fragilities_data, epci: @epci_fragilities_data, department: @department_fragilities_data,
+    region: @region_fragilities_data, france: @france_fragilities_data
+  }, france_name: "France métropolitaine*")
+  fr_commune = fr_territories.find { |t| t[:key] == :commune }
+  fr_france = fr_territories.find { |t| t[:key] == :france }
+%>
+<% if fr_commune %>
+  <% fr_year = comparison_latest_year(@fragilities_data, comparison_years(@fragilities_data, "fragilities_data")) %>
+  <section style="margin-bottom:2.5rem">
+    <h3 class="text-base font-medium text-gray-900 mb-1"><%= title %></h3>
+    <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %> En rouge, une situation moins favorable que la France métropolitaine.</p><% end %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Indicateur</th>
+            <% fr_territories.each do |t| %>
+              <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= t[:name] %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% rows.each do |key, label, direction, format| %>
+            <% fv = fr_france && territory_value(fr_france, fr_year, key) %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
+              <% fr_territories.each do |t| %>
+                <%
+                  v = territory_value(t, fr_year, key)
+                  worse = t[:key] == :commune && fv && v && (direction == :worse_if_lower ? v < fv : v > fv)
+                %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= worse ? 'color:#b91c1c' : '' %>">
+                  <% if v.nil? %><span class="text-gray-400" title="Secret statistique : effectif trop faible">s</span><% elsif format == :decimal %><%= fmt_decimal(v, precision: 1) %><% else %><%= fmt_pct(v) %><% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-gray-500 mt-2">Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), <%= fr_year %><%= note ? " ; #{note}" : "" %>. s : secret statistique (effectif trop faible dans la commune). * France métropolitaine : moyenne des régions pondérée par la population.</p>
+  </section>
+<% end %>

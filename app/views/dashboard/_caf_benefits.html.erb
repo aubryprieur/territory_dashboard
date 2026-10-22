@@ -164,3 +164,9 @@
 
 <!-- Complémentaire santé solidaire (Cnam / Insee) -->
 <%= render "dashboard/health_insurance" %>
+
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <%= render "dashboard/fragilities", title: "Complémentaire santé solidaire — toutes communes",
+        definition: "Part des bénéficiaires du régime général couverts par la complémentaire santé solidaire (avec ou sans participation). Publiée pour toutes les communes, y compris celles qui ne sont pas découpées en IRIS (valeur masquée pour les plus petites).",
+        rows: [["c2s_rate", "Bénéficiaires de la C2S (régime général, toute population)", :worse_if_higher]] %>
+</div>
