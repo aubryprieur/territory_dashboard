@@ -222,8 +222,10 @@ class DashboardController < ApplicationController
 
 
   def load_schooling
-    # Scolarisation (INSEE RP 2012, 2017, 2023) : commune + territoires de comparaison
+    # Onglet Scolarité : scolarisation par âge des habitants (INSEE RP 2012, 2017, 2023) puis établissements
+    # de la commune (Éducation nationale : IPS, valeur ajoutée, éloignement — DEPP, API /schools/*)
     load_education_training_comparison
+    load_schools_data
 
     respond_to do |format|
       format.html { render partial: 'schooling' }

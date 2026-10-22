@@ -1,8 +1,17 @@
 <%#
-  Onglet Scolarisation — INSEE, recensements 2012, 2017, 2023 (API /education-training/*).
-  La scolarisation à 2 ans et à 3-5 ans (2017, 2023) est intégrée à la partie par âge.
+  Onglet Scolarité (regroupe les anciens onglets Scolarisation et Éducation nationale) :
+    1. scolarisation par âge des enfants et jeunes qui habitent la commune — INSEE, recensements 2012, 2017, 2023
+       (API /education-training/*), y compris 2 ans et 3-5 ans ;
+    2. établissements situés dans la commune — IPS, valeur ajoutée, éloignement (DEPP, API /schools/*, partial _schools).
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-4">Scolarisation</h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Scolarisation des habitants</h2>
+  <p class="text-xs text-gray-500 mb-4">Part des enfants et des jeunes qui habitent la commune inscrits dans un établissement d'enseignement, quel que soit le lieu de cet établissement (recensement).</p>
   <%= render "dashboard/schooling_by_age" %>
 </div>
+
+<div style="margin:0 0 1rem;padding:12px 16px;border-left:4px solid #93c5fd;background:#eff6ff;border-radius:8px" class="text-sm text-gray-700">
+  Les établissements présentés ci-dessous sont ceux situés dans la commune. Leurs élèves ne sont pas tous des enfants de la commune, et des enfants de la commune sont scolarisés ailleurs, surtout au collège et au lycée.
+</div>
+
+<%= render "dashboard/schools" %>

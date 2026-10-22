@@ -69,7 +69,7 @@ export default class extends Controller {
       'children_comparison': 'petite enfance',
       'births': 'naissances',
       'economy': 'données économiques',
-      'schooling': 'scolarisation',
+      'schooling': 'scolarité',
       'diplomas': 'diplômes et formation',
       'childcare': 'petite enfance',
       'family-employment': 'emploi des familles',
