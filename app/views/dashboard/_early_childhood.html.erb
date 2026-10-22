@@ -1,0 +1,10 @@
+<%#
+  Onglet Petite enfance (regroupe les anciens onglets Enfants et Garde d'enfants) :
+    1. enfants de moins de 3 ans, projection 2035, enfants de 3 à 5 ans (_children_comparison)
+    2. accueil du jeune enfant : places et taux de couverture (Cnaf, _childcare_offer)
+    3. familles employant une assistante maternelle (Flores, _childminder_employers)
+  Les locals de load_children_comparison sont transmis tels quels à _children_comparison.
+%>
+<%= render "dashboard/children_comparison", **local_assigns %>
+<%= render "dashboard/childcare_offer" %>
+<%= render "dashboard/childminder_employers" %>

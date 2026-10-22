@@ -183,7 +183,7 @@
               </div>
             </button>
 
-            <!-- Onglet Enfants -->
+            <!-- Onglet Petite enfance (enfants de moins de 6 ans + accueil du jeune enfant) -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
                     data-tab="children_comparison"
@@ -198,8 +198,8 @@
                   </svg>
                 </div>
                 <div class="text-left">
-                  <div class="font-semibold">Enfants</div>
-                  <div class="text-xs text-gray-500">Petite enfance</div>
+                  <div class="font-semibold">Petite enfance</div>
+                  <div class="text-xs text-gray-500">Enfants, accueil</div>
                 </div>
               </div>
             </button>
@@ -259,25 +259,6 @@
               </div>
             </button>
 
-
-            <!-- Onglet Garde d'enfants -->
-            <button data-dashboard-tabs-target="tab"
-                    data-action="click->dashboard-tabs#showTab"
-                    data-tab="childcare"
-                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
-              <div class="flex items-center space-x-3">
-                <div class="p-2 rounded-lg bg-gradient-to-r from-purple-100 to-violet-100 group-hover:from-purple-200 group-hover:to-violet-200 transition-all duration-300">
-                  <!-- ✅ NOUVELLE ICÔNE: Même que dashboard EPCI (bâtiment/maison) -->
-                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                  </svg>
-                </div>
-                <div class="text-left">
-                  <div class="font-semibold">Garde d'enfants</div>
-                  <div class="text-xs text-gray-500">Accueil & garde</div>
-                </div>
-              </div>
-            </button>
 
             <!-- Onglet Emploi (activité, femmes, familles) -->
             <button data-dashboard-tabs-target="tab"
@@ -509,10 +490,10 @@
           </div>
         </div>
 
-        <!-- Panel Enfants -->
+        <!-- Panel Petite enfance -->
         <div data-dashboard-tabs-target="content" data-tab="children_comparison" class="hidden dashboard-panel">
           <div id="children_comparison-content" data-section="children_comparison">
-            <%= render 'components/loader', section_name: 'enfants' %>
+            <%= render 'components/loader', section_name: 'petite enfance' %>
           </div>
         </div>
 
@@ -537,13 +518,6 @@
           </div>
         </div>
 
-
-        <!-- Panel Garde d'enfants -->
-        <div data-dashboard-tabs-target="content" data-tab="childcare" class="hidden dashboard-panel">
-          <div id="childcare-content" data-section="childcare">
-            <%= render 'components/loader', section_name: 'garde d\'enfants' %>
-          </div>
-        </div>
 
         <!-- Panel Emploi -->
         <div data-dashboard-tabs-target="content" data-tab="employment" class="hidden dashboard-panel">

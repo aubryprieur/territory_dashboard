@@ -196,9 +196,12 @@ class DashboardController < ApplicationController
     end
 
     load_comparison_data_for_children_cached
+    # Onglet Petite enfance : les données de l'ancien onglet Garde d'enfants sont chargées ici aussi
+    load_childcare_offer_comparison # offre d'accueil du jeune enfant (Cnaf)
+    load_economic_fabric_comparison # familles employant une assistante maternelle (Flores)
 
     respond_to do |format|
-      format.html { render partial: 'children_comparison', locals: {
+      format.html { render partial: 'early_childhood', locals: {
         children_data: @children_data,
         france_children_data: @france_children_data,
         epci_children_data: @epci_children_data,

@@ -65,6 +65,7 @@ export default class extends Controller {
       'schools': 'éducation nationale',
       'immigration': 'immigrés et étrangers',
       'children': 'enfants',
+      'children_comparison': 'petite enfance',
       'births': 'naissances',
       'economy': 'données économiques',
       'schooling': 'scolarisation',
