@@ -1,0 +1,122 @@
+<%#
+  Onglet Enfance, jeunesse (6-24 ans) — dashboard commune (analyse des besoins sociaux).
+  Reprend, sans les retirer de leurs onglets, des indicateurs déjà présents dans l'API (recensement, Filosofi, CAF,
+  C2S, indicateurs de développement durable, licences sportives, BPE) et ajoute le pass Sport 2024 (API /pass-sport/*).
+  Effectifs : commune seulement (chiffres clés) ; tableaux : taux sur les 5 territoires.
+%>
+<%
+  ds = lambda do |data_key, prefix|
+    main = instance_variable_get("@#{prefix}_data")
+    terrs = comparison_territories(data_key, {
+      commune: main, epci: instance_variable_get("@epci_#{prefix}_data"),
+      department: instance_variable_get("@department_#{prefix}_data"),
+      region: instance_variable_get("@region_#{prefix}_data"), france: instance_variable_get("@france_#{prefix}_data")
+    })
+    ok = main.is_a?(Hash) && main["error"].blank? && main[data_key].present?
+    { terrs: terrs, latest: ok ? comparison_latest_year(main, comparison_years(main, data_key)) : nil }
+  end
+  sdg = ->(key) { c = sdg_common(key); { terrs: sdg_territories, latest: c && c[:latest] } }
+  pop, edu, emp = ds.("population_data", "pop"), ds.("education_data", "education"), ds.("employment_data", "emp")
+  rev, caf, c2s = ds.("revenues_data", "rev"), ds.("caf_data", "caf"), ds.("health_insurance_data", "c2s")
+  hh, sports, pass = ds.("household_data", "household"), ds.("sports_data", "sports"), ds.("pass_sport_data", "pass_sport")
+  cv = ->(d, key) { t = d[:terrs].find { |x| x[:key] == :commune }; t && d[:latest] ? territory_value(t, d[:latest], key) : nil }
+
+  eq_services = @equipment_data.is_a?(Hash) && @equipment_data["error"].blank? ? @equipment_data["services"].to_a : []
+%>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Enfance, jeunesse</h2>
+  <p class="text-xs text-gray-500 mb-4">Enfants et jeunes de 6 à 24 ans : effectifs, conditions de vie, scolarité et insertion, sport et loisirs. Ces indicateurs sont aussi présentés, avec leur évolution, dans les onglets Population, Scolarisation, Diplômes, Emploi, Revenus, Accès aux droits et Vie locale. La petite enfance a son propre onglet.</p>
+
+  <%
+    cards = [
+      ["6-10 ans", cv.(edu, "pop_6_10"), "recensement #{edu[:latest]}"],
+      ["11-14 ans", cv.(edu, "pop_11_14"), "recensement #{edu[:latest]}"],
+      ["15-17 ans", cv.(edu, "pop_15_17"), "recensement #{edu[:latest]}"],
+      ["18-24 ans", cv.(edu, "pop_18_24"), "recensement #{edu[:latest]}"],
+      ["Pass Sport activés (6-17 ans)", cv.(pass, "activations_6_17"), "campagne #{pass[:latest]}-#{pass[:latest].to_i + 1}"],
+      ["Foyers percevant l'allocation de rentrée scolaire", cv.(caf, "ars_households"), "CAF, #{caf[:latest]}"],
+      ["Enfants bénéficiaires de l'AEEH", cv.(caf, "aeeh_beneficiaries"), "CAF, #{caf[:latest]}"]
+    ].select { |_, v, _| v }
+  %>
+  <% if cards.any? %>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:2rem">
+      <% cards.each do |label, value, sub| %>
+        <div style="border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;background:#f0f9ff">
+          <div class="text-xs text-gray-500"><%= label %></div>
+          <div class="text-gray-900" style="font-size:1.4rem;font-weight:600;line-height:1.3"><%= fmt_count(value) %></div>
+          <div class="text-xs text-gray-500"><%= sub %></div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%= render "dashboard/youth_table", title: "Poids des jeunes",
+        rows: [
+          { label: "Part des 15-24 ans dans la population", ds: pop, key: "age_15_24_percentage" },
+          { label: "Indice de jeunesse (moins de 20 ans pour 100 personnes de 60 ans ou plus)", ds: pop, key: "youth_index", format: :decimal }
+        ] %>
+
+  <%= render "dashboard/youth_table", title: "Conditions de vie",
+        definition: "Pauvreté : part des personnes vivant sous le seuil de pauvreté (Filosofi, publié pour les communes assez peuplées). Allocation de rentrée scolaire : foyers bénéficiaires pour 100 familles avec enfants (ordre de grandeur, sous condition de ressources). En rouge, une situation moins favorable qu'en France.",
+        rows: [
+          { label: "Taux de pauvreté des moins de 18 ans", ds: rev, key: "poverty_rate_ind_lt18", direction: :worse_if_higher },
+          { label: "Taux de pauvreté des 18-29 ans", ds: rev, key: "poverty_rate_ind_18_29", direction: :worse_if_higher },
+          { label: "Foyers percevant l'allocation de rentrée scolaire, pour 100 familles avec enfants", ds: caf, key: "ars_families_rate", direction: :worse_if_higher },
+          { label: "18-24 ans bénéficiaires de la complémentaire santé solidaire gratuite", ds: c2s, key: "c2s_free_18_24_rate", direction: :worse_if_higher },
+          { label: "15-24 ans vivant seuls (population des ménages)", ds: hh, key: "living_alone_rate_15_24" }
+        ] %>
+
+  <%= render "dashboard/youth_table", title: "Scolarité et insertion",
+        definition: "Scolarisation : élèves, étudiants et apprentis inscrits dans un établissement, en % de la classe d'âge. Jeunes non insérés : 18-24 ans non scolarisés qui ne sont ni en emploi ni en études. En rouge, une situation moins favorable qu'en France.",
+        rows: [
+          { label: "Taux de scolarisation des 15-17 ans", ds: edu, key: "schooling_rate_15_17", direction: :worse_if_lower },
+          { label: "Taux de scolarisation des 18-24 ans", ds: edu, key: "schooling_rate_18_24" },
+          { label: "20-24 ans sortis du système scolaire sans diplôme", ds: sdg.("young_no_diploma_rate"), key: "young_no_diploma_rate", direction: :worse_if_higher },
+          { label: "18-24 ans ni en emploi ni en études (non insérés)", ds: sdg.("young_neet_rate"), key: "young_neet_rate", direction: :worse_if_higher },
+          { label: "Taux d'emploi des 15-24 ans", ds: emp, key: "employment_rate_15_24" },
+          { label: "Taux de chômage des 15-24 ans", ds: emp, key: "unemployment_rate_15_24", direction: :worse_if_higher }
+        ] %>
+
+  <% if emp[:latest] %>
+    <%= render "dashboard/iris_map", map: cached_iris_map("youth_unemployment_rate"),
+          definition: "Chômeurs de 15-24 ans, en % des actifs de 15-24 ans de l'IRIS.",
+          commune_latest: { year: emp[:latest], value: cv.(emp, "unemployment_rate_15_24"),
+                            count: cv.(emp, "unemployed_15_24"), total: cv.(emp, "active_15_24") } %>
+  <% end %>
+
+  <%= render "dashboard/youth_table", title: "Sport",
+        definition: "Licences sportives : licences délivrées par les fédérations, à la commune de résidence (une personne peut en avoir plusieurs). Pass Sport : aide de 50 € à l'inscription en club pour les jeunes de 6 à 17 ans dont la famille perçoit l'allocation de rentrée scolaire ou l'AEEH (et certains jeunes adultes) ; le taux rapporte les pass activés à tous les 6-17 ans, ce qui reflète à la fois la part de familles éligibles et le recours. En rouge, une valeur inférieure à la France.",
+        rows: [
+          { label: "Licenciés de moins de 15 ans, pour 100 enfants de moins de 15 ans", ds: sports, key: "licence_rate_0_14", format: :decimal, direction: :worse_if_lower },
+          { label: "Licenciés de 15-29 ans, pour 100 jeunes de 15-29 ans", ds: sports, key: "licence_rate_15_29", format: :decimal, direction: :worse_if_lower },
+          { label: "Part des filles parmi les licenciés de moins de 15 ans", ds: sports, key: "girls_share_0_14", direction: :worse_if_lower },
+          { label: "Pass Sport activés pour 100 jeunes de 6-17 ans", ds: pass, key: "rate_6_17", format: :decimal, direction: :worse_if_lower },
+          { label: "Part des filles parmi les bénéficiaires du Pass Sport de 6-17 ans", ds: pass, key: "girls_share_6_17", direction: :worse_if_lower }
+        ] %>
+
+  <% youth_eq = %w[leisure_centre social_centre college lycee library sports_hall swimming_pool cinema].filter_map { |k| eq_services.find { |s| s["key"] == k } } %>
+  <% if youth_eq.any? %>
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-base font-medium text-gray-900 mb-1">Équipements pour les enfants et les jeunes</h3>
+      <p class="text-xs text-gray-500 mb-3">Présence dans la commune ou distance à la commune équipée la plus proche (INSEE, BPE <%= @equipment_data["year"] %>).</p>
+      <ul class="text-sm text-gray-800" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:4px 24px">
+        <% youth_eq.each do |s| %>
+          <li class="py-1">
+            <span class="text-gray-700"><%= s["label"] %></span> :
+            <% if s["count"].to_i.positive? %>
+              <strong style="color:#047857">✓ <%= s["count"] %></strong>
+            <% elsif s["nearest"] %>
+              <span style="color:#b45309">✗ <%= number_with_precision(s.dig("nearest", "distance_km"), precision: 1, separator: ",") %> km · <%= s.dig("nearest", "commune_name").to_s.titleize %></span>
+            <% else %>
+              <span class="text-gray-400">✗</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+    <p>Sources : INSEE, recensements de la population (effectifs, scolarisation, emploi, personnes seules) ; INSEE, Filosofi (pauvreté) ; Cnaf, data.caf.fr (allocation de rentrée scolaire, AEEH) ; Cnam / INSEE (complémentaire santé solidaire) ; INSEE / SDES, indicateurs territoriaux de développement durable (sans diplôme, non insérés) ; INJEP — MEOS, licences sportives (Observatoire des territoires) ; ministère des Sports, pass Sport 2024, activations du 4 juin 2024 au 3 février 2025 par commune de résidence (data.gouv.fr) ; INSEE, Base permanente des équipements. « – » : donnée non disponible. France : France métropolitaine, sauf indicateurs publiés pour la France entière.</p>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+<%#
+  Tableau compact « 5 territoires » de l'onglet Enfance, jeunesse : chaque ligne peut venir d'une source différente.
+  locals : title, definition (optionnel), rows : [{ label:, ds: { terrs:, latest: }, key:, format: (:pct | :decimal),
+           direction: (:worse_if_higher | :worse_if_lower | :neutral) }]
+  Seules les lignes dont la commune a une valeur sont affichées. Millésime indiqué dans le libellé.
+%>
+<%
+  definition ||= nil
+  cols = [[:commune, @territory_name], [:epci, (@epci_code.present? ? epci_display_name : nil)],
+          [:department, department_display_name], [:region, region_display_name], [:france, "France"]].select { |_, n| n.present? }
+  val = ->(row, col) {
+    t = row[:ds][:terrs].find { |x| x[:key] == col }
+    t && row[:ds][:latest] ? territory_value(t, row[:ds][:latest], row[:key]) : nil
+  }
+  shown = rows.select { |r| val.(r, :commune) }
+%>
+<% if shown.any? %>
+  <section style="margin-bottom:2.5rem">
+    <h3 class="text-base font-medium text-gray-900 mb-1"><%= title %></h3>
+    <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %></p><% end %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Indicateur</th>
+            <% cols.each do |_, name| %>
+              <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= name %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% shown.each do |r| %>
+            <% fv = val.(r, :france) %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900"><%= r[:label] %> <span class="text-xs text-gray-400">(<%= r[:ds][:latest] %>)</span></td>
+              <% cols.each do |col, _| %>
+                <%
+                  v = val.(r, col)
+                  dir = r[:direction] || :neutral
+                  worse = col == :commune && dir != :neutral && fv && v && (dir == :worse_if_lower ? v < fv : v > fv)
+                %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= col == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= worse ? 'color:#b91c1c' : '' %>">
+                  <%= v.nil? ? "–" : (r[:format] == :decimal ? fmt_decimal(v, precision: 1) : fmt_pct(v)) %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<% end %>

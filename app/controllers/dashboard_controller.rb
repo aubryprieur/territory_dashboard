@@ -11,7 +11,7 @@ class DashboardController < ApplicationController
                                             :load_family_employment, :load_households, :load_diplomas,
                                             :load_housing, :load_caf_benefits,
                                             :load_revenues_poverty, :load_schools, :load_immigration, :load_local_economy, :load_equipment,
-                                            :load_health, :load_local_life, :load_seniors]
+                                            :load_health, :load_local_life, :load_seniors, :load_youth]
 
   def index
     # Vérifier si l'utilisateur est suspendu
@@ -268,6 +268,30 @@ class DashboardController < ApplicationController
 
     respond_to do |format|
       format.html { render partial: 'health' }
+      format.json { render json: { status: 'success' } }
+    end
+  end
+
+  def load_youth
+    # Onglet Enfance, jeunesse (6-24 ans) : indicateurs repris des autres onglets + pass Sport 2024
+    load_population_structure_comparison
+    load_education_training_comparison
+    load_employment_activity_comparison
+    load_revenues_poverty_comparison
+    load_caf_benefits_comparison
+    load_health_insurance_comparison
+    load_sdg_comparison
+    load_sports_comparison
+    load_pass_sport_comparison
+    @household_data = cached_households_data(:commune, @territory_code)
+    @epci_household_data = cached_households_data(:epci, @epci_code)
+    @department_household_data = cached_households_data(:department, @department_code)
+    @region_household_data = cached_households_data(:region, @region_code)
+    @france_household_data = cached_households_data(:france)
+    @equipment_data = cached_equipment_data(:commune, @territory_code)
+
+    respond_to do |format|
+      format.html { render partial: 'youth' }
       format.json { render json: { status: 'success' } }
     end
   end

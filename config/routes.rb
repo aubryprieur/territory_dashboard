@@ -97,6 +97,7 @@ Rails.application.routes.draw do
     get 'load_health', to: 'dashboard#load_health'
     get 'load_local_life', to: 'dashboard#load_local_life'
     get 'load_seniors', to: 'dashboard#load_seniors'
+    get 'load_youth', to: 'dashboard#load_youth'
     get 'load_diplomas', to: 'dashboard#load_diplomas'
     get 'load_children_comparison', to: 'dashboard#load_children_comparison'
     get 'load_schooling', to: 'dashboard#load_schooling'

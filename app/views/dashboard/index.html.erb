@@ -204,6 +204,24 @@
               </div>
             </button>
 
+            <!-- Onglet Enfance, jeunesse (6-24 ans) -->
+            <button data-dashboard-tabs-target="tab"
+                    data-action="click->dashboard-tabs#showTab"
+                    data-tab="youth"
+                    class="group flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap min-w-fit hover:bg-white/50 text-gray-600 hover:text-gray-800">
+              <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-lg bg-gradient-to-r from-blue-100 to-blue-100 transition-all duration-300">
+                  <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                </div>
+                <div class="text-left">
+                  <div class="font-semibold">Enfance, jeunesse</div>
+                  <div class="text-xs text-gray-500">6-24 ans</div>
+                </div>
+              </div>
+            </button>
+
             <!-- Onglet Scolarisation -->
             <button data-dashboard-tabs-target="tab"
                     data-action="click->dashboard-tabs#showTab"
@@ -494,6 +512,13 @@
         <div data-dashboard-tabs-target="content" data-tab="children_comparison" class="hidden dashboard-panel">
           <div id="children_comparison-content" data-section="children_comparison">
             <%= render 'components/loader', section_name: 'petite enfance' %>
+          </div>
+        </div>
+
+        <!-- Panel Enfance, jeunesse -->
+        <div data-dashboard-tabs-target="content" data-tab="youth" class="hidden dashboard-panel">
+          <div id="youth-content" data-section="youth">
+            <%= render 'components/loader', section_name: 'enfance, jeunesse' %>
           </div>
         </div>
 

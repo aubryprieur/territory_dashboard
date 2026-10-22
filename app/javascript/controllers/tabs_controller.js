@@ -57,6 +57,7 @@ export default class extends Controller {
       'health': 'santé',
       'local_life': 'vie locale',
       'seniors': 'seniors',
+      'youth': 'enfance, jeunesse',
       'delinquency': 'délinquance',
       'households': 'ménages',
       'housing': 'logement',
