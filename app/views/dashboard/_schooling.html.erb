@@ -7,6 +7,8 @@
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Scolarisation des habitants</h2>
   <p class="text-xs text-gray-500 mb-4">Part des enfants et des jeunes qui habitent la commune inscrits dans un établissement d'enseignement, quel que soit le lieu de cet établissement (recensement).</p>
+
+  <%= render "dashboard/fragility_ranks", group: "schooling" %>
   <%= render "dashboard/schooling_by_age" %>
 </div>
 

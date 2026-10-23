@@ -67,6 +67,7 @@ class DashboardController < ApplicationController
 
   def load_synthese
     # 🚀 Chargement des données de synthèse avec cache
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     @population_data = cached_population_data(@territory_code)
     @births_data = cached_births_data(@territory_code)
     @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
@@ -145,6 +146,7 @@ class DashboardController < ApplicationController
 
   def load_households
     # Ménages : commune + territoires de comparaison (INSEE RP 2012, 2017, 2023)
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     @household_data = cached_households_data(:commune, @territory_code)
     @epci_household_data = cached_households_data(:epci, @epci_code)
     @department_household_data = cached_households_data(:department, @department_code)
@@ -171,6 +173,7 @@ class DashboardController < ApplicationController
 
   def load_children_comparison
     # 🚀 Chargement spécifique pour la comparaison enfants avec cache
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     @children_data = cached_children_data(@territory_code)
 
     # 🆕 Charger les données de population et naissances pour les projections
@@ -226,6 +229,7 @@ class DashboardController < ApplicationController
   def load_schooling
     # Onglet Scolarité : scolarisation par âge des habitants (INSEE RP 2012, 2017, 2023) puis établissements
     # de la commune (Éducation nationale : IPS, valeur ajoutée, éloignement — DEPP, API /schools/*)
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_education_training_comparison
     load_schools_data
 
@@ -344,6 +348,7 @@ class DashboardController < ApplicationController
   def load_local_life
     # Onglet Vie locale : pratique sportive en club (INJEP — API /sports/*), vie associative (RNA — API /associations/*),
     # participation électorale (INSEE / SDES)
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_sports_comparison
     load_associations_comparison
     load_sdg_comparison
@@ -367,6 +372,7 @@ class DashboardController < ApplicationController
   def load_immigration
     # Onglet Immigrés et étrangers (ABS) : parts dans la population, emploi, âge (INSEE, recensement 2023 —
     # API /immigration/*)
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_immigration_comparison
 
     respond_to do |format|
@@ -402,6 +408,7 @@ class DashboardController < ApplicationController
   def load_caf_benefits
     # Onglet Prestations CAF (ABS) : allocataires, RSA, prime d'activité, aides au logement, AAH, familles
     # (Cnaf, décembre 2020-2024 — API /caf-benefits/*)
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_caf_benefits_comparison
     load_health_insurance_comparison # complémentaire santé solidaire (Cnam / Insee)
     load_fragilities_comparison # C2S toutes communes (Observatoire des fragilités)

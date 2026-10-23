@@ -21,6 +21,8 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Prestations CAF</h2>
   <p class="text-xs text-gray-500 mb-4">Foyers allocataires et personnes couvertes au 31 décembre (<%= years.first %>-<%= latest %>). Les taux rapportent les effectifs CAF à la population et aux ménages du recensement 2023.</p>
 
+  <%= render "dashboard/fragility_ranks", group: "rights" %>
+
   <% if commune.nil? || commune[:key] != :commune %>
     <p class="text-sm text-gray-500">Données CAF indisponibles pour ce territoire.</p>
   <% else %>

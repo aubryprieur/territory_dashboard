@@ -103,7 +103,35 @@
       </div>
     <% end %>
 
-    <p class="text-xs text-gray-500 mb-4">Le détail de chaque indicateur (valeur, rang dans la catégorie de densité et rang France) est présenté en tête de l'onglet thématique correspondant : Revenus et pauvreté, Emploi, Enfance-jeunesse, Diplômes, Familles, Seniors, Santé, Logement, Délinquance.</p>
+    <% ctx_all = inds + syn["context_indicators"].to_a %>
+    <% groups = syn["context_groups"].to_a %>
+    <% if groups.any? %>
+      <h3 class="text-base font-medium text-gray-900 mb-1">Repères</h3>
+      <p class="text-xs text-gray-500 mb-2">Position de <%= @territory_name %> parmi les communes de même densité sur d'autres indicateurs des onglets, hors synthèse des fragilités. Les indicateurs de structure (barre bleue) sont classés de la valeur la plus faible à la plus élevée, sans jugement.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:2rem">
+        <% groups.each do |g| %>
+          <% gi = g["indicators"].filter_map { |k| ctx_all.find { |i| i["key"] == k } }.reject { |i| i["value"].nil? } %>
+          <% next if gi.empty? %>
+          <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="<%= g['tab'] %>" style="display:block;width:100%;text-align:left;border:1px solid #e0e7ff;cursor:pointer;border-radius:12px;padding:12px 14px;background:#f8faff">
+            <div class="text-sm font-semibold text-gray-900" style="margin-bottom:6px"><%= g["label"] %></div>
+            <% gi.first(4).each do |i| %>
+              <% r = rank_of.(i); neutral = i["direction"] == "neutral" %>
+              <div style="margin-bottom:6px">
+                <div class="text-xs text-gray-700" style="display:flex;justify-content:space-between;gap:8px"><span><%= i["label"] %></span><strong class="whitespace-nowrap"><%= fmt_v.(i) %></strong></div>
+                <% if r %>
+                  <div style="position:relative;height:6px;border-radius:3px;margin-top:3px;background:<%= neutral ? 'linear-gradient(90deg,#eef2ff,#c7d2fe)' : 'linear-gradient(90deg,#d1fae5 0 20%,#f3f4f6 20% 80%,#fee2e2 80% 100%)' %>">
+                    <span style="position:absolute;top:-2px;left:calc(<%= r %>% - 3px);width:6px;height:10px;border-radius:2px;background:<%= neutral ? '#4f46e5' : (r >= 80 ? '#b91c1c' : (r <= 20 && !i['need'] ? '#047857' : '#4b5563')) %>"></span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            <div class="text-xs" style="margin-top:4px;color:#4f46e5">Voir l'onglet →</div>
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+
+    <p class="text-xs text-gray-500 mb-4">Le détail de chaque indicateur (valeur, rang dans la catégorie de densité et rang France) est présenté en tête de l'onglet thématique correspondant : Revenus et pauvreté, Emploi, Enfance-jeunesse, Diplômes, Familles, Seniors, Santé, Logement, Délinquance, ainsi que Population, Ménages, Immigrés et étrangers, Petite enfance, Scolarité, Accès aux droits et Vie locale.</p>
 
     <% if syn["population"].to_f.positive? && syn["population"].to_f < 1000 %>
       <p class="text-xs mb-3" style="color:#b45309">Commune de moins de 1 000 habitants : les taux reposent sur de petits effectifs et le rang peut varier fortement d'une année à l'autre.</p>

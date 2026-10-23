@@ -16,6 +16,8 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Immigrés et étrangers</h2>
   <p class="text-xs text-gray-500 mb-4">Un immigré est une personne née étrangère à l'étranger et résidant en France ; une partie des immigrés est devenue française. Un étranger est une personne qui n'a pas la nationalité française ; une partie des étrangers est née en France.</p>
 
+  <%= render "dashboard/fragility_ranks", group: "immigration" %>
+
   <% if commune.nil? %>
     <p class="text-sm text-gray-500">Données sur les immigrés et les étrangers indisponibles pour ce territoire.</p>
   <% else %>
