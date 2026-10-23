@@ -19,6 +19,8 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Emploi et activité</h2>
   <p class="text-xs text-gray-500 mb-4">Population de 15 à 64 ans selon sa situation déclarée au recensement. Le chômage « au sens du recensement » est déclaratif : il est plus élevé que le chômage au sens du BIT.</p>
 
+  <%= render "dashboard/fragility_ranks", theme: "employment" %>
+
   <% if commune.nil? || commune[:key] != :commune %>
     <p class="text-sm text-gray-500">Données emploi indisponibles pour ce territoire.</p>
   <% else %>

@@ -15,7 +15,9 @@
       inds = syn["indicators"]
       themes = syn["themes"]
       dens = syn.dig("density", "label")
-      by_theme = inds.group_by { |i| i["theme"] }
+      theme_tabs = { "poverty" => "revenues_poverty", "employment" => "employment", "youth" => "youth",
+                     "families" => "families", "seniors" => "seniors", "health" => "health", "housing" => "housing",
+                     "safety" => "delinquency" }
       level_style = {
         "high" => ["Enjeu fort", "#fee2e2", "#b91c1c"], "moderate" => ["Enjeu modéré", "#ffedd5", "#c2410c"],
         "low" => ["Enjeu faible", "#ecfdf5", "#047857"], "not_evaluable" => ["Non évaluable", "#f3f4f6", "#6b7280"]
@@ -61,13 +63,14 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:2rem">
       <% themes.each do |t| %>
         <% lbl, bg, fg = level_style[t["level"]] %>
-        <a href="#fs-<%= t['key'] %>" style="display:block;border-radius:12px;padding:14px 16px;background:<%= bg %>;text-decoration:none">
+        <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="<%= theme_tabs[t['key']] %>" title="Voir le détail dans l'onglet thématique" style="display:block;width:100%;text-align:left;border:none;cursor:pointer;border-radius:12px;padding:14px 16px;background:<%= bg %>">
           <div class="text-sm font-semibold text-gray-900"><%= t["label"] %></div>
           <div style="color:<%= fg %>;font-weight:600;font-size:0.95rem;margin-top:2px"><%= lbl %></div>
           <div class="text-xs text-gray-600" style="margin-top:4px">
             <% if t["available"].zero? %>aucun indicateur publié<% else %><%= t["alerts"] %> en alerte sur <%= t["available"] %> indicateur<%= t["available"] > 1 ? "s" : "" %><%= t["strengths"].positive? ? " · #{t['strengths']} point#{t['strengths'] > 1 ? 's' : ''} fort#{t['strengths'] > 1 ? 's' : ''}" : "" %><% end %>
           </div>
-        </a>
+          <div class="text-xs" style="margin-top:6px;color:#4f46e5">Voir le détail →</div>
+        </button>
       <% end %>
     </div>
 
@@ -100,56 +103,7 @@
       </div>
     <% end %>
 
-    <h3 class="text-base font-medium text-gray-900 mb-1">Tous les indicateurs</h3>
-    <p class="text-xs text-gray-500 mb-3">Rang : 0 = commune la moins touchée, 100 = la plus touchée (zone rouge : 20 % les plus touchées ; zone verte : 20 % les moins touchées). Médiane : valeur de la commune du milieu de la catégorie de densité. France : taux calculé sur l'ensemble de la population française ; les grandes villes y pèsent beaucoup, il peut donc être éloigné de la médiane des communes (une commune peut être sous le taux France tout en étant parmi les plus touchées des communes, et inversement).</p>
-    <% themes.each do |t| %>
-      <% rows = by_theme[t["key"]] || [] %>
-      <section id="fs-<%= t['key'] %>" style="margin-bottom:1.5rem">
-        <h4 class="text-sm font-semibold text-gray-800 mb-1"><%= t["label"] %> <span style="color:<%= level_style[t['level']][2] %>;font-weight:500">· <%= level_style[t["level"]][0].downcase %></span></h4>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Indicateur</th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase"><%= @territory_name %></th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Médiane catégorie</th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">France</th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase" style="min-width:180px">Rang dans la catégorie</th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Rang France</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <% rows.each do |i| %>
-                <% r = i["rank_density"] %>
-                <tr>
-                  <td class="px-3 py-2 text-sm text-gray-900"><%= i["label"] %> <span class="text-xs text-gray-400">(<%= i["year"] %>)</span>
-                    <% if i["tab"] %><button type="button" data-action="click->dashboard-tabs#showTab" data-tab="<%= i['tab'] %>" class="text-xs" style="color:#6366f1;margin-left:4px">voir</button><% end %>
-                  </td>
-                  <% if i["value"].nil? %>
-                    <td colspan="5" class="px-3 py-2 text-xs text-gray-400">non publié pour la commune (secret statistique ou commune trop petite)</td>
-                  <% else %>
-                    <td class="px-3 py-2 text-sm text-right font-semibold whitespace-nowrap" style="<%= i['alert'] ? 'color:#b91c1c' : (i['strength'] ? 'color:#047857' : '') %>">
-                      <%= fmt_v.(i) %><% if i["count"] %><div class="text-xs text-gray-500 font-normal"><%= fmt_count(i["count"]) %></div><% end %>
-                    </td>
-                    <td class="px-3 py-2 text-sm text-right text-gray-600 whitespace-nowrap"><%= fmt_v.(i, i["density_median"]) %></td>
-                    <td class="px-3 py-2 text-sm text-right text-gray-600 whitespace-nowrap"><%= fmt_v.(i, i["france_value"]) %></td>
-                    <td class="px-3 py-2">
-                      <% if r %>
-                        <div style="position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,#d1fae5 0 20%,#f3f4f6 20% 80%,#fee2e2 80% 100%)" title="Rang <%= r.round %> sur 100 parmi <%= i['density_n'] %> communes">
-                          <span style="position:absolute;top:-3px;left:calc(<%= r %>% - 4px);width:8px;height:16px;border-radius:3px;background:<%= i['alert'] ? '#b91c1c' : (i['strength'] ? '#047857' : '#4b5563') %>"></span>
-                        </div>
-                        <div class="text-xs text-gray-500" style="margin-top:3px"><%= position.(r) %> · <%= i["density_n"] %> communes</div>
-                      <% else %><span class="text-xs text-gray-400">commune non classée</span><% end %>
-                    </td>
-                    <td class="px-3 py-2 text-sm text-right text-gray-600"><%= i["rank_france"]&.round %></td>
-                  <% end %>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    <% end %>
+    <p class="text-xs text-gray-500 mb-4">Le détail de chaque indicateur (valeur, rang dans la catégorie de densité et rang France) est présenté en tête de l'onglet thématique correspondant : Revenus et pauvreté, Emploi, Enfance-jeunesse, Familles, Seniors, Santé, Logement, Délinquance.</p>
 
     <% if syn["population"].to_f.positive? && syn["population"].to_f < 1000 %>
       <p class="text-xs mb-3" style="color:#b45309">Commune de moins de 1 000 habitants : les taux reposent sur de petits effectifs et le rang peut varier fortement d'une année à l'autre.</p>

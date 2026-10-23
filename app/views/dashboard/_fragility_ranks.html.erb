@@ -1,0 +1,77 @@
+<%#
+  Position de la commune parmi les communes, pour les indicateurs d'un enjeu de la synthèse des fragilités
+  (API /fragility-synthesis/commune/*), affichée en tête de l'onglet thématique, avant les tableaux par échelle.
+  Bascule entre le rang dans la catégorie de densité INSEE (défaut) et le rang parmi toutes les communes de France.
+  locals : theme (clé d'enjeu : poverty, employment, youth, families, seniors, health, housing, safety)
+  Nécessite @fragility_synthesis (load_fragility_synthesis).
+%>
+<%
+  syn = @fragility_synthesis.is_a?(Hash) && @fragility_synthesis["error"].blank? ? @fragility_synthesis : nil
+  th = syn && syn["themes"].find { |t| t["key"] == theme }
+  items = syn ? syn["indicators"].select { |i| i["theme"] == theme && !i["value"].nil? } : []
+%>
+<% if th && items.any? %>
+  <%
+    levels = { "high" => ["Enjeu fort", "#fee2e2", "#b91c1c"], "moderate" => ["Enjeu modéré", "#ffedd5", "#c2410c"],
+               "low" => ["Enjeu faible", "#ecfdf5", "#047857"], "not_evaluable" => ["Non évaluable", "#f3f4f6", "#6b7280"] }
+    lvl, lvl_bg, lvl_fg = levels[th["level"]]
+    fmt_v = lambda do |i, v|
+      next "–" if v.nil?
+      case i["unit"]
+      when "%" then fmt_pct(v)
+      when "€" then "#{fmt_count(v)} €"
+      when "‰" then "#{fmt_decimal(v, precision: 1)} ‰"
+      else fmt_decimal(v, precision: 1)
+      end
+    end
+    position = lambda do |r|
+      next "" if r.nil?
+      if r >= 80 then "parmi les #{[(100 - r).ceil, 1].max} % les plus touchées"
+      elsif r <= 20 then "parmi les #{[r.ceil, 1].max} % les moins touchées"
+      else "dans la moyenne"
+      end
+    end
+    dens = syn.dig("density", "label")
+    btn = "padding:4px 10px;font-size:12px;border:1px solid #c7d2fe;cursor:pointer"
+    toggle = "var b=this,s=b.closest('section');s.querySelectorAll('[data-rank-mode]').forEach(function(e){e.style.display=e.getAttribute('data-rank-mode')===b.getAttribute('data-mode')?'':'none'});s.querySelectorAll('button[data-mode]').forEach(function(x){var on=x===b;x.style.background=on?'#4f46e5':'#fff';x.style.color=on?'#fff':'#3730a3'})"
+  %>
+  <section style="margin:0 0 2rem;padding:16px 18px;border:1px solid #e0e7ff;border-radius:12px;background:#f8faff">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
+      <div>
+        <h3 class="text-base font-medium text-gray-900">Position de <%= @territory_name %> parmi les communes
+          <span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:12px;background:<%= lvl_bg %>;color:<%= lvl_fg %>"><%= lvl %></span>
+        </h3>
+      </div>
+      <div style="display:inline-flex;border-radius:8px;overflow:hidden">
+        <button type="button" data-mode="dens" onclick="<%= toggle %>" style="<%= btn %>;border-radius:8px 0 0 8px;background:#4f46e5;color:#fff">Rang dans la catégorie</button>
+        <button type="button" data-mode="fr" onclick="<%= toggle %>" style="<%= btn %>;border-left:none;border-radius:0 8px 8px 0;background:#fff;color:#3730a3">Rang France</button>
+      </div>
+    </div>
+    <p class="text-xs text-gray-500" data-rank-mode="dens" style="margin-bottom:10px">Parmi les communes de même densité (<%= dens || "catégorie inconnue" %>). 0 = la moins touchée, 100 = la plus touchée ; zone rouge : 20 % les plus touchées, zone verte : 20 % les moins touchées.</p>
+    <p class="text-xs text-gray-500" data-rank-mode="fr" style="margin-bottom:10px;display:none">Parmi toutes les communes de France ayant une valeur publiée. 0 = la moins touchée, 100 = la plus touchée ; zone rouge : 20 % les plus touchées, zone verte : 20 % les moins touchées.</p>
+    <div>
+      <% items.each do |i| %>
+        <div style="display:grid;grid-template-columns:minmax(200px,2fr) 90px minmax(160px,3fr);gap:12px;align-items:center;padding:6px 0;border-top:1px solid #eef2ff">
+          <div class="text-sm text-gray-800"><%= i["label"] %> <span class="text-xs text-gray-400">(<%= i["year"] %>)</span></div>
+          <div class="text-sm text-right font-semibold whitespace-nowrap"><%= fmt_v.(i, i["value"]) %></div>
+          <% [["dens", i["rank_density"], i["density_n"], i["density_median"], "médiane de la catégorie"], ["fr", i["rank_france"], i["france_n"], i["france_value"], "France"]].each do |mode, r, n, ref, ref_label| %>
+            <div data-rank-mode="<%= mode %>" style="<%= mode == 'fr' ? 'display:none' : '' %>">
+              <% if r %>
+                <% alert = r >= 80; good = r <= 20 && !i["need"] %>
+                <div style="position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,#d1fae5 0 20%,#f3f4f6 20% 80%,#fee2e2 80% 100%)" title="Rang <%= r.round %> sur 100">
+                  <span style="position:absolute;top:-3px;left:calc(<%= r %>% - 4px);width:8px;height:16px;border-radius:3px;background:<%= alert ? '#b91c1c' : (good ? '#047857' : '#4b5563') %>"></span>
+                </div>
+                <div class="text-xs text-gray-500" style="margin-top:3px"><%= position.(r) %><%= n ? " · #{fmt_count(n)} communes" : "" %><%= ref ? " · #{ref_label} #{fmt_v.(i, ref)}" : "" %></div>
+              <% else %>
+                <span class="text-xs text-gray-400">commune non classée</span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <p class="text-xs text-gray-500" style="margin-top:8px">
+      <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="fragility" style="color:#4f46e5">Voir la synthèse de tous les enjeux</button>
+    </p>
+  </section>
+<% end %>

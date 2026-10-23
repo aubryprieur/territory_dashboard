@@ -19,6 +19,8 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Logement</h2>
   <p class="text-xs text-gray-500 mb-4">Parc de logements et conditions de logement des ménages, au sens du recensement.</p>
 
+  <%= render "dashboard/fragility_ranks", theme: "housing" %>
+
   <% if commune.nil? || commune[:key] != :commune %>
     <p class="text-sm text-gray-500">Données logement indisponibles pour ce territoire.</p>
   <% else %>

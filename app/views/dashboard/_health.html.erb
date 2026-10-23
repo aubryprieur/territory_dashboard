@@ -28,6 +28,8 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Santé</h2>
   <p class="text-xs text-gray-500 mb-4">Offre de soins de proximité. La complémentaire santé solidaire est présentée dans l'onglet Accès aux droits.</p>
 
+  <%= render "dashboard/fragility_ranks", theme: "health" %>
+
   <!-- 1. Accès aux médecins généralistes -->
   <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Accès aux médecins généralistes</h3>
   <%= render "dashboard/sdg_indicator", key: "gp_accessibility", theme: "red",

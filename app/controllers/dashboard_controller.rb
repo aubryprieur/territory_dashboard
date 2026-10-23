@@ -113,6 +113,7 @@ class DashboardController < ApplicationController
 
   def load_families
     # 🚀 Chargement des données familles avec cache
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     @children_data = cached_children_data(@territory_code)
     @births_data = cached_births_data(@territory_code)
     @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
@@ -263,6 +264,7 @@ class DashboardController < ApplicationController
   def load_health
     # Onglet Santé : accès aux médecins généralistes (APL), densité de professionnels de santé libéraux,
     # accès aux services de santé (BPE) — uniquement des données disponibles à la commune
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_sdg_comparison # APL médecins généralistes (INSEE / SDES)
     load_health_professionals_comparison
     @equipment_data = cached_equipment_data(:commune, @territory_code)
@@ -276,6 +278,7 @@ class DashboardController < ApplicationController
 
   def load_youth
     # Onglet Enfance, jeunesse (6-24 ans) : indicateurs repris des autres onglets + pass Sport 2024
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_population_structure_comparison
     load_education_training_comparison
     load_employment_activity_comparison
@@ -300,9 +303,7 @@ class DashboardController < ApplicationController
 
   def load_fragility
     # Onglet Synthèse : synthèse des fragilités (38 indicateurs, rangs national et par densité — API /fragility-synthesis/*)
-    @fragility_synthesis = cached_api_call(cache_key_for_territory(@territory_code, "fragility_synthesis"), expires_in: 12.hours) do
-      Api::FragilitySynthesisService.get_commune(@territory_code)
-    end
+    load_fragility_synthesis
 
     respond_to do |format|
       format.html { render partial: 'fragility_synthesis' }
@@ -325,6 +326,7 @@ class DashboardController < ApplicationController
     # Onglet Seniors : fragilité sociale, ressources, parcours et santé des retraités et des 55 ans ou plus
     # (Observatoire interrégimes des situations de fragilité — API /senior-fragilities/*), vaccination antigrippale
     # (API /fragilities/*)
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_senior_fragilities_comparison
     load_fragilities_comparison
     load_elderly_care_comparison # hébergement et services à domicile (BPE)
@@ -386,6 +388,7 @@ class DashboardController < ApplicationController
   def load_revenues_poverty
     # Onglet Revenus et pauvreté (ABS) : niveau de vie, pauvreté, inégalités, structure du revenu
     # (INSEE, Filosofi 2017-2021 et 2023 — API /revenues-poverty/*)
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_revenues_poverty_comparison
     load_tax_households_comparison # foyers fiscaux (DGFiP, IRCOM)
 
@@ -411,6 +414,7 @@ class DashboardController < ApplicationController
   def load_housing
     # Onglet Logement (ABS) : parc, statut d'occupation, peuplement, mobilité résidentielle,
     # conditions de vie (INSEE RP 2012, 2017, 2023 — API /housing/*)
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_housing_comparison
     load_social_housing_comparison # parc locatif social (SDES, RPLS)
     load_construction_comparison # construction neuve (SDES, Sitadel)
@@ -422,6 +426,7 @@ class DashboardController < ApplicationController
   end
 
   def load_employment
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # Onglet Emploi (ABS) : emploi, activité, chômage, femmes, emploi local, mobilité
     # (INSEE RP 2012, 2017, 2023) + emploi des parents de jeunes enfants (2023)
@@ -470,6 +475,7 @@ class DashboardController < ApplicationController
 
   def load_delinquency
     # Onglet Délinquance : crimes et délits enregistrés (SSMSI 2016-2025 — API /delinquency/*)
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_delinquency_comparison
 
     respond_to do |format|

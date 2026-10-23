@@ -17,6 +17,8 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Seniors</h2>
   <p class="text-xs text-gray-500 mb-4">Situation des retraités et des assurés de 55 ans ou plus, tous régimes de retraite et d'assurance maladie réunis (régime général, MSA…). La structure par âge et les cartes IRIS des 65 ans ou plus et des 80 ans ou plus vivant seuls sont dans les onglets Population et Ménages.</p>
 
+  <%= render "dashboard/fragility_ranks", theme: "seniors" %>
+
   <% if sf.nil? %>
     <p class="text-sm text-gray-500">Données de l'Observatoire des situations de fragilité non disponibles pour cette commune.</p>
   <% else %>

@@ -6,6 +6,8 @@
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-4">Familles</h2>
 
+  <%= render "dashboard/fragility_ranks", theme: "families" %>
+
   <% if families_territories.empty? || families_territories.first[:key] != :commune %>
     <p class="text-sm text-gray-500">Données familles indisponibles pour ce territoire.</p>
   <% else %>

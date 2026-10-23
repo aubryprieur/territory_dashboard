@@ -30,6 +30,8 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Revenus et pauvreté</h2>
   <p class="text-xs text-gray-500 mb-4">Niveau de vie des ménages (revenu disponible par unité de consommation) et pauvreté monétaire, d'après les sources fiscales et sociales (Filosofi).</p>
 
+  <%= render "dashboard/fragility_ranks", theme: "poverty" %>
+
   <% if commune.nil? || latest.nil? %>
     <p class="text-sm text-gray-500">Données de revenus indisponibles pour ce territoire.</p>
   <% else %>

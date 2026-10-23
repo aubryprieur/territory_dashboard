@@ -25,6 +25,8 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Délinquance et tranquillité publique</h2>
   <p class="text-xs text-gray-500 mb-4">Crimes et délits enregistrés par la police et la gendarmerie, comptés au lieu où ils ont été commis. Ces chiffres reflètent aussi la propension des victimes à porter plainte et l'activité des services : une hausse peut traduire une meilleure révélation des faits (violences intrafamiliales, violences sexuelles).</p>
 
+  <%= render "dashboard/fragility_ranks", theme: "safety" %>
+
   <% if commune.nil? || latest.nil? %>
     <p class="text-sm text-gray-500">Données de délinquance indisponibles pour ce territoire.</p>
   <% else %>

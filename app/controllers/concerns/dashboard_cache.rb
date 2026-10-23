@@ -486,6 +486,14 @@ module DashboardCache
     @france_pass_sport_data = cached_health_data(s, :france)
   end
 
+  # Synthèse des fragilités (API /fragility-synthesis/*) : onglet Synthèse et encadré « Position parmi les communes »
+  # en tête des onglets thématiques (_fragility_ranks)
+  def load_fragility_synthesis
+    @fragility_synthesis = cached_api_call(cache_key_for_territory(@territory_code, "fragility_synthesis"), expires_in: 12.hours) do
+      Api::FragilitySynthesisService.get_commune(@territory_code)
+    end
+  end
+
   def load_ald_comparison
     @department_ald_data = cached_health_data(Api::AldService, :department, @department_code)
     @france_ald_data = cached_health_data(Api::AldService, :france)
