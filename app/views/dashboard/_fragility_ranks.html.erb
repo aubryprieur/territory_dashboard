@@ -1,20 +1,29 @@
 <%#
-  Position de la commune parmi les communes, pour les indicateurs d'un enjeu de la synthèse des fragilités
-  (API /fragility-synthesis/commune/*), affichée en tête de l'onglet thématique, avant les tableaux par échelle.
-  Bascule entre le rang dans la catégorie de densité INSEE (défaut) et le rang parmi toutes les communes de France.
+  Position de la commune parmi les communes (API /fragility-synthesis/commune/*), affichée en tête d'un onglet
+  thématique, avant les tableaux par échelle. Bascule entre le rang dans la catégorie de densité INSEE (défaut) et le
+  rang parmi toutes les communes de France.
   locals : theme (clé d'enjeu : poverty, employment, youth, families, seniors, health, housing, safety)
+           ou keys (liste de clés d'indicateurs, synthèse ou contexte, dans l'ordre voulu ; pas de niveau d'enjeu)
   Nécessite @fragility_synthesis (load_fragility_synthesis).
 %>
 <%
+  theme ||= nil
+  keys ||= nil
   syn = @fragility_synthesis.is_a?(Hash) && @fragility_synthesis["error"].blank? ? @fragility_synthesis : nil
-  th = syn && syn["themes"].find { |t| t["key"] == theme }
-  items = syn ? syn["indicators"].select { |i| i["theme"] == theme && !i["value"].nil? } : []
+  all_items = syn ? syn["indicators"].to_a + syn["context_indicators"].to_a : []
+  th = syn && theme && syn["themes"].find { |t| t["key"] == theme }
+  items = if keys
+            keys.filter_map { |k| all_items.find { |i| i["key"] == k } }
+          else
+            all_items.select { |i| i["theme"] == theme }
+          end
+  items = items.reject { |i| i["value"].nil? }
 %>
-<% if th && items.any? %>
+<% if syn && items.any? %>
   <%
     levels = { "high" => ["Enjeu fort", "#fee2e2", "#b91c1c"], "moderate" => ["Enjeu modéré", "#ffedd5", "#c2410c"],
                "low" => ["Enjeu faible", "#ecfdf5", "#047857"], "not_evaluable" => ["Non évaluable", "#f3f4f6", "#6b7280"] }
-    lvl, lvl_bg, lvl_fg = levels[th["level"]]
+    lvl, lvl_bg, lvl_fg = th ? levels[th["level"]] : nil
     fmt_v = lambda do |i, v|
       next "–" if v.nil?
       case i["unit"]
@@ -39,7 +48,7 @@
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
       <div>
         <h3 class="text-base font-medium text-gray-900">Position de <%= @territory_name %> parmi les communes
-          <span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:12px;background:<%= lvl_bg %>;color:<%= lvl_fg %>"><%= lvl %></span>
+          <% if lvl %><span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:12px;background:<%= lvl_bg %>;color:<%= lvl_fg %>"><%= lvl %></span><% end %>
         </h3>
       </div>
       <div style="display:inline-flex;border-radius:8px;overflow:hidden">

@@ -158,6 +158,7 @@ class DashboardController < ApplicationController
   end
 
   def load_diplomas
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # Diplômes et formation : commune + territoires de comparaison (INSEE RP 2012, 2017, 2023)
     load_education_training_comparison
