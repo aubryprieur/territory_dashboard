@@ -15,7 +15,7 @@
   syn = @fragility_synthesis.is_a?(Hash) && @fragility_synthesis["error"].blank? ? @fragility_synthesis : nil
   keys ||= syn && group && syn["context_groups"].to_a.find { |g| g["key"] == group }&.dig("indicators")
   all_items = syn ? syn["indicators"].to_a + syn["context_indicators"].to_a : []
-  th = syn && theme && syn["themes"].find { |t| t["key"] == theme }
+  th = syn && (theme || group) && syn["themes"].find { |t| t["key"] == (theme || group) }
   items = if keys
             keys.filter_map { |k| all_items.find { |i| i["key"] == k } }
           else
@@ -26,7 +26,8 @@
 <% if syn && items.any? %>
   <%
     levels = { "high" => ["Enjeu fort", "#fee2e2", "#b91c1c"], "moderate" => ["Enjeu modéré", "#ffedd5", "#c2410c"],
-               "low" => ["Enjeu faible", "#ecfdf5", "#047857"], "not_evaluable" => ["Non évaluable", "#f3f4f6", "#6b7280"] }
+               "low" => ["Enjeu faible", "#ecfdf5", "#047857"], "not_evaluable" => ["Non évaluable", "#f3f4f6", "#6b7280"],
+               "context" => ["Contexte", "#eef2ff", "#4f46e5"] }
     lvl, lvl_bg, lvl_fg = th ? levels[th["level"]] : nil
     fmt_v = lambda do |i, v|
       next "–" if v.nil?
