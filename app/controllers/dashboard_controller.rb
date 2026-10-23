@@ -303,7 +303,7 @@ class DashboardController < ApplicationController
   end
 
   def load_fragility
-    # Onglet Synthèse : synthèse des fragilités (38 indicateurs, rangs national et par densité — API /fragility-synthesis/*)
+    # Onglet Synthèse : synthèse des fragilités (39 indicateurs, rangs national et par densité — API /fragility-synthesis/*)
     load_fragility_synthesis
 
     respond_to do |format|

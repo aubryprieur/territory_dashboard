@@ -18,7 +18,7 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Diplômes et formation</h2>
   <p class="text-xs text-gray-500 mb-4">Diplôme le plus élevé de la population de 15 ans ou plus <strong>non scolarisée</strong> (les élèves et étudiants ne sont pas comptés).</p>
 
-  <%= render "dashboard/fragility_ranks", keys: %w[no_diploma_share higher_education_share young_no_diploma_rate young_neet_rate] %>
+  <%= render "dashboard/fragility_ranks", theme: "diplomas" %>
 
   <% if commune.nil? || commune[:key] != :commune %>
     <p class="text-sm text-gray-500">Données diplômes indisponibles pour ce territoire.</p>

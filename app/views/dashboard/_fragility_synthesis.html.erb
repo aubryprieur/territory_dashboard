@@ -1,6 +1,6 @@
 <%#
   Onglet Synthèse — synthèse des fragilités de la commune (API /fragility-synthesis/commune/*).
-  38 indicateurs (taux) en 8 enjeux ; rang de la commune parmi toutes les communes et parmi les communes de même
+  39 indicateurs (taux) en 9 enjeux ; rang de la commune parmi toutes les communes et parmi les communes de même
   densité (grille INSEE à 7 niveaux) ; 100 = plus touchée. Alerte : parmi les 20 % les plus touchées de la catégorie.
 %>
 <%
@@ -15,7 +15,7 @@
       inds = syn["indicators"]
       themes = syn["themes"]
       dens = syn.dig("density", "label")
-      theme_tabs = { "poverty" => "revenues_poverty", "employment" => "employment", "youth" => "youth",
+      theme_tabs = { "poverty" => "revenues_poverty", "employment" => "employment", "youth" => "youth", "diplomas" => "diplomas",
                      "families" => "families", "seniors" => "seniors", "health" => "health", "housing" => "housing",
                      "safety" => "delinquency" }
       level_style = {
@@ -103,7 +103,7 @@
       </div>
     <% end %>
 
-    <p class="text-xs text-gray-500 mb-4">Le détail de chaque indicateur (valeur, rang dans la catégorie de densité et rang France) est présenté en tête de l'onglet thématique correspondant : Revenus et pauvreté, Emploi, Enfance-jeunesse, Familles, Seniors, Santé, Logement, Délinquance.</p>
+    <p class="text-xs text-gray-500 mb-4">Le détail de chaque indicateur (valeur, rang dans la catégorie de densité et rang France) est présenté en tête de l'onglet thématique correspondant : Revenus et pauvreté, Emploi, Enfance-jeunesse, Diplômes, Familles, Seniors, Santé, Logement, Délinquance.</p>
 
     <% if syn["population"].to_f.positive? && syn["population"].to_f < 1000 %>
       <p class="text-xs mb-3" style="color:#b45309">Commune de moins de 1 000 habitants : les taux reposent sur de petits effectifs et le rang peut varier fortement d'une année à l'autre.</p>
