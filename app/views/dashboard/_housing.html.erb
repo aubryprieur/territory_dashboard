@@ -67,6 +67,9 @@
             { label: "Appartements (ensemble des logements)", share_key: "apartments_percentage" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("vacancy_rate"),
+          definition: "Logements vacants, en % de l'ensemble des logements de l'IRIS." %>
+
     <!-- 2. Statut d'occupation -->
     <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Statut d'occupation</h3>
     <p class="text-xs text-gray-500 mb-4">Résidences principales selon le statut d'occupation du ménage.</p>
@@ -101,16 +104,6 @@
     <%= render "dashboard/grid_map", map: cached_grid_map("social_housing_share"),
           definition: "Ménages logés dans le parc social, en % des ménages du carreau (2021)." %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("overcrowding_rate"),
-          definition: "Résidences principales suroccupées (il manque au moins une pièce au regard de la composition du ménage), en % des résidences principales de l'IRIS." %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("vacancy_rate"),
-          definition: "Logements vacants, en % de l'ensemble des logements de l'IRIS." %>
-    <%= render "dashboard/iris_map", map: cached_iris_map("recent_movers_share"),
-          definition: "Ménages installés dans leur logement depuis moins de 2 ans, en % des ménages de l'IRIS : quartiers à forte rotation, où arrivent les nouveaux habitants (accueil, information sur les services, inscription dans la vie locale)." %>
-
-
-
     <%= render "dashboard/territory_indicator", **common,
           title: "Propriétaires occupants", theme: "amber",
           value_key: "owners_percentage",
@@ -130,6 +123,9 @@
             { label: "Sous-occupation (toutes intensités)", share_key: "under_occupation_rate" },
             { label: "Logements de 1 ou 2 pièces", share_key: "small_dwellings_percentage" }
           ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("overcrowding_rate"),
+          definition: "Résidences principales suroccupées (il manque au moins une pièce au regard de la composition du ménage), en % des résidences principales de l'IRIS." %>
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Peuplement des résidences principales (<%= latest %>)</h3>
@@ -174,6 +170,9 @@
             { label: "Emménagés depuis 10 ans ou plus", share_key: "long_stay_percentage" },
             { label: "Emménagés depuis 30 ans ou plus", share_key: "stay_ge30_percentage" }
           ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("recent_movers_share"),
+          definition: "Ménages installés dans leur logement depuis moins de 2 ans, en % des ménages de l'IRIS : quartiers à forte rotation, où arrivent les nouveaux habitants (accueil, information sur les services, inscription dans la vie locale)." %>
 
     <%= render "dashboard/territory_indicator", **common,
           title: "Ancienneté moyenne d'emménagement", theme: "blue",
