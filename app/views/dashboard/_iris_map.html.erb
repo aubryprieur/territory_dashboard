@@ -1,5 +1,6 @@
 <%#
-  Carte IRIS d'un indicateur (API /iris/map/commune/{code}?indicator=…) : carte SVG colorée selon l'écart de
+  Carte IRIS d'un indicateur (API /iris/map/commune/{code}?indicator=…) : carte sur fond Plan IGN (Leaflet, contrôleur
+  Stimulus grid-map, construite à son arrivée à l'écran) colorée selon l'écart de
   chaque IRIS à la commune, et, à droite, tableau des 5 IRIS les plus élevés et des 5 plus faibles (tous au-delà de 12 IRIS : sinon liste complète). N'apparaît que si la commune compte au
   moins deux IRIS.
   locals : map (réponse de l'API, ou nil), definition (optionnel),
@@ -18,6 +19,18 @@
     features = (map["features"] || []).sort_by { |f| -(iris_value(f, latest) || -1) }
     count_label = map.dig("indicator", "count_label")
     additive = map.dig("indicator", "additive") != false  # sinon : pas d'effectif (médiane, taux publiés tels quels)
+    # sur fond de carte, « proche de la commune » en ocre (le sable des anciennes cartes SVG se confondait avec le plan)
+    map_color = ->(color) { color == "#f5ede0" ? "#d4b483" : color }
+    shapes = features.map do |f|
+      value = iris_value(f, latest)
+      count = iris_value(f, latest, "count")
+      total = iris_value(f, latest, "total")
+      cls = iris_class(value, reference)
+      tip = "<strong>#{ERB::Util.h(f['iris_name'])}</strong> (IRIS #{f['iris_code']})<br>#{fmt_iris(value, unit)}"
+      tip += "<br>#{fmt_count(count)} sur #{fmt_count(total)}" if count && total && additive
+      tip += "<br><em>pas de valeur (IRIS sans population concernée)</em>" if value.nil?
+      { geometry: f["geometry"], color: cls ? map_color.(cls[:color]) : IrisMapHelper::IRIS_NO_DATA, tip: tip }
+    end
   %>
   <section style="margin-bottom:2.5rem">
     <h3 class="text-sm font-medium text-gray-700 mb-1"><%= map.dig("indicator", "label") %> par IRIS (<%= latest %>)</h3>
@@ -27,17 +40,15 @@
       @media (min-width:900px){.iris-layout{grid-template-columns:3fr 2fr}}
     </style>
     <div class="iris-layout">
-      <!-- Carte -->
-      <div>
-        <div class="rounded-xl p-4" style="background:#f8fafc;border:1px solid #e2e8f0;display:flex;justify-content:center;align-items:center">
-          <%= iris_map_svg(map, latest) %>
-        </div>
+      <!-- Carte (fond Plan IGN) -->
+      <div data-controller="grid-map" data-grid-map-data-value="<%= { shapes: shapes }.to_json %>">
+        <div data-grid-map-target="map" style="height:420px;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;z-index:0;position:relative;background:#f8fafc"></div>
         <!-- Légende : barre segmentée, du plus faible au plus élevé -->
         <div class="mt-3">
           <div style="display:flex;gap:3px">
             <% iris_legend(reference, unit).each do |c| %>
               <div style="flex:1;min-width:0">
-                <div style="height:10px;border-radius:999px;background:<%= c[:color] %>;<%= c[:color] == '#f5ede0' ? 'box-shadow:inset 0 0 0 1px #e7dcc8;' : '' %>"></div>
+                <div style="height:10px;border-radius:999px;background:<%= map_color.(c[:color]) %>"></div>
                 <div class="text-gray-500" style="font-size:10px;line-height:1.2;margin-top:4px;text-align:center"><%= c[:range] %></div>
               </div>
             <% end %>
@@ -48,7 +59,12 @@
             <span class="text-gray-500">Supérieur à la commune →</span>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mt-1" style="text-align:center">Survolez un IRIS pour afficher son nom, son code et sa valeur.</p>
+        <div class="text-xs text-gray-500 mt-1" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <span>Survoler un IRIS pour son nom, son code et sa valeur ; cliquer sur la carte pour zoomer à la molette.</span>
+          <label style="display:flex;align-items:center;gap:6px">Opacité
+            <input type="range" min="0.1" max="0.9" step="0.1" value="0.7" data-action="input->grid-map#opacity" style="width:100px">
+          </label>
+        </div>
       </div>
 
       <!-- Tableau : 5 IRIS les plus élevés, 5 les plus faibles, commune -->
@@ -84,7 +100,7 @@
                 %>
                 <tr>
                   <td class="px-2 py-2 text-xs text-gray-900">
-                    <span style="display:inline-block;width:9px;height:9px;border-radius:999px;background:<%= cls ? cls[:color] : IrisMapHelper::IRIS_NO_DATA_SWATCH %>;<%= cls && cls[:color] == '#f5ede0' ? 'box-shadow:inset 0 0 0 1px #d6c7ad;' : '' %>margin-right:6px;vertical-align:middle"></span><%= f["iris_name"] %>
+                    <span style="display:inline-block;width:9px;height:9px;border-radius:999px;background:<%= cls ? map_color.(cls[:color]) : IrisMapHelper::IRIS_NO_DATA_SWATCH %>;margin-right:6px;vertical-align:middle"></span><%= f["iris_name"] %>
                   </td>
                   <td class="<%= td %> font-medium"><%= fmt_iris(v1, unit) %></td>
                   <% if two_years %><td class="<%= td %> text-gray-600"><%= iris_trend(v0, v1, unit) %></td><% end %>
@@ -106,7 +122,7 @@
         <% if commune_latest && commune_latest[:year].to_s != latest.to_s %>
           <p class="text-xs text-gray-600 mt-2 bg-gray-50 border border-gray-200 rounded p-2">Dernier millésime à l'IRIS : <%= latest %>. Chiffre communal affiché plus haut : <%= commune_latest[:year] %> (<%= fmt_iris(commune_latest[:value], unit) %><% if commune_latest[:count] && commune_latest[:total] %>, soit <%= fmt_count(commune_latest[:count]) %> sur <%= fmt_count(commune_latest[:total]) %><% end %>).<% if additive && two_years %> Même valeur pour un même millésime (<%= first %> : <%= fmt_iris(cv.dig(first, "value"), unit) %>).<% end %></p>
         <% end %>
-        <p class="text-xs text-gray-500 mt-2">Source : <%= map["source"] %> (<%= years.join(" et ") %>).</p>
+        <p class="text-xs text-gray-500 mt-2">Source : <%= map["source"] %> (<%= years.join(" et ") %>) ; fond de carte : Plan IGN (Géoplateforme).</p>
       </div>
     </div>
   </section>
