@@ -65,6 +65,12 @@
             ["incomplete_career_rate", "Partis à l'âge du taux plein avec une carrière incomplète", :worse_if_higher]
           ] %>
 
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Où vivent les seniors</h3>
+    <%= render "dashboard/iris_map", map: cached_iris_map("age_65_79_share"),
+          definition: "Personnes de 65 à 79 ans, en % de la population de l'IRIS : jeunes retraités, public de la prévention et de la vie sociale." %>
+    <%= render "dashboard/iris_map", map: cached_iris_map("age_80p_share"),
+          definition: "Personnes de 80 ans ou plus, en % de la population de l'IRIS : âge où la perte d'autonomie devient plus fréquente." %>
+
     <%
       hh_years = comparison_years(@household_data, "household_data")
       hh_latest = @household_data.is_a?(Hash) && @household_data["error"].blank? ? comparison_latest_year(@household_data, hh_years) : nil
@@ -77,6 +83,8 @@
             definition: "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de l'IRIS.",
             commune_latest: { year: hh_latest, value: hh.("living_alone_rate_80_plus"),
                               count: hh.("living_alone_80_plus"), total: nil } %>
+      <%= render "dashboard/iris_map", map: cached_iris_map("alone_55_79_share"),
+            definition: "Personnes de 55 à 79 ans vivant seules, en % des 55-79 ans de l'IRIS : isolement avant le grand âge, à prévenir." %>
     <% end %>
 
     <%= render "dashboard/fragilities", show_source: false, dataset: :senior_fragilities, title: "Santé et recours aux soins des 55 ans ou plus",

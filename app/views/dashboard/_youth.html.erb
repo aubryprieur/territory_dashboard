@@ -57,6 +57,16 @@
           { label: "Indice de jeunesse (moins de 20 ans pour 100 personnes de 60 ans ou plus)", ds: pop, key: "youth_index", format: :decimal }
         ] %>
 
+  <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Où vivent les enfants et les jeunes</h3>
+  <%= render "dashboard/iris_map", map: cached_iris_map("age_6_10_share"),
+        definition: "Enfants de 6 à 10 ans (âge de l'école élémentaire), en % de la population de l'IRIS." %>
+  <%= render "dashboard/iris_map", map: cached_iris_map("age_11_17_share"),
+        definition: "Jeunes de 11 à 17 ans (âge du collège et du lycée), en % de la population de l'IRIS." %>
+  <%= render "dashboard/iris_map", map: cached_iris_map("age_18_24_share"),
+        definition: "Jeunes de 18 à 24 ans, en % de la population de l'IRIS : étudiants, jeunes actifs et jeunes en insertion." %>
+  <%= render "dashboard/iris_map", map: cached_iris_map("young_alone_share"),
+        definition: "Jeunes de 15 à 24 ans vivant seuls dans leur logement, en % des 15-24 ans de l'IRIS : repère de décohabitation (étudiants, jeunes actifs) et d'isolement." %>
+
   <%= render "dashboard/youth_table", title: "Conditions de vie",
         definition: "Pauvreté : part des personnes vivant sous le seuil de pauvreté (Filosofi ; le détail par âge n'est publié que pour les communes les plus peuplées). Allocation de rentrée scolaire : foyers bénéficiaires pour 100 familles avec enfants (ordre de grandeur, sous condition de ressources). En rouge, une situation moins favorable qu'en France.",
         rows: [

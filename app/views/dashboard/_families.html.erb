@@ -49,6 +49,9 @@
             { label: "Mères seules avec enfant(s)", count_key: "single_mothers", share_key: "single_mothers_percentage" }
           ] %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("families_with_children_share"),
+          definition: "Familles avec au moins un enfant de moins de 25 ans (couples avec enfants et familles monoparentales), en % des familles de l'IRIS : quartiers où se concentrent les besoins des familles (écoles, accueil, loisirs, soutien à la parentalité)." %>
+
     <%= render "dashboard/iris_map", map: cached_iris_map("single_parent_share"),
           definition: "Un parent vivant seul avec au moins un enfant, en % des familles de l'IRIS.",
           commune_latest: { year: latest, value: family_value(commune, latest, "single_parent_families_percentage"),

@@ -4,6 +4,10 @@
 
   <%= render "dashboard/fragility_ranks", group: "early_childhood" %>
 
+  <%= render "dashboard/iris_map", map: cached_iris_map("under_6_share"),
+        definition: "Enfants de moins de 6 ans, en % de la population de l'IRIS : repère pour situer les besoins d'accueil du jeune enfant, de PMI et d'écoles maternelles. Les quartiers les plus jeunes ne sont pas toujours ceux où l'offre est implantée." %>
+
+
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- SECTION 1 : ENFANTS DE MOINS DE 3 ANS -->
   <!-- ═══════════════════════════════════════════════════════════════ -->

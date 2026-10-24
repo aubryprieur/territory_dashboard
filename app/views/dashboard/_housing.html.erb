@@ -103,6 +103,9 @@
 
     <%= render "dashboard/iris_map", map: cached_iris_map("vacancy_rate"),
           definition: "Logements vacants, en % de l'ensemble des logements de l'IRIS." %>
+    <%= render "dashboard/iris_map", map: cached_iris_map("recent_movers_share"),
+          definition: "Ménages installés dans leur logement depuis moins de 2 ans, en % des ménages de l'IRIS : quartiers à forte rotation, où arrivent les nouveaux habitants (accueil, information sur les services, inscription dans la vie locale)." %>
+
 
 
     <%= render "dashboard/territory_indicator", **common,
