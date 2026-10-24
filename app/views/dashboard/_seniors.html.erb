@@ -70,6 +70,9 @@
           definition: "Personnes de 65 à 79 ans, en % de la population de l'IRIS : jeunes retraités, public de la prévention et de la vie sociale." %>
     <%= render "dashboard/iris_map", map: cached_iris_map("age_80p_share"),
           definition: "Personnes de 80 ans ou plus, en % de la population de l'IRIS : âge où la perte d'autonomie devient plus fréquente." %>
+    <%= render "dashboard/grid_map", map: cached_grid_map("age_80p_share"),
+          definition: "Personnes de 80 ans ou plus, en % des habitants du carreau (2021) : localiser les besoins de maintien à domicile, de visites et de transport." %>
+
 
     <%
       hh_years = comparison_years(@household_data, "household_data")

@@ -1,0 +1,52 @@
+<%#
+  Carte carroyée (Insee, Filosofi 2021, carreaux de 1 km — API /grid/map/commune/{code}?indicator=…) sur fond Plan IGN
+  (Leaflet, contrôleur Stimulus grid-map). Chaque carreau est coloré selon son écart à l'ensemble des carreaux de la
+  commune (mêmes classes que les cartes IRIS) ; carreaux estimés par l'Insee (moins de 11 ménages) en pointillés et
+  plus transparents ; contours des IRIS de la commune en trait fin. Affichée pour toutes les communes, découpées en
+  IRIS ou non.
+  locals : map (réponse de l'API, ou nil), definition (optionnel)
+%>
+<% definition ||= nil %>
+<% if map.present? %>
+  <%
+    unit = map.dig("indicator", "unit")
+    reference = map["reference"]
+    count_label = map.dig("indicator", "count_label")
+    den_label = map.dig("indicator", "denominator")
+    cells = map["cells"].map do |c|
+      cls = iris_class(c["value"], reference)
+      tip = ["<strong>#{fmt_iris(c['value'], unit)}</strong>"]
+      tip << "#{fmt_count(c['count'])} #{count_label} sur #{fmt_count(c['total'])} #{den_label}" if c["count"] && count_label
+      tip << "#{fmt_count(c['population'])} habitants dans le carreau"
+      tip << "<em>carreau estimé par l'Insee (moins de 11 ménages)</em>" if c["imputed"]
+      tip << "<em>carreau à cheval sur plusieurs communes</em>" if c["shared"]
+      { corners: c["corners"], color: cls ? cls[:color] : IrisMapHelper::IRIS_NO_DATA, imputed: c["imputed"],
+        tip: tip.join("<br>") }
+    end
+    payload = { cells: cells, outline: map["outline"] }
+    imputed_n = map["cells"].count { |c| c["imputed"] }
+    shared_n = map["cells"].count { |c| c["shared"] }
+  %>
+  <section style="margin-bottom:2.5rem">
+    <h3 class="text-sm font-medium text-gray-700 mb-1"><%= map.dig("indicator", "label") %> par carreau de 1 km (<%= map["year"] %>)</h3>
+    <p class="text-xs text-gray-500 mb-3"><%= definition %> Couleur : écart de chaque carreau à l'ensemble des carreaux habités de la commune (<%= fmt_iris(reference, unit) %> ; France métropolitaine : <%= fmt_iris(map["france"], unit) %>). Survoler un carreau pour sa valeur ; cliquer sur la carte pour zoomer à la molette.</p>
+    <div data-controller="grid-map" data-grid-map-data-value="<%= payload.to_json %>">
+      <div data-grid-map-target="map" style="height:440px;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;z-index:0;position:relative"></div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:10px">
+        <div style="display:flex;gap:3px;flex:1;min-width:280px">
+          <% iris_legend(reference, unit).each do |c| %>
+            <div style="flex:1;min-width:0">
+              <div style="height:10px;border-radius:999px;background:<%= c[:color] %>;<%= c[:color] == '#f5ede0' ? 'box-shadow:inset 0 0 0 1px #e7dcc8;' : '' %>"></div>
+              <div class="text-xs text-gray-500" style="margin-top:3px;text-align:center"><%= c[:range] %></div>
+            </div>
+          <% end %>
+        </div>
+        <label class="text-xs text-gray-600" style="display:flex;align-items:center;gap:6px">Opacité
+          <input type="range" min="0.1" max="0.9" step="0.1" value="0.6" data-action="input->grid-map#opacity" style="width:110px">
+        </label>
+      </div>
+      <p class="text-xs text-gray-500" style="margin-top:6px"><%= map["cells"].size %> carreaux habités touchent la commune<%= shared_n.positive? ? ", dont #{shared_n} à cheval sur plusieurs communes (affichés en entier)" : "" %><%= imputed_n.positive? ? " ; #{imputed_n} carreaux en pointillés : moins de 11 ménages, valeurs estimées par l'Insee" : "" %>. Trait fin : contours des IRIS.</p>
+      <p class="text-xs text-gray-400" style="margin-top:2px">Source : <%= map["source"] %> ; fond de carte : Plan IGN (Géoplateforme).</p>
+    </div>
+  </section>
+<% end %>

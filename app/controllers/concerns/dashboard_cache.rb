@@ -450,6 +450,15 @@ module DashboardCache
     data.is_a?(Hash) && data["irisee"] ? data : nil
   end
 
+  # Carte carroyée (Filosofi 2021, carreaux de 1 km) : toutes les communes, irisées ou non
+  def cached_grid_map(indicator)
+    return nil if @territory_code.blank?
+    data = cached_api_call(cache_key_for_territory(@territory_code, "grid_map_#{indicator}"), expires_in: 12.hours) do
+      Api::GridMapService.get_commune(@territory_code, indicator)
+    end
+    data.is_a?(Hash) && data["cells"].present? ? data : nil
+  end
+
   def load_fragilities_comparison
     s = Api::FragilitiesService
     @fragilities_data = cached_health_data(s, :commune, @territory_code)

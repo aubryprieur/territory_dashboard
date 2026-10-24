@@ -92,6 +92,12 @@
     <%= render "dashboard/iris_map", map: cached_iris_map("poverty_rate"),
           definition: "Part des personnes vivant sous le seuil de pauvreté (60 % du niveau de vie médian). L'Insee ne publie le taux que pour les IRIS assez peuplés.",
           commune_latest: { year: latest, value: territory_value(commune, latest, "poverty_rate") } %>
+    <%= render "dashboard/grid_map", map: cached_grid_map("living_standard"),
+          definition: "Niveau de vie moyen des habitants du carreau (revenu disponible du ménage par unité de consommation, revenus 2021). Repère plus fin que l'IRIS, disponible pour toutes les communes." %>
+
+    <%= render "dashboard/grid_map", map: cached_grid_map("poor_households_share"),
+          definition: "Ménages vivant sous le seuil de pauvreté (60 % du niveau de vie médian), en % des ménages du carreau (revenus 2021). L'Insee plafonne cette part à 80 % dans les carreaux très pauvres." %>
+
 
     <% if detail_year %>
       <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Qui est touché par la pauvreté ? (<%= detail_year %>)</h3>

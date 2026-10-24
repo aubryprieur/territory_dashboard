@@ -6,6 +6,9 @@
 
   <%= render "dashboard/iris_map", map: cached_iris_map("under_6_share"),
         definition: "Enfants de moins de 6 ans, en % de la population de l'IRIS : repère pour situer les besoins d'accueil du jeune enfant, de PMI et d'écoles maternelles. Les quartiers les plus jeunes ne sont pas toujours ceux où l'offre est implantée." %>
+  <%= render "dashboard/grid_map", map: cached_grid_map("age_0_3_share"),
+        definition: "Enfants de 0 à 3 ans, en % des habitants du carreau (2021) : tranche absente des données IRIS 2023, utile pour situer les besoins d'accueil du jeune enfant au plus près des habitants." %>
+
 
 
   <!-- ═══════════════════════════════════════════════════════════════ -->

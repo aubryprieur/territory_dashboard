@@ -57,6 +57,9 @@
           commune_latest: { year: latest, value: family_value(commune, latest, "single_parent_families_percentage"),
                             count: family_value(commune, latest, "single_parent_families"),
                             total: family_value(commune, latest, "total_families") } %>
+    <%= render "dashboard/grid_map", map: cached_grid_map("single_parent_share"),
+          definition: "Ménages dont la famille principale est monoparentale, en % des ménages du carreau (source fiscale, 2021)." %>
+
 
     <%= render "dashboard/families_indicator",
           title: "Familles nombreuses",
