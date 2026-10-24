@@ -98,6 +98,12 @@
           definition: "Résidences principales louées vides en HLM, en % des résidences principales de l'IRIS.",
           commune_latest: { year: latest, value: territory_value(commune, latest, "tenants_social_percentage"),
                             count: territory_value(commune, latest, "main_tenants_social"), total: territory_value(commune, latest, "dwellings_main") } %>
+    <%= render "dashboard/iris_map", map: cached_iris_map("overcrowding_rate"),
+          definition: "Résidences principales suroccupées (il manque au moins une pièce au regard de la composition du ménage), en % des résidences principales de l'IRIS." %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("vacancy_rate"),
+          definition: "Logements vacants, en % de l'ensemble des logements de l'IRIS." %>
+
 
     <%= render "dashboard/territory_indicator", **common,
           title: "Propriétaires occupants", theme: "amber",

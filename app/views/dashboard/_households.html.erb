@@ -118,6 +118,9 @@
           definition: "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de l'IRIS.",
           commune_latest: { year: latest, value: territory_value(commune, latest, "living_alone_rate_80_plus"),
                             count: territory_value(commune, latest, "living_alone_80_plus"), total: nil } %>
+    <%= render "dashboard/iris_map", map: cached_iris_map("living_alone_share"),
+          definition: "Personnes de 15 ans ou plus vivant seules dans leur logement, en % des 15 ans ou plus de l'IRIS." %>
+
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Personnes vivant seules selon l'âge (<%= latest %>)</h3>

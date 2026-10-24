@@ -107,6 +107,18 @@
           definition: "Chômeurs de 15-24 ans, en % des actifs de 15-24 ans de l'IRIS.",
           commune_latest: { year: latest, value: territory_value(commune, latest, "unemployment_rate_15_24"),
                             count: territory_value(commune, latest, "unemployed_15_24"), total: territory_value(commune, latest, "active_15_24") } %>
+    <%= render "dashboard/iris_map", map: cached_iris_map("women_employment_rate"),
+          definition: "Femmes de 15 à 64 ans en emploi, en % des femmes de 15 à 64 ans de l'IRIS." %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("workers_employees_share"),
+          definition: "Ouvriers et employés, en % des actifs de 15 à 64 ans de l'IRIS." %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("precarious_share"),
+          definition: "Salariés en CDD, intérim, emploi aidé ou apprentissage, en % des salariés de 15 ans ou plus de l'IRIS (en 2023, l'Insee publie ces contrats ensemble)." %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("transit_commute_share"),
+          definition: "Actifs occupés allant travailler en transports en commun, en % des actifs occupés de l'IRIS." %>
+
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de chômage selon le diplôme (<%= latest %>)</h3>

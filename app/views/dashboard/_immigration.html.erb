@@ -48,6 +48,9 @@
     <%= render "dashboard/iris_map", map: cached_iris_map("immigrant_share"),
           definition: "Personnes nées étrangères à l'étranger et résidant en France, en % de la population de l'IRIS.",
           commune_latest: { year: year, value: v.(commune, "immigrant_rate"), count: v.(commune, "imm"), total: nil } %>
+    <%= render "dashboard/iris_map", map: cached_iris_map("foreigner_share"),
+          definition: "Personnes de nationalité étrangère, en % de la population de l'IRIS." %>
+
 
     <!-- Comparaison territoriale -->
     <section style="margin-bottom:2.5rem">
