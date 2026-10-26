@@ -25,7 +25,7 @@
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Enfance, jeunesse</h2>
-  <p class="text-xs text-gray-500 mb-4">Enfants et jeunes de 6 à 24 ans : effectifs, conditions de vie, scolarité et insertion, sport et loisirs. Ces indicateurs sont aussi présentés, avec leur évolution, dans les onglets Population, Scolarité, Diplômes, Emploi, Revenus, Accès aux droits et Vie locale. La petite enfance a son propre onglet.</p>
+  <p class="text-xs text-gray-500 mb-4">Enfants et jeunes de 6 à 24 ans : effectifs, conditions de vie, scolarité et insertion, sport et loisirs. Certains indicateurs sont aussi présentés, avec leur évolution, dans les onglets Scolarité, Diplômes, Emploi, Revenus, Accès aux droits et Vie locale. La petite enfance a son propre onglet.</p>
 
   <%= render "dashboard/fragility_ranks", theme: "youth" %>
 
@@ -51,13 +51,15 @@
     </div>
   <% end %>
 
-  <%= render "dashboard/youth_table", title: "Poids des jeunes",
+  <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Poids des jeunes</h3>
+  <%= render "dashboard/age_focus", focus: :youth %>
+  <%= render "dashboard/youth_table", title: "Indice de jeunesse",
         rows: [
-          { label: "Part des 15-24 ans dans la population", ds: pop, key: "age_15_24_percentage" },
-          { label: "Indice de jeunesse (moins de 20 ans pour 100 personnes de 60 ans ou plus)", ds: pop, key: "youth_index", format: :decimal }
+          { label: "Moins de 20 ans pour 100 personnes de 60 ans ou plus", ds: pop, key: "youth_index", format: :decimal }
         ] %>
 
   <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Où vivent les enfants et les jeunes</h3>
+  <%= render "dashboard/age_focus", focus: :youth_map %>
   <%= render "dashboard/iris_map", map: cached_iris_map("age_6_10_share"),
         definition: "Enfants de 6 à 10 ans (âge de l'école élémentaire), en % de la population de l'IRIS." %>
   <%= render "dashboard/iris_map", map: cached_iris_map("age_11_17_share"),

@@ -1,0 +1,99 @@
+<%#
+  Repères démographiques par âge, issus de la structure de population (API /population-structure/*), affichés dans les
+  onglets thématiques plutôt que dans l'onglet Population (resté généraliste).
+  locals : focus — :youth (part des 15-24 ans, enfance et jeunesse par tranche d'âge)
+                   :youth_map (carte IRIS des moins de 18 ans)
+                   :seniors (indice de vieillissement, repères sur le vieillissement)
+  Nécessite load_population_structure_comparison (@pop_data et échelles).
+%>
+<%
+  territories = comparison_territories("population_data", {
+    commune: @pop_data, epci: @epci_pop_data, department: @department_pop_data,
+    region: @region_pop_data, france: @france_pop_data
+  })
+  years = comparison_years(@pop_data, "population_data")
+  latest = comparison_latest_year(@pop_data, years)
+  comparison = comparison_start_year(@pop_data, years)
+  commune = territories.first
+  common = { territories: territories, years: years, latest: latest, comparison: comparison }
+  labels = @pop_data.is_a?(Hash) ? (@pop_data["labels"] || {}) : {}
+%>
+<% if commune && commune[:key] == :commune %>
+  <% pv = ->(key, year = latest) { territory_value(commune, year, key) } %>
+  <% if focus == :youth %>
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Jeunes de 15 à 24 ans", theme: "blue",
+          value_key: "age_15_24_percentage", count_key: "pop_15_24", total_key: "pop", count_label: "jeunes de 15-24 ans",
+          definition: "Part des 15-24 ans dans la population : âge des études, de l'entrée dans la vie active et de la décohabitation. Repère pour les politiques jeunesse (mobilité, logement, insertion, mission locale).",
+          details: [
+            { label: "Moins de 15 ans", share_key: "age_lt15_percentage" },
+            { label: "25-39 ans", share_key: "age_25_39_percentage" }
+          ] %>
+    <% if pv.("age_0_2") %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Enfance et jeunesse (<%= latest %>)</h3>
+        <p class="text-xs text-gray-500 mb-4">
+          Part de chaque tranche d'âge dans la population, en %. À <%= commune[:name] %> :
+          <%= (labels["childhood"] || {}).map { |k, l| "#{fmt_count(pv.("age_#{k}"))} #{l.sub(' ans', '')} ans" }.join(" · ") %>.
+        </p>
+        <%= comparison_grouped_bar_chart(territories, latest,
+              (labels["childhood"] || {}).map { |k, l| ["age_#{k}_percentage", l] },
+              "Enfance et jeunesse par tranche d'âge et par territoire") %>
+      </section>
+    <% end %>
+  <% elsif focus == :youth_map %>
+    <%= render "dashboard/iris_map", map: cached_iris_map("under_18_share"),
+          definition: "Enfants et jeunes de moins de 18 ans, en % de la population de l'IRIS." %>
+  <% elsif focus == :seniors %>
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Indice de vieillissement", theme: "purple",
+          value_key: "aging_index", value_format: :decimal, unit: "", decimals: 1,
+          count_key: "pop_ge65", count_label: "personnes de 65 ans ou plus",
+          definition: "Nombre de personnes de 65 ans ou plus pour 100 jeunes de moins de 20 ans. Au-dessus de 100, les seniors sont plus nombreux que les jeunes.",
+          details: [
+            { label: "65 ans ou plus", share_key: "age_ge65_percentage" },
+            { label: "80 ans ou plus", share_key: "age_ge80_percentage" },
+            { label: "Femmes parmi les 80 ans ou plus", share_key: "women_ge80_percentage" },
+            { label: "Moins de 20 ans", share_key: "age_lt20_percentage" }
+          ] %>
+    <% if pv.("elderly_generations_index") %>
+      <% ageing = [
+           ["youth_index", "Indice de jeunesse", "Moins de 20 ans pour 100 personnes de 60 ans ou plus. Sous 100, les 60 ans ou plus sont plus nombreux que les jeunes."],
+           ["elderly_generations_index", "Indice d'évolution des générations âgées", "Personnes de 60 à 74 ans pour 100 de 75 ans ou plus. Au-dessus de 100, les générations qui vont entrer dans le grand âge sont plus nombreuses que celles qui y sont : la demande d'accompagnement du vieillissement va croître."],
+           ["caregiver_ratio", "Ratio aidants / aidés", "Personnes de 55 à 64 ans (âge des aidants familiaux potentiels) par personne de 85 ans ou plus. Plus il est faible, plus l'aide aux personnes très âgées repose sur peu d'aidants."]
+         ] %>
+      <section style="margin-bottom:2.5rem">
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Repères sur le vieillissement (<%= latest %>)</h3>
+        <p class="text-xs text-gray-500 mb-4">Indicateurs calculés à partir des tranches d'âge de 5 ans, disponibles pour le seul recensement <%= latest %>.</p>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Indicateur</th>
+                <% territories.each do |t| %>
+                  <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= t[:name] %></th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% ageing.each do |key, label, help| %>
+                <tr>
+                  <td class="px-4 py-3 text-sm text-gray-900">
+                    <span class="font-medium"><%= label %></span>
+                    <p class="text-xs text-gray-500 mt-1"><%= help %></p>
+                  </td>
+                  <% territories.each do |t| %>
+                    <% v = territory_value(t, latest, key) %>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold text-gray-900' : 'text-gray-600' %>">
+                      <%= v.nil? ? "–" : number_with_precision(v, precision: 1, delimiter: " ", separator: ",") %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% end %>
+  <% end %>
+<% end %>

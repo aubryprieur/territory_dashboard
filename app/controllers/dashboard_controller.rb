@@ -343,6 +343,7 @@ class DashboardController < ApplicationController
     # (API /fragilities/*)
     load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_senior_fragilities_comparison
+    load_population_structure_comparison # indice de vieillissement, repères sur le vieillissement (_age_focus)
     load_fragilities_comparison
     load_elderly_care_comparison # hébergement et services à domicile (BPE)
     @equipment_data = cached_equipment_data(:commune, @territory_code) # distance au plus proche
