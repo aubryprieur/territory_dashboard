@@ -1,7 +1,7 @@
 <%#
   Position de la commune parmi les communes (API /fragility-synthesis/commune/*), affichée en tête d'un onglet
-  thématique, avant les tableaux par échelle. Bascule entre le rang dans la catégorie de densité INSEE (défaut), le
-  rang parmi toutes les communes de France et le rang parmi les communes de l'EPCI (calculé à la volée par l'API).
+  thématique, avant les tableaux par échelle. Bascule entre le rang parmi les communes de l'EPCI (défaut, calculé à la
+  volée par l'API), le rang dans la catégorie de densité INSEE et le rang parmi toutes les communes de France.
   locals : theme (clé d'enjeu : poverty, employment, youth, families, seniors, health, housing, safety)
            ou keys (liste de clés d'indicateurs, synthèse ou contexte, dans l'ordre voulu ; pas de niveau d'enjeu)
            ou group (groupe de repères de contexte : population, households, immigration, early_childhood,
@@ -58,9 +58,10 @@
       k = i["epci_position"]
       neutral ? "#{ordinal.(k)} valeur la plus élevée" : (k == 1 ? "la plus touchée" : "#{ordinal.(k)} plus touchée")
     end
-    # du plus petit niveau au plus grand ; la catégorie de densité reste la vue par défaut (base de la synthèse)
+    # du plus petit niveau au plus grand ; ouverture sur le rang EPCI (catégorie si la commune n'a pas de rang EPCI)
     modes = [["dens", "Rang dans la catégorie"], ["fr", "Rang France"]]
     modes.unshift(["epci", "Rang dans l'EPCI"]) if epci
+    default_mode = modes.first[0]
     btn = "padding:4px 10px;font-size:12px;border:1px solid #c7d2fe;cursor:pointer"
     toggle = "var b=this,s=b.closest('section');s.querySelectorAll('[data-rank-mode]').forEach(function(e){e.style.display=e.getAttribute('data-rank-mode')===b.getAttribute('data-mode')?'':'none'});s.querySelectorAll('button[data-mode]').forEach(function(x){var on=x===b;x.style.background=on?'#4f46e5':'#fff';x.style.color=on?'#fff':'#3730a3'})"
   %>
@@ -75,16 +76,16 @@
         <% modes.each_with_index do |(mode, label), idx| %>
           <%
             radius = idx.zero? ? "8px 0 0 8px" : (idx == modes.size - 1 ? "0 8px 8px 0" : "0")
-            on = mode == "dens"
+            on = mode == default_mode
           %>
           <button type="button" data-mode="<%= mode %>" onclick="<%= toggle %>" style="<%= btn %>;<%= idx.zero? ? '' : 'border-left:none;' %>border-radius:<%= radius %>;background:<%= on ? '#4f46e5' : '#fff' %>;color:<%= on ? '#fff' : '#3730a3' %>"><%= label %></button>
         <% end %>
       </div>
     </div>
-    <p class="text-xs text-gray-500" data-rank-mode="dens" style="margin-bottom:10px">Parmi les communes de même densité (<%= dens || "catégorie inconnue" %>). 0 = la moins touchée, 100 = la plus touchée ; zone rouge : 20 % les plus touchées, zone verte : 20 % les moins touchées<%= items.any? { |i| i["direction"] == "neutral" } ? " ; barre bleue : indicateur de structure, classé de la valeur la plus faible (0) à la plus élevée (100), sans jugement" : "" %>.</p>
+    <p class="text-xs text-gray-500" data-rank-mode="dens" style="margin-bottom:10px;<%= default_mode == 'dens' ? '' : 'display:none' %>">Parmi les communes de même densité (<%= dens || "catégorie inconnue" %>). 0 = la moins touchée, 100 = la plus touchée ; zone rouge : 20 % les plus touchées, zone verte : 20 % les moins touchées<%= items.any? { |i| i["direction"] == "neutral" } ? " ; barre bleue : indicateur de structure, classé de la valeur la plus faible (0) à la plus élevée (100), sans jugement" : "" %>.</p>
     <p class="text-xs text-gray-500" data-rank-mode="fr" style="margin-bottom:10px;display:none">Parmi toutes les communes de France ayant une valeur publiée. 0 = la moins touchée, 100 = la plus touchée ; zone rouge : 20 % les plus touchées, zone verte : 20 % les moins touchées<%= items.any? { |i| i["direction"] == "neutral" } ? " ; barre bleue : indicateur de structure, classé de la valeur la plus faible (0) à la plus élevée (100), sans jugement" : "" %>.</p>
     <% if epci %>
-      <p class="text-xs text-gray-500" data-rank-mode="epci" style="margin-bottom:10px;display:none">Parmi les communes de <%= epci["label"] %> ayant une valeur publiée (<%= fmt_count(epci["communes"]) %> communes dans l'EPCI). 0 = la moins touchée, 100 = la plus touchée ; zone rouge : 20 % les plus touchées, zone verte : 20 % les moins touchées<%= items.any? { |i| i["direction"] == "neutral" } ? " ; barre bleue : indicateur de structure, classé de la valeur la plus faible (0) à la plus élevée (100), sans jugement" : "" %>. Dans un EPCI de peu de communes, une seule commune d'écart déplace fortement le rang.</p>
+      <p class="text-xs text-gray-500" data-rank-mode="epci" style="margin-bottom:10px">Parmi les communes de <%= epci["label"] %> ayant une valeur publiée (<%= fmt_count(epci["communes"]) %> communes dans l'EPCI). 0 = la moins touchée, 100 = la plus touchée ; zone rouge : 20 % les plus touchées, zone verte : 20 % les moins touchées<%= items.any? { |i| i["direction"] == "neutral" } ? " ; barre bleue : indicateur de structure, classé de la valeur la plus faible (0) à la plus élevée (100), sans jugement" : "" %>. Dans un EPCI de peu de communes, une seule commune d'écart déplace fortement le rang.</p>
     <% end %>
     <div>
       <% items.each do |i| %>
@@ -97,7 +98,7 @@
             rank_modes << ["epci", i["rank_epci"], i["epci_n"], i["epci_median"], "médiane de l'EPCI"] if epci
           %>
           <% rank_modes.each do |mode, r, n, ref, ref_label| %>
-            <div data-rank-mode="<%= mode %>" style="<%= mode == 'dens' ? '' : 'display:none' %>">
+            <div data-rank-mode="<%= mode %>" style="<%= mode == default_mode ? '' : 'display:none' %>">
               <% if r %>
                 <% neutral = i["direction"] == "neutral"; alert = !neutral && r >= 80; good = !neutral && r <= 20 && !i["need"] %>
                 <div style="position:relative;height:10px;border-radius:5px;background:<%= neutral ? 'linear-gradient(90deg,#eef2ff,#c7d2fe)' : 'linear-gradient(90deg,#d1fae5 0 20%,#f3f4f6 20% 80%,#fee2e2 80% 100%)' %>" title="Rang <%= r.round %> sur 100">
