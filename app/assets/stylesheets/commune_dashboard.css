@@ -136,3 +136,53 @@ input:focus, button:focus {
     gap: 0.5rem;
   }
 }
+
+/* ===== Titres des onglets thématiques (onglets chargés dans .dashboard-panel) =====
+   h2.text-lg                       : titre de l'onglet
+   h3.text-base.text-gray-900       : titre de partie (ex. « Emploi des femmes », tableaux de fragilités)
+   h3.text-sm.text-gray-700         : titre d'un indicateur, séparé du précédent par un filet
+   Les titres des cartes de synthèse (text-<couleur>-800) et de l'accueil ne sont pas concernés. */
+.dashboard-panel h2.text-lg.font-medium {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #1e1b4b;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, #6366f1, #a855f7) left bottom / 72px 3px no-repeat;
+}
+
+.dashboard-panel h3.text-base.font-medium.text-gray-900:not([data-plain-title]) {
+  font-size: 1.125rem;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #312e81;
+  background: #eef2ff;
+  border-left: 4px solid #6366f1;
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-top: 2rem;
+  margin-bottom: 10px;
+}
+
+.dashboard-panel h3[data-plain-title] {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e1b4b;
+}
+
+.dashboard-panel h3.text-sm.font-medium.text-gray-700 {
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #111827;
+  border-left: 3px solid #818cf8;
+  padding-left: 10px;
+  margin-bottom: 6px;
+}
+
+/* Filet de séparation au-dessus de chaque bloc indicateur */
+.dashboard-panel :has(> h3.text-sm.font-medium.text-gray-700) {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+}

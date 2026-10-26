@@ -68,7 +68,7 @@
   <section style="margin:0 0 2rem;padding:16px 18px;border:1px solid #e0e7ff;border-radius:12px;background:#f8faff">
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
       <div>
-        <h3 class="text-base font-medium text-gray-900">Position de <%= @territory_name %> parmi les communes
+        <h3 class="text-base font-medium text-gray-900" data-plain-title>Position de <%= @territory_name %> parmi les communes
           <% if lvl %><span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:12px;background:<%= lvl_bg %>;color:<%= lvl_fg %>"><%= lvl %></span><% end %>
         </h3>
         <%# Échelle de comparaison affichée selon le bouton choisi %>
