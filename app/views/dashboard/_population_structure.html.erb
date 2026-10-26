@@ -30,7 +30,7 @@
 
   <div class="bg-white shadow rounded-lg p-6 mb-6">
     <h2 class="text-lg font-medium text-gray-900 mb-1">Population</h2>
-    <p class="text-xs text-gray-500 mb-4">Population municipale au sens du recensement : évolution depuis 1968, densité, structure par âge d'ensemble, catégories socioprofessionnelles et mobilité résidentielle.</p>
+    <p class="text-xs text-gray-500 mb-4">Population municipale au sens du recensement : évolution depuis 1968, densité, structure par âge d'ensemble et mobilité résidentielle. Les catégories socioprofessionnelles sont dans l'onglet Emploi.</p>
 
     <%= render "dashboard/fragility_ranks", group: "population" %>
 
@@ -147,43 +147,6 @@
 
 
 
-    <!-- 3. Catégories socioprofessionnelles -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Catégories socioprofessionnelles</h3>
-    <p class="text-xs text-gray-500 mb-4">Population de 15 ans ou plus selon la catégorie socioprofessionnelle (actuelle ou dernière exercée), y compris retraités et personnes sans activité.</p>
-
-    <section style="margin-bottom:2.5rem">
-      <h3 class="text-sm font-medium text-gray-700 mb-1">Population de 15 ans ou plus par catégorie (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">En %.</p>
-      <%= comparison_stacked_chart(territories, latest, [
-            ["pcs_1_percentage", "Agriculteurs", "#84cc16"],
-            ["pcs_2_percentage", "Artisans, commerçants, chefs d'entr.", "#f59e0b"],
-            ["pcs_3_percentage", "Cadres, prof. intell. sup.", "#1e3a8a"],
-            ["pcs_4_percentage", "Professions intermédiaires", "#3b82f6"],
-            ["pcs_5_percentage", "Employés", "#93c5fd"],
-            ["pcs_6_percentage", "Ouvriers", "#ef4444"],
-            ["pcs_7_percentage", "Retraités", "#9ca3af"],
-            ["pcs_9_percentage", "Autres sans activité professionnelle", "#e5e7eb"]
-          ], "Population de 15 ans ou plus par catégorie socioprofessionnelle et par territoire") %>
-    </section>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Employés et ouvriers", theme: "blue",
-          value_key: "working_class_percentage",
-          count_key: "pop_15p", count_label: "personnes de 15 ans ou plus",
-          definition: "Part des employés et des ouvriers (en activité ou au chômage) parmi les 15 ans ou plus. Repère du poids des catégories populaires.",
-          details: [
-            { label: "Ouvriers", share_key: "pcs_6_percentage" },
-            { label: "Employés", share_key: "pcs_5_percentage" },
-            { label: "Cadres", share_key: "pcs_3_percentage" },
-            { label: "Retraités", share_key: "pcs_7_percentage" },
-            { label: "Autres sans activité professionnelle", share_key: "pcs_9_percentage" }
-          ] %>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Cadres et professions intermédiaires pour 100 employés et ouvriers", theme: "blue",
-          value_key: "upper_to_working_class_ratio", value_format: :decimal, unit: "", decimals: 0,
-          definition: "Rapport entre les catégories « supérieures » (cadres, professions intermédiaires) et les catégories populaires (employés, ouvriers) parmi les 15 ans ou plus, actifs ou anciens actifs. Sous 100, les catégories populaires sont majoritaires ; repère de la mixité sociale." %>
-
     <!-- 4. Mobilité résidentielle -->
     <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité résidentielle</h3>
     <p class="text-xs text-gray-500 mb-4">Lieu de résidence des habitants un an auparavant (personnes d'un an ou plus).</p>
@@ -208,7 +171,7 @@
     </section>
 
     <div class="mb-2 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026) ; pyramide des âges <%= latest %> ; catégories socioprofessionnelles : exploitation complémentaire.</p>
+      <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026) ; pyramide des âges <%= latest %>.</p>
       <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
       <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
     </div>

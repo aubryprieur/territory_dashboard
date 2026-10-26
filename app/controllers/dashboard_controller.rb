@@ -343,7 +343,7 @@ class DashboardController < ApplicationController
     # (API /fragilities/*)
     load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_senior_fragilities_comparison
-    load_population_structure_comparison # indice de vieillissement, repères sur le vieillissement (_age_focus)
+    load_population_structure_comparison # indice de vieillissement, repères sur le vieillissement (_population_focus)
     load_fragilities_comparison
     load_elderly_care_comparison # hébergement et services à domicile (BPE)
     @equipment_data = cached_equipment_data(:commune, @territory_code) # distance au plus proche
@@ -451,6 +451,7 @@ class DashboardController < ApplicationController
     # (INSEE RP 2012, 2017, 2023) + emploi des parents de jeunes enfants (2023)
     load_employment_activity_comparison
     load_job_seekers_comparison # demandeurs d'emploi inscrits à France Travail (Dares)
+    load_population_structure_comparison # population de 15 ans ou plus par catégorie socioprofessionnelle (_population_focus)
     # Familles (API /families/*) : enfants de moins de 6 ans selon l'activité des parents (2023)
     @family_data = cached_family_data(@territory_code)
     @epci_family_data = cached_epci_family_data(@epci_code)

@@ -52,14 +52,14 @@
   <% end %>
 
   <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Poids des jeunes</h3>
-  <%= render "dashboard/age_focus", focus: :youth %>
+  <%= render "dashboard/population_focus", focus: :youth %>
   <%= render "dashboard/youth_table", title: "Indice de jeunesse",
         rows: [
           { label: "Moins de 20 ans pour 100 personnes de 60 ans ou plus", ds: pop, key: "youth_index", format: :decimal }
         ] %>
 
   <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Où vivent les enfants et les jeunes</h3>
-  <%= render "dashboard/age_focus", focus: :youth_map %>
+  <%= render "dashboard/population_focus", focus: :youth_map %>
   <%= render "dashboard/iris_map", map: cached_iris_map("age_6_10_share"),
         definition: "Enfants de 6 à 10 ans (âge de l'école élémentaire), en % de la population de l'IRIS." %>
   <%= render "dashboard/iris_map", map: cached_iris_map("age_11_17_share"),

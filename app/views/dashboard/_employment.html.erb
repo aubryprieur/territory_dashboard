@@ -206,6 +206,11 @@
           ], "Temps partiel des salariés par âge et sexe et par territoire") %>
     </section>
 
+    <!-- 4. Catégories sociales : population de 15 ans ou plus (recensement, structure de population), puis actifs -->
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Catégories socioprofessionnelles</h3>
+    <p class="text-xs text-gray-500 mb-4">Population de 15 ans ou plus selon la catégorie socioprofessionnelle (actuelle ou dernière exercée), y compris retraités et personnes sans activité ; puis actifs de 15 à 64 ans.</p>
+    <%= render "dashboard/population_focus", focus: :pcs %>
+
     <!-- 4. Catégories sociales -->
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Actifs selon la catégorie socioprofessionnelle (<%= latest %>)</h3>

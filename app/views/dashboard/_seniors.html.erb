@@ -3,7 +3,7 @@
     - fragilité sociale, ressources, parcours et santé des retraités et des assurés de 55 ans ou plus
       (Observatoire interrégimes des situations de fragilité, interrégime 2025 — API /senior-fragilities/*)
     - vaccination antigrippale des 65 et 75 ans ou plus (même Observatoire — API /fragilities/*)
-  - poids des seniors : indice de vieillissement, repères sur le vieillissement (recensement, _age_focus)
+  - poids des seniors : indice de vieillissement, repères sur le vieillissement (recensement, _population_focus)
 %>
 <%
   sf = @senior_fragilities_data.is_a?(Hash) && @senior_fragilities_data["error"].blank? ? @senior_fragilities_data : nil
@@ -19,7 +19,7 @@
   <%= render "dashboard/fragility_ranks", theme: "seniors" %>
 
   <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Poids des seniors</h3>
-  <%= render "dashboard/age_focus", focus: :seniors %>
+  <%= render "dashboard/population_focus", focus: :seniors %>
 
   <% if sf.nil? %>
     <p class="text-sm text-gray-500">Données de l'Observatoire des situations de fragilité non disponibles pour cette commune.</p>
