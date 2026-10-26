@@ -71,6 +71,9 @@
         <h3 class="text-base font-medium text-gray-900">Position de <%= @territory_name %> parmi les communes
           <% if lvl %><span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:12px;background:<%= lvl_bg %>;color:<%= lvl_fg %>"><%= lvl %></span><% end %>
         </h3>
+        <% if dens %>
+          <div class="text-xs text-gray-600" style="margin-top:4px">Catégorie de densité de la commune : <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= dens %></span></div>
+        <% end %>
       </div>
       <div style="display:inline-flex;border-radius:8px;overflow:hidden">
         <% modes.each_with_index do |(mode, label), idx| %>

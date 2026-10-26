@@ -108,7 +108,12 @@
       toggle = "var b=this,s=b.closest('[data-rank-scope]');s.querySelectorAll('[data-rank-mode]').forEach(function(e){e.style.display=e.getAttribute('data-rank-mode')===b.getAttribute('data-mode')?'':'none'});s.querySelectorAll('button[data-mode]').forEach(function(x){var on=x===b;x.style.background=on?'#4f46e5':'#fff';x.style.color=on?'#fff':'#3730a3'})"
     %>
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
-      <h2 class="text-lg font-medium text-gray-900">Synthèse des enjeux de fragilité</h2>
+      <div>
+        <h2 class="text-lg font-medium text-gray-900">Synthèse des enjeux de fragilité</h2>
+        <% if dens %>
+          <div class="text-xs text-gray-600" style="margin-top:4px">Catégorie de densité de la commune : <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= dens %></span></div>
+        <% end %>
+      </div>
       <div style="display:inline-flex;border-radius:8px;overflow:hidden">
         <% modes.each_with_index do |m, idx| %>
           <% on = m[:key] == default_mode; radius = modes.size == 1 ? "8px" : (idx.zero? ? "8px 0 0 8px" : (idx == modes.size - 1 ? "0 8px 8px 0" : "0")) %>

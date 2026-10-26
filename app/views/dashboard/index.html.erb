@@ -54,7 +54,7 @@
               <% end %>
             </div>
           </div>
-          <div class="flex items-center space-x-3">
+          <div class="flex flex-wrap items-center" style="gap:12px">
             <span class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full text-sm font-semibold shadow-lg">
               Code INSEE: <%= @basic_info[:territory_code] %>
             </span>
@@ -63,6 +63,11 @@
                 <span class="text-green-800 text-sm font-medium">
                   <%= number_with_delimiter(@basic_info[:population]) %> habitants
                 </span>
+              </div>
+            <% end %>
+            <% if @basic_info[:density_label].present? %>
+              <div title="Catégorie de la grille communale de densité INSEE (7 niveaux) : la commune est comparée aux communes de même catégorie dans les encarts de position et la synthèse" style="padding:8px 16px;border-radius:999px;background:#dbeafe;border:1px solid #93c5fd">
+                <span style="color:#1e40af;font-size:0.875rem;font-weight:600"><%= @basic_info[:density_label] %></span>
               </div>
             <% end %>
           </div>

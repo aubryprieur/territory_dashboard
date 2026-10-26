@@ -45,6 +45,15 @@ class DashboardController < ApplicationController
       region_code: territory&.reg,
       is_commune_access_from_epci: @is_commune_access_from_epci
     }
+    # Catégorie de densité INSEE (7 niveaux), mise en avant dans l'en-tête et l'accueil ; synthèse en cache 12 h
+    begin
+      load_fragility_synthesis
+      density = @fragility_synthesis.is_a?(Hash) ? @fragility_synthesis["density"] : nil
+      @basic_info[:density_label] = density&.dig("label")
+      @basic_info[:density_code] = density&.dig("code")
+    rescue StandardError => e
+      Rails.logger.warn("Catégorie de densité indisponible : #{e.message}")
+    end
 
     begin
       # Précharger les données essentielles en arrière-plan

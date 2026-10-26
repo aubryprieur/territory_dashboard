@@ -28,7 +28,8 @@
   </div>
 
   <!-- Informations clés de la commune -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">
+  <% density_label = @basic_info&.dig(:density_label) %>
+  <div class="grid grid-cols-1 <%= density_label.present? ? 'md:grid-cols-3 max-w-4xl' : 'md:grid-cols-2 max-w-2xl' %> gap-4 mx-auto mb-8">
     <!-- Code INSEE -->
     <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border border-indigo-200 hover:shadow-lg transition-shadow duration-300">
       <div class="flex items-center justify-between mb-3">
@@ -64,6 +65,22 @@
       </p>
       <p class="text-sm text-gray-600">habitants</p>
     </div>
+
+    <% if density_label.present? %>
+      <!-- Catégorie de densité INSEE -->
+      <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 hover:shadow-lg transition-shadow duration-300">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Catégorie de densité</h3>
+          <div class="p-2 rounded-lg" style="background:#bfdbfe">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+            </svg>
+          </div>
+        </div>
+        <p class="font-bold text-gray-900 mb-1" style="font-size:1.5rem;line-height:1.2"><%= density_label %></p>
+        <p class="text-sm text-gray-600">grille communale de densité INSEE<%= @basic_info[:density_code].present? ? " (niveau #{@basic_info[:density_code]} sur 7)" : "" %> ; la commune est comparée aux communes de cette catégorie</p>
+      </div>
+    <% end %>
   </div>
 
   <!-- Navigation rapide vers les sections -->
