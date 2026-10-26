@@ -2,20 +2,6 @@
 <!-- Population : structure, pyramide, évolution depuis 1968, PCS, mobilité (API /population-structure/*) -->
 <%= render "dashboard/population_structure" %>
 
-<!-- Naissances (textes d'analyse et projection 2035 retirés le 11/10/2026, à repenser) -->
-<% if births_data_filtered.present? %>
-
-  <div class="bg-white shadow rounded-lg p-6 mb-6">
-    <h2 class="text-lg font-medium text-gray-900 mb-4">Évolution des naissances</h2>
-    <div class="h-64">
-      <canvas id="births-chart"></canvas>
-    </div>
-  </div>
-<% end %>
-
-<!-- Données JSON du graphique des naissances (charts_init.js) -->
-<script type="application/json" id="births-data-filtered">
-<%= raw(births_data_filtered.to_json) %>
-</script>
+<!-- Naissances : partie « Naissances » de l'onglet Population (_population_structure), après les moteurs de l'évolution -->
 
 <!-- SUPPRESSION DU SCRIPT INLINE - Les graphiques sont maintenant gérés par charts_init.js -->

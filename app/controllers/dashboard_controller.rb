@@ -83,6 +83,7 @@ class DashboardController < ApplicationController
     @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
     # Structure par âge, pyramide, PCS, mobilité, série longue 1968-2023 (API /population-structure/*)
     load_population_structure_comparison
+    load_births_comparison # naissances 2014-2023, commune et 4 échelles (base 100 et effectifs)
 
     # 🆕 Calcul des projections naissances 2035
     if @population_data.present?

@@ -73,6 +73,30 @@ module DashboardCache
     end
   end
 
+  # Naissances domiciliées (état civil INSEE, 2014-2023) d'un territoire : { année => naissances }.
+  # La table births contient aussi les EPCI, départements, régions et la France (code F = France entière) ;
+  # le type d'objet géographique lève l'ambiguïté entre codes identiques (département 11 / région 11, commune / bassin de vie).
+  BIRTHS_GEO_OBJECTS = { commune: "COM", epci: "EPCI", department: "DEP", region: "REG", france: "FRANCE" }.freeze
+
+  def cached_births_series(level, code)
+    return {} if code.blank?
+    data = level == :commune ? cached_births_data(code) : cached_api_call(cache_key_for_territory(code, "births_#{level}"), expires_in: 12.hours) { Api::PopulationService.get_births_data(code) }
+    return {} unless data.is_a?(Array)
+    data.select { |r| r["geo_object"] == BIRTHS_GEO_OBJECTS[level] }
+        .to_h { |r| [r["time_period"].to_i, r["obs_value"].to_f] }
+        .sort.to_h
+  end
+
+  def load_births_comparison
+    @births_series = {
+      commune: cached_births_series(:commune, @territory_code),
+      epci: cached_births_series(:epci, @epci_code),
+      department: cached_births_series(:department, @department_code),
+      region: cached_births_series(:region, @region_code),
+      france: cached_births_series(:france, "F")
+    }
+  end
+
   def cached_births_data(territory_code)
     cache_key = cache_key_for_territory(territory_code, 'births')
     cached_api_call(cache_key, expires_in: 8.hours) do
