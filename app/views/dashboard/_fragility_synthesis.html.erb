@@ -110,8 +110,12 @@
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
       <div>
         <h2 class="text-lg font-medium text-gray-900">Synthèse des enjeux de fragilité</h2>
-        <% if dens %>
-          <div class="text-xs text-gray-600" style="margin-top:4px">Catégorie de densité de la commune : <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= dens %></span></div>
+        <% modes.each do |m| %>
+          <div class="text-xs text-gray-600" data-rank-mode="<%= m[:key] %>" style="margin-top:4px;<%= m[:key] == default_mode ? '' : 'display:none' %>">
+            <% if m[:key] == "epci" %>Comparaison avec les communes de l'EPCI : <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= epci["label"] %></span>
+            <% elsif m[:key] == "dens" %>Comparaison avec les communes de la catégorie de densité : <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= dens || "non classée" %></span>
+            <% else %>Comparaison avec <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600">toutes les communes de France</span><% end %>
+          </div>
         <% end %>
       </div>
       <div style="display:inline-flex;border-radius:8px;overflow:hidden">
