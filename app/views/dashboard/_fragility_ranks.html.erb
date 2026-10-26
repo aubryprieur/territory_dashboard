@@ -58,8 +58,9 @@
       k = i["epci_position"]
       neutral ? "#{ordinal.(k)} valeur la plus élevée" : (k == 1 ? "la plus touchée" : "#{ordinal.(k)} plus touchée")
     end
+    # du plus petit niveau au plus grand ; la catégorie de densité reste la vue par défaut (base de la synthèse)
     modes = [["dens", "Rang dans la catégorie"], ["fr", "Rang France"]]
-    modes << ["epci", "Rang dans l'EPCI"] if epci
+    modes.unshift(["epci", "Rang dans l'EPCI"]) if epci
     btn = "padding:4px 10px;font-size:12px;border:1px solid #c7d2fe;cursor:pointer"
     toggle = "var b=this,s=b.closest('section');s.querySelectorAll('[data-rank-mode]').forEach(function(e){e.style.display=e.getAttribute('data-rank-mode')===b.getAttribute('data-mode')?'':'none'});s.querySelectorAll('button[data-mode]').forEach(function(x){var on=x===b;x.style.background=on?'#4f46e5':'#fff';x.style.color=on?'#fff':'#3730a3'})"
   %>
@@ -74,7 +75,7 @@
         <% modes.each_with_index do |(mode, label), idx| %>
           <%
             radius = idx.zero? ? "8px 0 0 8px" : (idx == modes.size - 1 ? "0 8px 8px 0" : "0")
-            on = idx.zero?
+            on = mode == "dens"
           %>
           <button type="button" data-mode="<%= mode %>" onclick="<%= toggle %>" style="<%= btn %>;<%= idx.zero? ? '' : 'border-left:none;' %>border-radius:<%= radius %>;background:<%= on ? '#4f46e5' : '#fff' %>;color:<%= on ? '#fff' : '#3730a3' %>"><%= label %></button>
         <% end %>
