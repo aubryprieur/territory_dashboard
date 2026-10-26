@@ -1,24 +1,28 @@
 <%#
   Onglet Synthèse — synthèse des fragilités de la commune (API /fragility-synthesis/commune/*).
-  39 indicateurs (taux) en 9 enjeux ; rang de la commune parmi toutes les communes et parmi les communes de même
-  densité (grille INSEE à 7 niveaux) ; 100 = plus touchée. Alerte : parmi les 20 % les plus touchées de la catégorie.
+  39 indicateurs (taux) en 9 enjeux ; rang de la commune parmi les communes de son EPCI, parmi les communes de même
+  densité (grille INSEE à 7 niveaux) et parmi toutes les communes de France ; 100 = plus touchée.
+  Boutons d'échelle (EPCI par défaut, puis catégorie, France) : phrase de synthèse, niveaux des enjeux et repères sont
+  recalculés pour l'échelle choisie (alerte : parmi les 20 % les plus touchées de l'échelle ; mêmes règles que l'API).
 %>
 <%
   syn = @fragility_synthesis.is_a?(Hash) && @fragility_synthesis["error"].blank? ? @fragility_synthesis : nil
 %>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-1">Synthèse des enjeux de fragilité</h2>
+<div class="bg-white shadow rounded-lg p-6 mb-6" data-rank-scope>
   <% if syn.nil? %>
+    <h2 class="text-lg font-medium text-gray-900 mb-1">Synthèse des enjeux de fragilité</h2>
     <p class="text-sm text-gray-500">Synthèse non disponible pour cette commune.</p>
   <% else %>
     <%
       inds = syn["indicators"]
-      themes = syn["themes"]
-      core = themes.select { |t| t["kind"].nil? || t["kind"] == "core" }
+      ctx_all = inds + syn["context_indicators"].to_a
+      by_key = ctx_all.index_by { |i| i["key"] }
+      api_themes = syn["themes"].index_by { |t| t["key"] }
+      groups_by_key = syn["context_groups"].to_a.index_by { |g| g["key"] }
       dens = syn.dig("density", "label")
-      theme_tabs = { "poverty" => "revenues_poverty", "employment" => "employment", "youth" => "youth", "diplomas" => "diplomas",
-                     "families" => "families", "seniors" => "seniors", "health" => "health", "housing" => "housing",
-                     "safety" => "delinquency" }
+      epci = syn["epci"].is_a?(Hash) && inds.any? { |i| i["rank_epci"] } ? syn["epci"] : nil
+      alert_t = syn.dig("thresholds", "alert") || 80
+      strength_t = syn.dig("thresholds", "strength") || 20
       level_style = {
         "high" => ["Enjeu fort", "#fee2e2", "#b91c1c"], "moderate" => ["Enjeu modéré", "#ffedd5", "#c2410c"],
         "low" => ["Enjeu faible", "#ecfdf5", "#047857"], "not_evaluable" => ["Non évaluable", "#f3f4f6", "#6b7280"],
@@ -33,7 +37,6 @@
         else fmt_decimal(v, precision: 1)
         end
       end
-      rank_of = ->(i) { i["rank_density"] || i["rank_france"] }
       position = lambda do |r|
         next "" if r.nil?
         if r >= 80 then "parmi les #{[(100 - r).ceil, 1].max} % les plus touchées"
@@ -41,32 +44,24 @@
         else "dans la moyenne"
         end
       end
-      by_share = ->(lvl) { core.select { |t| t["level"] == lvl }.sort_by { |t| -t["alerts"].to_f / [t["available"], 1].max }.map { |t| t["label"].downcase } }
-      high = by_share.("high")
-      moderate = by_share.("moderate")
-      alerts = inds.select { |i| i["alert"] }.sort_by { |i| -rank_of.(i) }
-      strengths = inds.select { |i| i["strength"] }.sort_by { |i| rank_of.(i) }
-      not_eval = core.select { |t| t["level"] == "not_evaluable" }.map { |t| t["label"].downcase }
-    %>
-    <p class="text-xs text-gray-500 mb-4">Chaque indicateur situe <%= @territory_name %> parmi les communes de même nature (catégorie de densité INSEE : <strong><%= dens || "non classée" %></strong>) et parmi toutes les communes de France. Un indicateur est en alerte quand la commune fait partie des 20 % de communes de sa catégorie les plus touchées. Seuls des taux sont comparés ; les effectifs de la commune sont indiqués pour dimensionner les actions.</p>
+      ordinal = ->(k) { k == 1 ? "1re" : "#{k}e" }
+      theme_level = lambda do |available, alerts, expected|
+        next "not_evaluable" if expected.zero? || available < expected / 2.0
+        share = alerts.to_f / available
+        share >= 0.5 ? "high" : (share >= 0.25 ? "moderate" : "low")
+      end
 
-    <div style="margin:0 0 1.5rem;padding:14px 18px;border-left:4px solid #6366f1;background:#eef2ff;border-radius:8px" class="text-sm text-gray-800">
-      <% if high.any? || moderate.any? %>
-        À <%= @territory_name %>, les enjeux de fragilité se concentrent sur <strong><%= (high.presence || moderate).to_sentence(last_word_connector: " et ", two_words_connector: " et ") %></strong><% if high.any? && moderate.any? %>, et dans une moindre mesure sur <%= moderate.to_sentence(last_word_connector: " et ", two_words_connector: " et ") %><% end %>.
-      <% else %>
-        À <%= @territory_name %>, aucun enjeu ne ressort nettement par rapport aux communes de même densité.
-      <% end %>
-      <%= alerts.size %> indicateur<%= alerts.size > 1 ? "s" : "" %> sur <%= inds.count { |i| i["value"] } %> placent la commune parmi les 20 % de communes de sa catégorie les plus touchées.
-      <% if strengths.any? %>Points forts : <%= strengths.first(3).map { |i| i["label"].sub(/\A./, &:downcase) }.join(" ; ") %>.<% end %>
-      <% if not_eval.any? %><span class="text-gray-500">Non évaluable faute de données publiées : <%= not_eval.join(", ") %>.</span><% end %>
-    </div>
+      # Échelles de comparaison, du plus petit niveau au plus grand
+      modes = []
+      modes << { key: "epci", label: "Rang dans l'EPCI", rank: ->(i) { i["rank_epci"] },
+                 among: "parmi les #{fmt_count(epci['communes'])} communes de #{epci['label']}", short: "de l'EPCI" } if epci
+      modes << { key: "dens", label: "Rang dans la catégorie", rank: ->(i) { i["rank_density"] || i["rank_france"] },
+                 among: "parmi les communes de même densité (#{dens || 'catégorie inconnue'})", short: "de sa catégorie" }
+      modes << { key: "fr", label: "Rang France", rank: ->(i) { i["rank_france"] },
+                 among: "parmi toutes les communes de France", short: "de France" }
+      default_mode = modes.first[:key]
 
-    <%
-      ctx_all = inds + syn["context_indicators"].to_a
-      themes_by_key = themes.index_by { |t| t["key"] }
-      groups_by_key = syn["context_groups"].to_a.index_by { |g| g["key"] }
-      # Ordre des onglets du dashboard ; [libellé, onglet, :theme ou :group, clé]
-      reperes = [
+      theme_tabs = [
         ["Population", "synthese", :group, "population"], ["Familles", "families", :theme, "families"],
         ["Ménages", "households", :group, "households"], ["Logement", "housing", :theme, "housing"],
         ["Immigrés et étrangers", "immigration", :group, "immigration"], ["Seniors", "seniors", :theme, "seniors"],
@@ -81,64 +76,136 @@
         list = if kind == :theme
                  ctx_all.select { |i| i["theme"] == key }
                else
-                 (groups_by_key.dig(key, "indicators") || []).filter_map { |k| ctx_all.find { |i| i["key"] == k } }
+                 (groups_by_key.dig(key, "indicators") || []).filter_map { |k| by_key[k] }
                end
         list.reject { |i| i["value"].nil? }
       end
+      # Niveaux des enjeux pour une échelle (mêmes règles que l'API : alerte rang ≥ 80, point fort rang ≤ 20 hors besoins)
+      is_alert = ->(m, i) { r = m[:rank].(i); i["direction"] != "neutral" && r && r >= alert_t }
+      is_strength = ->(m, i) { r = m[:rank].(i); i["direction"] != "neutral" && r && r <= strength_t && !i["need"] }
+      themes_for = lambda do |m|
+        theme_tabs.each_with_object({}) do |(_, _, kind, key), h|
+          api = api_themes[key]
+          next if api.nil?
+          if kind == :theme
+            items = inds.select { |i| i["theme"] == key }
+            avail = items.reject { |i| i["value"].nil? }
+            al = avail.count { |i| is_alert.(m, i) }
+            h[key] = { "kind" => "core", "label" => api["label"], "available" => avail.size, "alerts" => al,
+                       "strengths" => avail.count { |i| is_strength.(m, i) }, "level" => theme_level.(avail.size, al, items.size) }
+          else
+            items = (groups_by_key.dig(key, "indicators") || []).filter_map { |k| by_key[k] }
+            judged = items.reject { |i| i["direction"] == "neutral" }
+            avail = judged.reject { |i| i["value"].nil? }
+            al = avail.count { |i| is_alert.(m, i) }
+            h[key] = { "kind" => "context", "label" => api["label"], "available" => avail.size, "alerts" => al,
+                       "strengths" => avail.count { |i| is_strength.(m, i) },
+                       "level" => judged.any? ? theme_level.(avail.size, al, judged.size) : "context" }
+          end
+        end
+      end
+      btn = "padding:4px 10px;font-size:12px;border:1px solid #c7d2fe;cursor:pointer"
+      toggle = "var b=this,s=b.closest('[data-rank-scope]');s.querySelectorAll('[data-rank-mode]').forEach(function(e){e.style.display=e.getAttribute('data-rank-mode')===b.getAttribute('data-mode')?'':'none'});s.querySelectorAll('button[data-mode]').forEach(function(x){var on=x===b;x.style.background=on?'#4f46e5':'#fff';x.style.color=on?'#fff':'#3730a3'})"
     %>
-
-    <h3 class="text-base font-medium text-gray-900 mb-2">Enjeux</h3>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:2rem">
-      <% reperes.each do |label, tab, kind, key| %>
-        <% t = themes_by_key[key] %>
-        <% next if t.nil? || repere_items.(kind, key).empty? %>
-        <% lbl, bg, fg = level_style[t["level"]] || level_style["not_evaluable"] %>
-        <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="<%= tab %>" title="Voir le détail dans l'onglet" style="display:block;width:100%;text-align:left;border:none;cursor:pointer;border-radius:12px;padding:14px 16px;background:<%= bg %>">
-          <div class="text-sm font-semibold text-gray-900"><%= label %></div>
-          <div style="color:<%= fg %>;font-weight:600;font-size:0.95rem;margin-top:2px"><%= lbl %></div>
-          <div class="text-xs text-gray-600" style="margin-top:4px">
-            <% if t["level"] == "context" %>indicateurs de structure, sans niveau<% elsif t["available"].zero? %>aucun indicateur publié<% else %><%= t["alerts"] %> en alerte sur <%= t["available"] %> indicateur<%= t["available"] > 1 ? "s" : "" %><%= t["strengths"].positive? ? " · #{t['strengths']} point#{t['strengths'] > 1 ? 's' : ''} fort#{t['strengths'] > 1 ? 's' : ''}" : "" %><% end %>
-          </div>
-          <div class="text-xs" style="margin-top:6px;color:#4f46e5">Voir le détail →</div>
-        </button>
-      <% end %>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
+      <h2 class="text-lg font-medium text-gray-900">Synthèse des enjeux de fragilité</h2>
+      <div style="display:inline-flex;border-radius:8px;overflow:hidden">
+        <% modes.each_with_index do |m, idx| %>
+          <% on = m[:key] == default_mode; radius = modes.size == 1 ? "8px" : (idx.zero? ? "8px 0 0 8px" : (idx == modes.size - 1 ? "0 8px 8px 0" : "0")) %>
+          <button type="button" data-mode="<%= m[:key] %>" onclick="<%= toggle %>" style="<%= btn %>;<%= idx.zero? ? '' : 'border-left:none;' %>border-radius:<%= radius %>;background:<%= on ? '#4f46e5' : '#fff' %>;color:<%= on ? '#fff' : '#3730a3' %>"><%= m[:label] %></button>
+        <% end %>
+      </div>
     </div>
+    <p class="text-xs text-gray-500 mb-4">Chaque indicateur situe <%= @territory_name %> <%= epci ? "parmi les communes de son EPCI (#{epci['label']}), " : "" %>parmi les communes de même nature (catégorie de densité INSEE : <strong><%= dens || "non classée" %></strong>) et parmi toutes les communes de France ; les boutons choisissent l'échelle de comparaison. Un indicateur est en alerte quand la commune fait partie des 20 % de communes les plus touchées à cette échelle. Seuls des taux sont comparés ; les effectifs de la commune sont indiqués pour dimensionner les actions.</p>
 
-    <h3 class="text-base font-medium text-gray-900 mb-1">Repères par onglet</h3>
-    <p class="text-xs text-gray-500 mb-2">Position de <%= @territory_name %> parmi les communes de même densité, indicateur par indicateur (zone rouge : 20 % les plus touchées ; zone verte : 20 % les moins touchées ; barre bleue : indicateur de structure, classé de la valeur la plus faible à la plus élevée, sans jugement). Cliquer sur une tuile ouvre l'onglet, avec le rang France et les comparaisons entre échelles.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:2rem">
-      <% reperes.each do |label, tab, kind, key| %>
-        <% gi = repere_items.(kind, key) %>
-        <% next if gi.empty? %>
-        <% th = themes_by_key[key] %>
-        <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="<%= tab %>" style="display:block;width:100%;text-align:left;border:1px solid #e0e7ff;cursor:pointer;border-radius:12px;padding:12px 14px;background:#f8faff">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
-            <span class="text-sm font-semibold text-gray-900"><%= label %></span>
-            <% if th %><% lbl, bg, fg = level_style[th["level"]] || level_style["not_evaluable"] %><span style="padding:1px 7px;border-radius:999px;font-size:11px;background:<%= bg %>;color:<%= fg %>;white-space:nowrap"><%= lbl %></span><% end %>
-          </div>
-          <% gi.each do |i| %>
-            <% r = i["rank_density"]; neutral = i["direction"] == "neutral" %>
-            <div style="margin-bottom:6px">
-              <div class="text-xs text-gray-700" style="display:flex;justify-content:space-between;gap:8px"><span><%= i["label"] %></span><strong class="whitespace-nowrap"><%= fmt_v.(i) %></strong></div>
-              <% if r %>
-                <div style="position:relative;height:6px;border-radius:3px;margin-top:3px;background:<%= neutral ? 'linear-gradient(90deg,#eef2ff,#c7d2fe)' : 'linear-gradient(90deg,#d1fae5 0 20%,#f3f4f6 20% 80%,#fee2e2 80% 100%)' %>" title="<%= neutral ? "Rang #{r.round} sur 100 (0 = valeur la plus faible, 100 = la plus élevée)" : "#{position.(r)} (rang #{r.round} sur 100)" %>">
-                  <span style="position:absolute;top:-2px;left:calc(<%= r %>% - 3px);width:6px;height:10px;border-radius:2px;background:<%= neutral ? '#4f46e5' : (r >= 80 ? '#b91c1c' : (r <= 20 && !i['need'] ? '#047857' : '#4b5563')) %>"></span>
-                </div>
-              <% else %>
-                <div class="text-xs text-gray-400">commune non classée</div>
-              <% end %>
-            </div>
+    <% modes.each do |m| %>
+      <%
+        mthemes = themes_for.(m)
+        core = mthemes.values.select { |t| t["kind"] == "core" }
+        by_share = ->(lvl) { core.select { |t| t["level"] == lvl }.sort_by { |t| -t["alerts"].to_f / [t["available"], 1].max }.map { |t| t["label"].downcase } }
+        high = by_share.("high")
+        moderate = by_share.("moderate")
+        alerts = inds.select { |i| is_alert.(m, i) }
+        strengths = inds.select { |i| is_strength.(m, i) }.sort_by { |i| m[:rank].(i) }
+        not_eval = core.select { |t| t["level"] == "not_evaluable" }.map { |t| t["label"].downcase }
+      %>
+      <div data-rank-mode="<%= m[:key] %>" style="<%= m[:key] == default_mode ? '' : 'display:none' %>">
+        <div style="margin:0 0 1.5rem;padding:14px 18px;border-left:4px solid #6366f1;background:#eef2ff;border-radius:8px" class="text-sm text-gray-800">
+          <div class="text-xs text-gray-500" style="margin-bottom:4px">Comparaison <%= m[:among] %></div>
+          <% if high.any? || moderate.any? %>
+            À <%= @territory_name %>, les enjeux de fragilité se concentrent sur <strong><%= (high.presence || moderate).to_sentence(last_word_connector: " et ", two_words_connector: " et ") %></strong><% if high.any? && moderate.any? %>, et dans une moindre mesure sur <%= moderate.to_sentence(last_word_connector: " et ", two_words_connector: " et ") %><% end %>.
+          <% else %>
+            À <%= @territory_name %>, aucun enjeu ne ressort nettement par rapport aux communes <%= m[:short] %>.
           <% end %>
-          <div class="text-xs" style="margin-top:4px;color:#4f46e5">Voir l'onglet →</div>
-        </button>
-      <% end %>
-    </div>
+          <%= alerts.size %> indicateur<%= alerts.size > 1 ? "s" : "" %> sur <%= inds.count { |i| i["value"] } %> placent la commune parmi les 20 % de communes <%= m[:short] %> les plus touchées.
+          <% if strengths.any? %>Points forts : <%= strengths.first(3).map { |i| i["label"].sub(/\A./, &:downcase) }.join(" ; ") %>.<% end %>
+          <% if not_eval.any? %><span class="text-gray-500">Non évaluable faute de données publiées : <%= not_eval.join(", ") %>.</span><% end %>
+          <% if m[:key] == "epci" %><div class="text-xs text-gray-500" style="margin-top:4px">Dans un EPCI de peu de communes, une seule commune d'écart déplace fortement le rang : à lire avec les rangs catégorie et France.</div><% end %>
+        </div>
+
+        <h3 class="text-base font-medium text-gray-900 mb-2">Enjeux</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:2rem">
+          <% theme_tabs.each do |label, tab, kind, key| %>
+            <% t = mthemes[key] %>
+            <% next if t.nil? || repere_items.(kind, key).empty? %>
+            <% lbl, bg, fg = level_style[t["level"]] || level_style["not_evaluable"] %>
+            <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="<%= tab %>" title="Voir le détail dans l'onglet" style="display:block;width:100%;text-align:left;border:none;cursor:pointer;border-radius:12px;padding:14px 16px;background:<%= bg %>">
+              <div class="text-sm font-semibold text-gray-900"><%= label %></div>
+              <div style="color:<%= fg %>;font-weight:600;font-size:0.95rem;margin-top:2px"><%= lbl %></div>
+              <div class="text-xs text-gray-600" style="margin-top:4px">
+                <% if t["level"] == "context" %>indicateurs de structure, sans niveau<% elsif t["available"].zero? %>aucun indicateur publié<% else %><%= t["alerts"] %> en alerte sur <%= t["available"] %> indicateur<%= t["available"] > 1 ? "s" : "" %><%= t["strengths"].positive? ? " · #{t['strengths']} point#{t['strengths'] > 1 ? 's' : ''} fort#{t['strengths'] > 1 ? 's' : ''}" : "" %><% end %>
+              </div>
+              <div class="text-xs" style="margin-top:6px;color:#4f46e5">Voir le détail →</div>
+            </button>
+          <% end %>
+        </div>
+
+        <h3 class="text-base font-medium text-gray-900 mb-1">Repères par onglet</h3>
+        <p class="text-xs text-gray-500 mb-2">Position de <%= @territory_name %> <%= m[:among] %>, indicateur par indicateur (zone rouge : 20 % les plus touchées ; zone verte : 20 % les moins touchées ; barre bleue : indicateur de structure, classé de la valeur la plus faible à la plus élevée, sans jugement). Cliquer sur une tuile ouvre l'onglet, avec les comparaisons entre échelles.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:2rem">
+          <% theme_tabs.each do |label, tab, kind, key| %>
+            <% gi = repere_items.(kind, key) %>
+            <% next if gi.empty? %>
+            <% th = mthemes[key] %>
+            <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="<%= tab %>" style="display:block;width:100%;text-align:left;border:1px solid #e0e7ff;cursor:pointer;border-radius:12px;padding:12px 14px;background:#f8faff">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
+                <span class="text-sm font-semibold text-gray-900"><%= label %></span>
+                <% if th %><% lbl, bg, fg = level_style[th["level"]] || level_style["not_evaluable"] %><span style="padding:1px 7px;border-radius:999px;font-size:11px;background:<%= bg %>;color:<%= fg %>;white-space:nowrap"><%= lbl %></span><% end %>
+              </div>
+              <% gi.each do |i| %>
+                <%
+                  r = m[:rank].(i)
+                  neutral = i["direction"] == "neutral"
+                  tip = if m[:key] == "epci" && i["epci_position"]
+                          k = i["epci_position"]
+                          "#{neutral ? "#{ordinal.(k)} valeur la plus élevée" : (k == 1 ? 'la plus touchée' : "#{ordinal.(k)} plus touchée")} sur #{i['epci_n']} communes"
+                        elsif r
+                          neutral ? "Rang #{r.round} sur 100 (0 = valeur la plus faible, 100 = la plus élevée)" : "#{position.(r)} (rang #{r.round} sur 100)"
+                        end
+                %>
+                <div style="margin-bottom:6px">
+                  <div class="text-xs text-gray-700" style="display:flex;justify-content:space-between;gap:8px"><span><%= i["label"] %></span><strong class="whitespace-nowrap"><%= fmt_v.(i) %></strong></div>
+                  <% if r %>
+                    <div style="position:relative;height:6px;border-radius:3px;margin-top:3px;background:<%= neutral ? 'linear-gradient(90deg,#eef2ff,#c7d2fe)' : 'linear-gradient(90deg,#d1fae5 0 20%,#f3f4f6 20% 80%,#fee2e2 80% 100%)' %>" title="<%= tip %>">
+                      <span style="position:absolute;top:-2px;left:calc(<%= r %>% - 3px);width:6px;height:10px;border-radius:2px;background:<%= neutral ? '#4f46e5' : (r >= 80 ? '#b91c1c' : (r <= 20 && !i['need'] ? '#047857' : '#4b5563')) %>"></span>
+                    </div>
+                  <% else %>
+                    <div class="text-xs text-gray-400">commune non classée</div>
+                  <% end %>
+                </div>
+              <% end %>
+              <div class="text-xs" style="margin-top:4px;color:#4f46e5">Voir l'onglet →</div>
+            </button>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
 
     <% if syn["population"].to_f.positive? && syn["population"].to_f < 1000 %>
       <p class="text-xs mb-3" style="color:#b45309">Commune de moins de 1 000 habitants : les taux reposent sur de petits effectifs et le rang peut varier fortement d'une année à l'autre.</p>
     <% end %>
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Méthode : pour chaque indicateur, la commune est classée parmi les communes de France ayant une valeur publiée, puis parmi celles de même catégorie de densité (grille communale de densité INSEE à 7 niveaux, 2025) ; chaque commune compte pour une. Rang 100 = situation la plus défavorable (taux le plus élevé, ou le plus faible pour les indicateurs où un taux bas est défavorable : emploi, revenu, scolarisation, accueil du jeune enfant, accès aux soins, licences sportives, foyers imposés, places d'hébergement). Niveau d'un enjeu : fort si au moins la moitié de ses indicateurs sont en alerte, modéré si au moins un quart, non évaluable si moins de la moitié des indicateurs sont publiés pour la commune. Aucun score global n'est calculé.</p>
+      <p>Méthode : pour chaque indicateur, la commune est classée parmi les communes de son EPCI, parmi celles de même catégorie de densité (grille communale de densité INSEE à 7 niveaux, 2025) et parmi toutes les communes de France ayant une valeur publiée ; chaque commune compte pour une. Rang 100 = situation la plus défavorable (taux le plus élevé, ou le plus faible pour les indicateurs où un taux bas est défavorable : emploi, revenu, scolarisation, accueil du jeune enfant, accès aux soins, licences sportives, foyers imposés, places d'hébergement). Niveau d'un enjeu, pour l'échelle choisie : fort si au moins la moitié de ses indicateurs sont en alerte, modéré si au moins un quart, non évaluable si moins de la moitié des indicateurs sont publiés pour la commune. Aucun score global n'est calculé.</p>
       <p>Sources : <%= syn["source"] %>. Millésime de chaque indicateur entre parenthèses. France : France métropolitaine ou France entière selon la source.</p>
     </div>
   <% end %>
