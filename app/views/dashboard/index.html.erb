@@ -18,7 +18,8 @@
   </div>
 <% end %>
 
-<div data-controller="dashboard-tabs dashboard-loader"
+<div data-controller="dashboard-tabs dashboard-loader xlsx-tables"
+     data-xlsx-tables-territory-value="<%= @territory_name %>"
      data-dashboard-loader-territory-value="<%= @basic_info[:territory_code] %>">
 
   <!-- En-tête avec style dégradé moderne -->

@@ -16,6 +16,8 @@ pin "simple-statistics", to: "https://cdn.jsdelivr.net/npm/simple-statistics@7.8
 
 # leaflet
 pin "leaflet", to: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+# Export Excel (SheetJS), chargé seulement au clic sur « Télécharger » (import dynamique)
+pin "xlsx", to: "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs"
 
 # ✅ Utils
 pin "utils/initialization_guard", to: "utils/initialization_guard.js"

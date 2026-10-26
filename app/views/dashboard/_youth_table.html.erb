@@ -16,11 +16,23 @@
   hidden = rows - shown
 %>
 <% if shown.any? %>
+  <%
+    level_names = { commune: "Commune", epci: "EPCI", department: "Département", region: "Région", france: "France" }
+    yt_xlsx = [["Indicateur", "Année"] + cols.map { |c, n| "#{n} (#{level_names[c]})" }]
+    shown.each do |r|
+      unit = r[:format] == :decimal ? "" : " (%)"
+      yt_xlsx << ["#{r[:label]}#{unit}", r[:ds][:latest].to_i] + cols.map { |c, _| xlsx_number(val.(r, c)) }
+    end
+  %>
   <section style="margin-bottom:2.5rem">
-    <h3 class="text-base font-medium text-gray-900 mb-1"><%= title %></h3>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <h3 class="text-base font-medium text-gray-900 mb-1"><%= title %></h3>
+      <%= xlsx_download_button(filename: xlsx_filename(title), notes: [title, definition],
+                               sheets: [{ name: "Données", rows: yt_xlsx, widths: [48, 8] + [18] * cols.size }]) %>
+    </div>
     <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %></p><% end %>
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
+      <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Indicateur</th>

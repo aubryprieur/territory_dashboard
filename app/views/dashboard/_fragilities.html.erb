@@ -26,11 +26,24 @@
 %>
 <% if fr_commune %>
   <% fr_year = comparison_latest_year(fr_main, comparison_years(fr_main, fr_key)) %>
+  <%
+    fr_xlsx = [["Indicateur", "Année"] + fr_territories.map { |t| "#{t[:name]} (#{xlsx_level(t)})" }]
+    rows.each do |key, label, _dir, format|
+      unit = case format when :decimal then " (consultations/an/hab.)" when :score then " (indice)" when :count then " (effectif)" else " (%)" end
+      fr_xlsx << ["#{label}#{unit}", fr_year.to_i] + fr_territories.map { |t| xlsx_number(territory_value(t, fr_year, key)) }
+    end
+    fr_notes = [title, definition, "Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), #{fr_year}#{note ? " ; #{note}" : ""}.",
+                "Cellule vide : secret statistique (effectif trop faible)."]
+  %>
   <section style="margin-bottom:2.5rem">
-    <h3 class="text-base font-medium text-gray-900 mb-1"><%= title %></h3>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <h3 class="text-base font-medium text-gray-900 mb-1"><%= title %></h3>
+      <%= xlsx_download_button(filename: xlsx_filename(title), notes: fr_notes,
+                               sheets: [{ name: "Données", rows: fr_xlsx, widths: [48, 8] + [18] * fr_territories.size }]) %>
+    </div>
     <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %> En rouge, une situation moins favorable qu'en France.</p><% end %>
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
+      <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Indicateur</th>

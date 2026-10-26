@@ -32,8 +32,32 @@
       { geometry: f["geometry"], color: cls ? map_color.(cls[:color]) : IrisMapHelper::IRIS_NO_DATA, tip: tip }
     end
   %>
+  <%
+    # Export Excel : chaque IRIS et la commune, tous les millésimes, taux + effectif + total
+    ilabel = map.dig("indicator", "label")
+    iris_rows = [["Code IRIS", "Nom de l'IRIS", "Année", "#{ilabel} (#{unit})", "Effectif", "Total"]]
+    (map["features"] || []).sort_by { |f| f["iris_code"].to_s }.each do |f|
+      years.each do |y|
+        v = f.dig("values", y)
+        next if v.nil?
+        iris_rows << [f["iris_code"], f["iris_name"], y.to_i, xlsx_number(v["value"]),
+                      additive ? xlsx_number(v["count"]) : nil, additive ? xlsx_number(v["total"]) : nil]
+      end
+    end
+    years.each do |y|
+      v = map.dig("commune", "values", y) || {}
+      iris_rows << ["Commune", (additive ? "Commune (somme des IRIS)" : "Ensemble de la commune"), y.to_i,
+                    xlsx_number(v["value"]), additive ? xlsx_number(v["count"]) : nil, additive ? xlsx_number(v["total"]) : nil]
+    end
+    iris_notes = ["#{ilabel} par IRIS", definition, (additive && count_label ? "Effectif : #{count_label} ; total : dénominateur de l'IRIS" : nil),
+                  "Source : #{map['source']}"]
+  %>
   <section style="margin-bottom:2.5rem">
-    <h3 class="text-sm font-medium text-gray-700 mb-1"><%= map.dig("indicator", "label") %> par IRIS (<%= latest %>)</h3>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <h3 class="text-sm font-medium text-gray-700 mb-1"><%= ilabel %> par IRIS (<%= latest %>)</h3>
+      <%= xlsx_download_button(filename: xlsx_filename(ilabel, "IRIS"), notes: iris_notes,
+                               sheets: [{ name: "IRIS", rows: iris_rows, widths: [12, 36, 8, 22, 12, 12] }]) %>
+    </div>
     <p class="text-xs text-gray-500 mb-4"><%= definition %> Les IRIS sont les quartiers statistiques de l'Insee (environ 2 000 habitants). Couleur : écart de chaque IRIS à l'ensemble de la commune (<%= fmt_iris(reference, unit) %> en <%= latest %>).</p>
     <style>
       .iris-layout{display:grid;grid-template-columns:1fr;gap:1.5rem;align-items:start}
@@ -78,7 +102,7 @@
           th = "px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
           td = "px-2 py-2 whitespace-nowrap text-xs text-right"
         %>
-        <table class="min-w-full divide-y divide-gray-200">
+        <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
               <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IRIS</th>
