@@ -34,6 +34,7 @@
         when "%" then fmt_pct(v)
         when "€" then "#{fmt_count(v)} €"
         when "‰" then "#{fmt_decimal(v, precision: 1)} ‰"
+        when "%/an" then "#{v.positive? ? '+' : ''}#{fmt_decimal(v, precision: 2)} %/an"
         else fmt_decimal(v, precision: 1)
         end
       end
