@@ -31,8 +31,9 @@ module FragilityIntensityHelper
                      "plus défavorable qu'ailleurs, donc un enjeu à ne pas négliger dans l'analyse et le plan " \
                      "d'action. Pour les évolutions (population, naissances, concentration d'emploi), l'intensité " \
                      "mesure l'écart à la médiane, dans un sens ou dans l'autre. La barre mesure l'enjeu, pas la " \
-                     "valeur : pour les indicateurs marqués ▼, c'est une valeur basse qui place le curseur à droite " \
-                     "(par exemple, peu de licenciés sportifs ou un revenu bas).".freeze
+                     "valeur : les signes « − » et « + » aux extrémités indiquent le sens de la valeur ; pour les " \
+                     "indicateurs marqués ▼, ils sont inversés (+ à gauche, − à droite) et c'est une valeur basse qui " \
+                     "place le curseur à droite (par exemple, peu de licenciés sportifs ou un revenu bas).".freeze
 
   # Indicateur inversé : une valeur basse signale un enjeu plus marqué (licences, taux d'emploi, revenu, IPS…)
   def enjeu_reversed?(item)
@@ -98,14 +99,28 @@ module FragilityIntensityHelper
     end
   end
 
-  # Barre d'intensité (curseur coloré selon la zone)
+  # Barre d'intensité (curseur coloré selon la zone), avec aux extrémités le sens de la valeur :
+  # « − » / « + » (valeur plus basse / plus élevée) ; inversés pour les indicateurs ▼ (+ à gauche, − à droite) ;
+  # « ≈ » / « ± » pour les évolutions (proche de la médiane / fort écart, à la hausse ou à la baisse)
   def enjeu_bar(item, rank, height: 10)
     x = enjeu_intensity(item, rank)
     return "" if x.nil?
     marker_h = height + 6
     title = two_sided?(item) ? "Écart à la médiane : #{x.round} sur 100 (#{enjeu_side(item, rank)})" : "Intensité de l'enjeu : #{x.round} sur 100"
-    content_tag(:div, style: "position:relative;height:#{height}px;border-radius:#{height / 2}px;background:#{INTENSITY_GRADIENT}", title: title) do
-      content_tag(:span, "", style: "position:absolute;top:-3px;left:calc(#{x}% - 4px);width:8px;height:#{marker_h}px;border-radius:3px;background:#{enjeu_color(x)}")
+    left, right, left_t, right_t =
+      if two_sided?(item) then ["≈", "±", "proche de la médiane", "fort écart à la médiane (hausse ou baisse)"]
+      elsif enjeu_reversed?(item) then ["+", "−", "valeur plus élevée", "valeur plus basse"]
+      else ["−", "+", "valeur plus basse", "valeur plus élevée"]
+      end
+    end_style = "flex:none;width:12px;text-align:center;font-size:#{height >= 10 ? 13 : 11}px;font-weight:700;line-height:1;color:#6b7280;cursor:help"
+    content_tag(:div, style: "display:flex;align-items:center;gap:4px") do
+      safe_join([
+        content_tag(:span, left, title: left_t, style: end_style),
+        content_tag(:div, style: "position:relative;flex:1;height:#{height}px;border-radius:#{height / 2}px;background:#{INTENSITY_GRADIENT}", title: title) do
+          content_tag(:span, "", style: "position:absolute;top:-3px;left:calc(#{x}% - 4px);width:8px;height:#{marker_h}px;border-radius:3px;background:#{enjeu_color(x)}")
+        end,
+        content_tag(:span, right, title: right_t, style: end_style)
+      ])
     end
   end
 
