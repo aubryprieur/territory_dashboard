@@ -76,11 +76,13 @@
       # de structure et d'évolution sont affichés en repère mais n'entrent pas dans le niveau
       themes_for = lambda do |m|
         theme_tabs.each_with_object({}) do |(label, tab, _, key), h|
-          jl = (tab_keys[tab] || []).filter_map { |k| by_key[k] }.select { |i| judged.(i) }
-          avail = jl.reject { |i| i["value"].nil? }
-          al = avail.count { |i| is_alert.(m, i) }
-          h[key] = { "kind" => (jl.any? ? "core" : "context"), "label" => label, "available" => avail.size,
-                     "alerts" => al, "level" => jl.any? ? theme_level.(avail.size, al, jl.size) : "context" }
+          jl = (tab_keys[tab] || []).filter_map { |k| by_key[k] }
+          xs = jl.map { |i| i["value"].nil? ? nil : enjeu_intensity(i, m[:rank].(i)) }
+          vals = xs.compact
+          h[key] = { "kind" => (jl.any? ? "core" : "context"), "label" => label, "available" => vals.size,
+                     "alerts" => vals.count { |x| x >= alert_t },
+                     "mean" => vals.any? ? (vals.sum / vals.size).round : nil,
+                     "level" => jl.any? ? enjeu_level(xs, jl.size) : "context" }
         end
       end
       # Indicateurs jugés présentés dans les onglets (chacun compté une fois)
@@ -107,7 +109,7 @@
       </div>
     </div>
     <p class="text-xs text-gray-500 mb-4">Chaque indicateur situe <%= @territory_name %> <%= epci ? "parmi les communes de son EPCI (#{epci['label']}), " : "" %>parmi les communes de même nature (catégorie de densité INSEE : <strong><%= dens || "non classée" %></strong>) et parmi toutes les communes de France ; les boutons choisissent l'échelle de comparaison. Seuls des taux sont comparés ; les effectifs de la commune sont indiqués pour dimensionner les actions.</p>
-    <p class="text-xs text-gray-500 mb-2"><%= FragilityIntensityHelper::INTENSITY_LEGEND %> L'intensité de chaque enjeu (forte, modérée, faible) est calculée sur les indicateurs de son onglet : un indicateur est à forte intensité quand la commune fait partie des 20 % de communes où l'enjeu est le plus marqué ; cela vaut aussi pour les indicateurs de structure (une part plus élevée d'habitants concernés) et pour les évolutions (un écart à la médiane plus fort, à la hausse comme à la baisse).</p>
+    <p class="text-xs text-gray-500 mb-2"><%= FragilityIntensityHelper::INTENSITY_LEGEND %> L'intensité de chaque enjeu (forte, modérée, faible) résume les indicateurs de son onglet : forte si leur intensité moyenne atteint 70 sur 100 (côté rouge) ou si la moitié d'entre eux sont à forte intensité (commune parmi les 20 % de communes où l'enjeu est le plus marqué), modérée si la moyenne atteint 40 (zone grise) ou si un quart sont à forte intensité, faible sinon (côté bleu) ; cela vaut aussi pour les indicateurs de structure (une part plus élevée d'habitants concernés) et pour les évolutions (un écart à la médiane plus fort, à la hausse comme à la baisse).</p>
     <div class="text-xs text-gray-500 mb-4" style="display:flex;align-items:center;gap:8px">
       <span style="color:<%= FragilityIntensityHelper::INTENSITY_BLUE %>;font-weight:600">enjeu moins marqué</span>
       <span style="display:inline-block;width:120px;height:8px;border-radius:4px;background:<%= FragilityIntensityHelper::INTENSITY_GRADIENT %>"></span>
@@ -148,7 +150,7 @@
               <div class="text-sm font-semibold text-gray-900"><%= label %></div>
               <div style="color:<%= fg %>;font-weight:600;font-size:0.95rem;margin-top:2px"><%= lbl %></div>
               <div class="text-xs text-gray-600" style="margin-top:4px">
-                <% if t["level"] == "context" %>indicateurs de structure, sans niveau<% elsif t["available"].zero? %>aucun indicateur publié<% else %><%= t["alerts"] %> indicateur<%= t["alerts"] > 1 ? "s" : "" %> à forte intensité sur <%= t["available"] %><% end %>
+                <% if t["level"] == "context" %>indicateurs de structure, sans niveau<% elsif t["available"].zero? %>aucun indicateur publié<% else %>intensité moyenne <%= t["mean"] %>/100 · <%= t["alerts"] %> indicateur<%= t["alerts"] > 1 ? "s" : "" %> à forte intensité sur <%= t["available"] %><% end %>
               </div>
               <div class="text-xs" style="margin-top:auto;padding-top:6px;color:#4f46e5">Voir le détail →</div>
             </button>
@@ -173,7 +175,7 @@
                   tip = m[:key] == "epci" && i["epci_position"] ? enjeu_epci_text(i) : enjeu_position_text(i, r)
                 %>
                 <div style="margin-bottom:6px">
-                  <div class="text-xs text-gray-700" style="display:flex;justify-content:space-between;gap:8px"><span><%= i["label"] %></span><strong class="whitespace-nowrap"><%= fmt_v.(i) %></strong></div>
+                  <div class="text-xs text-gray-700" style="display:flex;justify-content:space-between;gap:8px"><span><%= enjeu_label(i) %></span><strong class="whitespace-nowrap"><%= fmt_v.(i) %></strong></div>
                   <% if r %>
                     <div style="margin-top:3px" title="<%= tip %>"><%= enjeu_bar(i, r, height: 6) %></div>
                   <% else %>
@@ -192,7 +194,7 @@
       <p class="text-xs mb-3" style="color:#b45309">Commune de moins de 1 000 habitants : les taux reposent sur de petits effectifs et le rang peut varier fortement d'une année à l'autre.</p>
     <% end %>
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Méthode : pour chaque indicateur, la commune est classée parmi les communes de son EPCI, parmi celles de même catégorie de densité (grille communale de densité INSEE à 7 niveaux, 2025) et parmi toutes les communes de France ayant une valeur publiée ; chaque commune compte pour une. Intensité 100 = enjeu le plus marqué : valeur la plus élevée, ou la plus faible pour les indicateurs où un taux bas signale un besoin (emploi, revenu, scolarisation, accueil du jeune enfant, accès aux soins, licences sportives, foyers imposés, places d'hébergement, participation électorale, IPS) ; pour les évolutions (population, naissances, concentration d'emploi), écart à la médiane dans un sens ou dans l'autre. Intensité d'un enjeu (un par onglet), pour l'échelle choisie, sur tous les indicateurs de l'onglet (forte intensité : 80 ou plus sur 100) : intensité forte si au moins la moitié de ses indicateurs sont à forte intensité, modérée si au moins un quart, non évaluable si moins de la moitié des indicateurs sont publiés pour la commune. Aucun score global n'est calculé.</p>
+      <p>Méthode : pour chaque indicateur, la commune est classée parmi les communes de son EPCI, parmi celles de même catégorie de densité (grille communale de densité INSEE à 7 niveaux, 2025) et parmi toutes les communes de France ayant une valeur publiée ; chaque commune compte pour une. Intensité 100 = enjeu le plus marqué : valeur la plus élevée, ou la plus faible pour les indicateurs où un taux bas signale un besoin (emploi, revenu, scolarisation, accueil du jeune enfant, accès aux soins, licences sportives, foyers imposés, places d'hébergement, participation électorale, IPS) ; pour les évolutions (population, naissances, concentration d'emploi), écart à la médiane dans un sens ou dans l'autre. Intensité d'un enjeu (un par onglet), pour l'échelle choisie, sur tous les indicateurs de l'onglet (intensité de 0 à 100 ; forte intensité : 80 ou plus) : intensité forte si la moyenne des indicateurs atteint 70 ou si au moins la moitié sont à forte intensité, modérée si la moyenne atteint 40 ou si au moins un quart sont à forte intensité, faible sinon ; non évaluable si moins de la moitié des indicateurs sont publiés pour la commune. Aucun score global n'est calculé.</p>
       <p>Sources : <%= syn["source"] %>. Millésime de chaque indicateur entre parenthèses. France : France métropolitaine ou France entière selon la source.</p>
     </div>
   <% end %>

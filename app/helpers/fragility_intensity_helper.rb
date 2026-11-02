@@ -30,7 +30,22 @@ module FragilityIntensityHelper
                      "situation négative : il indique une part plus élevée d'habitants concernés ou une situation " \
                      "plus défavorable qu'ailleurs, donc un enjeu à ne pas négliger dans l'analyse et le plan " \
                      "d'action. Pour les évolutions (population, naissances, concentration d'emploi), l'intensité " \
-                     "mesure l'écart à la médiane, dans un sens ou dans l'autre.".freeze
+                     "mesure l'écart à la médiane, dans un sens ou dans l'autre. La barre mesure l'enjeu, pas la " \
+                     "valeur : pour les indicateurs marqués ▼, c'est une valeur basse qui place le curseur à droite " \
+                     "(par exemple, peu de licenciés sportifs ou un revenu bas).".freeze
+
+  # Indicateur inversé : une valeur basse signale un enjeu plus marqué (licences, taux d'emploi, revenu, IPS…)
+  def enjeu_reversed?(item)
+    item["direction"] == "down"
+  end
+
+  # Libellé de l'indicateur, avec ▼ pour les indicateurs inversés
+  def enjeu_label(item)
+    return item["label"] unless enjeu_reversed?(item)
+    safe_join([item["label"], " ",
+               content_tag(:span, "▼", title: "Indicateur inversé : une valeur basse signale un enjeu plus marqué",
+                           style: "color:#{INTENSITY_BLUE};font-size:0.8em;cursor:help")])
+  end
 
   def two_sided?(item)
     item["direction"] == "two_sided"
@@ -53,15 +68,22 @@ module FragilityIntensityHelper
     intensity >= 80 ? INTENSITY_RED : (intensity <= 20 ? INTENSITY_BLUE : INTENSITY_GREY)
   end
 
+  # Texte sous la barre : position de la valeur, puis intensité de l'enjeu qui en découle
   def enjeu_position_text(item, rank)
     x = enjeu_intensity(item, rank)
     return "" if x.nil?
-    side = enjeu_side(item, rank)
-    text = if x >= 80 then "parmi les #{[(100 - x).ceil, 1].max} % de communes où l'enjeu est le plus marqué"
-           elsif x <= 20 then "parmi les #{[x.ceil, 1].max} % de communes où l'enjeu est le moins marqué"
-           else "enjeu dans la moyenne"
-           end
-    side && x > 20 ? "#{side} : #{text}" : text
+    if two_sided?(item)
+      side = enjeu_side(item, rank)
+      return "écart à la médiane dans la moyenne" if x < 80 && x > 20
+      return x >= 80 ? "#{side} : parmi les #{[(100 - x).ceil, 1].max} % d'écarts les plus forts, enjeu parmi les plus marqués" :
+                       "proche de la médiane : enjeu peu marqué"
+    end
+    # rang 100 = valeur la plus élevée (up, neutral) ou la plus basse (down)
+    high_side, low_side = enjeu_reversed?(item) ? ["basses", "élevées"] : ["élevées", "basses"]
+    if x >= 80 then "valeur parmi les #{[(100 - x).ceil, 1].max} % les plus #{high_side} : enjeu parmi les plus marqués"
+    elsif x <= 20 then "valeur parmi les #{[x.ceil, 1].max} % les plus #{low_side} : enjeu parmi les moins marqués"
+    else "valeur dans la moyenne : enjeu dans la moyenne"
+    end
   end
 
   # Rang dans l'EPCI (API : epci_position, 1 = valeur la plus « touchée » ; pour two_sided : la plus élevée)
@@ -84,6 +106,22 @@ module FragilityIntensityHelper
     title = two_sided?(item) ? "Écart à la médiane : #{x.round} sur 100 (#{enjeu_side(item, rank)})" : "Intensité de l'enjeu : #{x.round} sur 100"
     content_tag(:div, style: "position:relative;height:#{height}px;border-radius:#{height / 2}px;background:#{INTENSITY_GRADIENT}", title: title) do
       content_tag(:span, "", style: "position:absolute;top:-3px;left:calc(#{x}% - 4px);width:8px;height:#{marker_h}px;border-radius:3px;background:#{enjeu_color(x)}")
+    end
+  end
+
+  # Intensité d'un enjeu (tuile, badge d'encart) à partir des intensités de ses indicateurs (0-100) :
+  #   forte    : intensité moyenne ≥ 70 (côté rouge) ou au moins la moitié des indicateurs à forte intensité (≥ 80)
+  #   modérée  : intensité moyenne ≥ 40 (zone grise) ou au moins un quart des indicateurs à forte intensité
+  #   faible   : sinon (côté bleu)
+  # Non évaluable si moins de la moitié des indicateurs attendus ont une valeur.
+  def enjeu_level(intensities, expected)
+    xs = intensities.compact
+    return "not_evaluable" if expected.zero? || xs.size < expected / 2.0 || xs.empty?
+    mean = xs.sum / xs.size
+    strong = xs.count { |x| x >= 80 }
+    if mean >= 70 || strong >= xs.size * 0.5 then "high"
+    elsif mean >= 40 || strong >= xs.size * 0.25 then "moderate"
+    else "low"
     end
   end
 

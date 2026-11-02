@@ -14,20 +14,10 @@
   keys = syn ? (syn.dig("tab_keys", tab) || []) : []
   all_items = syn ? (syn["indicators"].to_a + syn["context_indicators"].to_a).index_by { |i| i["key"] } : {}
   items = keys.filter_map { |k| all_items[k] }.reject { |i| i["value"].nil? }
-  # Niveau de l'enjeu de l'onglet (même calcul que la tuile de la Synthèse, rang dans la catégorie de densité) :
-  # tous les indicateurs de l'encart ; intensité forte si la moitié des indicateurs atteint 80, modérée si un quart
-  judged_all = keys.filter_map { |k| all_items[k] }
-  th = nil
-  if judged_all.any?
-    avail = judged_all.reject { |i| i["value"].nil? }
-    alerts = avail.count { |i| (x = enjeu_intensity(i, i["rank_density"] || i["rank_france"])) && x >= 80 }
-    level = if avail.size < judged_all.size / 2.0 then "not_evaluable"
-            elsif alerts >= avail.size * 0.5 then "high"
-            elsif alerts >= avail.size * 0.25 then "moderate"
-            else "low"
-            end
-    th = { "level" => level }
-  end
+  # Intensité de l'enjeu de l'onglet (même calcul que la tuile de la Synthèse, rang dans la catégorie de densité) :
+  # moyenne des intensités et part des indicateurs à forte intensité (FragilityIntensityHelper#enjeu_level)
+  enjeu_items = keys.filter_map { |k| all_items[k] }
+  th = enjeu_items.any? ? { "level" => enjeu_level(enjeu_items.map { |i| i["value"].nil? ? nil : enjeu_intensity(i, i["rank_density"] || i["rank_france"]) }, enjeu_items.size) } : nil
 %>
 <% if syn && items.any? %>
   <%
@@ -86,7 +76,7 @@
     <div>
       <% items.each do |i| %>
         <div style="display:grid;grid-template-columns:minmax(200px,2fr) 90px minmax(160px,3fr);gap:12px;align-items:center;padding:6px 0;border-top:1px solid #eef2ff">
-          <div class="text-sm text-gray-800"><%= i["label"] %> <span class="text-xs text-gray-400">(<%= i["year"] %>)</span></div>
+          <div class="text-sm text-gray-800"><%= enjeu_label(i) %> <span class="text-xs text-gray-400">(<%= i["year"] %>)</span></div>
           <div class="text-sm text-right font-semibold whitespace-nowrap"><%= fmt_v.(i, i["value"]) %></div>
           <%
             rank_modes = [["dens", i["rank_density"], i["density_n"], i["density_median"], "médiane de la catégorie"],
