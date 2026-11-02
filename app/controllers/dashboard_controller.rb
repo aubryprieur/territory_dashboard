@@ -364,6 +364,7 @@ class DashboardController < ApplicationController
     load_sports_comparison
     load_associations_comparison
     load_sdg_comparison
+    load_municipal_elections_comparison # participation au 1er tour des municipales
 
     respond_to do |format|
       format.html { render partial: 'local_life' }

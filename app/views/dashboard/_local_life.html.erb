@@ -22,7 +22,25 @@
         title: "Participation électorale",
         definition: "Votants au 1er tour de l'élection présidentielle parmi les inscrits. Repère de l'engagement citoyen et du sentiment d'éloignement des institutions." %>
 
+  <%
+    me_terrs = comparison_territories("municipal_elections_data", {
+      commune: @municipal_elections_data, epci: @epci_municipal_elections_data,
+      department: @department_municipal_elections_data, region: @region_municipal_elections_data,
+      france: @france_municipal_elections_data
+    })
+    me_years = comparison_years(@municipal_elections_data, "municipal_elections_data")
+    me_latest = comparison_latest_year(@municipal_elections_data, me_years)
+  %>
+  <% if me_terrs.first&.dig(:key) == :commune && me_years.any? %>
+    <%= render "dashboard/territory_indicator", territories: me_terrs, years: me_years, latest: me_latest, comparison: me_latest,
+          title: "Participation aux élections municipales (1er tour)", theme: "indigo",
+          value_key: "turnout_rate",
+          count_key: "voters", total_key: "registered", count_label: "votants",
+          definition: "Votants au 1er tour des élections municipales de #{me_latest} parmi les inscrits sur les listes électorales. Scrutin de proximité : à lire avec la participation à la présidentielle, l'écart renseigne sur l'intérêt pour la vie locale. EPCI, département, région et France : somme des communes.",
+          details: [{ label: "Blancs et nuls (% des votants)", share_key: "blank_null_rate" }] %>
+  <% end %>
+
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-    <p>Sources : licences sportives : INJEP — MEOS, recensement des licences et clubs sportifs (Observatoire des territoires) ; associations : ministère de l'Intérieur, Répertoire national des associations (RNA) ; participation électorale : ministère de l'Intérieur, via INSEE / SDES (indicateurs territoriaux de développement durable).</p>
+    <p>Sources : licences sportives : INJEP — MEOS, recensement des licences et clubs sportifs (Observatoire des territoires) ; associations : ministère de l'Intérieur, Répertoire national des associations (RNA) ; participation à la présidentielle : ministère de l'Intérieur, via INSEE / SDES (indicateurs territoriaux de développement durable) ; participation aux municipales : ministère de l'Intérieur, résultats du 1er tour par commune (data.gouv.fr), France = France métropolitaine.</p>
   </div>
 </div>

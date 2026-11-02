@@ -519,6 +519,16 @@ module DashboardCache
     @france_pass_sport_data = cached_health_data(s, :france)
   end
 
+  # Élections municipales, 1er tour (API /municipal-elections/*), onglet Vie locale
+  def load_municipal_elections_comparison
+    s = Api::MunicipalElectionsService
+    @municipal_elections_data = cached_health_data(s, :commune, @territory_code)
+    @epci_municipal_elections_data = cached_health_data(s, :epci, @epci_code)
+    @department_municipal_elections_data = cached_health_data(s, :department, @department_code)
+    @region_municipal_elections_data = cached_health_data(s, :region, @region_code)
+    @france_municipal_elections_data = cached_health_data(s, :france)
+  end
+
   # Précarité énergétique logement (Géodip, ONPE — API /energy-poverty/*), onglet Logement
   def load_energy_poverty_comparison
     s = Api::EnergyPovertyService
