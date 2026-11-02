@@ -519,6 +519,13 @@ module DashboardCache
     @france_pass_sport_data = cached_health_data(s, :france)
   end
 
+  # Projections démographiques 2023-2033 (API /population-projection/*) : Petite enfance, Enfance-jeunesse, Seniors
+  def load_population_projection
+    @population_projection = cached_api_call(cache_key_for_territory(@territory_code, "population_projection"), expires_in: 12.hours) do
+      Api::PopulationProjectionService.get_commune(@territory_code)
+    end
+  end
+
   # Élections municipales, 1er tour (API /municipal-elections/*), onglet Vie locale
   def load_municipal_elections_comparison
     s = Api::MunicipalElectionsService

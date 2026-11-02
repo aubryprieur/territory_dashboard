@@ -58,6 +58,9 @@
           { label: "Moins de 20 ans pour 100 personnes de 60 ans ou plus", ds: pop, key: "youth_index", format: :decimal }
         ] %>
 
+  <%= render "dashboard/population_projection", groups: %w[6_10 11_14 15_17 18_24],
+        title: "Projections 2023-2033 : enfants et jeunes" %>
+
   <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Où vivent les enfants et les jeunes</h3>
   <%= render "dashboard/population_focus", focus: :youth_map %>
   <%= render "dashboard/iris_map", map: cached_iris_map("age_6_10_share"),

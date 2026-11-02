@@ -20,6 +20,9 @@
 
   <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Poids des seniors</h3>
   <%= render "dashboard/population_focus", focus: :seniors %>
+  <%= render "dashboard/population_projection", groups: %w[60_74 75_84 85p],
+        title: "Projections 2023-2033 : seniors",
+        intro: "Seniors projetés au 1er janvier, scénario tendanciel (mortalité nationale récente, migrations par âge observées dans la commune entre 2017 et 2022)." %>
 
   <% if sf.nil? %>
     <p class="text-sm text-gray-500">Données de l'Observatoire des situations de fragilité non disponibles pour cette commune.</p>

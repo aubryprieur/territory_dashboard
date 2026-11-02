@@ -1,10 +1,17 @@
 <%#
   Onglet Petite enfance (regroupe les anciens onglets Enfants et Garde d'enfants) :
-    1. enfants de moins de 3 ans, projection 2035, enfants de 3 à 5 ans (_children_comparison)
+    1. enfants de moins de 3 ans, enfants de 3 à 5 ans (_children_comparison)
     2. accueil du jeune enfant : places et taux de couverture (Cnaf, _childcare_offer)
     3. familles employant une assistante maternelle (Flores, _childminder_employers)
+    4. projections 2023-2033 : naissances, moins de 3 ans, 3-5 ans (_population_projection)
   Les locals de load_children_comparison sont transmis tels quels à _children_comparison.
 %>
 <%= render "dashboard/children_comparison", **local_assigns %>
 <%= render "dashboard/childcare_offer" %>
 <%= render "dashboard/childminder_employers" %>
+
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+  <%= render "dashboard/population_projection", groups: %w[0_2 3_5], births: true,
+        title: "Projections 2023-2033 : naissances et jeunes enfants",
+        intro: "Naissances par an et enfants de moins de 6 ans projetés au 1er janvier, scénario tendanciel (natalité et migrations récentes de la commune reconduites)." %>
+</div>

@@ -2,6 +2,7 @@
 // Chaque <canvas data-families-chart="{...}"> porte sa configuration
 // (générée par FamiliesHelper / TerritoryComparisonHelper) :
 //   type "line"    : évolution d'un indicateur sur les millésimes, une courbe par territoire
+//                    (dataset.dash : trait pointillé, ex. fourchette ou scénario d'une projection)
 //   type "stacked" : barres horizontales empilées à 100 % (répartitions)
 //   type "bars"    : barres verticales groupées (catégories x territoires)
 //   type "components" : barres empilées positives / négatives + courbe du total (composantes d'une variation)
@@ -32,8 +33,9 @@ function lineChart(canvas, cfg) {
         borderColor: d.color,
         backgroundColor: d.color,
         borderWidth: d.main ? 3 : 1.5,
-        pointRadius: d.main ? 4 : 3,
+        pointRadius: d.dash ? 0 : (d.main ? 4 : 3),
         pointHoverRadius: 6,
+        borderDash: d.dash ? [6, 4] : [],
         spanGaps: true,
         tension: 0,
       })),

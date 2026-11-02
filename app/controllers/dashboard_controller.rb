@@ -185,6 +185,7 @@ class DashboardController < ApplicationController
   end
 
   def load_children_comparison
+    load_population_projection # projections démographiques 2023-2033
     # 🚀 Chargement spécifique pour la comparaison enfants avec cache
     load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     @children_data = cached_children_data(@territory_code)
@@ -296,6 +297,7 @@ class DashboardController < ApplicationController
   end
 
   def load_youth
+    load_population_projection # projections démographiques 2023-2033
     # Onglet Enfance, jeunesse (6-24 ans) : indicateurs repris des autres onglets + pass Sport 2024
     load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_population_structure_comparison
@@ -342,6 +344,7 @@ class DashboardController < ApplicationController
   end
 
   def load_seniors
+    load_population_projection # projections démographiques 2023-2033
     # Onglet Seniors : fragilité sociale, ressources, parcours et santé des retraités et des 55 ans ou plus
     # (Observatoire interrégimes des situations de fragilité — API /senior-fragilities/*), vaccination antigrippale
     # (API /fragilities/*)

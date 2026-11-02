@@ -1,0 +1,108 @@
+<%#
+  Projections démographiques 2023-2033 de la commune (API /population-projection/*, méthode par cohortes).
+  locals : groups (clés : 0_2, 3_5, 6_10, 11_14, 15_17, 18_24, 60_74, 75_84, 85p), births (true : naissances par an),
+           title, intro (optionnel). Nécessite @population_projection (load_population_projection).
+%>
+<%
+  pj = @population_projection.is_a?(Hash) && @population_projection["error"].blank? ? @population_projection : nil
+  births ||= false
+  intro ||= nil
+%>
+<% if pj && pj["groups"].is_a?(Hash) %>
+  <%
+    years = pj["years"] || []
+    i5 = years.index((pj["base_year"].to_i + 5)) || 5
+    i10 = years.size - 1
+    labels = pj["labels"] || {}
+    rel = pj["reliability"] || {}
+    rel_style = { "bonne" => ["#dcfce7", "#166534"], "moyenne" => ["#fef3c7", "#92400e"] }
+    colors = %w[#4f46e5 #0891b2 #059669 #d97706 #db2777 #7c3aed #64748b #dc2626 #2563eb]
+    evo = ->(a, b) { a.to_f.positive? && b ? "#{b >= a ? '+' : '−'}#{number_with_precision(((b - a) * 100.0 / a).abs, precision: 0)} %" : "–" }
+    small = pj["population"].to_f.positive? && pj["population"].to_f < 2000
+    bobs = (pj.dig("births", "observed") || {}).transform_keys(&:to_i)
+    b_recent = [2021, 2022, 2023].filter_map { |y| bobs[y] }
+    datasets = groups.each_with_index.map do |g, k|
+      { label: labels[g] || g, data: pj["groups"][g], color: colors[k % colors.size], main: true }
+    end
+  %>
+  <section style="margin-bottom:2.5rem">
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4"><%= title %></h3>
+    <p class="text-xs text-gray-500 mb-4"><%= intro || "Effectifs projetés au 1er janvier, scénario tendanciel (natalité et migrations récentes de la commune reconduites)." %> Une projection n'est pas une prévision : elle montre ce que donnerait la poursuite des tendances observées.</p>
+
+    <div style="overflow-x:auto">
+      <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tranche d'âge</th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= years.first %></th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= years[i5] %></th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= years[i10] %></th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Évolution</th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" title="Natalité basse / haute">Fourchette <%= years[i10] %></th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" title="Vieillissement, naissances et décès seulement">Sans migrations <%= years[i10] %></th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fiabilité</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% if births %>
+            <% bt = pj.dig("births", "trend") || []; bl = pj.dig("births", "low") || []; bh = pj.dig("births", "high") || []; bn = pj.dig("births", "no_migration") || [] %>
+            <tr>
+              <td class="px-3 py-2 text-sm text-gray-900">Naissances dans l'année <span class="text-xs text-gray-400">(<%= years.first %> : observé)</span></td>
+              <td class="px-3 py-2 text-sm text-right"><%= bt[0] ? fmt_count(bt[0].round) : "–" %></td>
+              <td class="px-3 py-2 text-sm text-right font-semibold"><%= bt[i5] ? fmt_count(bt[i5].round) : "–" %></td>
+              <td class="px-3 py-2 text-sm text-right font-semibold"><%= bt.last ? fmt_count(bt.last.round) : "–" %> <span class="text-xs text-gray-400">(<%= (pj.dig("births", "years") || []).last %>)</span></td>
+              <td class="px-3 py-2 text-sm text-right"><%= evo.(bt[0], bt.last) %></td>
+              <td class="px-3 py-2 text-sm text-right text-gray-600"><%= bl.last && bh.last ? "#{fmt_count(bl.last.round)} – #{fmt_count(bh.last.round)}" : "–" %></td>
+              <td class="px-3 py-2 text-sm text-right text-gray-600"><%= bn.last ? fmt_count(bn.last.round) : "–" %></td>
+              <td class="px-3 py-2 text-xs"><span style="padding:1px 8px;border-radius:999px;background:<%= rel_style.dig(rel["births"], 0) %>;color:<%= rel_style.dig(rel["births"], 1) %>"><%= rel["births"] %></span></td>
+            </tr>
+          <% end %>
+          <% groups.each do |g| %>
+            <% v = pj["groups"][g] || []; lo = pj.dig("low", g); hi = pj.dig("high", g); nm = pj.dig("no_migration", g) %>
+            <tr>
+              <td class="px-3 py-2 text-sm text-gray-900"><%= labels[g] || g %></td>
+              <td class="px-3 py-2 text-sm text-right"><%= fmt_count(v[0]) %></td>
+              <td class="px-3 py-2 text-sm text-right font-semibold"><%= fmt_count(v[i5]) %></td>
+              <td class="px-3 py-2 text-sm text-right font-semibold"><%= fmt_count(v[i10]) %></td>
+              <td class="px-3 py-2 text-sm text-right"><%= evo.(v[0], v[i10]) %></td>
+              <td class="px-3 py-2 text-sm text-right text-gray-600"><%= lo && hi ? "#{fmt_count(lo[i10])} – #{fmt_count(hi[i10])}" : "–" %></td>
+              <td class="px-3 py-2 text-sm text-right text-gray-600"><%= nm ? fmt_count(nm[i10]) : "–" %></td>
+              <td class="px-3 py-2 text-xs"><span style="padding:1px 8px;border-radius:999px;background:<%= rel_style.dig(rel[g], 0) %>;color:<%= rel_style.dig(rel[g], 1) %>"><%= rel[g] %></span></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:1.25rem">
+      <%= chart_canvas({ type: "line", unit: "", digits: 0, labels: years, datasets: datasets }, 260, "#{title} : effectifs projetés #{years.first}-#{years.last}") %>
+    </div>
+
+    <% if births %>
+      <%
+        b_years = (bobs.keys.sort.select { |y| y < pj["base_year"].to_i }) + (pj.dig("births", "years") || [])
+        obs_series = b_years.map { |y| y < pj["base_year"].to_i ? bobs[y] : (y == pj["base_year"].to_i ? bobs[y] : nil) }
+        proj = ->(key) { b_years.map { |y| (i = (pj.dig("births", "years") || []).index(y)) ? pj.dig("births", key, i)&.round(1) : nil } }
+      %>
+      <div style="margin-top:1.25rem">
+        <p class="text-xs text-gray-500 mb-1">Naissances par an : observées (<%= b_years.first %>-<%= pj["base_year"] %>) puis projetées, avec la fourchette de natalité.</p>
+        <%= chart_canvas({ type: "line", unit: "", digits: 0, labels: b_years, datasets: [
+              { label: "Observées", data: obs_series, color: "#111827", main: true },
+              { label: "Projection tendancielle", data: proj.("trend"), color: "#4f46e5", main: true },
+              { label: "Natalité basse", data: proj.("low"), color: "#93c5fd", dash: true },
+              { label: "Natalité haute", data: proj.("high"), color: "#93c5fd", dash: true }
+            ] }, 240, "Naissances observées et projetées") %>
+      </div>
+    <% end %>
+
+    <div class="text-xs text-gray-500 space-y-1" style="margin-top:0.75rem">
+      <p>Méthode : <%= pj["method"] %></p>
+      <% if births %>
+        <p>Natalité de la commune : <%= pj["fertility_per_1000_women"] %> naissances par an pour 1 000 femmes de 15 à 49 ans (2021-2023<%= b_recent.any? ? " ; #{b_recent.join(', ')} naissances" : "" %>) ; fourchette ± <%= pj["births_spread_pct"] %> %, selon la variation des naissances d'une année à l'autre depuis 2014.<% if pj["births_test_error_pct"] %> Test : avec le taux de natalité de 2014-2016, la méthode aurait prévu les naissances 2017-2023 avec un écart de <%= pj["births_test_error_pct"].positive? ? "+" : "" %><%= number_with_precision(pj["births_test_error_pct"], precision: 0) %> % ; la natalité est la partie la plus incertaine.<% end %></p>
+      <% end %>
+      <p>Fiabilité à 10 ans : bonne pour les tranches déjà nées en <%= pj["base_year"] %> (évolution surtout liée aux décès et aux migrations), moyenne pour celles qui dépendent des naissances à venir et pour les 18-24 ans (départs pour les études, très variables).<%= pj["migration_source"] == "département" ? " Migrations : profil du département (commune non comparable entre 2017 et 2022)." : "" %></p>
+      <% if small %><p style="color:#b45309">⚠ Commune de moins de 2 000 habitants : les effectifs par âge sont faibles et les projections doivent être lues comme des ordres de grandeur.</p><% end %>
+      <p>Source : <%= pj["source"] %>.</p>
+    </div>
+  </section>
+<% end %>
