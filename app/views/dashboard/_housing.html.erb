@@ -233,6 +233,25 @@
           ], "Période de construction par territoire") %>
     </section>
 
+    <!-- 6. Précarité énergétique (Géodip, ONPE) -->
+    <%
+      ep_terrs = comparison_territories("energy_poverty_data", {
+        commune: @energy_poverty_data, epci: @epci_energy_poverty_data, department: @department_energy_poverty_data,
+        region: @region_energy_poverty_data, france: @france_energy_poverty_data
+      })
+      ep_years = comparison_years(@energy_poverty_data, "energy_poverty_data")
+      ep_latest = comparison_latest_year(@energy_poverty_data, ep_years)
+    %>
+    <% if ep_terrs.first&.dig(:key) == :commune && ep_years.any? %>
+      <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Précarité énergétique</h3>
+      <p class="text-xs text-gray-500 mb-4">Estimation du nombre de ménages qui peinent à payer l'énergie de leur logement, à partir des revenus et des caractéristiques des logements.</p>
+      <%= render "dashboard/territory_indicator", territories: ep_terrs, years: ep_years, latest: ep_latest, comparison: ep_latest,
+            title: "Ménages en précarité énergétique logement", theme: "red",
+            value_key: "energy_poverty_rate",
+            count_key: "energy_poverty_households", count_label: "ménages",
+            definition: "Ménages dont les dépenses théoriques d'énergie pour le logement (chauffage, eau chaude, électricité) dépassent 8 % de leurs ressources et dont le niveau de vie est parmi les 30 % les plus modestes. Estimation du ministère de la Transition écologique (modèle Prometheus), publiée par l'Observatoire national de la précarité énergétique (Géodip). Source : Géodip (ONPE), #{ep_latest} ; Insee, recensement #{ep_latest}. France : France métropolitaine, pas d'estimation pour l'outre-mer." %>
+    <% end %>
+
     <div class="mb-8 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Peuplement : exploitation complémentaire.</p>
       <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>

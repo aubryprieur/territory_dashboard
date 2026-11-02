@@ -438,6 +438,7 @@ class DashboardController < ApplicationController
     load_housing_comparison
     load_social_housing_comparison # parc locatif social (SDES, RPLS)
     load_construction_comparison # construction neuve (SDES, Sitadel)
+    load_energy_poverty_comparison # précarité énergétique logement (Géodip, ONPE)
 
     respond_to do |format|
       format.html { render partial: 'housing' }

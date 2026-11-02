@@ -519,6 +519,16 @@ module DashboardCache
     @france_pass_sport_data = cached_health_data(s, :france)
   end
 
+  # Précarité énergétique logement (Géodip, ONPE — API /energy-poverty/*), onglet Logement
+  def load_energy_poverty_comparison
+    s = Api::EnergyPovertyService
+    @energy_poverty_data = cached_health_data(s, :commune, @territory_code)
+    @epci_energy_poverty_data = cached_health_data(s, :epci, @epci_code)
+    @department_energy_poverty_data = cached_health_data(s, :department, @department_code)
+    @region_energy_poverty_data = cached_health_data(s, :region, @region_code)
+    @france_energy_poverty_data = cached_health_data(s, :france)
+  end
+
   # Synthèse des fragilités (API /fragility-synthesis/*) : onglet Synthèse et encadré « Position parmi les communes »
   # en tête des onglets thématiques (_fragility_ranks)
   def load_fragility_synthesis
