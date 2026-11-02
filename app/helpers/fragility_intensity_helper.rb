@@ -20,8 +20,8 @@ module FragilityIntensityHelper
   }.freeze
 
   ENJEU_LEVELS = {
-    "high" => ["Enjeu fort", "#fee2e2", "#b91c1c"], "moderate" => ["Enjeu modéré", "#ffedd5", "#c2410c"],
-    "low" => ["Enjeu faible", "#dbeafe", "#1d4ed8"], "not_evaluable" => ["Non évaluable", "#f3f4f6", "#6b7280"],
+    "high" => ["Intensité forte", "#fee2e2", "#b91c1c"], "moderate" => ["Intensité modérée", "#ffedd5", "#c2410c"],
+    "low" => ["Intensité faible", "#dbeafe", "#1d4ed8"], "not_evaluable" => ["Non évaluable", "#f3f4f6", "#6b7280"],
     "context" => ["Contexte", "#eef2ff", "#4f46e5"]
   }.freeze
 
