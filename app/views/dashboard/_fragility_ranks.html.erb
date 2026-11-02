@@ -14,8 +14,20 @@
   keys = syn ? (syn.dig("tab_keys", tab) || []) : []
   all_items = syn ? (syn["indicators"].to_a + syn["context_indicators"].to_a).index_by { |i| i["key"] } : {}
   items = keys.filter_map { |k| all_items[k] }.reject { |i| i["value"].nil? }
-  enjeu_key = FragilityIntensityHelper::TAB_ENJEU[tab]
-  th = syn && enjeu_key && syn["themes"].to_a.find { |t| t["key"] == enjeu_key }
+  # Niveau de l'enjeu de l'onglet (même calcul que la tuile de la Synthèse, rang dans la catégorie de densité) :
+  # indicateurs jugés (up / down) de l'encart ; fort si la moitié en alerte (rang ≥ 80), modéré si un quart
+  judged_all = keys.filter_map { |k| all_items[k] }.select { |i| %w[up down].include?(i["direction"]) }
+  th = nil
+  if judged_all.any?
+    avail = judged_all.reject { |i| i["value"].nil? }
+    alerts = avail.count { |i| (r = i["rank_density"] || i["rank_france"]) && r >= 80 }
+    level = if avail.size < judged_all.size / 2.0 then "not_evaluable"
+            elsif alerts >= avail.size * 0.5 then "high"
+            elsif alerts >= avail.size * 0.25 then "moderate"
+            else "low"
+            end
+    th = { "level" => level }
+  end
 %>
 <% if syn && items.any? %>
   <%
