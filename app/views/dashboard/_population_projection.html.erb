@@ -19,6 +19,7 @@
     colors = %w[#4f46e5 #0891b2 #059669 #d97706 #db2777 #7c3aed #64748b #dc2626 #2563eb]
     evo = ->(a, b) { a.to_f.positive? && b ? "#{b >= a ? '+' : '−'}#{number_with_precision(((b - a) * 100.0 / a).abs, precision: 0)} %" : "–" }
     small = pj["population"].to_f.positive? && pj["population"].to_f < 2000
+    show_range = births || groups.any? { |g| pj.dig("low", g) }   # fourchette : seulement si des naissances à venir jouent
     bobs = (pj.dig("births", "observed") || {}).transform_keys(&:to_i)
     b_recent = [2021, 2022, 2023].filter_map { |y| bobs[y] }
     datasets = groups.each_with_index.map do |g, k|
@@ -38,7 +39,7 @@
             <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= years[i5] %></th>
             <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= years[i10] %></th>
             <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Évolution</th>
-            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" title="Natalité basse / haute">Fourchette <%= years[i10] %></th>
+            <% if show_range %><th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" title="Natalité basse / haute">Fourchette <%= years[i10] %></th><% end %>
             <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" title="Vieillissement, naissances et décès seulement">Sans migrations <%= years[i10] %></th>
             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fiabilité</th>
           </tr>
@@ -52,7 +53,7 @@
               <td class="px-3 py-2 text-sm text-right font-semibold"><%= bt[i5] ? fmt_count(bt[i5].round) : "–" %></td>
               <td class="px-3 py-2 text-sm text-right font-semibold"><%= bt.last ? fmt_count(bt.last.round) : "–" %> <span class="text-xs text-gray-400">(<%= (pj.dig("births", "years") || []).last %>)</span></td>
               <td class="px-3 py-2 text-sm text-right"><%= evo.(bt[0], bt.last) %></td>
-              <td class="px-3 py-2 text-sm text-right text-gray-600"><%= bl.last && bh.last ? "#{fmt_count(bl.last.round)} – #{fmt_count(bh.last.round)}" : "–" %></td>
+              <% if show_range %><td class="px-3 py-2 text-sm text-right text-gray-600"><%= bl.last && bh.last ? "#{fmt_count(bl.last.round)} – #{fmt_count(bh.last.round)}" : "–" %></td><% end %>
               <td class="px-3 py-2 text-sm text-right text-gray-600"><%= bn.last ? fmt_count(bn.last.round) : "–" %></td>
               <td class="px-3 py-2 text-xs"><span style="padding:1px 8px;border-radius:999px;background:<%= rel_style.dig(rel["births"], 0) %>;color:<%= rel_style.dig(rel["births"], 1) %>"><%= rel["births"] %></span></td>
             </tr>
@@ -65,7 +66,7 @@
               <td class="px-3 py-2 text-sm text-right font-semibold"><%= fmt_count(v[i5]) %></td>
               <td class="px-3 py-2 text-sm text-right font-semibold"><%= fmt_count(v[i10]) %></td>
               <td class="px-3 py-2 text-sm text-right"><%= evo.(v[0], v[i10]) %></td>
-              <td class="px-3 py-2 text-sm text-right text-gray-600"><%= lo && hi ? "#{fmt_count(lo[i10])} – #{fmt_count(hi[i10])}" : "–" %></td>
+              <% if show_range %><td class="px-3 py-2 text-sm text-right text-gray-600"><%= lo && hi ? "#{fmt_count(lo[i10])} – #{fmt_count(hi[i10])}" : "–" %></td><% end %>
               <td class="px-3 py-2 text-sm text-right text-gray-600"><%= nm ? fmt_count(nm[i10]) : "–" %></td>
               <td class="px-3 py-2 text-xs"><span style="padding:1px 8px;border-radius:999px;background:<%= rel_style.dig(rel[g], 0) %>;color:<%= rel_style.dig(rel[g], 1) %>"><%= rel[g] %></span></td>
             </tr>
@@ -75,7 +76,7 @@
     </div>
 
     <div style="margin-top:1.25rem">
-      <%= chart_canvas({ type: "line", unit: "", digits: 0, labels: years, datasets: datasets }, 260, "#{title} : effectifs projetés #{years.first}-#{years.last}") %>
+      <%= chart_canvas({ type: "line", unit: "", digits: 0, zero: true, labels: years, datasets: datasets }, 260, "#{title} : effectifs projetés #{years.first}-#{years.last}") %>
     </div>
 
     <% if births %>
@@ -86,7 +87,7 @@
       %>
       <div style="margin-top:1.25rem">
         <p class="text-xs text-gray-500 mb-1">Naissances par an : observées (<%= b_years.first %>-<%= pj["base_year"] %>) puis projetées, avec la fourchette de natalité.</p>
-        <%= chart_canvas({ type: "line", unit: "", digits: 0, labels: b_years, datasets: [
+        <%= chart_canvas({ type: "line", unit: "", digits: 0, zero: true, labels: b_years, datasets: [
               { label: "Observées", data: obs_series, color: "#111827", main: true },
               { label: "Projection tendancielle", data: proj.("trend"), color: "#4f46e5", main: true },
               { label: "Natalité basse", data: proj.("low"), color: "#93c5fd", dash: true },

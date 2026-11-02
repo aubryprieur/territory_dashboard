@@ -52,7 +52,7 @@ function lineChart(canvas, cfg) {
       scales: {
         x: { grid: { display: false } },
         // graduations non entières (ex. 6,5 %) : une décimale pour éviter « 7 %, 7 % »
-        y: { ticks: { callback: (v) => (Number.isInteger(v) ? tick(v) : tip(v)) }, grid: { color: "#f3f4f6" } },
+        y: { beginAtZero: !!cfg.zero, ticks: { callback: (v) => (Number.isInteger(v) ? tick(v) : tip(v)) }, grid: { color: "#f3f4f6" } },
       },
     },
   });
