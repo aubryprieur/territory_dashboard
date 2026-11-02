@@ -8,14 +8,10 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Scolarisation des habitants</h2>
   <p class="text-xs text-gray-500 mb-4">Part des enfants et des jeunes qui habitent la commune inscrits dans un établissement d'enseignement, quel que soit le lieu de cet établissement (recensement).</p>
 
-  <%= render "dashboard/fragility_ranks", group: "schooling" %>
+  <%= render "dashboard/fragility_ranks", tab: "schooling" %>
   <%= render "dashboard/schooling_by_age" %>
 
-  <%= render "dashboard/iris_map", map: cached_iris_map("schooling_15_17_rate"),
-        definition: "Jeunes de 15 à 17 ans inscrits dans un établissement d'enseignement, en % des 15-17 ans de l'IRIS (petits effectifs : à lire avec la colonne effectif)." %>
 
-  <%= render "dashboard/iris_map", map: cached_iris_map("schooling_18_24_rate"),
-        definition: "Jeunes de 18 à 24 ans poursuivant des études, en % des 18-24 ans de l'IRIS." %>
 </div>
 
 <div style="margin:0 0 1rem;padding:12px 16px;border-left:4px solid #93c5fd;background:#eff6ff;border-radius:8px" class="text-sm text-gray-700">

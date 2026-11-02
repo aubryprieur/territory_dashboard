@@ -17,7 +17,7 @@
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-4">Ménages</h2>
 
-  <%= render "dashboard/fragility_ranks", group: "households" %>
+  <%= render "dashboard/fragility_ranks", tab: "households" %>
 
   <% if commune.nil? || commune[:key] != :commune %>
     <p class="text-sm text-gray-500">Données ménages indisponibles pour ce territoire.</p>
@@ -175,6 +175,9 @@
         </table>
       </div>
     </section>
+
+    <!-- 5. Mobilité résidentielle (données logement du recensement) -->
+    <%= render "dashboard/housing_mobility" %>
 
     <div class="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026).</p>

@@ -27,7 +27,7 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Enfance, jeunesse</h2>
   <p class="text-xs text-gray-500 mb-4">Enfants et jeunes de 6 à 24 ans : effectifs, conditions de vie, scolarité et insertion, sport et loisirs. Certains indicateurs sont aussi présentés, avec leur évolution, dans les onglets Scolarité, Diplômes, Emploi, Revenus, Accès aux droits et Vie locale. La petite enfance a son propre onglet.</p>
 
-  <%= render "dashboard/fragility_ranks", theme: "youth" %>
+  <%= render "dashboard/fragility_ranks", tab: "youth" %>
 
   <%
     cards = [
@@ -79,23 +79,7 @@
           { label: "15-24 ans vivant seuls (population des ménages)", ds: hh, key: "living_alone_rate_15_24" }
         ] %>
 
-  <%= render "dashboard/youth_table", title: "Scolarité et insertion",
-        definition: "Scolarisation : élèves, étudiants et apprentis inscrits dans un établissement, en % de la classe d'âge. Jeunes non insérés : 18-24 ans non scolarisés qui ne sont ni en emploi ni en études. En rouge, une situation moins favorable qu'en France.",
-        rows: [
-          { label: "Taux de scolarisation des 15-17 ans", ds: edu, key: "schooling_rate_15_17", direction: :worse_if_lower },
-          { label: "Taux de scolarisation des 18-24 ans", ds: edu, key: "schooling_rate_18_24" },
-          { label: "20-24 ans sortis du système scolaire sans diplôme", ds: sdg.("young_no_diploma_rate"), key: "young_no_diploma_rate", direction: :worse_if_higher },
-          { label: "18-24 ans ni en emploi ni en études (non insérés)", ds: sdg.("young_neet_rate"), key: "young_neet_rate", direction: :worse_if_higher },
-          { label: "Taux d'emploi des 15-24 ans", ds: emp, key: "employment_rate_15_24" },
-          { label: "Taux de chômage des 15-24 ans", ds: emp, key: "unemployment_rate_15_24", direction: :worse_if_higher }
-        ] %>
-
-  <% if emp[:latest] %>
-    <%= render "dashboard/iris_map", map: cached_iris_map("youth_unemployment_rate"),
-          definition: "Chômeurs de 15-24 ans, en % des actifs de 15-24 ans de l'IRIS.",
-          commune_latest: { year: emp[:latest], value: cv.(emp, "unemployment_rate_15_24"),
-                            count: cv.(emp, "unemployed_15_24"), total: cv.(emp, "active_15_24") } %>
-  <% end %>
+  <p class="text-xs text-gray-500" style="margin:-1rem 0 2rem">Scolarisation des 15-24 ans : onglet <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="schooling" style="color:#4f46e5">Scolarité</button> ; jeunes sans diplôme et ni en emploi ni en études : onglet <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="diplomas" style="color:#4f46e5">Diplômes</button> ; emploi et chômage des 15-24 ans : onglet <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="employment" style="color:#4f46e5">Emploi</button>.</p>
 
   <%= render "dashboard/youth_table", title: "Sport",
         definition: "Licences sportives : licences délivrées par les fédérations, à la commune de résidence (une personne peut en avoir plusieurs). Pass Sport : aide de 50 € à l'inscription en club pour les jeunes de 6 à 17 ans dont la famille perçoit l'allocation de rentrée scolaire ou l'AEEH (et certains jeunes adultes) ; le taux rapporte les pass activés à tous les 6-17 ans, ce qui reflète à la fois la part de familles éligibles et le recours. En rouge, une valeur inférieure à la France.",

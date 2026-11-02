@@ -1,0 +1,48 @@
+<%#
+  Mobilité résidentielle des ménages (INSEE RP, API /housing/*), affichée dans l'onglet Ménages :
+  ménages emménagés depuis moins de 2 ans (taux, carte IRIS), ancienneté moyenne d'emménagement, selon le statut.
+  Nécessite load_housing_comparison.
+%>
+<%
+  territories = comparison_territories("housing_data", {
+    commune: @housing_data, epci: @epci_housing_data, department: @department_housing_data,
+    region: @region_housing_data, france: @france_housing_data
+  })
+  years = comparison_years(@housing_data, "housing_data")
+  latest = comparison_latest_year(@housing_data, years)
+  comparison = comparison_start_year(@housing_data, years)
+  commune = territories.first
+  common = { territories: territories, years: years, latest: latest, comparison: comparison }
+%>
+<% if commune && commune[:key] == :commune %>
+    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité résidentielle</h3>
+    <p class="text-xs text-gray-500 mb-4">Ancienneté d'emménagement des ménages dans leur logement actuel.</p>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Ménages emménagés depuis moins de 2 ans", theme: "blue",
+          value_key: "recent_movers_percentage",
+          count_key: "stay_lt2", total_key: "dwellings_main", count_label: "ménages",
+          definition: "Part des ménages installés dans leur logement depuis moins de 2 ans. Repère du renouvellement de la population et de l'attractivité résidentielle.",
+          details: [
+            { label: "Emménagés depuis 10 ans ou plus", share_key: "long_stay_percentage" },
+            { label: "Emménagés depuis 30 ans ou plus", share_key: "stay_ge30_percentage" }
+          ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("recent_movers_share"),
+          definition: "Ménages installés dans leur logement depuis moins de 2 ans, en % des ménages de l'IRIS : quartiers à forte rotation, où arrivent les nouveaux habitants (accueil, information sur les services, inscription dans la vie locale)." %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Ancienneté moyenne d'emménagement", theme: "blue",
+          value_key: "average_stay", value_format: :decimal, unit: "ans", decimals: 1,
+          definition: "Nombre moyen d'années depuis lequel les ménages occupent leur logement." %>
+
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Ancienneté moyenne d'emménagement selon le statut (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">En années. Une ancienneté élevée chez les locataires HLM peut signaler un parc social peu mobile (peu de logements libérés).</p>
+      <%= comparison_grouped_bar_chart(territories, latest, [
+            ["average_stay", "Ensemble"], ["average_stay_owners", "Propriétaires"],
+            ["average_stay_tenants", "Locataires"], ["average_stay_social", "Locataires HLM"]
+          ], "Ancienneté moyenne d'emménagement par statut et par territoire", unit: "ans") %>
+    </section>
+
+<% end %>

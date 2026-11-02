@@ -6,7 +6,7 @@
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-4">Familles</h2>
 
-  <%= render "dashboard/fragility_ranks", theme: "families" %>
+  <%= render "dashboard/fragility_ranks", tab: "families" %>
 
   <% if families_territories.empty? || families_territories.first[:key] != :commune %>
     <p class="text-sm text-gray-500">Données familles indisponibles pour ce territoire.</p>
@@ -149,3 +149,29 @@
     </div>
   <% end %>
 </div>
+
+<!-- Allocation de rentrée scolaire (Cnaf, API /caf-benefits/*) : bloc à part, source et millésimes propres -->
+<%
+  ars_terrs = comparison_territories("caf_data", {
+    commune: @caf_data, epci: @epci_caf_data, department: @department_caf_data,
+    region: @region_caf_data, france: @france_caf_data
+  })
+  ars_years = comparison_years(@caf_data, "caf_data")
+  ars_latest = comparison_latest_year(@caf_data, ars_years)
+  ars_comparison = comparison_start_year(@caf_data, ars_years)
+%>
+<% if ars_terrs.first&.dig(:key) == :commune && ars_years.any? && territory_value(ars_terrs.first, ars_latest, "ars_families_rate") %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-lg font-medium text-gray-900 mb-1">Allocation de rentrée scolaire</h2>
+    <p class="text-xs text-gray-500 mb-4">Familles aux revenus modestes ayant des enfants scolarisés de 6 à 18 ans.</p>
+    <%= render "dashboard/territory_indicator", territories: ars_terrs, years: ars_years, latest: ars_latest, comparison: ars_comparison,
+          table_years: ([ars_comparison] + ars_years.last(3)).uniq.sort,
+          title: "Familles percevant l'allocation de rentrée scolaire", theme: "pink",
+          value_key: "ars_families_rate", value_format: :decimal, unit: "pour 100", decimals: 1,
+          count_key: "ars_households", count_label: "foyers allocataires",
+          definition: "Foyers percevant l'allocation de rentrée scolaire pour 100 familles avec enfants (recensement 2023). L'allocation est versée sous conditions de ressources pour chaque enfant de 6 à 18 ans scolarisé : repère des familles modestes avec enfants d'âge scolaire. Ordre de grandeur : le dénominateur comprend aussi les familles dont les enfants ont moins de 6 ans ou plus de 18 ans." %>
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : Cnaf, foyers allocataires au 31 décembre (<%= ars_years.first %>-<%= ars_latest %>) ; Insee, recensement 2023 (familles avec enfants).</p>
+    </div>
+  </div>
+<% end %>

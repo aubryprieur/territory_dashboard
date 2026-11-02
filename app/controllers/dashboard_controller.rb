@@ -133,6 +133,7 @@ class DashboardController < ApplicationController
 
     # Données de comparaison avec cache
     load_comparison_data_for_families_cached
+    load_caf_benefits_comparison # allocation de rentrée scolaire (Cnaf)
 
     respond_to do |format|
       format.html { render partial: 'families', locals: {
@@ -163,6 +164,7 @@ class DashboardController < ApplicationController
     @department_household_data = cached_households_data(:department, @department_code)
     @region_household_data = cached_households_data(:region, @region_code)
     @france_household_data = cached_households_data(:france)
+    load_housing_comparison # mobilité résidentielle (_housing_mobility)
 
     respond_to do |format|
       format.html { render partial: 'households' }
@@ -265,6 +267,7 @@ class DashboardController < ApplicationController
   end
 
   def load_local_economy
+    load_fragility_synthesis # position parmi les communes (_fragility_ranks)
     load_sdg_comparison # indicateurs de développement durable (INSEE / SDES)
     # Onglet Tissu économique : emplois au lieu de travail (INSEE RP) et établissements employeurs (Flores)
     load_employment_activity_comparison

@@ -1,6 +1,6 @@
 <%#
   Onglet Logement — dashboard commune (analyse des besoins sociaux).
-  Parc, statut d'occupation, taille et peuplement, mobilité résidentielle, conditions de vie.
+  Parc, statut d'occupation, taille et peuplement, conditions de vie (la mobilité résidentielle est dans l'onglet Ménages).
   Données : INSEE, recensements de la population 2012, 2017, 2023 (valeurs officielles par
   territoire, via l'API /housing/* — DS_RP_LOGEMENT_PRINC et DS_RP_LOGEMENT_COMP).
 %>
@@ -19,7 +19,7 @@
   <h2 class="text-lg font-medium text-gray-900 mb-1">Logement</h2>
   <p class="text-xs text-gray-500 mb-4">Parc de logements et conditions de logement des ménages, au sens du recensement.</p>
 
-  <%= render "dashboard/fragility_ranks", theme: "housing" %>
+  <%= render "dashboard/fragility_ranks", tab: "housing" %>
 
   <% if commune.nil? || commune[:key] != :commune %>
     <p class="text-sm text-gray-500">Données logement indisponibles pour ce territoire.</p>
@@ -156,37 +156,6 @@
           title: "Nombre moyen de personnes par logement", theme: "purple",
           value_key: "persons_per_dwelling", value_format: :decimal, unit: "pers.",
           definition: "Population des ménages rapportée au nombre de résidences principales. Sa baisse traduit le desserrement des ménages (vieillissement, séparations, décohabitation)." %>
-
-    <!-- 4. Mobilité résidentielle -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité résidentielle</h3>
-    <p class="text-xs text-gray-500 mb-4">Ancienneté d'emménagement des ménages dans leur logement actuel.</p>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Ménages emménagés depuis moins de 2 ans", theme: "blue",
-          value_key: "recent_movers_percentage",
-          count_key: "stay_lt2", total_key: "dwellings_main", count_label: "ménages",
-          definition: "Part des ménages installés dans leur logement depuis moins de 2 ans. Repère du renouvellement de la population et de l'attractivité résidentielle.",
-          details: [
-            { label: "Emménagés depuis 10 ans ou plus", share_key: "long_stay_percentage" },
-            { label: "Emménagés depuis 30 ans ou plus", share_key: "stay_ge30_percentage" }
-          ] %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("recent_movers_share"),
-          definition: "Ménages installés dans leur logement depuis moins de 2 ans, en % des ménages de l'IRIS : quartiers à forte rotation, où arrivent les nouveaux habitants (accueil, information sur les services, inscription dans la vie locale)." %>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Ancienneté moyenne d'emménagement", theme: "blue",
-          value_key: "average_stay", value_format: :decimal, unit: "ans", decimals: 1,
-          definition: "Nombre moyen d'années depuis lequel les ménages occupent leur logement." %>
-
-    <section style="margin-bottom:2.5rem">
-      <h3 class="text-sm font-medium text-gray-700 mb-1">Ancienneté moyenne d'emménagement selon le statut (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">En années. Une ancienneté élevée chez les locataires HLM peut signaler un parc social peu mobile (peu de logements libérés).</p>
-      <%= comparison_grouped_bar_chart(territories, latest, [
-            ["average_stay", "Ensemble"], ["average_stay_owners", "Propriétaires"],
-            ["average_stay_tenants", "Locataires"], ["average_stay_social", "Locataires HLM"]
-          ], "Ancienneté moyenne d'emménagement par statut et par territoire", unit: "ans") %>
-    </section>
 
     <!-- 5. Conditions de vie -->
     <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Équipement et confort</h3>
