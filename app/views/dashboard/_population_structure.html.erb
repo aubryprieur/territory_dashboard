@@ -177,6 +177,30 @@
         <p class="text-xs text-gray-500 mb-4">Part de chaque tranche d'âge de 5 ans dans la population totale, en %. Contour : <%= france ? france[:name] : "référence" %>. Une barre qui dépasse le contour signale une tranche surreprésentée.</p>
         <%= age_pyramid_chart(commune, france, latest, (labels["pyramid"] || {}).keys.presence || (0..90).step(5).map { |a| "#{a}_#{a + 4}" } + ["ge95"], labels["pyramid"] || {}) %>
       </section>
+
+      <%# Pyramide projetée (API /population-projection/*, scénario tendanciel) en contour de la pyramide observée %>
+      <% pj = @population_projection.is_a?(Hash) && @population_projection["error"].blank? ? @population_projection : nil %>
+      <% pyr = pj && pj["pyramid"] %>
+      <% if pyr.is_a?(Hash) && pyr["groups"].present? %>
+        <%
+          pgroups = pyr["groups"]
+          ptotal = (pyr["men"].to_a + pyr["women"].to_a).sum.to_f
+          pshare = ->(sex) { pyr[sex].to_a.map { |v| ptotal.positive? ? (v * 100.0 / ptotal).round(2) : nil } }
+          plabels = labels["pyramid"] || {}
+          obs = ->(sex) { pgroups.map { |g| territory_value(commune, latest, "pyr_#{sex}_#{g}_percentage") } }
+          pconfig = {
+            type: "pyramid",
+            labels: pgroups.map { |g| plabels[g] || g }.reverse,
+            main: { name: "#{commune[:name]} #{latest}", men: obs.("men").reverse, women: obs.("women").reverse },
+            reference: { name: "Projection #{pyr['year']}", men: pshare.("men").reverse, women: pshare.("women").reverse }
+          }
+        %>
+        <section style="margin-bottom:2.5rem">
+          <h3 class="text-sm font-medium text-gray-700 mb-1">Pyramide des âges <%= latest %> et projection <%= pyr["year"] %></h3>
+          <p class="text-xs text-gray-500 mb-4">Barres : population <%= latest %> (recensement). Contour : population projetée en <%= pyr["year"] %> (scénario tendanciel : natalité et migrations récentes de la commune reconduites, mortalité nationale), en % de la population totale de chaque année. Une barre qui dépasse le contour signale une tranche dont le poids diminuera ; un contour qui dépasse la barre, une tranche dont le poids augmentera. Population projetée : <%= fmt_count(ptotal.round) %> habitants en <%= pyr["year"] %>. Détail des projections dans les onglets Petite enfance, Enfance-jeunesse et Seniors.</p>
+          <%= chart_canvas(pconfig, 480, "Pyramide des âges #{latest} et projection #{pyr['year']}") %>
+        </section>
+      <% end %>
     <% end %>
 
     <section style="margin-bottom:2.5rem">

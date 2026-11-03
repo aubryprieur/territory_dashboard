@@ -78,6 +78,7 @@ class DashboardController < ApplicationController
   def load_synthese
     # 🚀 Chargement des données de synthèse avec cache
     load_fragility_synthesis # position parmi les communes (_fragility_ranks)
+    load_population_projection # pyramide projetée 2033
     @population_data = cached_population_data(@territory_code)
     @births_data = cached_births_data(@territory_code)
     @births_data_filtered = @births_data&.select { |item| item["geo_object"] == "COM" } || []
