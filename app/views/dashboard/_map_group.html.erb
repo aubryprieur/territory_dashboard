@@ -1,0 +1,42 @@
+<%#
+  Plusieurs cartes repliées regroupées : un libellé commun puis des boutons accolés (comme Graphique / Tableau) ;
+  un clic ouvre la carte sous les boutons (et referme les autres), un second clic la referme.
+  locals : maps — [{ kind: :iris | :grid, map:, definition:, commune_latest: (optionnel) }] (cartes absentes ignorées)
+%>
+<%
+  items = maps.select { |m| m[:map].present? }
+%>
+<% if items.size == 1 %>
+  <% m = items.first %>
+  <%= render "dashboard/#{m[:kind] == :grid ? 'grid_map' : 'iris_map'}", map: m[:map], collapsed: true,
+        definition: m[:definition], commune_latest: m[:commune_latest] %>
+<% elsif items.any? %>
+  <%
+    same = items.map { |m| m[:kind] }.uniq.size == 1
+    lead = if !same then "🗺 Voir la carte"
+           elsif items.first[:kind] == :grid then "🗺 Voir la carte par carreau de 1 km"
+           else "🗺 Voir la carte par quartier (IRIS)"
+           end
+    btn = "padding:6px 12px;font-size:13px;font-weight:500;border:1px solid #c7d2fe;cursor:pointer;background:#f8faff;color:#3730a3"
+    toggle = "var b=this,g=b.closest('[data-map-group]'),i=b.getAttribute('data-idx'),open=b.getAttribute('aria-pressed')!=='true';g.querySelectorAll('[data-map-panel]').forEach(function(p,k){p.style.display=(open&&String(k)===i)?'':'none'});g.querySelectorAll('button[data-idx]').forEach(function(x){var on=open&&x===b;x.setAttribute('aria-pressed',on?'true':'false');x.style.background=on?'#4f46e5':'#f8faff';x.style.color=on?'#fff':'#3730a3'});window.dispatchEvent(new Event('resize'))"
+  %>
+  <div data-map-group style="margin:0 0 2rem">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:13px;font-weight:500;color:#3730a3"><%= lead %> :</span>
+      <div style="display:inline-flex;flex-wrap:wrap;border-radius:8px;overflow:hidden">
+        <% items.each_with_index do |m, i| %>
+          <%
+            label = m[:map].dig("indicator", "label").to_s.sub(/\A./, &:downcase)
+            label = "#{m[:kind] == :grid ? 'par carreau' : 'par quartier'} : #{label}" unless same
+            radius = items.size == 1 ? "8px" : (i.zero? ? "8px 0 0 8px" : (i == items.size - 1 ? "0 8px 8px 0" : "0"))
+          %>
+          <button type="button" data-idx="<%= i %>" aria-pressed="false" onclick="<%= toggle %>" style="<%= btn %>;border-radius:<%= radius %>;<%= i.zero? ? '' : 'border-left:none;' %>"><%= label %></button>
+        <% end %>
+      </div>
+    </div>
+    <% items.each do |m| %>
+      <%= render "dashboard/#{m[:kind] == :grid ? 'grid_map' : 'iris_map'}", map: m[:map], collapsed: :panel,
+            definition: m[:definition], commune_latest: m[:commune_latest] %>
+    <% end %>
+  </div>
+<% end %>

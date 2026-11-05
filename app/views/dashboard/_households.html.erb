@@ -144,13 +144,14 @@
             { label: "80 ans ou plus vivant seuls", count_key: "living_alone_80_plus", share_key: "living_alone_rate_80_plus" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("living_alone_share"), collapsed: true,
-          definition: "Personnes de 15 ans ou plus vivant seules dans leur logement, en % des 15 ans ou plus de l'IRIS." %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("alone_80p_share"), collapsed: true,
+    <%= render "dashboard/map_group", maps: [
+        { kind: :iris, map: cached_iris_map("living_alone_share"), 
+          definition: "Personnes de 15 ans ou plus vivant seules dans leur logement, en % des 15 ans ou plus de l'IRIS." },
+        { kind: :iris, map: cached_iris_map("alone_80p_share"), 
           definition: "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de l'IRIS.",
           commune_latest: { year: latest, value: territory_value(commune, latest, "living_alone_rate_80_plus"),
-                            count: territory_value(commune, latest, "living_alone_80_plus"), total: nil } %>
+                            count: territory_value(commune, latest, "living_alone_80_plus"), total: nil } }
+      ] %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. Ménages ≠ familles : un ménage regroupe les occupants d'un logement. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>

@@ -155,13 +155,14 @@
             { label: "Logés gratuitement", share_key: "free_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("social_housing_share"), collapsed: true,
+    <%= render "dashboard/map_group", maps: [
+        { kind: :iris, map: cached_iris_map("social_housing_share"), 
           definition: "Résidences principales louées vides en HLM, en % des résidences principales de l'IRIS.",
           commune_latest: { year: latest, value: territory_value(commune, latest, "tenants_social_percentage"),
-                            count: territory_value(commune, latest, "main_tenants_social"), total: territory_value(commune, latest, "dwellings_main") } %>
-
-    <%= render "dashboard/grid_map", map: cached_grid_map("social_housing_share"), collapsed: true,
-          definition: "Ménages logés dans le parc social, en % des ménages du carreau (2021)." %>
+                            count: territory_value(commune, latest, "main_tenants_social"), total: territory_value(commune, latest, "dwellings_main") } },
+        { kind: :grid, map: cached_grid_map("social_housing_share"), 
+          definition: "Ménages logés dans le parc social, en % des ménages du carreau (2021)." }
+      ] %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>

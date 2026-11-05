@@ -64,14 +64,14 @@
       "Effectifs par tranche d'âge et répartition par quartier, poids des 15-24 ans, indice de jeunesse et projections à 2033.") do %>
   <%= render "dashboard/population_focus", focus: :youth %>
 
-  <%= render "dashboard/iris_map", map: cached_iris_map("age_6_10_share"), collapsed: true,
-        definition: "Enfants de 6 à 10 ans (âge de l'école élémentaire), en % de la population de l'IRIS." %>
-
-  <%= render "dashboard/iris_map", map: cached_iris_map("age_11_17_share"), collapsed: true,
-        definition: "Jeunes de 11 à 17 ans (âge du collège et du lycée), en % de la population de l'IRIS." %>
-
-  <%= render "dashboard/iris_map", map: cached_iris_map("age_18_24_share"), collapsed: true,
-        definition: "Jeunes de 18 à 24 ans, en % de la population de l'IRIS : étudiants, jeunes actifs et jeunes en insertion." %>
+  <%= render "dashboard/map_group", maps: [
+      { kind: :iris, map: cached_iris_map("age_6_10_share"), 
+        definition: "Enfants de 6 à 10 ans (âge de l'école élémentaire), en % de la population de l'IRIS." },
+      { kind: :iris, map: cached_iris_map("age_11_17_share"), 
+        definition: "Jeunes de 11 à 17 ans (âge du collège et du lycée), en % de la population de l'IRIS." },
+      { kind: :iris, map: cached_iris_map("age_18_24_share"), 
+        definition: "Jeunes de 18 à 24 ans, en % de la population de l'IRIS : étudiants, jeunes actifs et jeunes en insertion." }
+    ] %>
 
   <%= render "dashboard/youth_table", title: "Indice de jeunesse",
         rows: [
