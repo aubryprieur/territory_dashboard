@@ -1,4 +1,5 @@
 <%#
+  Rendu par _schooling en trois cartes numérotées (questions 2 à 4 de l'onglet Scolarité).
   Onglet Éducation nationale — dashboard commune (analyse des besoins sociaux).
   Données : ministère de l'Éducation nationale, DEPP (API /schools/*).
     - IPS des écoles, collèges et lycées de la commune et position parmi les établissements du même type
@@ -25,15 +26,21 @@
   epci_label = @epci_code.present? ? epci_display_name : "l'EPCI"
 
 %>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-1">Établissements scolaires de la commune</h2>
-  <p class="text-xs text-gray-500 mb-4">Écoles, collèges et lycées publics et privés sous contrat de la commune : profil social des élèves, valeur ajoutée et éloignement, comparés à l'ensemble des établissements de France.</p>
-
-  <% if main.empty? && others.empty? %>
+<% if main.empty? && others.empty? %>
+  <%= story_card("q-schooling-2", 2, "Quel public accueillent les écoles, collèges et lycées de la commune ?") do %>
     <p class="text-sm text-gray-500">Aucun établissement scolaire trouvé pour ce territoire.</p>
-  <% else %>
+  <div class="text-xs text-gray-500 border-t pt-3 mt-4" style="border-color:#e5e7eb">
+    <p>Source : ministère de l'Éducation nationale, DEPP (data.education.gouv.fr) — IPS des écoles (rentrées 2022 à 2024), des collèges et des lycées (rentrées 2023 à 2025), indicateurs de valeur ajoutée des collèges (DNB 2022 à 2025) et des lycées, indice d'éloignement (rentrées 2022 à 2025).</p>
+    <p>Les écoles maternelles n'ont pas d'IPS publié. Les déciles sont calculés parmi les établissements du même type de France entière, public et privé sous contrat.</p>
+  </div>
+  <% end %>
+<% else %>
+  <%= story_card("q-schooling-2", 2, "Quel public accueillent les écoles, collèges et lycées de la commune ?",
+        "Écoles, collèges et lycées publics et privés sous contrat de la commune : profil social des élèves mesuré par l'indice de position sociale (IPS), comparé à l'ensemble des établissements de France.") do %>
+<div style="margin:0 0 1rem;padding:12px 16px;border-left:4px solid #93c5fd;background:#eff6ff;border-radius:8px" class="text-sm text-gray-700">
+  Les établissements présentés ici sont ceux situés dans la commune. Leurs élèves ne sont pas tous des enfants de la commune, et des enfants de la commune sont scolarisés ailleurs, surtout au collège et au lycée.
+</div>
 
-    <!-- Synthèse -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
       <div class="bg-indigo-50 p-4 rounded-lg">
         <h4 class="text-xs font-medium text-indigo-800">Établissements de la commune</h4>
@@ -74,8 +81,6 @@
       <% end %>
     </div>
 
-    <!-- 1. Indice de position sociale -->
-    <h3 class="text-base font-medium text-gray-900 mb-1">Profil social des élèves : indice de position sociale (IPS)</h3>
     <p class="text-xs text-gray-500 mb-4"><%= definitions["ips"] %> Le décile situe l'établissement parmi tous les établissements du même type en France (public et privé) : le 1er décile regroupe les 10 % d'établissements au public le plus défavorisé, le 10e les 10 % au public le plus favorisé.</p>
 
     <section style="margin-bottom:2rem">
@@ -130,10 +135,10 @@
       <% end %>
       <p class="text-xs text-gray-500 mt-2">Département et France : IPS moyen des établissements du même type (lycées : même type de lycée), pondéré par les effectifs d'élèves. Évolution depuis la première rentrée disponible.</p>
     </section>
+  <% end %>
 
-
-    <!-- 2. Valeur ajoutée -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-6">Valeur ajoutée des collèges et des lycées</h3>
+  <%= story_card("q-schooling-3", 3, "Les collèges et les lycées font-ils progresser leurs élèves ?",
+        "Valeur ajoutée des collèges (diplôme national du brevet) et des lycées (baccalauréat).") do %>
     <p class="text-xs text-gray-500 mb-4"><%= definitions["va"] %> Elle mesure l'action propre de l'établissement, indépendamment du profil social de ses élèves.</p>
 
     <% college_rows = colleges %>
@@ -224,12 +229,13 @@
               ], aria: "Valeur ajoutée des lycées parmi les déciles nationaux") %>
       </section>
     <% end %>
+  <% end %>
 
-    <!-- 3. Indice d'éloignement -->
+  <%= story_card("q-schooling-4", 4, "Les collèges et les lycées sont-ils éloignés des ressources ?",
+        "Indice d'éloignement des collèges et des lycées : accès aux ressources culturelles, sportives et de formation autour de l'établissement.") do %>
     <% remote_main = (colleges + lycees).select { |s| school_last(s, "remoteness").last } %>
     <% remote_rows = remote_main.any? ? remote_main : (epci_colleges + epci_lycees).select { |s| school_last(s, "remoteness").last } %>
     <% if remote_rows.any? %>
-      <h3 class="text-base font-medium text-gray-900 mb-1 mt-6">Indice d'éloignement</h3>
       <p class="text-xs text-gray-500 mb-4"><%= definitions["remoteness"] %> Le 10e décile regroupe les 10 % d'établissements les plus éloignés des ressources.</p>
       <section style="margin-bottom:2rem">
         <%= schools_positions_chart(remote_main.any? ? remote_main : [], remote_main.any? ? (epci_colleges + epci_lycees) : [], national, key: "remoteness",
@@ -265,12 +271,12 @@
           <p class="text-xs text-gray-500 mt-2">Pas de collège ni de lycée dans la commune : établissements de <%= epci_label %>.</p>
         <% end %>
       </section>
+    <% else %>
+      <p class="text-sm text-gray-500 mb-4">Aucun indice d'éloignement publié pour les collèges et lycées de la commune ou de l'intercommunalité.</p>
     <% end %>
-  <% end %>
-
-
-  <div class="text-xs text-gray-500 border-t pt-3 mt-4">
+  <div class="text-xs text-gray-500 border-t pt-3 mt-4" style="border-color:#e5e7eb">
     <p>Source : ministère de l'Éducation nationale, DEPP (data.education.gouv.fr) — IPS des écoles (rentrées 2022 à 2024), des collèges et des lycées (rentrées 2023 à 2025), indicateurs de valeur ajoutée des collèges (DNB 2022 à 2025) et des lycées, indice d'éloignement (rentrées 2022 à 2025).</p>
     <p>Les écoles maternelles n'ont pas d'IPS publié. Les déciles sont calculés parmi les établissements du même type de France entière, public et privé sous contrat.</p>
   </div>
-</div>
+  <% end %>
+<% end %>

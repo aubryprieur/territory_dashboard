@@ -9,8 +9,10 @@
   })
   tx_commune = tx_territories.find { |t| t[:key] == :commune }
 %>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-1">Foyers fiscaux et impôt sur le revenu</h2>
+<% heading ||= nil %>
+<% card_id ||= nil %>
+<div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading || "Foyers fiscaux et impôt sur le revenu" %></h2>
   <p class="text-xs text-gray-500 mb-4">Déclarations de revenus traitées par l'administration fiscale. Un foyer fiscal correspond à une déclaration : un couple non marié ni pacsé forme deux foyers, un jeune rattaché à ses parents n'en forme pas. Le revenu fiscal de référence (RFR) est le revenu déclaré après abattements, avant impôt et prestations sociales.</p>
 
   <% if tx_commune.nil? %>

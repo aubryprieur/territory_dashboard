@@ -1,4 +1,5 @@
 <%#
+  Organisé en questions : 1. emplois et secteurs 2. établissements employeurs (_economic_fabric) 3. créations d'entreprises (_business_creations).
   Onglet Tissu économique — dashboard commune (analyse des besoins sociaux).
   Emplois situés sur le territoire (INSEE RP 2012, 2017, 2023 — API /employment-activity/*) et tissu
   d'établissements employeurs (INSEE Flores 2017 et 2021 — API /economic-fabric/*, partial _economic_fabric).
@@ -13,20 +14,26 @@
   comparison = comparison_start_year(@emp_data, years)
   commune = territories.first
   common = { territories: territories, years: years, latest: latest, comparison: comparison }
+  questions = [
+    ["q-economy-1", "Combien d'emplois la commune offre-t-elle, et dans quels secteurs ?"],
+    ["q-economy-2", "Quels établissements emploient sur le territoire ?"],
+    ["q-economy-3", "Crée-t-on des entreprises dans la commune ?"]
+  ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Tissu économique</h2>
   <p class="text-xs text-gray-500 mb-4">Emplois et entreprises implantés sur le territoire, quel que soit le lieu de résidence des personnes qui y travaillent : poids de l'emploi local, secteurs d'activité, taille des établissements, activités tournées vers les habitants.</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "local_economy" %>
+  <%= story_takeaways("local_economy") %>
+</div>
 
-  <% if commune.nil? || commune[:key] != :commune %>
-    <p class="text-sm text-gray-500">Données sur l'emploi local indisponibles pour ce territoire.</p>
-  <% else %>
-    <!-- 1. Emplois situés sur le territoire (recensement) -->
-    <h3 class="text-base font-medium text-gray-900 mb-1">Emplois sur le territoire</h3>
-    <p class="text-xs text-gray-500 mb-4">Emplois situés sur le territoire, quel que soit le lieu de résidence des personnes qui les occupent.</p>
-
+<% if commune.nil? || commune[:key] != :commune %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données sur l'emploi local indisponibles pour ce territoire.</p></div>
+<% else %>
+  <%= story_card("q-economy-1", 1, "Combien d'emplois la commune offre-t-elle, et dans quels secteurs ?",
+        "Emplois situés sur le territoire, quel que soit le lieu de résidence des personnes qui les occupent : poids de l'emploi local, secteurs d'activité, économie sociale et solidaire.") do %>
     <%= render "dashboard/territory_indicator", **common,
           title: "Concentration d'emploi : emplois pour 100 actifs occupés", theme: "teal",
           value_key: "employment_concentration", value_format: :decimal, unit: "", decimals: 1,
@@ -50,17 +57,24 @@
           ], "Emplois par secteur et par territoire") %>
     </section>
 
-
-    <%= render "dashboard/economic_fabric" %>
-
-    <%= render "dashboard/business_creations" %>
-
     <%= render "dashboard/sdg_indicator", key: "ess_jobs_share", theme: "green",
           title: "Emplois de l'économie sociale et solidaire",
           definition: "Part des emplois salariés du territoire dans les associations, coopératives, mutuelles et fondations. Repère du tissu associatif et des acteurs de l'action sociale." %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (emplois au lieu de travail) ; économie sociale et solidaire : INSEE / SDES, indicateurs territoriaux de développement durable.</p>
+    </div>
+  <% end %>
+
+  <%= story_card("q-economy-2", 2, "Quels établissements emploient sur le territoire ?") do %>
+    <%= render "dashboard/economic_fabric" %>
+  <% end %>
+
+  <%= story_card("q-economy-3", 3, "Crée-t-on des entreprises dans la commune ?") do %>
+    <%= render "dashboard/business_creations" %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Sources : INSEE, recensements de la population <%= years.join(", ") %> (emplois au lieu de travail) ; INSEE, Flores (établissements et postes salariés) ; INSEE, SIDE (créations d'entreprises) ; économie sociale et solidaire : INSEE / SDES, indicateurs territoriaux de développement durable.</p>
     </div>
   <% end %>
-</div>
+<% end %>

@@ -24,7 +24,6 @@
   end
 %>
 <% if f_main && f_latest %>
-  <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Établissements employeurs</h3>
   <p class="text-xs text-gray-500 mb-4">Établissements actifs employeurs et postes salariés situés sur le territoire au 31 décembre (Flores). La sphère présentielle regroupe les activités tournées vers les besoins des habitants (commerce de proximité, santé, action sociale, enseignement, services publics...) ; la sphère productive, celles qui produisent pour l'extérieur du territoire.</p>
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -104,4 +103,6 @@
         ], "Établissements par taille et par territoire") %>
     <p class="text-xs text-gray-500 mt-3">Source : INSEE, Flores <%= f_start %> et <%= f_latest %> (établissements actifs employeurs, postes salariés au 31 décembre, hors particuliers employeurs). EPCI, département, région et France métropolitaine : sommes des communes.</p>
   </section>
+<% else %>
+  <p class="text-sm text-gray-500 mb-4">Données sur les établissements employeurs indisponibles pour ce territoire.</p>
 <% end %>
