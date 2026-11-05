@@ -1,4 +1,5 @@
 <%#
+  Organisé en questions : 1. accès aux médecins 2. professionnels et services 3. recours aux soins et dépistage 4. état de santé.
   Onglet Santé — dashboard commune (analyse des besoins sociaux).
     - accès aux médecins généralistes (APL — INSEE / SDES, indicateurs de développement durable)
     - densité de professionnels de santé libéraux (Observatoire des territoires, API /health-professionals/*)
@@ -23,15 +24,24 @@
   pharmacy = health_services.find { |s| s["key"] == "pharmacy" }
 
   dens = ->(v) { v.nil? ? "–" : number_with_precision(v, precision: 1, separator: ",", delimiter: " ") }
+  questions = [
+    ["q-health-1", "Les habitants ont-ils facilement accès à un médecin ?"],
+    ["q-health-2", "Quels professionnels et services de santé sont présents ?"],
+    ["q-health-3", "Les habitants consultent-ils et se font-ils dépister ?"],
+    ["q-health-4", "Quel est l'état de santé des habitants ?"]
+  ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Santé</h2>
-  <p class="text-xs text-gray-500 mb-4">Offre de soins de proximité. La complémentaire santé solidaire est présentée dans l'onglet Accès aux droits.</p>
+  <p class="text-xs text-gray-500 mb-4">Offre de soins de proximité, recours aux soins et état de santé : quatre questions. La complémentaire santé solidaire est présentée dans l'onglet Accès aux droits.</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "health" %>
+  <%= story_takeaways("health") %>
+</div>
 
-  <!-- 1. Accès aux médecins généralistes -->
-  <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Accès aux médecins généralistes</h3>
+<%= story_card("q-health-1", 1, "Les habitants ont-ils facilement accès à un médecin ?",
+      "Accessibilité potentielle localisée (APL) aux médecins généralistes, aux généralistes de moins de 65 ans et aux chirurgiens-dentistes.") do %>
   <%= render "dashboard/sdg_indicator", key: "gp_accessibility", theme: "red",
         title: "Accessibilité aux médecins généralistes", value_format: :decimal, unit: "", decimals: 1,
         definition: "Accessibilité potentielle localisée (APL) : nombre de consultations de médecine générale accessibles par an et par habitant, en tenant compte de l'activité des médecins, de leur distance et des besoins de la population selon l'âge. Sous 2,5, la zone est considérée comme sous-dotée." %>
@@ -44,7 +54,10 @@
           ["apl_dentists", "Chirurgiens-dentistes (équivalents temps plein pour 100 000 habitants)", :worse_if_lower, :decimal]
         ] %>
 
-  <!-- 2. Professionnels de santé libéraux -->
+<% end %>
+
+<%= story_card("q-health-2", 2, "Quels professionnels et services de santé sont présents ?",
+      "Professionnels de santé libéraux pour 100 000 habitants et services de santé présents dans la commune ou, à défaut, distance au plus proche.") do %>
   <% if pro_commune %>
     <%
       rows = primary.map { |k| [k, professions[k]] } + professions.reject { |k, _| primary.include?(k) }.to_a
@@ -84,7 +97,6 @@
     </section>
   <% end %>
 
-  <!-- 3. Services de santé : présence ou distance -->
   <% if health_services.any? %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-base font-medium text-gray-900 mb-1">Services de santé de proximité (<%= eq["year"] %>)</h3>
@@ -105,7 +117,14 @@
       </ul>
     </section>
   <% end %>
+  <% if pro_commune.nil? && health_services.none? %>
+    <p class="text-sm text-gray-500 mb-4">Données sur l'offre de soins indisponibles pour ce territoire.</p>
+  <% end %>
 
+<% end %>
+
+<%= story_card("q-health-3", 3, "Les habitants consultent-ils et se font-ils dépister ?",
+      "Bénéficiaires de l'assurance maladie sans médecin traitant, sans consultation ou sans dépistage : repère du renoncement aux soins et des besoins de prévention.") do %>
   <%= render "dashboard/fragilities", title: "Recours aux soins et prévention",
         definition: "Bénéficiaires de l'assurance maladie n'ayant pas eu recours à un professionnel ou à un dépistage. Repère du renoncement aux soins et des besoins de prévention.",
         rows: [
@@ -117,6 +136,10 @@
           ["no_colorectal_screening_rate", "50-74 ans sans dépistage du cancer colorectal", :worse_if_higher]
         ] %>
 
+<% end %>
+
+<%= story_card("q-health-4", 4, "Quel est l'état de santé des habitants ?",
+      "Affections de longue durée et pensions d'invalidité parmi les bénéficiaires de l'assurance maladie.") do %>
   <%= render "dashboard/fragilities", title: "État de santé",
         definition: "Part des bénéficiaires de 16 ans ou plus en affection de longue durée (maladie chronique grave : diabète, cancer, maladie cardiovasculaire…) ou percevant une pension d'invalidité. Régimes général et agricole réunis.",
         rows: [
@@ -127,4 +150,4 @@
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
     <p>Sources : accessibilité aux médecins généralistes : DREES, via INSEE / SDES (indicateurs territoriaux de développement durable) ; professionnels de santé libéraux : Observatoire des territoires (ANCT) — RPPS, Adeli, INSEE BPE 2025 et recensement 2023, France métropolitaine = moyenne des régions pondérée par la population ; services de santé : INSEE, Base permanente des équipements 2025 ; recours aux soins, prévention, ALD, invalidité : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), 2025 ; APL des médecins de moins de 65 ans et des dentistes : ANCT, 2024.</p>
   </div>
-</div>
+<% end %>

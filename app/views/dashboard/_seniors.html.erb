@@ -1,4 +1,5 @@
 <%#
+  Organisé en questions : 1. nombre et projections 2. fragilité des retraités 3. isolement 4. santé et activité physique 5. hébergement et services à domicile.
   Onglet Seniors — dashboard commune (analyse des besoins sociaux).
     - fragilité sociale, ressources, parcours et santé des retraités et des assurés de 55 ans ou plus
       (Observatoire interrégimes des situations de fragilité, interrégime 2025 — API /senior-fragilities/*)
@@ -11,21 +12,45 @@
   sfv = ->(data, key) { data.is_a?(Hash) && data["error"].blank? && sf_year ? data.dig("senior_fragilities_data", sf_year.to_s, key) : nil }
   fr = ->(key) { sfv.(@france_senior_fragilities_data, key) }
   com = ->(key) { sfv.(sf, key) }
+  questions = [
+    ["q-seniors-1", "Combien de seniors vivent dans la commune, et combien demain ?"],
+    ["q-seniors-2", "Les retraités sont-ils en situation de fragilité ?"],
+    ["q-seniors-3", "Les seniors vivent-ils seuls ?"],
+    ["q-seniors-4", "Les seniors prennent-ils soin de leur santé ?"],
+    ["q-seniors-5", "Quelles solutions d'hébergement et d'aide à domicile ?"]
+  ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Seniors</h2>
   <p class="text-xs text-gray-500 mb-4">Poids des seniors dans la population (recensement), situation des retraités et des assurés de 55 ans ou plus, tous régimes de retraite et d'assurance maladie réunis (régime général, MSA…), lieux de vie et isolement, hébergement et services.</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "seniors" %>
+  <%= story_takeaways("seniors") %>
+</div>
 
-  <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Poids des seniors</h3>
+<%= story_card("q-seniors-1", 1, "Combien de seniors vivent dans la commune, et combien demain ?",
+      "Poids des seniors dans la population, projections à dix ans et quartiers où ils vivent.") do %>
   <%= render "dashboard/population_focus", focus: :seniors %>
   <%= render "dashboard/population_projection", groups: %w[60_74 75_84 85p],
         title: "Projections 2023-2033 : seniors",
         intro: "Seniors projetés au 1er janvier, scénario tendanciel (mortalité nationale récente, migrations par âge observées dans la commune entre 2017 et 2022)." %>
 
+  <%= render "dashboard/map_group", maps: [
+      { kind: :iris, map: cached_iris_map("age_65_79_share"),
+        definition: "Personnes de 65 à 79 ans, en % de la population de l'IRIS : jeunes retraités, public de la prévention et de la vie sociale." },
+      { kind: :iris, map: cached_iris_map("age_80p_share"),
+        definition: "Personnes de 80 ans ou plus, en % de la population de l'IRIS : âge où la perte d'autonomie devient plus fréquente." },
+      { kind: :grid, map: cached_grid_map("age_80p_share"),
+        definition: "Personnes de 80 ans ou plus, en % des habitants du carreau (2021) : localiser les besoins de maintien à domicile, de visites et de transport." }
+    ] %>
+
+<% end %>
+
+<%= story_card("q-seniors-2", 2, "Les retraités sont-ils en situation de fragilité ?",
+      "Retraités de tous les régimes : fragilité sociale, ressources et parcours (Observatoire interrégimes des situations de fragilité).") do %>
   <% if sf.nil? %>
-    <p class="text-sm text-gray-500">Données de l'Observatoire des situations de fragilité non disponibles pour cette commune.</p>
+  <p class="text-sm text-gray-500 mb-4">Données de l'Observatoire des situations de fragilité non disponibles pour cette commune.</p>
   <% else %>
     <%
       cards = [
@@ -69,32 +94,35 @@
             ["invalidity_inaptitude_rate", "Retraités ex-invalides ou partis au titre de l'inaptitude", :worse_if_higher],
             ["incomplete_career_rate", "Partis à l'âge du taux plein avec une carrière incomplète", :worse_if_higher]
           ] %>
+  <% end %>
 
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-2">Où vivent les seniors</h3>
-    <%= render "dashboard/iris_map", map: cached_iris_map("age_65_79_share"),
-          definition: "Personnes de 65 à 79 ans, en % de la population de l'IRIS : jeunes retraités, public de la prévention et de la vie sociale." %>
-    <%= render "dashboard/iris_map", map: cached_iris_map("age_80p_share"),
-          definition: "Personnes de 80 ans ou plus, en % de la population de l'IRIS : âge où la perte d'autonomie devient plus fréquente." %>
-    <%= render "dashboard/grid_map", map: cached_grid_map("age_80p_share"),
-          definition: "Personnes de 80 ans ou plus, en % des habitants du carreau (2021) : localiser les besoins de maintien à domicile, de visites et de transport." %>
+<% end %>
 
-
+<%= story_card("q-seniors-3", 3, "Les seniors vivent-ils seuls ?",
+      "Personnes vivant seules à 80 ans ou plus, et entre 55 et 79 ans : repère de l'isolement à prévenir.") do %>
     <%
       hh_years = comparison_years(@household_data, "household_data")
       hh_latest = @household_data.is_a?(Hash) && @household_data["error"].blank? ? comparison_latest_year(@household_data, hh_years) : nil
       hh = ->(key) { hh_latest && @household_data.dig("household_data", hh_latest.to_s, key) }
     %>
     <% if hh_latest %>
-      <h3 class="text-base font-medium text-gray-900 mb-1">Isolement des 80 ans ou plus</h3>
       <p class="text-xs text-gray-500 mb-2">À <%= @territory_name %>, <strong><%= fmt_pct(hh.("living_alone_rate_80_plus")) %></strong> des personnes de 80 ans ou plus vivent seules (<%= fmt_count(hh.("living_alone_80_plus")) %> personnes, recensement <%= hh_latest %>). Détail et comparaisons dans l'onglet Ménages.</p>
-      <%= render "dashboard/iris_map", map: cached_iris_map("alone_80p_share"),
+      <%= render "dashboard/map_group", maps: [
+          { kind: :iris, map: cached_iris_map("alone_80p_share"),
             definition: "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de l'IRIS.",
-            commune_latest: { year: hh_latest, value: hh.("living_alone_rate_80_plus"),
-                              count: hh.("living_alone_80_plus"), total: nil } %>
-      <%= render "dashboard/iris_map", map: cached_iris_map("alone_55_79_share"),
-            definition: "Personnes de 55 à 79 ans vivant seules, en % des 55-79 ans de l'IRIS : isolement avant le grand âge, à prévenir." %>
+            commune_latest: { year: hh_latest, value: hh.("living_alone_rate_80_plus"), count: hh.("living_alone_80_plus"), total: nil } },
+          { kind: :iris, map: cached_iris_map("alone_55_79_share"),
+            definition: "Personnes de 55 à 79 ans vivant seules, en % des 55-79 ans de l'IRIS : isolement avant le grand âge, à prévenir." }
+        ] %>
+    <% else %>
+      <p class="text-sm text-gray-500 mb-4">Données sur les ménages indisponibles pour ce territoire.</p>
     <% end %>
 
+<% end %>
+
+<%= story_card("q-seniors-4", 4, "Les seniors prennent-ils soin de leur santé ?",
+      "Recours aux soins des 55 ans ou plus, vaccination contre la grippe et pratique sportive en club des 60 ans ou plus.") do %>
+  <% if sf %>
     <%= render "dashboard/fragilities", show_source: false, dataset: :senior_fragilities, title: "Santé et recours aux soins des 55 ans ou plus",
           definition: "Assurés de 55 ans ou plus. Sans recours aux soins : aucun soin remboursé sur la période observée. Le score de non-recours (2024) mesure la fragilité liée au renoncement aux soins.",
                     rows: [
@@ -103,6 +131,7 @@
             ["ald_rate", "En affection de longue durée (ALD)", :worse_if_higher],
             ["care_nonuse_score", "Score moyen de fragilité liée au non-recours aux soins", :worse_if_higher, :score]
           ] %>
+  <% end %>
 
     <%= render "dashboard/fragilities", show_source: false, title: "Vaccination antigrippale",
           definition: "Personnes âgées éligibles n'ayant pas été vaccinées contre la grippe au cours des 24 derniers mois Les deux indicateurs n'ont pas la même définition : 65 ans ou plus du régime général d'une part, 75 ans ou plus éligibles à la vaccination d'autre part ; ils ne se comparent donc pas entre eux.",
@@ -111,6 +140,14 @@
             ["no_flu_vaccine_75p_rate", "75 ans ou plus sans vaccination antigrippale", :worse_if_higher]
           ] %>
 
+    <%= render "dashboard/sports", title: "Pratique sportive en club des 60 ans ou plus",
+          only: %w[licence_rate_60p women_share_60p],
+          intro: "Repère du maintien d'une activité physique encadrée, facteur de prévention de la perte d'autonomie." %>
+
+<% end %>
+
+<%= story_card("q-seniors-5", 5, "Quelles solutions d'hébergement et d'aide à domicile ?",
+      "Établissements d'hébergement pour personnes âgées et services de soins et d'aide à domicile.") do %>
     <%
       ec = @elderly_care_data.is_a?(Hash) && @elderly_care_data["error"].blank? ? @elderly_care_data : nil
       ec_year = ec && ec["latest_year"]
@@ -119,13 +156,8 @@
       nearest = ->(key) { eq_services.find { |s| s["key"] == key }&.dig("nearest") }
       near_txt = ->(n) { n ? " (le plus proche à #{number_with_precision(n['distance_km'], precision: 1, separator: ',')} km, #{n['commune_name'].to_s.titleize})" : "" }
     %>
-    <%= render "dashboard/sports", title: "Pratique sportive en club des 60 ans ou plus",
-          only: %w[licence_rate_60p women_share_60p],
-          intro: "Repère du maintien d'une activité physique encadrée, facteur de prévention de la perte d'autonomie." %>
-
     <% if ec %>
       <section style="margin-bottom:2.5rem">
-        <h3 class="text-base font-medium text-gray-900 mb-1">Hébergement et services à domicile</h3>
         <p class="text-xs text-gray-500 mb-3">Établissements d'hébergement pour personnes âgées (Ehpad, résidences autonomie, petites unités de vie) et services d'accompagnement à domicile implantés dans la commune. Un service à domicile intervient aussi dans les communes voisines : son absence dans la commune ne signifie pas une absence de service.</p>
         <ul class="text-sm text-gray-800 space-y-1" style="margin-bottom:1rem">
           <li>
@@ -149,10 +181,11 @@
               france_name: "France métropolitaine",
               rows: [["places_per_1000_75p", "Places d'hébergement pour 1 000 personnes de 75 ans ou plus", :worse_if_lower, :decimal]] %>
       </section>
+    <% else %>
+      <p class="text-sm text-gray-500 mb-4">Données sur l'hébergement et les services à domicile indisponibles pour ce territoire.</p>
     <% end %>
-  <% end %>
 
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
     <p>Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), Géofragilité, données 2025 (score de non-recours aux soins : 2024 ; nombre de retraités 2017 pour l'évolution). Population : retraités et assurés de 55 ans ou plus, tous régimes. « s » : secret statistique (effectif trop faible). En rouge : situation moins favorable qu'en France. France : France entière, outre-mer compris ; valeurs publiées par l'Observatoire, sauf le minimum vieillesse (moyenne des départements pondérée par le nombre de retraités). Effectifs de retraités : commune seulement. Part des retraités à risque et évolution du nombre de retraités : EPCI, département, région et France calculés en additionnant les communes non soumises au secret.</p>
   </div>
-</div>
+<% end %>

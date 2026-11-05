@@ -10,8 +10,10 @@
   }).map { |t| t[:key] == :commune ? t : t.merge(name: "#{t[:name]} *") }
   c2s_commune = c2s_territories.find { |t| t[:key] == :commune }
 %>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-1">Complémentaire santé solidaire</h2>
+<% heading ||= nil %>
+<% card_id ||= nil %>
+<div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading || "Complémentaire santé solidaire" %></h2>
   <p class="text-xs text-gray-500 mb-4">Assurés du régime général de l'assurance maladie bénéficiant de la complémentaire santé solidaire (C2S), au 1er janvier. Sans participation (ex-CMU-C) : ressources inférieures à environ 850 € par mois pour une personne seule ; avec participation (ex-ACS) : jusqu'à 35 % au-dessus de ce plafond.</p>
 
   <% if c2s_commune.nil? %>
@@ -56,4 +58,5 @@
       <p>* Ensemble des communes découpées en IRIS du territoire (<%= fmt_count(c2s_territories.find { |t| t[:key] == :france }&.then { |t| territory_value(t, c2s_latest, "communes") }) %> communes en France métropolitaine), seules publiées : comparaison indicative, ces communes sont plus urbaines que la moyenne. Évolution 2022 → 2025 affichée pour la commune seulement, et seulement si elle figure dans l'édition 2022, qui couvre deux fois moins de communes.</p>
     </div>
   <% end %>
+  <% if local_assigns[:extra].present? %><div style="margin-top:2rem"><%= extra %></div><% end %>
 </div>

@@ -1,4 +1,5 @@
 <%#
+  Organisé en questions : 1. part et localisation des immigrés et étrangers 2. accès à l'emploi.
   Onglet Immigrés et étrangers — dashboard commune (analyse des besoins sociaux).
   Données : INSEE, recensement 2023 (API /immigration/*), un seul millésime.
 %>
@@ -11,18 +12,20 @@
   france = territories.find { |t| t[:key] == :france }
   year = commune && comparison_latest_year(commune[:data], comparison_years(commune[:data], "immigration_data"))
   v = ->(t, key) { t && territory_value(t, year, key) }
+  questions = [
+    ["q-immigration-1", "Combien d'immigrés et d'étrangers vivent dans la commune, et dans quels quartiers ?"],
+    ["q-immigration-2", "Les immigrés accèdent-ils autant à l'emploi que les autres habitants ?"]
+  ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Immigrés et étrangers</h2>
-  <p class="text-xs text-gray-500 mb-4">Un immigré est une personne née étrangère à l'étranger et résidant en France ; une partie des immigrés est devenue française. Un étranger est une personne qui n'a pas la nationalité française ; une partie des étrangers est née en France.</p>
+  <p class="text-xs text-gray-500 mb-4">Un immigré est une personne née étrangère à l'étranger et résidant en France ; une partie des immigrés est devenue française. Un étranger est une personne qui n'a pas la nationalité française ; une partie des étrangers est née en France. Deux questions.</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "immigration" %>
-
-  <% if commune.nil? %>
-    <p class="text-sm text-gray-500">Données sur les immigrés et les étrangers indisponibles pour ce territoire.</p>
-  <% else %>
-    <!-- Synthèse -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+  <%= story_takeaways("immigration") %>
+  <% if commune %>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-indigo-50 p-4 rounded-lg">
         <h4 class="text-xs font-medium text-indigo-800">Immigrés (<%= year %>)</h4>
         <p class="text-2xl font-bold text-indigo-900"><%= fmt_pct(v.(commune, "immigrant_rate")) %></p>
@@ -44,15 +47,14 @@
         <p class="text-xs text-gray-600">non-immigrées : <%= fmt_pct(v.(commune, "nonimm_women_employment_rate_25_54")) %> · au foyer : <%= fmt_pct(v.(commune, "imm_women_homemakers_rate_25_54")) %><%= small_count_flag(v.(commune, "imm_women_25_54")) %></p>
       </div>
     </div>
+  <% end %>
+</div>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("immigrant_share"),
-          definition: "Personnes nées étrangères à l'étranger et résidant en France, en % de la population de l'IRIS.",
-          commune_latest: { year: year, value: v.(commune, "immigrant_rate"), count: v.(commune, "imm"), total: nil } %>
-    <%= render "dashboard/iris_map", map: cached_iris_map("foreigner_share"),
-          definition: "Personnes de nationalité étrangère, en % de la population de l'IRIS." %>
-
-
-    <!-- Comparaison territoriale -->
+<% if commune.nil? %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données sur les immigrés et les étrangers indisponibles pour ce territoire.</p></div>
+<% else %>
+  <%= story_card("q-immigration-1", 1, "Combien d'immigrés et d'étrangers vivent dans la commune, et dans quels quartiers ?",
+        "Part des immigrés et des étrangers dans la population, comparée aux autres territoires, et répartition par quartier.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Comparaison territoriale (<%= year %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Chômage au sens du recensement (personnes se déclarant au chômage), parmi les actifs de 15 ans ou plus. Ouvriers et employés : parmi les personnes de 15 ans ou plus ayant une profession ou en ayant eu une.</p>
@@ -92,15 +94,29 @@
           ], "Part des immigrés et des étrangers par territoire", height: 240) %>
     </section>
 
-    <!-- Écarts immigrés / non-immigrés -->
+    <%= render "dashboard/map_group", maps: [
+        { kind: :iris, map: cached_iris_map("immigrant_share"),
+          definition: "Personnes nées étrangères à l'étranger et résidant en France, en % de la population de l'IRIS.",
+          commune_latest: { year: year, value: v.(commune, "immigrant_rate"), count: v.(commune, "imm"), total: nil } },
+        { kind: :iris, map: cached_iris_map("foreigner_share"),
+          definition: "Personnes de nationalité étrangère, en % de la population de l'IRIS." }
+      ] %>
+
+    <div class="text-xs text-gray-500 border-t pt-3 mt-4" style="border-color:#e5e7eb">
+      <p>Source : INSEE, recensement de la population 2023 (exploitation principale ; catégories socioprofessionnelles : exploitation complémentaire). Effectifs estimés à partir d'enquêtes annuelles : ⚠ à interpréter avec prudence en dessous de 200 personnes.</p>
+    </div>
+  <% end %>
+
+  <%= story_card("q-immigration-2", 2, "Les immigrés accèdent-ils autant à l'emploi que les autres habitants ?",
+        "Chômage, emploi des femmes et catégories sociales des immigrés comparés à ceux des non-immigrés.") do %>
     <section style="margin-bottom:1.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Immigrés et non-immigrés face à l'emploi (<%= year %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Comparaison des immigrés et des non-immigrés de la commune, avec la France métropolitaine en repère (couleurs claires).</p>
       <%= immigration_gap_chart(commune, france, year) %>
     </section>
-  <% end %>
 
-  <div class="text-xs text-gray-500 border-t pt-3 mt-4">
-    <p>Source : INSEE, recensement de la population 2023 (exploitation principale ; catégories socioprofessionnelles : exploitation complémentaire). Effectifs estimés à partir d'enquêtes annuelles : ⚠ à interpréter avec prudence en dessous de 200 personnes.</p>
-  </div>
-</div>
+    <div class="text-xs text-gray-500 border-t pt-3 mt-4" style="border-color:#e5e7eb">
+      <p>Source : INSEE, recensement de la population 2023 (exploitation principale ; catégories socioprofessionnelles : exploitation complémentaire). Effectifs estimés à partir d'enquêtes annuelles : ⚠ à interpréter avec prudence en dessous de 200 personnes.</p>
+    </div>
+  <% end %>
+<% end %>

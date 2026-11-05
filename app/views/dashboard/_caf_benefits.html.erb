@@ -1,4 +1,5 @@
 <%#
+  Organisé en questions : 1. couverture CAF 2. RSA et prime d'activité 3. aides au logement 4. familles et handicap 5. complémentaire santé solidaire (_health_insurance).
   Onglet Accès aux droits (prestations CAF, puis complémentaire santé solidaire : _health_insurance) — dashboard commune (analyse des besoins sociaux).
   Données : Cnaf, data.caf.fr, foyers allocataires au 31 décembre 2020 à 2024 (API /caf-benefits/*).
   Taux rapportés au recensement 2023 du territoire (ménages, population, familles).
@@ -16,20 +17,24 @@
   common = { territories: territories, years: years, latest: latest, comparison: comparison, table_years: table_years }
   labels = @caf_data.is_a?(Hash) ? (@caf_data.dig("labels", "benefits") || {}) : {}
   euros = ->(v) { v.nil? ? "–" : "#{fmt_count(v)} €" }
+  questions = [
+    ["q-rights-1", "Quelle part de la population est couverte par la CAF ?"],
+    ["q-rights-2", "Combien d'habitants vivent du RSA ou d'un bas revenu d'activité ?"],
+    ["q-rights-3", "Combien d'habitants sont aidés pour se loger ?"],
+    ["q-rights-4", "Quelles aides pour les familles et les personnes handicapées ?"],
+    ["q-rights-5", "Les habitants ont-ils accès à une complémentaire santé ?"]
+  ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-1">Prestations CAF</h2>
-  <p class="text-xs text-gray-500 mb-4">Foyers allocataires et personnes couvertes au 31 décembre (<%= years.first %>-<%= latest %>). Les taux rapportent les effectifs CAF à la population et aux ménages du recensement 2023.</p>
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Accès aux droits</h2>
+  <p class="text-xs text-gray-500 mb-4">Prestations de la CAF et complémentaire santé solidaire : cinq questions. Foyers allocataires et personnes couvertes au 31 décembre (<%= years.first %>-<%= latest %>). Les taux rapportent les effectifs CAF à la population et aux ménages du recensement 2023.</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "caf_benefits" %>
-
-  <% if commune.nil? || commune[:key] != :commune %>
-    <p class="text-sm text-gray-500">Données CAF indisponibles pour ce territoire.</p>
-  <% else %>
+  <%= story_takeaways("caf_benefits") %>
+  <% if commune && commune[:key] == :commune %>
     <% cv = ->(key, year = latest) { territory_value(commune, year, key) } %>
-
-    <!-- Synthèse -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <% [
            ["Population couverte par la CAF", "population_covered_rate", "indigo"],
            ["Population couverte par le RSA", "rsa_population_rate", "purple"],
@@ -43,8 +48,16 @@
         </div>
       <% end %>
     </div>
+  <% end %>
+</div>
 
-    <!-- 1. Couverture par la CAF -->
+<% if commune.nil? || commune[:key] != :commune %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données CAF indisponibles pour ce territoire.</p></div>
+<% else %>
+  <% cv = ->(key, year = latest) { territory_value(commune, year, key) } %>
+
+  <%= story_card("q-rights-1", 1, "Quelle part de la population est couverte par la CAF ?",
+        "Part des habitants vivant dans un foyer qui perçoit au moins une prestation de la CAF, poids de chaque prestation et détail des montants versés.") do %>
     <%= render "dashboard/territory_indicator", **common,
           title: "Population couverte par la CAF", theme: "indigo",
           value_key: "population_covered_rate",
@@ -54,65 +67,6 @@
             { label: "Ménages allocataires", count_key: "all_households", share_key: "households_covered_rate" }
           ] %>
 
-    <!-- 2. Précarité : RSA et prime d'activité -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Minima sociaux et bas revenus d'activité</h3>
-    <p class="text-xs text-gray-500 mb-4">Le RSA garantit un revenu minimum ; la prime d'activité complète les revenus des travailleurs modestes.</p>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Population couverte par le RSA", theme: "purple",
-          value_key: "rsa_population_rate",
-          count_key: "rsa_persons", count_label: "personnes couvertes par le RSA",
-          definition: "Part de la population vivant dans un foyer allocataire du revenu de solidarité active. C'est l'un des repères les plus directs de la pauvreté monétaire sur un territoire.",
-          details: [
-            { label: "Foyers allocataires du RSA", count_key: "rsa_households", share_key: "rsa_households_rate" },
-            { label: "Part des allocataires CAF", share_key: "rsa_share" }
-          ] %>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Population couverte par la prime d'activité", theme: "blue",
-          value_key: "ppa_population_rate",
-          count_key: "ppa_persons", count_label: "personnes couvertes par la prime d'activité",
-          definition: "Part de la population vivant dans un foyer qui perçoit la prime d'activité : travailleurs aux revenus modestes, souvent à temps partiel ou en contrat court.",
-          details: [
-            { label: "Foyers allocataires", count_key: "ppa_households", share_key: "ppa_households_rate" },
-            { label: "Part des allocataires CAF", share_key: "ppa_share" }
-          ] %>
-
-    <!-- 3. Logement -->
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Population couverte par une aide au logement", theme: "teal",
-          value_key: "housing_population_rate",
-          count_key: "housing_persons", count_label: "personnes couvertes par une aide au logement",
-          definition: "Part de la population vivant dans un foyer qui perçoit une aide au logement (APL, ALF ou ALS). Repère du poids du logement dans le budget des ménages modestes.",
-          details: [
-            { label: "Foyers allocataires", count_key: "housing_households", share_key: "housing_households_rate" },
-            { label: "dont APL (parc conventionné)", share_key: "apl_housing_share" },
-            { label: "dont ALF (familles)", share_key: "alf_housing_share" },
-            { label: "dont ALS (personnes seules, étudiants...)", share_key: "als_housing_share" }
-          ] %>
-
-    <!-- 4. Familles et handicap -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Familles et handicap</h3>
-    <p class="text-xs text-gray-500 mb-4">Prestations familiales et liées au handicap.</p>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Familles monoparentales percevant l'ASF", theme: "orange",
-          value_key: "asf_single_parent_rate",
-          count_key: "asf_households", count_label: "foyers percevant l'allocation de soutien familial",
-          definition: "Foyers percevant l'allocation de soutien familial (parent qui élève seul un enfant sans pension alimentaire, ou orphelin) pour 100 familles monoparentales du recensement. Repère de la fragilité des familles monoparentales.",
-          details: [
-            { label: "Familles avec enfants percevant les allocations familiales", share_key: "af_families_rate" },
-            { label: "Foyers percevant la Paje (jeunes enfants)", count_key: "paje_households" },
-            { label: "dont complément mode de garde (CMG)", count_key: "cmg_households" }
-          ] %>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Bénéficiaires de l'AAH", theme: "amber",
-          value_key: "aah_rate",
-          count_key: "aah_beneficiaries", count_label: "bénéficiaires de l'allocation aux adultes handicapés",
-          definition: "Bénéficiaires de l'allocation aux adultes handicapés pour 100 personnes de 20 à 64 ans. La Cnaf ne publie pas les prestations liées au handicap à l'échelle communale : la commune apparaît sans valeur." %>
-
-    <!-- 5. Poids des prestations -->
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Poids de chaque prestation parmi les foyers allocataires (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Part des foyers allocataires de la CAF qui perçoivent chaque prestation, en % (un foyer peut en percevoir plusieurs).</p>
@@ -156,19 +110,88 @@
       </div>
     </section>
 
-    <div class="mb-2 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : Cnaf, data.caf.fr — foyers allocataires et personnes couvertes au 31 décembre <%= years.first %> à <%= latest %> ; INSEE, recensement 2023 (dénominateurs). Régions et France métropolitaine : somme des départements.</p>
       <p>Les taux de toutes les années sont rapportés aux populations de 2023 : leurs évolutions reflètent surtout celle du nombre d'allocataires. Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
       <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>
   <% end %>
-</div>
 
-<!-- Complémentaire santé solidaire (Cnam / Insee) -->
-<%= render "dashboard/health_insurance" %>
+  <%= story_card("q-rights-2", 2, "Combien d'habitants vivent du RSA ou d'un bas revenu d'activité ?",
+        "Le RSA garantit un revenu minimum ; la prime d'activité complète les revenus des travailleurs modestes.") do %>
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Population couverte par le RSA", theme: "purple",
+          value_key: "rsa_population_rate",
+          count_key: "rsa_persons", count_label: "personnes couvertes par le RSA",
+          definition: "Part de la population vivant dans un foyer allocataire du revenu de solidarité active. C'est l'un des repères les plus directs de la pauvreté monétaire sur un territoire.",
+          details: [
+            { label: "Foyers allocataires du RSA", count_key: "rsa_households", share_key: "rsa_households_rate" },
+            { label: "Part des allocataires CAF", share_key: "rsa_share" }
+          ] %>
 
-<div class="bg-white shadow rounded-lg p-6 mb-6">
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Population couverte par la prime d'activité", theme: "blue",
+          value_key: "ppa_population_rate",
+          count_key: "ppa_persons", count_label: "personnes couvertes par la prime d'activité",
+          definition: "Part de la population vivant dans un foyer qui perçoit la prime d'activité : travailleurs aux revenus modestes, souvent à temps partiel ou en contrat court.",
+          details: [
+            { label: "Foyers allocataires", count_key: "ppa_households", share_key: "ppa_households_rate" },
+            { label: "Part des allocataires CAF", share_key: "ppa_share" }
+          ] %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : Cnaf, data.caf.fr — foyers allocataires et personnes couvertes au 31 décembre <%= years.first %> à <%= latest %> ; INSEE, recensement 2023 (dénominateurs). Évolutions en points de pourcentage. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+  <%= story_card("q-rights-3", 3, "Combien d'habitants sont aidés pour se loger ?",
+        "Aides au logement de la CAF : APL dans le parc conventionné, ALF pour les familles, ALS pour les autres ménages.") do %>
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Population couverte par une aide au logement", theme: "teal",
+          value_key: "housing_population_rate",
+          count_key: "housing_persons", count_label: "personnes couvertes par une aide au logement",
+          definition: "Part de la population vivant dans un foyer qui perçoit une aide au logement (APL, ALF ou ALS). Repère du poids du logement dans le budget des ménages modestes.",
+          details: [
+            { label: "Foyers allocataires", count_key: "housing_households", share_key: "housing_households_rate" },
+            { label: "dont APL (parc conventionné)", share_key: "apl_housing_share" },
+            { label: "dont ALF (familles)", share_key: "alf_housing_share" },
+            { label: "dont ALS (personnes seules, étudiants...)", share_key: "als_housing_share" }
+          ] %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : Cnaf, data.caf.fr — foyers allocataires et personnes couvertes au 31 décembre <%= years.first %> à <%= latest %> ; INSEE, recensement 2023 (dénominateurs). Évolutions en points de pourcentage. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+  <%= story_card("q-rights-4", 4, "Quelles aides pour les familles et les personnes handicapées ?",
+        "Prestations familiales et allocation aux adultes handicapés.") do %>
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Familles monoparentales percevant l'ASF", theme: "orange",
+          value_key: "asf_single_parent_rate",
+          count_key: "asf_households", count_label: "foyers percevant l'allocation de soutien familial",
+          definition: "Foyers percevant l'allocation de soutien familial (parent qui élève seul un enfant sans pension alimentaire, ou orphelin) pour 100 familles monoparentales du recensement. Repère de la fragilité des familles monoparentales.",
+          details: [
+            { label: "Familles avec enfants percevant les allocations familiales", share_key: "af_families_rate" },
+            { label: "Foyers percevant la Paje (jeunes enfants)", count_key: "paje_households" },
+            { label: "dont complément mode de garde (CMG)", count_key: "cmg_households" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Bénéficiaires de l'AAH", theme: "amber",
+          value_key: "aah_rate",
+          count_key: "aah_beneficiaries", count_label: "bénéficiaires de l'allocation aux adultes handicapés",
+          definition: "Bénéficiaires de l'allocation aux adultes handicapés pour 100 personnes de 20 à 64 ans. La Cnaf ne publie pas les prestations liées au handicap à l'échelle communale : la commune apparaît sans valeur." %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : Cnaf, data.caf.fr — foyers allocataires et personnes couvertes au 31 décembre <%= years.first %> à <%= latest %> ; INSEE, recensement 2023 (dénominateurs). Évolutions en points de pourcentage. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+<% end %>
+
+<% c2s_all = capture do %>
   <%= render "dashboard/fragilities", title: "Complémentaire santé solidaire — toutes communes",
         definition: "Part des bénéficiaires du régime général couverts par la complémentaire santé solidaire (avec ou sans participation). Publiée pour toutes les communes, y compris celles qui ne sont pas découpées en IRIS (valeur masquée pour les plus petites).",
         rows: [["c2s_rate", "Bénéficiaires de la C2S (régime général, toute population)", :worse_if_higher]] %>
-</div>
+<% end %>
+<%= render "dashboard/health_insurance", heading: "5. Les habitants ont-ils accès à une complémentaire santé ?", card_id: "q-rights-5", extra: c2s_all %>
