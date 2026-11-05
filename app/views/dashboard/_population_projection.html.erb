@@ -76,7 +76,7 @@
     </div>
 
     <div style="margin-top:1.25rem">
-      <%= chart_canvas({ type: "line", unit: "", digits: 0, zero: true, labels: years, datasets: datasets }, 260, "#{title} : effectifs projetés #{years.first}-#{years.last}") %>
+      <%= chart_canvas({ type: "line", unit: "", digits: 0, labels: years, datasets: datasets }, 260, "#{title} : effectifs projetés #{years.first}-#{years.last}") %>
     </div>
 
     <% if births %>
@@ -87,7 +87,7 @@
       %>
       <div style="margin-top:1.25rem">
         <p class="text-xs text-gray-500 mb-1">Naissances par an : observées (<%= b_years.first %>-<%= pj["base_year"] %>) puis projetées, avec la fourchette de natalité.</p>
-        <%= chart_canvas({ type: "line", unit: "", digits: 0, zero: true, labels: b_years, datasets: [
+        <%= chart_canvas({ type: "line", unit: "", digits: 0, labels: b_years, datasets: [
               { label: "Observées", data: obs_series, color: "#111827", main: true },
               { label: "Projection tendancielle", data: proj.("trend"), color: "#4f46e5", main: true },
               { label: "Natalité basse", data: proj.("low"), color: "#93c5fd", dash: true },

@@ -54,7 +54,7 @@
     iris_notes = ["#{ilabel} par IRIS", definition, (additive && count_label ? "Effectif : #{count_label} ; total : dénominateur de l'IRIS" : nil),
                   "Source : #{map['source']}"]
   %>
-  <% if collapsed %><details class="map-fold" style="margin:-1.25rem 0 2rem"><summary style="cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #c7d2fe;border-radius:8px;background:#f8faff;color:#3730a3;font-size:13px;font-weight:500">🗺 Voir la carte par quartier (IRIS) : <%= ilabel.to_s.sub(/\A./, &:downcase) %></summary><div style="margin-top:12px"><% end %>
+  <% if collapsed %><details class="map-fold" style="margin:0 0 2rem"><summary style="cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #c7d2fe;border-radius:8px;background:#f8faff;color:#3730a3;font-size:13px;font-weight:500">🗺 Voir la carte par quartier (IRIS) : <%= ilabel.to_s.sub(/\A./, &:downcase) %></summary><div style="margin-top:12px"><% end %>
   <section style="margin-bottom:2.5rem">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
       <h3 class="text-sm font-medium text-gray-700 mb-1"><%= ilabel %> par IRIS (<%= latest %>)</h3>
