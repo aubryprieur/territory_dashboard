@@ -19,6 +19,8 @@
     count_label  - libellé de l'effectif (ex. "ménages")
     definition   - phrase d'explication (optionnel)
     details      - [{ label:, count_key:, share_key:, euros_key: }] (optionnel ; euros_key : montant en €)
+  Affichage : carte du chiffre clé (avec repère France) à gauche ; à droite, bascule Graphique / Tableau (graphique par
+  défaut, tableau seul s'il n'y a qu'un millésime) ; définition repliable (ⓘ Définition).
 %>
 <%
   value_format ||= :pct
@@ -51,6 +53,19 @@
   single_year = comparison.to_s == latest.to_s  # un seul millésime : ni évolution, ni courbe
   count = count_key && territory_value(commune, latest, count_key)
   total = total_key && territory_value(commune, latest, total_key)
+  # Repère France : valeur et rapport (« 2,1 fois plus qu'en France ») pour les taux et valeurs positives
+  ref_t = territories.find { |t| t[:key] == :france }
+  ref_v = ref_t && territory_value(ref_t, latest, value_key)
+  ref_text = if ref_v && value && ref_v.to_f.positive? && value_format != :points
+               r = value.to_f / ref_v
+               cmp = if r >= 1.2 then "ici #{fmt_decimal(r, precision: 1)} fois plus"
+                     elsif r <= 0.83 && r.positive? then "ici #{fmt_decimal(1 / r, precision: 1)} fois moins"
+                     else "niveau proche"
+                     end
+               "#{display_territory_name(ref_t[:name])} : #{fmt_value.(ref_v)} · #{cmp}"
+             end
+  view_btn = "padding:3px 10px;font-size:12px;border:1px solid #c7d2fe;cursor:pointer"
+  view_toggle = "var b=this,s=b.closest('section');s.querySelectorAll('[data-view]').forEach(function(e){e.style.display=e.getAttribute('data-view')===b.getAttribute('data-mode')?'':'none'});s.querySelectorAll('button[data-view-btn]').forEach(function(x){var on=x===b;x.style.background=on?'#4f46e5':'#fff';x.style.color=on?'#fff':'#3730a3'});window.dispatchEvent(new Event('resize'))"
 %>
 <%
   # Export Excel : taux pour les 5 échelles et tous les millésimes ; effectif et total pour la commune
@@ -76,7 +91,12 @@
     <%= xlsx_download_button(filename: xlsx_filename(title), notes: xlsx_notes,
                              sheets: [{ name: "Données", rows: xlsx_rows, widths: [14, 42, 8, 22, 18, 16] }]) %>
   </div>
-  <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %></p><% end %>
+  <% if definition %>
+    <details class="text-xs text-gray-500" style="margin-bottom:12px">
+      <summary style="cursor:pointer;color:#4f46e5;list-style:none;display:inline">ⓘ Définition</summary>
+      <p style="margin-top:4px"><%= definition %></p>
+    </details>
+  <% end %>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
     <div class="md:col-span-1">
@@ -87,6 +107,7 @@
           <% unless single_year %><p class="ml-2"><%= trend.(territory_value(commune, comparison, value_key), value) %></p><% end %>
         </div>
         <% unless single_year %><p class="text-xs text-gray-500">depuis <%= comparison %></p><% end %>
+        <% if ref_text %><p class="text-xs text-gray-600" style="margin-top:4px"><%= ref_text %></p><% end %>
         <% if count %>
           <p class="text-sm text-<%= theme %>-700 mt-2">
             <%= fmt_count(count) %><% if total %> sur <%= fmt_count(total) %><% end %> <%= count_label %><%= small_count_flag(count) %>
@@ -113,7 +134,19 @@
     </div>
 
     <div class="md:col-span-2">
-      <div class="overflow-x-auto">
+      <% unless single_year %>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+          <div style="display:inline-flex;border-radius:8px;overflow:hidden">
+            <button type="button" data-view-btn data-mode="chart" onclick="<%= view_toggle %>" style="<%= view_btn %>;border-radius:8px 0 0 8px;background:#4f46e5;color:#fff">Graphique</button>
+            <button type="button" data-view-btn data-mode="table" onclick="<%= view_toggle %>" style="<%= view_btn %>;border-left:none;border-radius:0 8px 8px 0;background:#fff;color:#3730a3">Tableau</button>
+          </div>
+        </div>
+        <div data-view="chart">
+          <%= comparison_line_chart(territories, years, value_key, unit: (value_format == :pct ? "%" : (value_format == :euros ? "€" : unit.to_s)),
+                                    digits: (decimals if value_format == :decimal)) %>
+        </div>
+      <% end %>
+      <div class="overflow-x-auto" data-view="table" style="<%= single_year ? '' : 'display:none' %>">
         <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
@@ -148,8 +181,4 @@
     </div>
   </div>
 
-  <% unless single_year %>
-    <%= comparison_line_chart(territories, years, value_key, unit: (value_format == :pct ? "%" : (value_format == :euros ? "€" : unit.to_s)),
-                              digits: (decimals if value_format == :decimal)) %>
-  <% end %>
 </section>

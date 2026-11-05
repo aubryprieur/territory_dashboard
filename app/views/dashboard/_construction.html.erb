@@ -2,6 +2,7 @@
   Construction neuve de logements — SDES, base Sitadel (API /construction/*) : logements commencés et autorisés,
   moyennes annuelles sur cinq ans, pour 1 000 habitants, répartition par type, courbe 2013-2024.
   Rendu à la suite du parc locatif social, dans l'onglet Logement.
+  locals (optionnels) : heading (titre de la carte), card_id (ancre du sommaire)
 %>
 <%
   cn_territories = comparison_territories("construction_data", {
@@ -11,8 +12,10 @@
   cn_commune = cn_territories.find { |t| t[:key] == :commune }
   cn_france = cn_territories.find { |t| t[:key] == :france }
 %>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-1">Construction neuve</h2>
+<% heading ||= "Construction neuve" %>
+<% card_id ||= nil %>
+<div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading %></h2>
   <p class="text-xs text-gray-500 mb-4">Logements autorisés (permis de construire) et commencés (ouverture de chantier), d'après la base Sitadel. Repère de la dynamique résidentielle et de la capacité du territoire à accueillir de nouveaux ménages. En rouge, une valeur inférieure à la France métropolitaine.</p>
 
   <% if cn_commune.nil? %>

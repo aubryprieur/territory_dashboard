@@ -1,6 +1,7 @@
 <%#
   Parc locatif social — SDES, RPLS au 1er janvier (API /social-housing/*) : évolution du parc depuis 2013,
   mobilité et vacance, loyer moyen, structure du parc en 2025. Rendu à la suite de l'onglet Logement.
+  locals (optionnels) : heading (titre de la carte), card_id (ancre du sommaire)
 %>
 <%
   sh_territories = comparison_territories("social_housing_data", {
@@ -9,8 +10,10 @@
   })
   sh_commune = sh_territories.find { |t| t[:key] == :commune }
 %>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-1">Parc locatif social</h2>
+<% heading ||= "Parc locatif social" %>
+<% card_id ||= nil %>
+<div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading %></h2>
   <p class="text-xs text-gray-500 mb-4">Logements appartenant aux bailleurs sociaux (offices publics de l'habitat, entreprises sociales pour l'habitat, logements conventionnés des SEM), au 1er janvier de chaque année, d'après le répertoire des bailleurs (RPLS).</p>
 
   <% if sh_commune.nil? %>
@@ -45,7 +48,7 @@
             { label: "Vacance de plus de 3 mois", share_key: "vacancy_3m_rate" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("social_turnover_rate"),
+    <%= render "dashboard/iris_map", map: cached_iris_map("social_turnover_rate"), collapsed: true,
           definition: "Emménagements dans l'année en % des logements sociaux de l'IRIS (effectifs estimés à partir du taux publié).",
           commune_latest: { year: sh_latest, value: sv.("mobility_rate") } %>
 
