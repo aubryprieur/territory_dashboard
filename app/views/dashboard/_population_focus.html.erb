@@ -32,18 +32,18 @@
           ] %>
     <% if pv.("age_0_2") %>
       <section style="margin-bottom:2.5rem">
-        <h3 class="text-sm font-medium text-gray-700 mb-1">Enfance et jeunesse (<%= latest %>)</h3>
+        <h3 class="text-sm font-medium text-gray-700 mb-1">Tranches d'âge (<%= latest %>)</h3>
         <p class="text-xs text-gray-500 mb-4">
           Part de chaque tranche d'âge dans la population, en %. À <%= commune[:name] %> :
           <%= (labels["childhood"] || {}).except("0_2", "3_5").map { |k, l| "#{fmt_count(pv.("age_#{k}"))} #{l.sub(' ans', '')} ans" }.join(" · ") %>.
         </p>
         <%= comparison_grouped_bar_chart(territories, latest,
               (labels["childhood"] || {}).except("0_2", "3_5").map { |k, l| ["age_#{k}_percentage", l] },
-              "Enfance et jeunesse par tranche d'âge et par territoire") %>
+              "Tranches d'âge des enfants et des jeunes par territoire") %>
       </section>
     <% end %>
   <% elsif focus == :youth_map %>
-    <%= render "dashboard/iris_map", map: cached_iris_map("under_18_share"),
+    <%= render "dashboard/iris_map", map: cached_iris_map("under_18_share"), collapsed: true,
           definition: "Enfants et jeunes de moins de 18 ans, en % de la population de l'IRIS." %>
   <% elsif focus == :seniors %>
     <%= render "dashboard/territory_indicator", **common,

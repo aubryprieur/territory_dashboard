@@ -1,23 +1,36 @@
 <%#
-  Onglet Familles — dashboard commune.
-  Données : INSEE, recensement de la population 2012, 2017, 2023 (valeurs officielles
-  par territoire, via l'API /families/*). Taux en % de l'ensemble des familles sauf mention.
+  Onglet Familles — dashboard commune, organisé en questions (sommaire, « À retenir », une carte par question) :
+    1. Quelles familles vivent dans la commune ? (couples avec enfants, nombre d'enfants, familles recomposées)
+    2. Quelles familles demandent une attention particulière ? (monoparentales, nombreuses)
+    3. Les familles ont-elles des revenus modestes ? (allocation de rentrée scolaire, Cnaf)
+  Données : INSEE, recensement de la population 2012, 2017, 2023 (API /families/*) ; Cnaf (API /caf-benefits/*).
+%>
+<%
+  questions = [
+    ["q-families-1", "Quelles familles vivent dans la commune ?"],
+    ["q-families-2", "Quelles familles demandent une attention particulière ?"],
+    ["q-families-3", "Les familles ont-elles des revenus modestes ?"]
+  ]
+  fam_ok = families_territories.any? && families_territories.first[:key] == :commune
+  latest = fam_ok ? family_latest_year : nil
+  commune = families_territories.first
+  ars_terrs = comparison_territories("caf_data", {
+    commune: @caf_data, epci: @epci_caf_data, department: @department_caf_data,
+    region: @region_caf_data, france: @france_caf_data
+  })
+  ars_years = comparison_years(@caf_data, "caf_data")
+  ars_latest = comparison_latest_year(@caf_data, ars_years)
+  ars_comparison = comparison_start_year(@caf_data, ars_years)
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-4">Familles</h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Familles</h2>
+  <p class="text-xs text-gray-500 mb-4">Familles avec enfants de moins de 25 ans : trois questions sur leur composition, celles qui demandent une attention particulière et leurs revenus. Taux en % de l'ensemble des familles sauf mention.</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "families" %>
-
-  <% if families_territories.empty? || families_territories.first[:key] != :commune %>
-    <p class="text-sm text-gray-500">Données familles indisponibles pour ce territoire.</p>
-  <% else %>
-    <%
-      latest = family_latest_year
-      commune = families_territories.first
-    %>
-
-    <!-- Synthèse en 3 cases -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  <%= story_takeaways("families") %>
+  <% if fam_ok %>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <% [
            ["Couples avec enfants", "indigo", "couples_with_children_percentage", "couples_with_children"],
            ["Familles monoparentales", "purple", "single_parent_families_percentage", "single_parent_families"],
@@ -29,8 +42,14 @@
           <p class="text-sm text-<%= theme %>-600"><%= family_count(family_value(commune, latest, count_key)) %> familles en <%= latest %></p>
         </div>
       <% end %>
-    </div>
+  <% end %>
+</div>
 
+<% if !fam_ok %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données familles indisponibles pour ce territoire.</p></div>
+<% else %>
+  <%= story_card("q-families-1", 1, "Quelles familles vivent dans la commune ?",
+        "Couples avec enfants, nombre d'enfants par famille et familles recomposées.") do %>
     <%= render "dashboard/families_indicator",
           title: "Couples avec enfants",
           theme: "indigo",
@@ -38,47 +57,15 @@
           count_key: "couples_with_children",
           definition: "Couples vivant avec au moins un enfant, en % de l'ensemble des familles." %>
 
-    <%= render "dashboard/families_indicator",
-          title: "Familles monoparentales",
-          theme: "purple",
-          rate_key: "single_parent_families_percentage",
-          count_key: "single_parent_families",
-          definition: "Un parent vivant seul avec au moins un enfant, en % de l'ensemble des familles.",
-          details: [
-            { label: "Pères seuls avec enfant(s)", count_key: "single_fathers", share_key: "single_fathers_percentage" },
-            { label: "Mères seules avec enfant(s)", count_key: "single_mothers", share_key: "single_mothers_percentage" }
-          ] %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("families_with_children_share"),
+    <%= render "dashboard/iris_map", map: cached_iris_map("families_with_children_share"), collapsed: true,
           definition: "Familles avec au moins un enfant de moins de 25 ans (couples avec enfants et familles monoparentales), en % des familles de l'IRIS : quartiers où se concentrent les besoins des familles (écoles, accueil, loisirs, soutien à la parentalité)." %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("single_parent_share"),
-          definition: "Un parent vivant seul avec au moins un enfant, en % des familles de l'IRIS.",
-          commune_latest: { year: latest, value: family_value(commune, latest, "single_parent_families_percentage"),
-                            count: family_value(commune, latest, "single_parent_families"),
-                            total: family_value(commune, latest, "total_families") } %>
-    <%= render "dashboard/grid_map", map: cached_grid_map("single_parent_share"),
-          definition: "Ménages dont la famille principale est monoparentale, en % des ménages du carreau (source fiscale, 2021)." %>
+    <section class="mb-6" style="margin-bottom:1.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Familles selon le nombre d'enfants de moins de 25 ans (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Répartition de l'ensemble des familles, en %. Survolez les barres pour le détail.</p>
+      <%= families_children_chart %>
+    </section>
 
-
-    <%= render "dashboard/families_indicator",
-          title: "Familles nombreuses",
-          theme: "blue",
-          rate_key: "large_families_percentage",
-          count_key: "total_large_families",
-          definition: "Familles avec 3 enfants ou plus de moins de 25 ans, en % de l'ensemble des familles.",
-          details: [
-            { label: "3 enfants", count_key: "families_with_3_children", share_key: "families_3_children_percentage" },
-            { label: "4 enfants ou plus", count_key: "families_with_4_plus_children", share_key: "families_4_plus_children_percentage" }
-          ] %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("large_family_share"),
-          definition: "Familles avec 3 enfants ou plus de moins de 25 ans, en % des familles de l'IRIS.",
-          commune_latest: { year: latest, value: family_value(commune, latest, "large_families_percentage"),
-                            count: family_value(commune, latest, "total_large_families"),
-                            total: family_value(commune, latest, "total_families") } %>
-
-    <!-- Familles recomposées (2023 uniquement) -->
     <% blended_rate = family_value(commune, latest, "blended_families_percentage") %>
     <% if blended_rate %>
       <section class="mb-10" style="margin-bottom:2.5rem">
@@ -134,44 +121,70 @@
       </section>
     <% end %>
 
-    <!-- Répartition par nombre d'enfants -->
-    <section class="mb-6" style="margin-bottom:1.5rem">
-      <h3 class="text-sm font-medium text-gray-700 mb-1">Familles selon le nombre d'enfants de moins de 25 ans (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Répartition de l'ensemble des familles, en %. Survolez les barres pour le détail.</p>
-      <%= families_children_chart %>
-    </section>
-
-    <!-- Notes -->
-    <div class="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Source : INSEE, recensements de la population <%= family_years.join(", ") %> (géographie au 1er janvier 2026).</p>
-      <p>Les évolutions sont exprimées en points de pourcentage entre <%= family_comparison_year %> et <%= latest %>.</p>
-      <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence (imprécision liée au sondage).</p>
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= family_years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= family_comparison_year %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>
   <% end %>
-</div>
 
-<!-- Allocation de rentrée scolaire (Cnaf, API /caf-benefits/*) : bloc à part, source et millésimes propres -->
-<%
-  ars_terrs = comparison_territories("caf_data", {
-    commune: @caf_data, epci: @epci_caf_data, department: @department_caf_data,
-    region: @region_caf_data, france: @france_caf_data
-  })
-  ars_years = comparison_years(@caf_data, "caf_data")
-  ars_latest = comparison_latest_year(@caf_data, ars_years)
-  ars_comparison = comparison_start_year(@caf_data, ars_years)
-%>
+  <%= story_card("q-families-2", 2, "Quelles familles demandent une attention particulière ?",
+        "Familles monoparentales et familles nombreuses : besoins de garde, de logement adapté et de soutien aux revenus.") do %>
+    <%= render "dashboard/families_indicator",
+          title: "Familles monoparentales",
+          theme: "purple",
+          rate_key: "single_parent_families_percentage",
+          count_key: "single_parent_families",
+          definition: "Un parent vivant seul avec au moins un enfant, en % de l'ensemble des familles.",
+          details: [
+            { label: "Pères seuls avec enfant(s)", count_key: "single_fathers", share_key: "single_fathers_percentage" },
+            { label: "Mères seules avec enfant(s)", count_key: "single_mothers", share_key: "single_mothers_percentage" }
+          ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("single_parent_share"), collapsed: true,
+          definition: "Un parent vivant seul avec au moins un enfant, en % des familles de l'IRIS.",
+          commune_latest: { year: latest, value: family_value(commune, latest, "single_parent_families_percentage"),
+                            count: family_value(commune, latest, "single_parent_families"),
+                            total: family_value(commune, latest, "total_families") } %>
+
+    <%= render "dashboard/grid_map", map: cached_grid_map("single_parent_share"), collapsed: true,
+          definition: "Ménages dont la famille principale est monoparentale, en % des ménages du carreau (source fiscale, 2021)." %>
+
+    <%= render "dashboard/families_indicator",
+          title: "Familles nombreuses",
+          theme: "blue",
+          rate_key: "large_families_percentage",
+          count_key: "total_large_families",
+          definition: "Familles avec 3 enfants ou plus de moins de 25 ans, en % de l'ensemble des familles.",
+          details: [
+            { label: "3 enfants", count_key: "families_with_3_children", share_key: "families_3_children_percentage" },
+            { label: "4 enfants ou plus", count_key: "families_with_4_plus_children", share_key: "families_4_plus_children_percentage" }
+          ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("large_family_share"), collapsed: true,
+          definition: "Familles avec 3 enfants ou plus de moins de 25 ans, en % des familles de l'IRIS.",
+          commune_latest: { year: latest, value: family_value(commune, latest, "large_families_percentage"),
+                            count: family_value(commune, latest, "total_large_families"),
+                            total: family_value(commune, latest, "total_families") } %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= family_years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= family_comparison_year %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+<% end %>
+
 <% if ars_terrs.first&.dig(:key) == :commune && ars_years.any? && territory_value(ars_terrs.first, ars_latest, "ars_families_rate") %>
-  <div class="bg-white shadow rounded-lg p-6 mb-6">
-    <h2 class="text-lg font-medium text-gray-900 mb-1">Allocation de rentrée scolaire</h2>
-    <p class="text-xs text-gray-500 mb-4">Familles aux revenus modestes ayant des enfants scolarisés de 6 à 18 ans.</p>
+  <%= story_card("q-families-3", 3, "Les familles ont-elles des revenus modestes ?",
+        "Familles aux revenus modestes ayant des enfants scolarisés de 6 à 18 ans.") do %>
     <%= render "dashboard/territory_indicator", territories: ars_terrs, years: ars_years, latest: ars_latest, comparison: ars_comparison,
           table_years: ([ars_comparison] + ars_years.last(3)).uniq.sort,
           title: "Familles percevant l'allocation de rentrée scolaire", theme: "pink",
           value_key: "ars_families_rate", value_format: :decimal, unit: "pour 100", decimals: 1,
           count_key: "ars_households", count_label: "foyers allocataires",
           definition: "Foyers percevant l'allocation de rentrée scolaire pour 100 familles avec enfants (recensement 2023). L'allocation est versée sous conditions de ressources pour chaque enfant de 6 à 18 ans scolarisé : repère des familles modestes avec enfants d'âge scolaire. Ordre de grandeur : le dénominateur comprend aussi les familles dont les enfants ont moins de 6 ans ou plus de 18 ans." %>
+
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : Cnaf, foyers allocataires au 31 décembre (<%= ars_years.first %>-<%= ars_latest %>) ; Insee, recensement 2023 (familles avec enfants).</p>
     </div>
-  </div>
+  <% end %>
+
 <% end %>

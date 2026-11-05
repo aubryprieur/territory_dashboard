@@ -1,4 +1,5 @@
 <%#
+  Organisé en questions : 1. taille et composition 2. personnes vivant seules 3. milieu social 4. ancienneté dans le logement (_housing_mobility).
   Onglet Ménages — dashboard commune (analyse des besoins sociaux).
   Données : INSEE, recensements de la population 2012, 2017, 2023 (valeurs officielles
   par territoire, via l'API /households/*).
@@ -13,19 +14,24 @@
   comparison = comparison_start_year(@household_data, years)
   commune = territories.first
   common = { territories: territories, years: years, latest: latest, comparison: comparison }
+  questions = [
+    ["q-households-1", "Comment sont composés les ménages ?"],
+    ["q-households-2", "Qui vit seul ?"],
+    ["q-households-3", "De quel milieu social sont les ménages ?"],
+    ["q-households-4", "Les ménages restent-ils longtemps dans leur logement ?"]
+  ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-4">Ménages</h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Ménages</h2>
+  <p class="text-xs text-gray-500 mb-4">Les ménages, c'est-à-dire les personnes qui partagent un même logement : quatre questions sur leur taille, l'isolement, leur milieu social et leur ancienneté dans le logement.</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "households" %>
+  <%= story_takeaways("households") %>
 
-  <% if commune.nil? || commune[:key] != :commune %>
-    <p class="text-sm text-gray-500">Données ménages indisponibles pour ce territoire.</p>
-  <% else %>
-    <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
-
-    <!-- Synthèse -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+  <% if commune && commune[:key] == :commune %>
+  <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-teal-50 p-4 rounded-lg">
         <h3 class="text-sm font-medium text-teal-800 mb-1">Ménages</h3>
         <p class="text-2xl font-bold text-teal-900"><%= fmt_count(hv.("households")) %></p>
@@ -51,14 +57,22 @@
       </div>
     </div>
 
-    <!-- 1. Taille des ménages -->
+  <% end %>
+</div>
+
+<% if commune.nil? || commune[:key] != :commune %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données ménages indisponibles pour ce territoire.</p></div>
+<% else %>
+  <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
+
+  <%= story_card("q-households-1", 1, "Comment sont composés les ménages ?",
+        "Nombre moyen de personnes par ménage et types de ménages : personnes seules, couples, familles monoparentales, ménages complexes.") do %>
     <%= render "dashboard/territory_indicator", **common,
           title: "Taille moyenne des ménages", theme: "indigo",
           value_key: "average_household_size", value_format: :decimal, unit: "pers.",
           count_key: "households", count_label: "ménages",
           definition: "Nombre moyen de personnes par ménage (population des ménages / nombre de ménages). Une baisse traduit le vieillissement, les séparations et la progression des personnes seules." %>
 
-    <!-- 2. Composition des ménages -->
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Composition des ménages (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Répartition des ménages selon leur type, en %. Un ménage = l'ensemble des personnes partageant un même logement.</p>
@@ -103,25 +117,13 @@
       </div>
     </section>
 
-    <!-- 3. Personnes vivant seules -->
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Personnes de 65 ans ou plus vivant seules", theme: "blue",
-          value_key: "living_alone_rate_65_plus",
-          count_key: "living_alone_65_plus", count_label: "personnes de 65 ans ou plus vivant seules",
-          definition: "Part des personnes de 65 ans ou plus vivant seules dans leur logement, parmi la population des ménages du même âge. Indicateur d'isolement résidentiel des seniors.",
-          details: [
-            { label: "65-79 ans vivant seuls", count_key: "living_alone_65_79", share_key: "living_alone_rate_65_79" },
-            { label: "80 ans ou plus vivant seuls", count_key: "living_alone_80_plus", share_key: "living_alone_rate_80_plus" }
-          ] %>
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. Ménages ≠ familles : un ménage regroupe les occupants d'un logement. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("alone_80p_share"),
-          definition: "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de l'IRIS.",
-          commune_latest: { year: latest, value: territory_value(commune, latest, "living_alone_rate_80_plus"),
-                            count: territory_value(commune, latest, "living_alone_80_plus"), total: nil } %>
-    <%= render "dashboard/iris_map", map: cached_iris_map("living_alone_share"),
-          definition: "Personnes de 15 ans ou plus vivant seules dans leur logement, en % des 15 ans ou plus de l'IRIS." %>
-
-
+  <%= story_card("q-households-2", 2, "Qui vit seul ?",
+        "Personnes vivant seules selon l'âge, en particulier les seniors : repère de l'isolement.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Personnes vivant seules selon l'âge (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Part des personnes vivant seules dans chaque tranche d'âge (population des ménages), en %.</p>
@@ -132,7 +134,31 @@
           ], "Personnes vivant seules par tranche d'âge et par territoire") %>
     </section>
 
-    <!-- 4. Catégorie sociale de la personne de référence -->
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Personnes de 65 ans ou plus vivant seules", theme: "blue",
+          value_key: "living_alone_rate_65_plus",
+          count_key: "living_alone_65_plus", count_label: "personnes de 65 ans ou plus vivant seules",
+          definition: "Part des personnes de 65 ans ou plus vivant seules dans leur logement, parmi la population des ménages du même âge. Indicateur d'isolement résidentiel des seniors.",
+          details: [
+            { label: "65-79 ans vivant seuls", count_key: "living_alone_65_79", share_key: "living_alone_rate_65_79" },
+            { label: "80 ans ou plus vivant seuls", count_key: "living_alone_80_plus", share_key: "living_alone_rate_80_plus" }
+          ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("living_alone_share"), collapsed: true,
+          definition: "Personnes de 15 ans ou plus vivant seules dans leur logement, en % des 15 ans ou plus de l'IRIS." %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("alone_80p_share"), collapsed: true,
+          definition: "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de l'IRIS.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "living_alone_rate_80_plus"),
+                            count: territory_value(commune, latest, "living_alone_80_plus"), total: nil } %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. Ménages ≠ familles : un ménage regroupe les occupants d'un logement. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+  <%= story_card("q-households-3", 3, "De quel milieu social sont les ménages ?",
+        "Catégorie socioprofessionnelle de la personne de référence du ménage.") do %>
     <section style="margin-bottom:1.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Ménages selon la catégorie socioprofessionnelle de la personne de référence (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Répartition des ménages, en %. La personne de référence est en général l'adulte le plus âgé du couple, ou la personne seule.</p>
@@ -176,14 +202,18 @@
       </div>
     </section>
 
-    <!-- 5. Mobilité résidentielle (données logement du recensement) -->
-    <%= render "dashboard/housing_mobility" %>
-
-    <div class="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026).</p>
-      <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %> ; la colonne « <%= comparison %>→<%= latest %> » concerne <%= @territory_name %>.</p>
-      <p>Ménages ≠ familles : un ménage regroupe les occupants d'un logement ; un logement peut abriter plusieurs familles, ou aucune (personnes seules, colocations).</p>
-      <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence (imprécision liée au sondage).</p>
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. Ménages ≠ familles : un ménage regroupe les occupants d'un logement. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>
   <% end %>
-</div>
+
+  <%= story_card("q-households-4", 4, "Les ménages restent-ils longtemps dans leur logement ?",
+        "Ancienneté d'emménagement : renouvellement de la population et attractivité résidentielle.") do %>
+    <%= render "dashboard/housing_mobility" %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. Ménages ≠ familles : un ménage regroupe les occupants d'un logement. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+<% end %>

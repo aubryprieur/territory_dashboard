@@ -15,9 +15,6 @@
   common = { territories: territories, years: years, latest: latest, comparison: comparison }
 %>
 <% if commune && commune[:key] == :commune %>
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité résidentielle</h3>
-    <p class="text-xs text-gray-500 mb-4">Ancienneté d'emménagement des ménages dans leur logement actuel.</p>
-
     <%= render "dashboard/territory_indicator", **common,
           title: "Ménages emménagés depuis moins de 2 ans", theme: "blue",
           value_key: "recent_movers_percentage",
@@ -28,7 +25,7 @@
             { label: "Emménagés depuis 30 ans ou plus", share_key: "stay_ge30_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("recent_movers_share"),
+    <%= render "dashboard/iris_map", map: cached_iris_map("recent_movers_share"), collapsed: true,
           definition: "Ménages installés dans leur logement depuis moins de 2 ans, en % des ménages de l'IRIS : quartiers à forte rotation, où arrivent les nouveaux habitants (accueil, information sur les services, inscription dans la vie locale)." %>
 
     <%= render "dashboard/territory_indicator", **common,
