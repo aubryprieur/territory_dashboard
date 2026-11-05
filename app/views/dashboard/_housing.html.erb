@@ -1,11 +1,12 @@
 <%#
   Onglet Logement — dashboard commune (analyse des besoins sociaux), organisé en questions (onglet pilote de la mise en
   récit : sommaire, « À retenir », une carte par question, cartes IRIS repliées, bascule graphique / tableau).
-    1. De quels logements dispose la commune ? (catégories, vacance, âge et taille du parc)
-    2. Qui occupe les logements ? (statut d'occupation, HLM, propriétaires) + parc locatif social (RPLS)
-    3. Les logements sont-ils adaptés aux ménages ? (suroccupation, peuplement, personnes par logement)
-    4. Se loger pèse-t-il sur le budget des ménages ? (précarité énergétique, chauffage, voiture)
-    5. La commune construit-elle ? (Sitadel)
+    1. De quels logements dispose la commune ? (catégories, période de construction, taille, vacance)
+    2. Qui occupe les logements ? (statut d'occupation, propriétaires, HLM)
+    3. Le parc locatif social (RPLS, _social_housing)
+    4. Les logements sont-ils adaptés aux ménages ? (peuplement, personnes par logement, suroccupation)
+    5. Se loger pèse-t-il sur le budget des ménages ? (précarité énergétique, chauffage, voiture)
+    6. La commune construit-elle ? (Sitadel)
   La mobilité résidentielle est dans l'onglet Ménages.
   Données : INSEE, recensements 2012, 2017, 2023 (API /housing/*) ; Géodip (ONPE) ; SDES (RPLS, Sitadel).
 %>
@@ -22,9 +23,10 @@
   questions = [
     ["q-housing-1", "De quels logements dispose la commune ?"],
     ["q-housing-2", "Qui occupe les logements ?"],
-    ["q-housing-3", "Les logements sont-ils adaptés aux ménages ?"],
-    ["q-housing-4", "Se loger pèse-t-il sur le budget des ménages ?"],
-    ["q-housing-5", "La commune construit-elle ?"]
+    ["q-housing-3", "Le parc locatif social"],
+    ["q-housing-4", "Les logements sont-ils adaptés aux ménages ?"],
+    ["q-housing-5", "Se loger pèse-t-il sur le budget des ménages ?"],
+    ["q-housing-6", "La commune construit-elle ?"]
   ]
 
   ep_terrs = comparison_territories("energy_poverty_data", {
@@ -36,7 +38,7 @@
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Logement</h2>
-  <p class="text-xs text-gray-500 mb-4">Parc de logements et conditions de logement des ménages : cinq questions pour comprendre la situation du territoire.</p>
+  <p class="text-xs text-gray-500 mb-4">Parc de logements et conditions de logement des ménages : six questions pour comprendre la situation du territoire.</p>
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "housing" %>
@@ -68,19 +70,6 @@
 
   <%= story_card("q-housing-1", 1, "De quels logements dispose la commune ?",
         "#{fmt_count(hv.("dwellings"))} logements en #{latest}, dont #{fmt_count(hv.("dwellings_main"))} résidences principales : nature, ancienneté et taille du parc.") do %>
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Logements vacants", theme: "orange",
-          value_key: "vacancy_rate",
-          count_key: "dwellings_vacant", total_key: "dwellings", count_label: "logements",
-          definition: "Part des logements inoccupés au moment du recensement (en vente, en location, en attente d'occupation ou sans affectation). Au-delà de 8 à 10 %, la vacance signale souvent un parc dégradé, inadapté ou un marché peu tendu.",
-          details: [
-            { label: "Résidences secondaires", share_key: "secondary_rate" },
-            { label: "Maisons (ensemble des logements)", share_key: "houses_percentage" },
-            { label: "Appartements (ensemble des logements)", share_key: "apartments_percentage" }
-          ] %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("vacancy_rate"), collapsed: true,
-          definition: "Logements vacants, en % de l'ensemble des logements de l'IRIS." %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Catégories de logements (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Part de chaque catégorie dans l'ensemble des logements, en %.</p>
@@ -116,13 +105,45 @@
           ], "Taille des résidences principales par territoire") %>
     </section>
 
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Logements vacants", theme: "orange",
+          value_key: "vacancy_rate",
+          count_key: "dwellings_vacant", total_key: "dwellings", count_label: "logements",
+          definition: "Part des logements inoccupés au moment du recensement (en vente, en location, en attente d'occupation ou sans affectation). Au-delà de 8 à 10 %, la vacance signale souvent un parc dégradé, inadapté ou un marché peu tendu.",
+          details: [
+            { label: "Résidences secondaires", share_key: "secondary_rate" },
+            { label: "Maisons (ensemble des logements)", share_key: "houses_percentage" },
+            { label: "Appartements (ensemble des logements)", share_key: "apartments_percentage" }
+          ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("vacancy_rate"), collapsed: true,
+          definition: "Logements vacants, en % de l'ensemble des logements de l'IRIS." %>
+
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>
   <% end %>
 
   <%= story_card("q-housing-2", 2, "Qui occupe les logements ?",
-        "Statut d'occupation des ménages : propriétaires, locataires du parc privé ou social. Le parc social est détaillé juste après.") do %>
+        "Statut d'occupation des ménages : propriétaires, locataires du parc privé ou social. Le parc social est détaillé dans la question suivante.") do %>
+    <section style="margin-bottom:2.5rem">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Statut d'occupation des résidences principales (<%= latest %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">En %.</p>
+      <%= comparison_stacked_chart(territories, latest, [
+            ["owners_percentage", "Propriétaires", "#1e3a8a"],
+            ["tenants_private_percentage", "Locataires du parc privé", "#3b82f6"],
+            ["tenants_social_percentage", "Locataires HLM", "#f59e0b"],
+            ["tenants_furnished_percentage", "Meublé, chambre d'hôtel", "#93c5fd"],
+            ["free_percentage", "Logés gratuitement", "#e5e7eb"]
+          ], "Statut d'occupation par territoire") %>
+    </section>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Propriétaires occupants", theme: "amber",
+          value_key: "owners_percentage",
+          count_key: "main_owners", total_key: "dwellings_main", count_label: "résidences principales",
+          definition: "Part des résidences principales occupées par leur propriétaire. Une part élevée de propriétaires âgés ou modestes peut signaler des besoins d'adaptation ou de rénovation du logement." %>
+
     <%= render "dashboard/territory_indicator", **common,
           title: "Locataires HLM", theme: "amber",
           value_key: "tenants_social_percentage",
@@ -138,52 +159,19 @@
           definition: "Résidences principales louées vides en HLM, en % des résidences principales de l'IRIS.",
           commune_latest: { year: latest, value: territory_value(commune, latest, "tenants_social_percentage"),
                             count: territory_value(commune, latest, "main_tenants_social"), total: territory_value(commune, latest, "dwellings_main") } %>
+
     <%= render "dashboard/grid_map", map: cached_grid_map("social_housing_share"), collapsed: true,
           definition: "Ménages logés dans le parc social, en % des ménages du carreau (2021)." %>
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Propriétaires occupants", theme: "amber",
-          value_key: "owners_percentage",
-          count_key: "main_owners", total_key: "dwellings_main", count_label: "résidences principales",
-          definition: "Part des résidences principales occupées par leur propriétaire. Une part élevée de propriétaires âgés ou modestes peut signaler des besoins d'adaptation ou de rénovation du logement." %>
-
-    <section style="margin-bottom:2.5rem">
-      <h3 class="text-sm font-medium text-gray-700 mb-1">Statut d'occupation des résidences principales (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">En %.</p>
-      <%= comparison_stacked_chart(territories, latest, [
-            ["owners_percentage", "Propriétaires", "#1e3a8a"],
-            ["tenants_private_percentage", "Locataires du parc privé", "#3b82f6"],
-            ["tenants_social_percentage", "Locataires HLM", "#f59e0b"],
-            ["tenants_furnished_percentage", "Meublé, chambre d'hôtel", "#93c5fd"],
-            ["free_percentage", "Logés gratuitement", "#e5e7eb"]
-          ], "Statut d'occupation par territoire") %>
-    </section>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>
   <% end %>
 
-  <%= render "dashboard/social_housing", heading: "Zoom : le parc locatif social" %>
+  <%= render "dashboard/social_housing", heading: "3. Le parc locatif social", card_id: "q-housing-3" %>
 
-  <%= story_card("q-housing-3", 3, "Les logements sont-ils adaptés aux ménages ?",
+  <%= story_card("q-housing-4", 4, "Les logements sont-ils adaptés aux ménages ?",
         "Adéquation entre la taille des logements et celle des ménages : suroccupation, sous-occupation, taille moyenne des ménages.") do %>
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Logements suroccupés", theme: "purple",
-          value_key: "overcrowding_rate",
-          definition: "Part des résidences principales où le nombre de pièces est inférieur au besoin du ménage (une pièce de séjour, une pièce par couple, par adulte et par paire d'enfants). La suroccupation est un marqueur de mal-logement.",
-          details: [
-            { label: "Dont suroccupation accentuée", share_key: "severe_overcrowding_rate" },
-            { label: "Sous-occupation (toutes intensités)", share_key: "under_occupation_rate" },
-            { label: "Logements de 1 ou 2 pièces", share_key: "small_dwellings_percentage" }
-          ] %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("overcrowding_rate"), collapsed: true,
-          definition: "Résidences principales suroccupées (il manque au moins une pièce au regard de la composition du ménage), en % des résidences principales de l'IRIS." %>
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Nombre moyen de personnes par logement", theme: "purple",
-          value_key: "persons_per_dwelling", value_format: :decimal, unit: "pers.",
-          definition: "Population des ménages rapportée au nombre de résidences principales. Sa baisse traduit le desserrement des ménages (vieillissement, séparations, décohabitation)." %>
-
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Peuplement des résidences principales (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">En %. La sous-occupation concerne surtout des personnes âgées vivant seules ou en couple dans de grands logements.</p>
@@ -197,12 +185,30 @@
           ], "Peuplement des résidences principales par territoire") %>
     </section>
 
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Nombre moyen de personnes par logement", theme: "purple",
+          value_key: "persons_per_dwelling", value_format: :decimal, unit: "pers.",
+          definition: "Population des ménages rapportée au nombre de résidences principales. Sa baisse traduit le desserrement des ménages (vieillissement, séparations, décohabitation)." %>
+
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Logements suroccupés", theme: "purple",
+          value_key: "overcrowding_rate",
+          definition: "Part des résidences principales où le nombre de pièces est inférieur au besoin du ménage (une pièce de séjour, une pièce par couple, par adulte et par paire d'enfants). La suroccupation est un marqueur de mal-logement.",
+          details: [
+            { label: "Dont suroccupation accentuée", share_key: "severe_overcrowding_rate" },
+            { label: "Sous-occupation (toutes intensités)", share_key: "under_occupation_rate" },
+            { label: "Logements de 1 ou 2 pièces", share_key: "small_dwellings_percentage" }
+          ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("overcrowding_rate"), collapsed: true,
+          definition: "Résidences principales suroccupées (il manque au moins une pièce au regard de la composition du ménage), en % des résidences principales de l'IRIS." %>
+
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026) ; peuplement : exploitation complémentaire. Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>
   <% end %>
 
-  <%= story_card("q-housing-4", 4, "Se loger pèse-t-il sur le budget des ménages ?",
+  <%= story_card("q-housing-5", 5, "Se loger pèse-t-il sur le budget des ménages ?",
         "Dépenses contraintes liées au logement : énergie pour se chauffer et s'éclairer, dépendance à la voiture.") do %>
     <% if ep_terrs.first&.dig(:key) == :commune && ep_years.any? %>
       <%= render "dashboard/territory_indicator", territories: ep_terrs, years: ep_years, latest: ep_latest, comparison: ep_latest,
@@ -244,4 +250,4 @@
   <% end %>
 <% end %>
 
-<%= render "dashboard/construction", heading: "5. La commune construit-elle ?", card_id: "q-housing-5" %>
+<%= render "dashboard/construction", heading: "6. La commune construit-elle ?", card_id: "q-housing-6" %>

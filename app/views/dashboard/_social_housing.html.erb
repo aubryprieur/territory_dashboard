@@ -1,6 +1,6 @@
 <%#
   Parc locatif social — SDES, RPLS au 1er janvier (API /social-housing/*) : évolution du parc depuis 2013,
-  mobilité et vacance, loyer moyen, structure du parc en 2025. Rendu à la suite de l'onglet Logement.
+  caractéristiques du parc (en premier), évolution du parc depuis 2013, mobilité et vacance, loyer moyen. Question 3 de l'onglet Logement.
   locals (optionnels) : heading (titre de la carte), card_id (ancre du sommaire)
 %>
 <%
@@ -28,34 +28,6 @@
                     table_years: [sh_first, sh_comparison, sh_latest].uniq }
       sv = ->(key) { territory_value(sh_commune, sh_latest, key) }
     %>
-
-    <%= render "dashboard/territory_indicator", **sh_common.merge(comparison: sh_first),
-          title: "Évolution du parc social depuis #{sh_first}", theme: "amber",
-          value_key: "social_dwellings_index", value_format: :decimal, unit: "", decimals: 1,
-          count_key: "social_dwellings", count_label: "logements sociaux",
-          definition: "Indice base 100 en #{sh_first} : nombre de logements sociaux rapporté à celui de #{sh_first}. 110 signifie que le parc a augmenté de 10 % (constructions, acquisitions), 95 qu'il a diminué de 5 % (ventes, démolitions).",
-          details: [
-            { label: "Logements sociaux pour 100 résidences principales", share_key: "density" },
-            { label: "Situés en quartier prioritaire (QPV)", share_key: "qpv_share" }
-          ] %>
-
-    <%= render "dashboard/territory_indicator", **sh_common,
-          title: "Taux de mobilité dans le parc social", theme: "amber",
-          value_key: "mobility_rate",
-          definition: "Part des logements proposés à la location depuis au moins un an dont le locataire a changé dans l'année (emménagements). Un taux faible signifie peu de logements libérés chaque année, donc une attente plus longue pour les demandeurs.",
-          details: [
-            { label: "Taux de vacance", share_key: "vacancy_rate" },
-            { label: "Vacance de plus de 3 mois", share_key: "vacancy_3m_rate" }
-          ] %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("social_turnover_rate"), collapsed: true,
-          definition: "Emménagements dans l'année en % des logements sociaux de l'IRIS (effectifs estimés à partir du taux publié).",
-          commune_latest: { year: sh_latest, value: sv.("mobility_rate") } %>
-
-    <%= render "dashboard/territory_indicator", **sh_common,
-          title: "Loyer moyen du parc social", theme: "amber",
-          value_key: "avg_rent_m2", value_format: :decimal, unit: "€/m²", decimals: 2,
-          definition: "Loyer moyen hors charges par m² de surface habitable des logements loués au 1er janvier, en euros courants." %>
 
     <%
       rows = [
@@ -106,6 +78,34 @@
         </table>
       </div>
     </section>
+
+    <%= render "dashboard/territory_indicator", **sh_common.merge(comparison: sh_first),
+          title: "Évolution du parc social depuis #{sh_first}", theme: "amber",
+          value_key: "social_dwellings_index", value_format: :decimal, unit: "", decimals: 1,
+          count_key: "social_dwellings", count_label: "logements sociaux",
+          definition: "Indice base 100 en #{sh_first} : nombre de logements sociaux rapporté à celui de #{sh_first}. 110 signifie que le parc a augmenté de 10 % (constructions, acquisitions), 95 qu'il a diminué de 5 % (ventes, démolitions).",
+          details: [
+            { label: "Logements sociaux pour 100 résidences principales", share_key: "density" },
+            { label: "Situés en quartier prioritaire (QPV)", share_key: "qpv_share" }
+          ] %>
+
+    <%= render "dashboard/territory_indicator", **sh_common,
+          title: "Taux de mobilité dans le parc social", theme: "amber",
+          value_key: "mobility_rate",
+          definition: "Part des logements proposés à la location depuis au moins un an dont le locataire a changé dans l'année (emménagements). Un taux faible signifie peu de logements libérés chaque année, donc une attente plus longue pour les demandeurs.",
+          details: [
+            { label: "Taux de vacance", share_key: "vacancy_rate" },
+            { label: "Vacance de plus de 3 mois", share_key: "vacancy_3m_rate" }
+          ] %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("social_turnover_rate"), collapsed: true,
+          definition: "Emménagements dans l'année en % des logements sociaux de l'IRIS (effectifs estimés à partir du taux publié).",
+          commune_latest: { year: sh_latest, value: sv.("mobility_rate") } %>
+
+    <%= render "dashboard/territory_indicator", **sh_common,
+          title: "Loyer moyen du parc social", theme: "amber",
+          value_key: "avg_rent_m2", value_format: :decimal, unit: "€/m²", decimals: 2,
+          definition: "Loyer moyen hors charges par m² de surface habitable des logements loués au 1er janvier, en euros courants." %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : SDES, répertoire des logements locatifs des bailleurs sociaux (RPLS) au 1er janvier <%= sh_latest %>, données soumises au secret statistique. Paris, Lyon, Marseille et EPCI situés sur plusieurs départements : taux pondérés par le nombre de logements.</p>
