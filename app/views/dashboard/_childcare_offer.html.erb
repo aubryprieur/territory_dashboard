@@ -25,8 +25,10 @@
   common = { territories: territories, years: years, latest: latest, comparison: comparison, table_years: table_years }
   fv = ->(key, year = latest) { focus && territory_value(focus, year, key) }
 %>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-1">Accueil du jeune enfant</h2>
+<% heading ||= nil %>
+<% card_id ||= nil %>
+<div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading || "Accueil du jeune enfant" %></h2>
   <p class="text-xs text-gray-500 mb-4">Capacité d'accueil des enfants de moins de 3 ans par mode d'accueil, selon la Cnaf (<%= years.first %>-<%= latest %>).</p>
 
   <% if focus.nil? || latest.nil? %>

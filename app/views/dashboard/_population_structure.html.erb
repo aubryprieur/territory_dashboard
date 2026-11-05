@@ -1,5 +1,8 @@
 <%#
-  Onglet Population — structure et évolution (analyse des besoins sociaux).
+  Onglet Population — structure et évolution (analyse des besoins sociaux), organisé en questions :
+    1. Combien d'habitants et quelle évolution ? (série 1968-2023, moteurs, densité) 2. Naissances (état civil)
+    3. Âge de la population, aujourd'hui et demain (pyramide avec projection 2033, grandes tranches, dépendance)
+    4. Nouveaux arrivants
   Données : INSEE, recensements (API /population-structure/*) :
     - structure par âge, pyramide (2023), catégories socioprofessionnelles, mobilité résidentielle (2012, 2017, 2023)
     - série longue 1968 → 2023 (population, solde naturel et solde migratoire)
@@ -16,6 +19,12 @@
   france = territories.find { |t| t[:key] == :france }
   common = { territories: territories, years: years, latest: latest, comparison: comparison }
   labels = @pop_data.is_a?(Hash) ? (@pop_data["labels"] || {}) : {}
+  questions = [
+    ["q-population-1", "Combien d'habitants, et comment la population évolue-t-elle ?"],
+    ["q-population-2", "Combien d'enfants naissent chaque année ?"],
+    ["q-population-3", "Quel âge a la population, aujourd'hui et demain ?"],
+    ["q-population-4", "Qui arrive dans la commune ?"]
+  ]
 %>
 <% if commune.nil? || commune[:key] != :commune %>
   <div class="bg-white shadow rounded-lg p-6 mb-6">
@@ -30,12 +39,12 @@
 
   <div class="bg-white shadow rounded-lg p-6 mb-6">
     <h2 class="text-lg font-medium text-gray-900 mb-1">Population</h2>
-    <p class="text-xs text-gray-500 mb-4">Population municipale au sens du recensement : évolution depuis 1968, densité, structure par âge d'ensemble et mobilité résidentielle. Les catégories socioprofessionnelles sont dans l'onglet Emploi.</p>
+    <p class="text-xs text-gray-500 mb-4">Population municipale au sens du recensement : quatre questions sur le nombre d'habitants, les naissances, l'âge et les arrivées. Les catégories socioprofessionnelles sont dans l'onglet Emploi ; le détail par âge dans les onglets Petite enfance, Enfance-jeunesse et Seniors.</p>
+    <%= story_summary(questions) %>
 
     <%= render "dashboard/fragility_ranks", tab: "synthese" %>
-
-    <!-- Synthèse -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <%= story_takeaways("synthese") %>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-indigo-50 p-4 rounded-lg">
         <h3 class="text-sm font-medium text-indigo-800 mb-1">Population <%= latest %></h3>
         <p class="text-2xl font-bold text-indigo-900"><%= fmt_count(pv.("pop")) %></p>
@@ -58,10 +67,10 @@
       <% end %>
     </div>
 
-    <!-- 1. Évolution longue -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Évolution de la population depuis 1968</h3>
-    <p class="text-xs text-gray-500 mb-4">Recensements de 1968 à <%= latest %>, en géographie au 1er janvier 2026.</p>
+  </div>
 
+  <%= story_card("q-population-1", 1, "Combien d'habitants, et comment la population évolue-t-elle ?",
+        "Évolution depuis 1968, part du solde naturel (naissances moins décès) et du solde migratoire (arrivées moins départs), densité.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Population en base 100 en 1968</h3>
       <p class="text-xs text-gray-500 mb-4">Indice 100 = population de 1968 de chaque territoire : permet de comparer les dynamiques quelle que soit la taille.</p>
@@ -104,13 +113,25 @@
       </div>
     </section>
 
-    <!-- Naissances (état civil, 2014-2023) : base 100 sur les 5 échelles, effectifs de la commune -->
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Densité de population", theme: "indigo",
+          value_key: "density", value_format: :decimal, unit: "hab./km²", decimals: 0,
+          definition: "Nombre d'habitants par km² (superficie actuelle du territoire). Repère pour l'organisation des services : en territoire peu dense, les distances d'accès pèsent davantage." %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+  <%= story_card("q-population-2", 2, "Combien d'enfants naissent chaque année ?",
+        "Naissances domiciliées depuis 2014, comparées aux autres échelles. Projections des naissances : onglet Petite enfance.") do %>
     <%
       bs = @births_series || {}
       b_years = (bs[:commune].presence || bs[:france] || {}).keys.sort
       b_first, b_last = b_years.first, b_years.last
       b_com = bs[:commune] || {}
     %>
+
     <% if b_years.size >= 2 && b_com.any? %>
       <%
         b_datasets = territories.filter_map do |t|
@@ -162,15 +183,11 @@
       </section>
     <% end %>
 
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Densité de population", theme: "indigo",
-          value_key: "density", value_format: :decimal, unit: "hab./km²", decimals: 0,
-          definition: "Nombre d'habitants par km² (superficie actuelle du territoire). Repère pour l'organisation des services : en territoire peu dense, les distances d'accès pèsent davantage." %>
 
-    <!-- 2. Pyramide des âges -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Structure par âge</h3>
-    <p class="text-xs text-gray-500 mb-4">Répartition de la population par âge et sexe.</p>
+  <% end %>
 
+  <%= story_card("q-population-3", 3, "Quel âge a la population, aujourd'hui et demain ?",
+        "Pyramide des âges (avec la projection 2033), grandes tranches d'âge et rapport de dépendance.") do %>
     <% if pv.("pyr_women_0_4_percentage") %>
       <%
         pyr_groups = (labels["pyramid"] || {}).keys.presence || (0..90).step(5).map { |a| "#{a}_#{a + 4}" } + ["ge95"]
@@ -230,21 +247,18 @@
     </section>
     <p class="text-xs text-gray-500" style="margin:-1.5rem 0 2rem">Le détail par âge est dans les onglets thématiques : <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="children_comparison" style="color:#4f46e5">Petite enfance</button>, <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="youth" style="color:#4f46e5">Enfance, jeunesse</button> (part des 15-24 ans, enfance et jeunesse par tranche d'âge, cartes IRIS) et <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="seniors" style="color:#4f46e5">Seniors</button> (indice de vieillissement, repères sur le vieillissement, cartes IRIS).</p>
 
-
-
-
-
     <%= render "dashboard/territory_indicator", **common,
           title: "Rapport de dépendance", theme: "purple",
           value_key: "dependency_ratio", value_format: :decimal, unit: "", decimals: 1,
           definition: "Nombre de jeunes (moins de 20 ans) et de seniors (65 ans ou plus) pour 100 personnes de 20 à 64 ans. Plus il est élevé, plus la population d'âge actif est faible au regard des âges qui ont le plus besoin de services (petite enfance, école, accompagnement du vieillissement)." %>
 
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026) ; pyramide des âges <%= latest %> ; projection : calcul par cohortes (détail dans les onglets Petite enfance, Enfance-jeunesse et Seniors). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
 
-
-    <!-- 4. Mobilité résidentielle -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité résidentielle</h3>
-    <p class="text-xs text-gray-500 mb-4">Lieu de résidence des habitants un an auparavant (personnes d'un an ou plus).</p>
-
+  <%= story_card("q-population-4", 4, "Qui arrive dans la commune ?",
+        "Lieu de résidence des habitants un an auparavant (personnes d'un an ou plus) et âge des nouveaux arrivants.") do %>
     <%= render "dashboard/territory_indicator", **common,
           title: "Nouveaux arrivants", theme: "teal",
           value_key: "newcomers_percentage",
@@ -264,10 +278,9 @@
             "Âge des nouveaux arrivants par territoire") %>
     </section>
 
-    <div class="mb-2 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026) ; pyramide des âges <%= latest %>.</p>
-      <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>.</p>
-      <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>
-  </div>
+  <% end %>
+
 <% end %>

@@ -1,8 +1,10 @@
 <%#
   Onglet Emploi — dashboard commune (analyse des besoins sociaux).
-  Regroupe l'emploi, l'activité, le chômage, l'emploi des femmes, la précarité et le temps partiel, la mobilité
-  domicile-travail (INSEE RP 2012, 2017, 2023 — API /employment-activity/*) et l'emploi des
-  familles avec jeunes enfants (API /families/employment/*).
+  Organisé en questions (sommaire, « À retenir », une carte par question, cartes IRIS repliées) :
+    1. Qui travaille ? 2. Qui est au chômage ? (dont demandeurs d'emploi France Travail) 3. Femmes et jeunes
+    4. Parents de jeunes enfants (_parents_activity) 5. Stabilité de l'emploi 6. Milieux sociaux 7. Lieu de travail et trajets
+  Données : INSEE RP 2012, 2017, 2023 (API /employment-activity/*), INSEE / SDES (indicateurs de développement durable),
+  Dares (France Travail), familles (API /families/*).
 %>
 <%
   territories = comparison_territories("employment_data", {
@@ -14,20 +16,27 @@
   comparison = comparison_start_year(@emp_data, years)
   commune = territories.first
   common = { territories: territories, years: years, latest: latest, comparison: comparison }
+  questions = [
+    ["q-employment-1", "Qui travaille ?"],
+    ["q-employment-2", "Qui est au chômage, et depuis quand ?"],
+    ["q-employment-3", "Les femmes et les jeunes accèdent-ils à l'emploi ?"],
+    ["q-employment-4", "Les parents de jeunes enfants travaillent-ils ?"],
+    ["q-employment-5", "L'emploi est-il stable ?"],
+    ["q-employment-6", "Quels milieux sociaux ?"],
+    ["q-employment-7", "Où travaille-t-on, et comment s'y rend-on ?"]
+  ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Emploi et activité</h2>
-  <p class="text-xs text-gray-500 mb-4">Population de 15 à 64 ans selon sa situation déclarée au recensement. Le chômage « au sens du recensement » est déclaratif : il est plus élevé que le chômage au sens du BIT.</p>
+  <p class="text-xs text-gray-500 mb-4">Activité, chômage et conditions d'emploi des habitants, au sens du recensement (le chômage « au sens du recensement » est déclaratif : il est plus élevé que le chômage au sens du BIT). L'emploi situé dans la commune est dans l'onglet Tissu économique.</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "employment" %>
+  <%= story_takeaways("employment") %>
 
-  <% if commune.nil? || commune[:key] != :commune %>
-    <p class="text-sm text-gray-500">Données emploi indisponibles pour ce territoire.</p>
-  <% else %>
+  <% if commune && commune[:key] == :commune %>
     <% ev = ->(key, year = latest) { territory_value(commune, year, key) } %>
-
-    <!-- Synthèse -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <% [
            ["Taux d'emploi 15-64 ans", "employment_rate_15_64", "indigo"],
            ["Taux de chômage 15-64 ans", "unemployment_rate_15_64", "purple"],
@@ -42,7 +51,16 @@
       <% end %>
     </div>
 
-    <!-- Situation de la population 15-64 ans -->
+  <% end %>
+</div>
+
+<% if commune.nil? || commune[:key] != :commune %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données emploi indisponibles pour ce territoire.</p></div>
+<% else %>
+  <% ev = ->(key, year = latest) { territory_value(commune, year, key) } %>
+
+  <%= story_card("q-employment-1", 1, "Qui travaille ?",
+        "Situation des habitants de 15 à 64 ans : en emploi, au chômage, en études, à la retraite ou au foyer.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Situation des 15-64 ans (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Répartition de la population de 15 à 64 ans, en %.</p>
@@ -56,7 +74,6 @@
           ], "Situation de la population de 15 à 64 ans par territoire") %>
     </section>
 
-    <!-- 1. Emploi -->
     <%= render "dashboard/territory_indicator", **common,
           title: "Taux d'emploi des 15-64 ans", theme: "indigo",
           value_key: "employment_rate_15_64",
@@ -79,7 +96,13 @@
           ], "Taux d'emploi par âge et sexe et par territoire") %>
     </section>
 
-    <!-- 2. Chômage -->
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+  <%= story_card("q-employment-2", 2, "Qui est au chômage, et depuis quand ?",
+        "Chômage déclaré au recensement, selon le diplôme et la durée, puis demandeurs d'emploi inscrits à France Travail.") do %>
     <%= render "dashboard/territory_indicator", **common,
           title: "Taux de chômage des 15-64 ans", theme: "purple",
           value_key: "unemployment_rate_15_64",
@@ -92,29 +115,10 @@
             { label: "55-64 ans", share_key: "unemployment_rate_55_64" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("unemployment_rate"),
+    <%= render "dashboard/iris_map", map: cached_iris_map("unemployment_rate"), collapsed: true,
           definition: "Chômeurs de 15-64 ans au sens du recensement, en % des actifs de 15-64 ans de l'IRIS.",
           commune_latest: { year: latest, value: territory_value(commune, latest, "unemployment_rate_15_64"),
                             count: territory_value(commune, latest, "unemployed_15_64"), total: territory_value(commune, latest, "active_15_64") } %>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Taux d'emploi des jeunes de 15-24 ans", theme: "purple",
-          value_key: "employment_rate_15_24",
-          definition: "Part des jeunes de 15 à 24 ans ayant un emploi (y compris apprentis et étudiants qui travaillent). Il dépend beaucoup de la poursuite d'études : à lire avec le taux de scolarisation des 18-24 ans (onglet Scolarité)." %>
-
-    <%= render "dashboard/territory_indicator", **common,
-          title: "Chômage des jeunes de 15-24 ans", theme: "purple",
-          value_key: "unemployment_rate_15_24",
-          count_key: "unemployed_15_24", total_key: "active_15_24", count_label: "jeunes chômeurs parmi les jeunes actifs",
-          definition: "Part des chômeurs parmi les jeunes actifs de 15 à 24 ans. À lire avec le taux de scolarisation des 18-24 ans (onglet Scolarité)." %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("youth_unemployment_rate"),
-          definition: "Chômeurs de 15-24 ans, en % des actifs de 15-24 ans de l'IRIS.",
-          commune_latest: { year: latest, value: territory_value(commune, latest, "unemployment_rate_15_24"),
-                            count: territory_value(commune, latest, "unemployed_15_24"), total: territory_value(commune, latest, "active_15_24") } %>
-
-    <%= render "dashboard/iris_map", map: cached_iris_map("workers_employees_share"),
-          definition: "Ouvriers et employés, en % des actifs de 15 à 64 ans de l'IRIS." %>
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de chômage selon le diplôme (<%= latest %>)</h3>
@@ -130,13 +134,15 @@
           title: "Chômeurs de longue durée",
           definition: "Part des chômeurs qui recherchent un emploi depuis plus d'un an (recensement). Repère des besoins d'accompagnement renforcé vers l'emploi." %>
 
-    <!-- 2 bis. Demandeurs d'emploi inscrits à France Travail (Dares) -->
     <%= render "dashboard/job_seekers" %>
 
-    <!-- 3. Emploi des femmes -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Emploi des femmes</h3>
-    <p class="text-xs text-gray-500 mb-4">Accès à l'emploi des femmes et écarts avec les hommes.</p>
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026) ; chômage de longue durée et trajets : INSEE / SDES, indicateurs territoriaux de développement durable ; demandeurs d'emploi : Dares, France Travail (catégories A, B, C, moyenne du 4e trimestre, arrondies à 5). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
 
+  <%= story_card("q-employment-3", 3, "Les femmes et les jeunes accèdent-ils à l'emploi ?",
+        "Emploi des femmes et écarts avec les hommes ; emploi et chômage des 15-24 ans.") do %>
     <%= render "dashboard/territory_indicator", **common,
           title: "Taux d'emploi des femmes de 15-64 ans", theme: "blue",
           value_key: "employment_rate_15_64_women",
@@ -151,7 +157,7 @@
             { label: "Femmes salariées en contrat court", share_key: "fixed_term_percentage_women" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("women_employment_rate"),
+    <%= render "dashboard/iris_map", map: cached_iris_map("women_employment_rate"), collapsed: true,
           definition: "Femmes de 15 à 64 ans en emploi, en % des femmes de 15 à 64 ans de l'IRIS." %>
 
     <%= render "dashboard/territory_indicator", **common,
@@ -165,10 +171,31 @@
           count_key: "homemakers_15_64_women", total_key: "pop_15_64_women", count_label: "femmes de 15-64 ans",
           definition: "Part des femmes de 15 à 64 ans se déclarant au foyer (inactives, hors études et retraite). Repère pour les besoins de garde, d'accompagnement vers l'emploi et de mobilité." %>
 
-    <!-- 3 bis. Conditions d'emploi des habitants -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Précarité et temps partiel</h3>
-    <p class="text-xs text-gray-500 mb-4">Actifs occupés de 15 ans ou plus résidant sur le territoire, quel que soit leur lieu de travail.</p>
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Taux d'emploi des jeunes de 15-24 ans", theme: "purple",
+          value_key: "employment_rate_15_24",
+          definition: "Part des jeunes de 15 à 24 ans ayant un emploi (y compris apprentis et étudiants qui travaillent). Il dépend beaucoup de la poursuite d'études : à lire avec le taux de scolarisation des 18-24 ans (onglet Scolarité)." %>
 
+    <%= render "dashboard/territory_indicator", **common,
+          title: "Chômage des jeunes de 15-24 ans", theme: "purple",
+          value_key: "unemployment_rate_15_24",
+          count_key: "unemployed_15_24", total_key: "active_15_24", count_label: "jeunes chômeurs parmi les jeunes actifs",
+          definition: "Part des chômeurs parmi les jeunes actifs de 15 à 24 ans. À lire avec le taux de scolarisation des 18-24 ans (onglet Scolarité)." %>
+
+    <%= render "dashboard/iris_map", map: cached_iris_map("youth_unemployment_rate"), collapsed: true,
+          definition: "Chômeurs de 15-24 ans, en % des actifs de 15-24 ans de l'IRIS.",
+          commune_latest: { year: latest, value: territory_value(commune, latest, "unemployment_rate_15_24"),
+                            count: territory_value(commune, latest, "unemployed_15_24"), total: territory_value(commune, latest, "active_15_24") } %>
+
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+  <%= render "dashboard/parents_activity", heading: "4. Les parents de jeunes enfants travaillent-ils ?", card_id: "q-employment-4" %>
+
+  <%= story_card("q-employment-5", 5, "L'emploi est-il stable ?",
+        "Contrats à durée limitée et temps partiel des salariés résidant dans la commune.") do %>
     <%= render "dashboard/territory_indicator", **common,
           title: "Salariés en contrat à durée limitée", theme: "orange",
           value_key: "fixed_term_percentage",
@@ -181,7 +208,7 @@
             { label: "Non-salariés (indépendants)", share_key: "non_salaried_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("precarious_share"),
+    <%= render "dashboard/iris_map", map: cached_iris_map("precarious_share"), collapsed: true,
           definition: "Salariés en CDD, intérim, emploi aidé ou apprentissage, en % des salariés de 15 ans ou plus de l'IRIS (en 2023, l'Insee publie ces contrats ensemble)." %>
 
     <%= render "dashboard/territory_indicator", **common,
@@ -211,12 +238,15 @@
           ], "Temps partiel des salariés par âge et sexe et par territoire") %>
     </section>
 
-    <!-- 4. Catégories sociales : population de 15 ans ou plus (recensement, structure de population), puis actifs -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Catégories socioprofessionnelles</h3>
-    <p class="text-xs text-gray-500 mb-4">Population de 15 ans ou plus selon la catégorie socioprofessionnelle (actuelle ou dernière exercée), y compris retraités et personnes sans activité ; puis actifs de 15 à 64 ans.</p>
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+  <%= story_card("q-employment-6", 6, "Quels milieux sociaux ?",
+        "Catégorie socioprofessionnelle des habitants de 15 ans ou plus (actuelle ou dernière exercée, retraités compris), puis des actifs.") do %>
     <%= render "dashboard/population_focus", focus: :pcs %>
 
-    <!-- 4. Catégories sociales -->
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Actifs selon la catégorie socioprofessionnelle (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Actifs de 15 à 64 ans (en emploi ou au chômage), en %.</p>
@@ -250,10 +280,16 @@
       </div>
     </section>
 
-    <!-- 5. Mobilité domicile-travail (l'emploi local est dans l'onglet Tissu économique) -->
-    <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Mobilité domicile-travail</h3>
-    <p class="text-xs text-gray-500 mb-4">Actifs occupés de 15 ans ou plus résidant sur le territoire.</p>
+    <%= render "dashboard/iris_map", map: cached_iris_map("workers_employees_share"), collapsed: true,
+          definition: "Ouvriers et employés, en % des actifs de 15 à 64 ans de l'IRIS." %>
 
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
+    </div>
+  <% end %>
+
+  <%= story_card("q-employment-7", 7, "Où travaille-t-on, et comment s'y rend-on ?",
+        "Lieu de travail des actifs occupés résidant dans la commune, mode de transport et durée des trajets.") do %>
     <%= render "dashboard/territory_indicator", **common,
           title: "Actifs travaillant dans leur commune de résidence", theme: "teal",
           value_key: "work_in_commune_percentage",
@@ -266,7 +302,7 @@
             { label: "Hors métropole, y c. étranger", share_key: "work_abroad_overseas_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("transit_commute_share"),
+    <%= render "dashboard/iris_map", map: cached_iris_map("transit_commute_share"), collapsed: true,
           definition: "Actifs occupés allant travailler en transports en commun, en % des actifs occupés de l'IRIS." %>
 
     <section style="margin-bottom:2.5rem">
@@ -284,17 +320,14 @@
     <%= render "dashboard/sdg_indicator", key: "commute_minutes", theme: "teal",
           title: "Durée du trajet domicile-travail", value_format: :decimal, unit: "min", decimals: 0,
           definition: "Durée médiane (heures pleines) du trajet en voiture entre le domicile et le lieu de travail des actifs occupés : la moitié des actifs ont un trajet plus long." %>
+
     <%= render "dashboard/sdg_indicator", key: "commute_km", theme: "teal",
           title: "Distance du trajet domicile-travail", value_format: :decimal, unit: "km", decimals: 1,
           definition: "Distance médiane par la route entre le domicile et le lieu de travail des actifs occupés." %>
 
-    <div class="mb-8 pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Chômage de longue durée et trajets domicile-travail : INSEE / SDES, indicateurs territoriaux de développement durable. Demandeurs d'emploi : Dares, France Travail (catégories A, B, C, moyenne du 4e trimestre, données brutes arrondies à 5 ; EPCI, département et région : somme des communes).</p>
-      <p>Les évolutions des taux sont exprimées en points de pourcentage entre <%= comparison %> et <%= latest %>. Indicateurs INSEE / SDES : évolution entre les millésimes indiqués dans leur tableau.</p>
-      <p><span style="color:#d97706">⚠</span> Effectif inférieur à 200 : l'INSEE recommande de l'interpréter avec prudence.</p>
+    <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
+      <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026) ; chômage de longue durée et trajets : INSEE / SDES, indicateurs territoriaux de développement durable. Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>
   <% end %>
-</div>
 
-<!-- 6. Emploi des parents de jeunes enfants (2023) -->
-<%= render "dashboard/parents_activity" %>
+<% end %>

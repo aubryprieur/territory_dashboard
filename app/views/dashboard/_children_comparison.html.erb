@@ -1,12 +1,13 @@
 <!-- Comparaison des données enfants -->
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-  <h2 class="text-lg font-medium text-gray-900 mb-6">Les jeunes enfants</h2>
+<% heading ||= nil %>
+<% card_id ||= nil %>
+<div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading || "Les jeunes enfants" %></h2>
+  <p class="text-xs text-gray-500 mb-4">Enfants de moins de 3 ans et de 3 à 5 ans au recensement, comparés aux autres échelles ; où vivent-ils dans la commune.</p>
 
-  <%= render "dashboard/fragility_ranks", tab: "children_comparison" %>
-
-  <%= render "dashboard/iris_map", map: cached_iris_map("under_6_share"),
+  <%= render "dashboard/iris_map", map: cached_iris_map("under_6_share"), collapsed: true,
         definition: "Enfants de moins de 6 ans, en % de la population de l'IRIS : repère pour situer les besoins d'accueil du jeune enfant, de PMI et d'écoles maternelles. Les quartiers les plus jeunes ne sont pas toujours ceux où l'offre est implantée." %>
-  <%= render "dashboard/grid_map", map: cached_grid_map("age_0_3_share"),
+  <%= render "dashboard/grid_map", map: cached_grid_map("age_0_3_share"), collapsed: true,
         definition: "Enfants de 0 à 3 ans, en % des habitants du carreau (2021) : tranche absente des données IRIS 2023, utile pour situer les besoins d'accueil du jeune enfant au plus près des habitants." %>
 
 

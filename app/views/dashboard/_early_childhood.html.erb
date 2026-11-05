@@ -1,17 +1,36 @@
 <%#
-  Onglet Petite enfance (regroupe les anciens onglets Enfants et Garde d'enfants) :
-    1. enfants de moins de 3 ans, enfants de 3 à 5 ans (_children_comparison)
-    2. accueil du jeune enfant : places et taux de couverture (Cnaf, _childcare_offer)
-    3. familles employant une assistante maternelle (Flores, _childminder_employers)
-    4. projections 2023-2033 : naissances, moins de 3 ans, 3-5 ans (_population_projection)
+  Onglet Petite enfance, organisé en questions (sommaire, « À retenir », une carte par question) :
+    1. Combien de jeunes enfants vivent dans la commune ? (moins de 3 ans, 3-5 ans, cartes : _children_comparison)
+    2. Combien de jeunes enfants demain ? (projections 2023-2033, naissances : _population_projection)
+    3. L'offre d'accueil répond-elle aux besoins ? (Cnaf : _childcare_offer)
+    4. Les familles emploient-elles une assistante maternelle ? (Flores : _childminder_employers)
   Les locals de load_children_comparison sont transmis tels quels à _children_comparison.
 %>
-<%= render "dashboard/children_comparison", **local_assigns %>
-<%= render "dashboard/childcare_offer" %>
-<%= render "dashboard/childminder_employers" %>
-
+<%
+  questions = [
+    ["q-early-1", "Combien de jeunes enfants vivent dans la commune ?"],
+    ["q-early-2", "Combien de jeunes enfants demain ?"],
+    ["q-early-3", "L'offre d'accueil répond-elle aux besoins ?"],
+    ["q-early-4", "Les familles emploient-elles une assistante maternelle ?"]
+  ]
+%>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-medium text-gray-900 mb-1">Petite enfance</h2>
+  <p class="text-xs text-gray-500 mb-4">Enfants de moins de 6 ans, naissances, offre d'accueil du jeune enfant : quatre questions pour situer les besoins. L'activité des parents de jeunes enfants est dans l'onglet Emploi.</p>
+  <%= story_summary(questions) %>
+
+  <%= render "dashboard/fragility_ranks", tab: "children_comparison" %>
+  <%= story_takeaways("children_comparison") %>
+</div>
+
+<%= render "dashboard/children_comparison", **local_assigns.merge(heading: "1. Combien de jeunes enfants vivent dans la commune ?", card_id: "q-early-1") %>
+
+<%= story_card("q-early-2", 2, "Combien de jeunes enfants demain ?",
+      "Projection des naissances et des enfants de moins de 6 ans jusqu'en 2033, à partir de la natalité et des migrations récentes de la commune.") do %>
   <%= render "dashboard/population_projection", groups: %w[0_2 3_5], births: true,
         title: "Projections 2023-2033 : naissances et jeunes enfants",
         intro: "Naissances par an et enfants de moins de 6 ans projetés au 1er janvier, scénario tendanciel (natalité et migrations récentes de la commune reconduites)." %>
-</div>
+<% end %>
+
+<%= render "dashboard/childcare_offer", heading: "3. L'offre d'accueil répond-elle aux besoins ?", card_id: "q-early-3" %>
+<%= render "dashboard/childminder_employers", heading: "4. Les familles emploient-elles une assistante maternelle ?", card_id: "q-early-4" %>
