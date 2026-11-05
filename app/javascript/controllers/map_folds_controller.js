@@ -35,28 +35,50 @@ export default class extends Controller {
         return
       }
       const row = document.createElement("div")
-      row.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin:0 0 1rem"
+      row.style.cssText = "display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 1rem"
       first.parentNode.insertBefore(row, first)
-      const buttons = run.map((d) => {
+      // Libellés « 🗺 Voir la carte par quartier (IRIS) : part des … » : préfixe commun affiché une fois
+      const parts = run.map((d) => {
         const summary = d.querySelector(":scope > summary")
-        const b = document.createElement("button")
-        b.type = "button"
-        b.textContent = summary ? summary.textContent.trim() : "Carte"
+        const text = summary ? summary.textContent.trim() : "Carte"
         if (summary) summary.style.display = "none"
         d.dataset.grouped = "1"
         d.style.margin = "0"
-        row.appendChild(b)
+        const k = text.indexOf(" : ")
+        return k > 0 ? [text.slice(0, k), text.slice(k + 3)] : ["", text]
+      })
+      const samePrefix = parts.every(([p]) => p && p === parts[0][0])
+      if (samePrefix) {
+        const lead = document.createElement("span")
+        lead.textContent = `${parts[0][0]} :`
+        lead.style.cssText = "font-size:13px;font-weight:500;color:#3730a3"
+        row.appendChild(lead)
+      }
+      const group = document.createElement("div")
+      group.style.cssText = "display:inline-flex;flex-wrap:wrap;border-radius:8px;overflow:hidden"
+      row.appendChild(group)
+      const buttons = parts.map(([prefix, rest], i) => {
+        const b = document.createElement("button")
+        b.type = "button"
+        const kind = /carreau/.test(prefix) ? "par carreau" : "par quartier"
+        b.textContent = samePrefix ? rest : `${kind} : ${rest}`
+        b.dataset.pos = i === 0 ? "first" : (i === parts.length - 1 ? "last" : "mid")
+        group.appendChild(b)
         return b
       })
+      const radius = (b) => (b.dataset.pos === "first" ? "8px 0 0 8px" : (b.dataset.pos === "last" ? "0 8px 8px 0" : "0"))
       const paint = () => run.forEach((d, i) => {
         const on = d.open
-        buttons[i].style.cssText = `${BTN};background:${on ? "#4f46e5" : "#f8faff"};color:${on ? "#fff" : "#3730a3"}`
+        buttons[i].style.cssText = `${BTN};border-radius:${radius(buttons[i])};${i ? "border-left:none;" : ""}background:${on ? "#4f46e5" : "#f8faff"};color:${on ? "#fff" : "#3730a3"}`
       })
       buttons.forEach((b, i) => b.addEventListener("click", () => {
         const open = !run[i].open
         run.forEach((d) => { d.open = false })
         run[i].open = open
         paint()
+        window.dispatchEvent(new Event("resize"))
+      }))
+      paint()
         window.dispatchEvent(new Event("resize"))
       }))
       paint()
