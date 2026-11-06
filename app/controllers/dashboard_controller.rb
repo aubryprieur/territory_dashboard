@@ -35,6 +35,9 @@ class DashboardController < ApplicationController
         department_code: @department_code, region_code: @region_code, epci_mode: true,
         communes_count: Territory.where(epci: @epci_code).count, is_commune_access_from_epci: false
       }
+      # Recherche d'une commune de l'EPCI : ouvre son tableau de bord dans un nouvel onglet (epci/commune_search.js)
+      @epci_communes_list = Territory.where(epci: @epci_code).order(:libgeo).pluck(:codgeo, :libgeo)
+                                     .map { |code, name| { code: code, name: name } }
       begin
         load_fragility_synthesis
         if @fragility_synthesis.is_a?(Hash)
