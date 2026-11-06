@@ -606,6 +606,35 @@ module DashboardCache
     end
   end
 
+  # Équipements géolocalisés (BPE) pour la carte de localisation : emprise de la commune (+ ~2 km) ou de l'EPCI.
+  # Retourne { "points" => …, "categories" => …, "outline" => [GeoJSON], "members" => [codes du territoire] } ou nil
+  def cached_equipment_points(group = "youth")
+    codes = @epci_mode ? Territory.where(epci: @epci_code).pluck(:codgeo) : [@territory_code].compact
+    return nil if codes.empty?
+    key = @epci_mode ? "epci:#{@epci_code}" : "commune:#{@territory_code}"
+    @equipment_points ||= {}
+    @equipment_points[group] ||= cached_api_call("#{key}:equipment_points_#{group}:v1", expires_in: 24.hours) do
+      geoms = CommuneGeometry.where(code_insee: codes).pluck(:geojson).filter_map { |g| JSON.parse(g) rescue nil }
+      coords = geoms.flat_map { |g| equipment_coords(g) }
+      next nil if coords.empty?
+      lons, lats = coords.map(&:first), coords.map(&:last)
+      pad_lat, pad_lon = @epci_mode ? [0.01, 0.015] : [0.02, 0.03]  # ~1 km autour de l'EPCI, ~2 km autour de la commune
+      data = Api::EquipmentPointsService.get(west: lons.min - pad_lon, south: lats.min - pad_lat,
+                                             east: lons.max + pad_lon, north: lats.max + pad_lat, group: group)
+      next nil unless data.is_a?(Hash) && data["points"].is_a?(Array)
+      data.merge("outline" => geoms, "members" => codes)
+    end
+  end
+
+  def equipment_coords(geometry)
+    g = geometry["type"] == "Feature" ? geometry["geometry"] : geometry
+    case g&.dig("type")
+    when "Polygon" then g["coordinates"].flatten(1)
+    when "MultiPolygon" then g["coordinates"].flatten(2)
+    else []
+    end
+  end
+
   # Naissances domiciliées par commune de l'EPCI et par année (API /epci/births/{epci}/communes)
   def cached_epci_communes_births
     return nil unless @epci_mode && @epci_code.present?

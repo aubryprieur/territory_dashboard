@@ -6,6 +6,7 @@ import { Controller } from "@hotwired/stimulus"
 //   cells:  [{ corners: [[lat, lon] x4], color, imputed, tip }]   (carreaux)
 //   shapes: [{ geometry: GeoJSON, color, tip }]                     (IRIS)
 //   outline: [GeoJSON]                                              (contours de repérage, optionnel)
+//   points: [{ lat, lon, color, tip, faded }]                       (équipements localisés ; faded : hors territoire)
 // }
 // La carte n'est construite qu'à son arrivée à l'écran (IntersectionObserver) : un onglet riche en cartes ne
 // télécharge que les fonds de carte réellement regardés.
@@ -59,15 +60,27 @@ export default class extends Controller {
       this.layers.push(layer.addTo(this.map))
     })
 
-    if ((this.dataValue.outline || []).length) {
-      L.geoJSON(this.dataValue.outline, {
-        style: { color: "#1f2937", weight: 1.2, fill: false, opacity: 0.8 }, interactive: false
-      }).addTo(this.map)
-    }
+    // Contour et points : créés d'abord, ajoutés à la carte une fois la vue fixée (ajouter des tracés avant la
+    // première vue fait échouer le rendu SVG de Leaflet : « Cannot read properties of undefined (reading 'min') »)
+    const outlineLayer = (this.dataValue.outline || []).length
+      ? L.geoJSON(this.dataValue.outline, { style: { color: "#1f2937", weight: 1.2, fill: false, opacity: 0.8 }, interactive: false })
+      : null
+    // Points (équipements) : cercles colorés par catégorie, atténués hors du territoire
+    this.points = (this.dataValue.points || []).map((p) => {
+      const m = L.circleMarker([p.lat, p.lon], {
+        radius: p.faded ? 4 : 6, color: "#ffffff", weight: 1, fillColor: p.color, fillOpacity: p.faded ? 0.45 : 0.95
+      }).bindTooltip(p.tip)
+      m._category = p.category
+      return m
+    })
 
-    const group = L.featureGroup(this.layers)
-    this.fit = () => { if (this.layers.length) this.map.fitBounds(group.getBounds(), { padding: [4, 4] }) }
+    const group = this.layers.length ? L.featureGroup(this.layers)
+      : (outlineLayer || (this.points.length ? L.featureGroup(this.points) : null))
+    this.fit = () => { if (group) this.map.fitBounds(group.getBounds(), { padding: [4, 4] }) }
     this.fit()
+    if (!group) this.map.setView([46.6, 2.5], 6)
+    if (outlineLayer) outlineLayer.addTo(this.map)
+    this.points.forEach((m) => m.addTo(this.map))
     this.map.on("click", () => this.map.scrollWheelZoom.enable())
     this.map.on("mouseout", () => this.map.scrollWheelZoom.disable())
     // carte construite dans un onglet encore masqué : recalcul de la taille à l'affichage
@@ -76,6 +89,16 @@ export default class extends Controller {
       if (!this.fitted && this.mapTarget.offsetWidth > 0) { this.fit(); this.fitted = true }
     })
     this.resizeObserver.observe(this.mapTarget)
+  }
+
+  // Filtre des points par catégorie (cases à cocher de la légende : data-category)
+  toggleCategory(event) {
+    const cat = event.target.dataset.category
+    const on = event.target.checked
+    ;(this.points || []).forEach((m) => {
+      if (m._category !== cat) return
+      if (on) m.addTo(this.map); else m.remove()
+    })
   }
 
   opacity(event) {

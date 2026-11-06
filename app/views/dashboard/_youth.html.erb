@@ -172,6 +172,9 @@
     </section>
   <% end %>
 
+  <%# Localisation des équipements pour les enfants et les jeunes (BPE), commune et environs ou EPCI %>
+  <%= render "dashboard/equipment_points_map", group: "youth" %>
+
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
     <p>Sources : INSEE, recensements de la population (effectifs, scolarisation, emploi, personnes seules) ; INSEE, Filosofi (pauvreté) ; Cnaf, data.caf.fr (allocation de rentrée scolaire) ; Cnam / INSEE (complémentaire santé solidaire) ; INSEE / SDES, indicateurs territoriaux de développement durable (sans diplôme, non insérés) ; INJEP — MEOS, licences sportives (Observatoire des territoires) ; ministère des Sports, pass Sport 2024, activations du 4 juin 2024 au 3 février 2025 par commune de résidence (data.gouv.fr) ; INSEE, Base permanente des équipements. « – » : donnée non disponible. France : France métropolitaine, sauf indicateurs publiés pour la France entière.</p>
   </div>

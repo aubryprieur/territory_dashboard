@@ -4,7 +4,8 @@ class DashboardController < ApplicationController
   include DashboardCache  # 🚀 Ajout du système de cache
   helper_method :cached_iris_map  # cartes IRIS appelées depuis les vues
   helper_method :cached_grid_map  # cartes carroyées (Filosofi, carreaux de 1 km)
-  helper_method :cached_epci_communes, :cached_epci_communes_births, :epci_communes_map, :epci_mode? # tableau de bord EPCI (cartes des communes)
+  helper_method :cached_epci_communes, :cached_epci_communes_births, :epci_communes_map, :epci_mode?
+  helper_method :cached_equipment_points # carte de localisation des équipements (BPE) # tableau de bord EPCI (cartes des communes)
 
   before_action :check_user_territory
   before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families,

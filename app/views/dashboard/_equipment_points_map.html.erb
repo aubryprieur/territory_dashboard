@@ -1,0 +1,56 @@
+<%#
+  Carte de localisation des équipements (BPE 2025, API /equipment/points) sur fond Plan IGN, repliée derrière un
+  bouton : un point par équipement, coloré par catégorie (cases à cocher pour filtrer) ; contour de la commune ou des
+  communes de l'EPCI ; équipements alentour atténués. Données : cached_equipment_points(group).
+  locals : group (défaut "youth"), title (optionnel)
+%>
+<% group ||= "youth" %>
+<% data = cached_equipment_points(group) %>
+<% if data.is_a?(Hash) && data["points"].present? %>
+  <%
+    title ||= data["label"]
+    palette = %w[#2563eb #7c3aed #0891b2 #0f766e #ca8a04 #ea580c #dc2626 #db2777 #65a30d #475569]
+    cats = data["categories"] || {}
+    colors = cats.keys.each_with_index.to_h { |k, i| [k, palette[i % palette.size]] }
+    members = (data["members"] || []).to_set
+    pts = data["points"].map do |p|
+      inside = members.include?(p["depcom"].to_s)
+      tip = "<strong>#{ERB::Util.h(cats[p['category']])}</strong><br>#{ERB::Util.h(p['name'].to_s.titleize)}" \
+            "<br>#{ERB::Util.h(p['commune'])}#{p['qpv'] ? ' · quartier prioritaire' : ''}" \
+            "#{p['quality'] == 'mauvaise' ? '<br><em>localisation approximative</em>' : ''}"
+      { lat: p["lat"], lon: p["lon"], color: colors[p["category"]], tip: tip, faded: !inside, category: p["category"] }
+    end
+    counts = data["points"].select { |p| members.include?(p["depcom"].to_s) }.group_by { |p| p["category"] }.transform_values(&:size)
+    around = data["points"].count { |p| !members.include?(p["depcom"].to_s) }
+    terr = @epci_mode ? "l'intercommunalité" : "la commune"
+  %>
+  <details class="map-fold" style="margin:0 0 2rem">
+    <summary style="cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #c7d2fe;border-radius:8px;background:#f8faff;color:#3730a3;font-size:13px;font-weight:500">🗺 Voir les équipements sur la carte</summary>
+    <section style="margin-top:12px">
+      <h3 class="text-sm font-medium text-gray-700 mb-1"><%= title %> (<%= data["year"] %>)</h3>
+      <p class="text-xs text-gray-500 mb-4">Un point par équipement recensé dans <%= terr %> (contour noir)<%= around.positive? ? ", et en plus pâle les #{fmt_count(around)} équipements des environs" : "" %>. Survoler un point pour son nom et sa commune ; cocher ou décocher une catégorie pour l'afficher ou la masquer.</p>
+      <style>
+        .eqp-layout{display:grid;grid-template-columns:1fr;gap:1.5rem;align-items:start}
+        @media (min-width:900px){.eqp-layout{grid-template-columns:3fr 1fr}}
+      </style>
+      <div class="eqp-layout" data-controller="grid-map" data-grid-map-data-value="<%= { points: pts, outline: data["outline"] || [] }.to_json %>">
+        <div data-grid-map-target="map" style="height:480px;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;z-index:0;position:relative;background:#f8fafc"></div>
+        <div>
+          <ul class="text-sm" style="display:flex;flex-direction:column;gap:6px">
+            <% cats.each do |k, label| %>
+              <li>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                  <input type="checkbox" checked data-category="<%= k %>" data-action="change->grid-map#toggleCategory">
+                  <span style="display:inline-block;width:11px;height:11px;border-radius:999px;background:<%= colors[k] %>;flex:none"></span>
+                  <span class="text-gray-700" style="flex:1"><%= label %></span>
+                  <span class="text-gray-900 font-medium"><%= counts[k] || 0 %></span>
+                </label>
+              </li>
+            <% end %>
+          </ul>
+          <p class="text-xs text-gray-500 mt-3">Nombre d'équipements dans <%= terr %>. Source : <%= data["source"] %> ; fond de carte : Plan IGN (Géoplateforme). Certaines localisations sont approximatives (adresse ou centre de la commune).<%= data["truncated"] ? " Affichage limité à 20 000 équipements." : "" %></p>
+        </div>
+      </div>
+    </section>
+  </details>
+<% end %>
