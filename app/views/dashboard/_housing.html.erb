@@ -26,7 +26,7 @@
     ["q-housing-3", "Le parc locatif social"],
     ["q-housing-4", "Les logements sont-ils adaptés aux ménages ?"],
     ["q-housing-5", "Se loger pèse-t-il sur le budget des ménages ?"],
-    ["q-housing-6", "La commune construit-elle ?"]
+    ["q-housing-6", (@epci_mode ? "L'intercommunalité construit-elle ?" : "La commune construit-elle ?")]
   ]
 
   ep_terrs = comparison_territories("energy_poverty_data", {
@@ -186,6 +186,18 @@
           ], "Peuplement des résidences principales par territoire") %>
     </section>
 
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : suroccupation (modérée + accentuée) et sous-occupation (modérée + accentuée + très accentuée) par commune %>
+      <%= render "dashboard/map_group", maps: [
+          { kind: :communes, map: epci_indicator_map(territories, "overcrowding_rate", title: "Logements suroccupés",
+                                                     value_format: :pct, years: [comparison, latest]),
+            definition: "Suroccupation modérée et accentuée : résidences principales où il manque au moins une pièce au regard de la composition du ménage, en % des résidences principales." },
+          { kind: :communes, map: epci_indicator_map(territories, "under_occupation_rate", title: "Logements sous-occupés",
+                                                     value_format: :pct, years: [comparison, latest]),
+            definition: "Sous-occupation modérée, accentuée et très accentuée : résidences principales comptant au moins une pièce de plus que le besoin du ménage, en % des résidences principales." }
+        ] %>
+    <% end %>
+
     <%= render "dashboard/territory_indicator", **common,
           title: "Nombre moyen de personnes par logement", theme: "purple",
           value_key: "persons_per_dwelling", value_format: :decimal, unit: "pers.",
@@ -193,7 +205,7 @@
 
     <%= render "dashboard/territory_indicator", **common,
           title: "Logements suroccupés", theme: "purple",
-          value_key: "overcrowding_rate",
+          value_key: "overcrowding_rate", communes_map: false,
           definition: "Part des résidences principales où le nombre de pièces est inférieur au besoin du ménage (une pièce de séjour, une pièce par couple, par adulte et par paire d'enfants). La suroccupation est un marqueur de mal-logement.",
           details: [
             { label: "Dont suroccupation accentuée", share_key: "severe_overcrowding_rate" },
@@ -230,6 +242,24 @@
           ], "Combustible principal de chauffage par territoire") %>
     </section>
 
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : combustible principal de chauffage par commune (gaz, électricité, fioul, autre) %>
+      <%
+        heat_map = ->(title, keys, definition) do
+          { kind: :communes, definition: definition,
+            map: epci_computed_map(territories, title: title, value_format: :pct, year: latest) { |sr| epci_sum_keys(sr, latest, keys) } }
+        end
+      %>
+      <%= render "dashboard/map_group", maps: [
+          heat_map.("Chauffage au gaz", %w[heat_town_gas_percentage heat_bottled_gas_percentage],
+                    "Résidences principales chauffées au gaz (gaz de ville ou réseau de chaleur, gaz en bouteille ou citerne), en %."),
+          heat_map.("Chauffage à l'électricité", %w[heat_electric_percentage], "Résidences principales chauffées à l'électricité, en %."),
+          heat_map.("Chauffage au fioul", %w[heat_oil_percentage], "Résidences principales chauffées au fioul, en %."),
+          heat_map.("Autre chauffage (bois, pompe à chaleur…)", %w[heat_other_percentage],
+                    "Résidences principales chauffées par un autre combustible (bois, pompe à chaleur, solaire…), en %.")
+        ] %>
+    <% end %>
+
     <%= render "dashboard/territory_indicator", **common,
           title: "Ménages sans voiture", theme: "teal",
           value_key: "no_car_percentage",
@@ -251,4 +281,4 @@
   <% end %>
 <% end %>
 
-<%= render "dashboard/construction", heading: "6. La commune construit-elle ?", card_id: "q-housing-6" %>
+<%= render "dashboard/construction", heading: "6. #{@epci_mode ? "L'intercommunalité construit-elle ?" : 'La commune construit-elle ?'}", card_id: "q-housing-6" %>

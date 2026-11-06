@@ -183,8 +183,10 @@
   </div>
 
 </section>
-<% if @epci_mode %>
-  <%# Tableau de bord EPCI : carte de comparaison des communes membres, repliée %>
+<% communes_map = true if local_assigns[:communes_map].nil? %>
+<% if @epci_mode && communes_map %>
+  <%# Tableau de bord EPCI : carte de comparaison des communes membres, repliée (communes_map: false si la carte est
+      affichée ailleurs dans l'onglet) %>
   <%= render "dashboard/iris_map", map: epci_indicator_map(territories, value_key, title: title, value_format: value_format,
                                                            years: [comparison, latest]),
         level: :communes, collapsed: true, definition: definition %>

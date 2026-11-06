@@ -73,6 +73,23 @@
       </table>
     </div>
 
+    <% if @epci_mode %>
+      <%
+        # Tableau de bord EPCI : moyenne annuelle des logements commencés pour 1 000 habitants sur la période du tableau
+        cn_period_years = cn_started.to_s.scan(/\d{4}/).map(&:to_i)
+        cn_avg_years = cn_period_years.size == 2 ? (cn_period_years[0]..cn_period_years[1]).map(&:to_s) : cn_years.last(5)
+        cn_map = epci_computed_map(cn_territories, title: "Logements commencés par an pour 1 000 habitants (moyenne #{cn_started})",
+                                   value_format: :decimal, year: cn_avg_years.last) do |sr|
+          vals = cn_avg_years.map { |y| sr.dig(y, "started_per_1000") }.select { |v| v.is_a?(Numeric) }
+          vals.empty? ? nil : (vals.sum / vals.size).round(2)
+        end
+      %>
+      <div style="margin-top:1.5rem">
+        <%= render "dashboard/iris_map", map: cn_map, level: :communes, collapsed: true,
+              definition: "Logements commencés (ouvertures de chantier) par an pour 1 000 habitants, moyenne #{cn_started}." %>
+      </div>
+    <% end %>
+
     <h3 class="text-sm font-medium text-gray-900 mt-6 mb-2">Logements commencés pour 1 000 habitants, <%= cn_years.first %>-<%= cn_years.last %></h3>
     <%= comparison_line_chart(cn_territories, cn_years, "started_per_1000", unit: "", digits: 1) %>
     <p class="text-xs text-gray-500 mt-2">

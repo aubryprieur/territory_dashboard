@@ -95,4 +95,35 @@ module EpciCommunesHelper
     m && m.merge("breaks" => epci_quintile_breaks(vals.values), "legend_low" => "Moins de naissances", "legend_high" => "Plus de naissances",
                  "color_note" => "Couleur : cinq classes comptant chacune environ un cinquième des communes ; #{fmt_count(total)} naissances dans l'EPCI en #{year}.")
   end
+
+  # Carte des communes pour une valeur calculée sur les séries de chaque territoire (somme de plusieurs clés, moyenne sur
+  # plusieurs années…) : le bloc reçoit la série { année => valeurs } d'une commune ou de l'EPCI et rend la valeur.
+  # year : millésime affiché (libellé) ; data_key : clé des séries (défaut : celle du territoire principal)
+  def epci_computed_map(territories, title:, value_format:, year:, data_key: nil, source: nil, &value_of)
+    return nil unless @epci_mode
+    main = territories.find { |t| t[:main] }
+    return nil unless main
+    dk = data_key || main[:data_key]
+    ds = cached_epci_communes(dk)
+    return nil unless ds.is_a?(Hash) && ds["values"].is_a?(Hash)
+    y = year.to_s
+    values = {}
+    ds["values"].each do |code, d|
+      v = value_of.call(d.is_a?(Hash) ? (d[dk] || {}) : {})
+      values[code] = { y => v.to_f } if v.is_a?(Numeric)
+    end
+    ref = value_of.call(main[:data].dig(dk) || {})
+    return nil if values.size < 2
+    names = (ds["communes"] || []).to_h { |c| [c["code"], c["name"]] }
+    unit = case value_format when :pct then "%" when :euros then "€" else "" end
+    epci_communes_map(label: title, unit: unit, values: values, names: names,
+                      reference: (ref.is_a?(Numeric) ? { y => ref.to_f } : {}), years: [y],
+                      source: source || "même source que l'indicateur, valeurs communales (cartes : IGN, Admin Express)")
+  end
+
+  # Somme de plusieurs clés d'un millésime (nil si aucune valeur)
+  def epci_sum_keys(series, year, keys)
+    vals = keys.map { |k| series.dig(year.to_s, k) }.select { |v| v.is_a?(Numeric) }
+    vals.empty? ? nil : vals.sum
+  end
 end
