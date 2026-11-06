@@ -21,6 +21,11 @@
   rev, caf, c2s = ds.("revenues_data", "rev"), ds.("caf_data", "caf"), ds.("health_insurance_data", "c2s")
   hh, sports, pass = ds.("household_data", "household"), ds.("sports_data", "sports"), ds.("pass_sport_data", "pass_sport")
   cv = ->(d, key) { t = d[:terrs].find { |x| x[:main] }; t && d[:latest] ? territory_value(t, d[:latest], key) : nil }
+  # Tableau de bord EPCI : carte des communes d'une ligne de tableau (source d, clé, titre, format)
+  cmap = lambda do |d, key, title, definition, format = :pct|
+    { kind: :communes, definition: definition,
+      map: d[:latest] ? epci_indicator_map(d[:terrs], key, title: title, value_format: format, years: [d[:latest]]) : nil }
+  end
 
   eq_services = @equipment_data.is_a?(Hash) && @equipment_data["error"].blank? ? @equipment_data["services"].to_a : []
   questions = [
@@ -73,10 +78,25 @@
         definition: "Jeunes de 18 à 24 ans, en % de la population de l'IRIS : étudiants, jeunes actifs et jeunes en insertion." }
     ] %>
 
+  <% if @epci_mode %>
+    <%# Tableau de bord EPCI : tranches d'âge par commune %>
+    <%= render "dashboard/map_group", maps: [
+        cmap.(pop, "age_6_10_percentage", "6-10 ans", "Enfants de 6 à 10 ans (âge de l'école élémentaire), en % de la population de la commune."),
+        cmap.(pop, "age_11_14_percentage", "11-14 ans", "Jeunes de 11 à 14 ans (âge du collège), en % de la population de la commune."),
+        cmap.(pop, "age_15_17_percentage", "15-17 ans", "Jeunes de 15 à 17 ans (âge du lycée), en % de la population de la commune."),
+        cmap.(pop, "age_18_24_percentage", "18-24 ans", "Jeunes de 18 à 24 ans, en % de la population de la commune : étudiants, jeunes actifs et jeunes en insertion.")
+      ] %>
+  <% end %>
+
   <%= render "dashboard/youth_table", title: "Indice de jeunesse",
         rows: [
           { label: "Moins de 20 ans pour 100 personnes de 60 ans ou plus", ds: pop, key: "youth_index", format: :decimal }
         ] %>
+  <% if @epci_mode %>
+    <%= render "dashboard/map_group", maps: [
+        cmap.(pop, "youth_index", "Indice de jeunesse", "Moins de 20 ans pour 100 personnes de 60 ans ou plus.", :decimal)
+      ] %>
+  <% end %>
 
   <%= render "dashboard/population_projection", groups: %w[6_10 11_14 15_17 18_24],
         title: "Projections 2023-2033 : enfants et jeunes" %>
@@ -95,6 +115,13 @@
           { label: "15-24 ans vivant seuls (population des ménages)", ds: hh, key: "living_alone_rate_15_24" }
         ] %>
 
+  <% if @epci_mode %>
+    <%# Tableau de bord EPCI : décohabitation et complémentaire santé solidaire des jeunes, par commune %>
+    <%= render "dashboard/map_group", maps: [
+        cmap.(hh, "living_alone_rate_15_24", "15-24 ans vivant seuls", "Jeunes de 15 à 24 ans vivant seuls, en % des 15-24 ans de la population des ménages."),
+        cmap.(c2s, "c2s_free_18_24_rate", "18-24 ans bénéficiaires de la C2S gratuite", "Assurés de 18 à 24 ans bénéficiaires de la complémentaire santé solidaire sans participation, en %. Publié pour les communes découpées en IRIS.")
+      ] %>
+  <% end %>
   <%= render "dashboard/iris_map", map: cached_iris_map("young_alone_share"), collapsed: true,
         definition: "Jeunes de 15 à 24 ans vivant seuls dans leur logement, en % des 15-24 ans de l'IRIS : repère de décohabitation (étudiants, jeunes actifs) et d'isolement." %>
 
@@ -113,6 +140,14 @@
           { label: "Pass Sport activés pour 100 jeunes de 6-17 ans", ds: pass, key: "rate_6_17", format: :decimal, direction: :worse_if_lower },
           { label: "Part des filles parmi les bénéficiaires du Pass Sport de 6-17 ans", ds: pass, key: "girls_share_6_17", direction: :worse_if_lower }
         ] %>
+  <% if @epci_mode %>
+    <%# Tableau de bord EPCI : licences sportives et Pass Sport par commune %>
+    <%= render "dashboard/map_group", maps: [
+        cmap.(sports, "licence_rate_0_14", "Licenciés de moins de 15 ans", "Licences sportives pour 100 enfants de moins de 15 ans.", :decimal),
+        cmap.(sports, "licence_rate_15_29", "Licenciés de 15-29 ans", "Licences sportives pour 100 jeunes de 15 à 29 ans.", :decimal),
+        cmap.(pass, "rate_6_17", "Pass Sport activés", "Pass Sport activés pour 100 jeunes de 6 à 17 ans.", :decimal)
+      ] %>
+  <% end %>
 
   <% youth_eq = %w[leisure_centre social_centre college lycee library sports_hall swimming_pool cinema].filter_map { |k| eq_services.find { |s| s["key"] == k } } %>
 
