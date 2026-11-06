@@ -2,9 +2,11 @@
 # :communes). Valeurs des communes : API /epci-communes/{epci}/{jeu de données} (mêmes séries que la route communale).
 module EpciCommunesHelper
   # Carte des communes pour un indicateur de _territory_indicator (nil hors tableau de bord EPCI ou sans données)
-  def epci_indicator_map(territories, value_key, title:, value_format:, years:, source: nil)
+  # data_key : clé des séries quand les territoires n'en portent pas (onglet Familles : families_territories)
+  def epci_indicator_map(territories, value_key, title:, value_format:, years:, source: nil, data_key: nil)
     return nil unless @epci_mode
     main = territories.find { |t| t[:main] }
+    main = main.merge(data_key: data_key) if main && data_key
     return nil unless main && main[:data_key]
     ds = cached_epci_communes(main[:data_key])
     return nil unless ds.is_a?(Hash) && ds["values"].is_a?(Hash)

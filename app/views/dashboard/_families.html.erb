@@ -119,6 +119,14 @@
           </div>
         </div>
       </section>
+      <% if @epci_mode %>
+        <%# Tableau de bord EPCI : familles recomposées par commune %>
+        <%= render "dashboard/iris_map", map: epci_indicator_map(families_territories, "blended_families_percentage",
+                                                                 title: "Familles recomposées", value_format: :pct, years: [latest],
+                                                                 data_key: "family_data"),
+              level: :communes, collapsed: true,
+              definition: "Couples avec au moins un enfant d'un seul des deux conjoints, en % des couples avec enfants." %>
+      <% end %>
     <% end %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">

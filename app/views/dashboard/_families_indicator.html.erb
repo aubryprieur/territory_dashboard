@@ -97,3 +97,9 @@
   <!-- Graphique d'évolution -->
   <%= families_line_chart(rate_key) %>
 </section>
+<% if @epci_mode %>
+  <%# Tableau de bord EPCI : carte de comparaison des communes membres, repliée %>
+  <%= render "dashboard/iris_map", map: epci_indicator_map(families_territories, rate_key, title: title, value_format: :pct,
+                                                           years: [comparison, latest], data_key: "family_data"),
+        level: :communes, collapsed: true, definition: definition %>
+<% end %>
