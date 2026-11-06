@@ -31,7 +31,7 @@
       <%= xlsx_download_button(filename: xlsx_filename(title), notes: [title, definition],
                                sheets: [{ name: "Données", rows: yt_xlsx, widths: [48, 8] + [18] * cols.size }]) %>
     </div>
-    <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %></p><% end %>
+    <% if definition %><details class="text-xs text-gray-500" style="margin-bottom:12px"><summary style="cursor:pointer;color:#4f46e5;list-style:none;display:inline">ⓘ Définition</summary><p style="margin-top:4px"><%= definition %></p></details><% end %>
     <div class="overflow-x-auto">
       <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
