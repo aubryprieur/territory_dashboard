@@ -533,6 +533,12 @@ module DashboardCache
 
   # Projections démographiques 2023-2033 (API /population-projection/*) : Petite enfance, Enfance-jeunesse, Seniors
   def load_population_projection
+    if @epci_mode
+      # Tableau de bord EPCI : somme des projections des communes
+      return @population_projection = cached_api_call("epci:#{@epci_code}:population_projection:v1", expires_in: 12.hours) do
+        Api::PopulationProjectionService.get_epci(@epci_code)
+      end
+    end
     return @population_projection = nil if @territory_code.blank?
     @population_projection = cached_api_call(cache_key_for_territory(@territory_code, "population_projection"), expires_in: 12.hours) do
       Api::PopulationProjectionService.get_commune(@territory_code)

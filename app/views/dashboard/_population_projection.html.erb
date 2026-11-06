@@ -98,7 +98,9 @@
 
     <div class="text-xs text-gray-500 space-y-1" style="margin-top:0.75rem">
       <p>Méthode : <%= pj["method"] %></p>
-      <% if births %>
+      <% if births && pj["fertility_per_1000_women"].nil? %>
+        <p>Naissances projetées : somme des projections des <%= pj["communes"] %> communes de l'intercommunalité, chacune avec sa propre natalité ; fourchette moyenne ± <%= pj["births_spread_pct"] %> %.</p>
+      <% elsif births %>
         <p>Natalité de la commune : <%= pj["fertility_per_1000_women"] %> naissances par an pour 1 000 femmes de 15 à 49 ans (2021-2023<%= b_recent.any? ? " ; #{b_recent.join(', ')} naissances" : "" %>) ; fourchette ± <%= pj["births_spread_pct"] %> %, selon la variation des naissances d'une année à l'autre depuis 2014.<% if pj["births_test_error_pct"] %> Test : avec le taux de natalité de 2014-2016, la méthode aurait prévu les naissances 2017-2023 avec un écart de <%= pj["births_test_error_pct"].positive? ? "+" : "" %><%= number_with_precision(pj["births_test_error_pct"], precision: 0) %> % ; la natalité est la partie la plus incertaine.<% end %></p>
       <% end %>
       <p>Fiabilité à 10 ans : bonne pour les tranches déjà nées en <%= pj["base_year"] %> (évolution surtout liée aux décès et aux migrations), moyenne pour celles qui dépendent des naissances à venir et pour les 18-24 ans (départs pour les études, très variables).<%= pj["migration_source"] == "département" ? " Migrations : profil du département (commune non comparable entre 2017 et 2022)." : "" %></p>
