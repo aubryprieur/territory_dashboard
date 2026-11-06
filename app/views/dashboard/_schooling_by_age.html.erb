@@ -13,7 +13,7 @@
   commune = territories.first
   common = { territories: territories, years: years, latest: latest, comparison: comparison }
 %>
-<% if commune && commune[:key] == :commune %>
+<% if commune && commune[:main] %>
   <% ev = ->(key, year = latest) { territory_value(commune, year, key) } %>
 
   <!-- Synthèse -->

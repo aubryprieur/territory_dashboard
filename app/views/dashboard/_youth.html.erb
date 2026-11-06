@@ -20,7 +20,7 @@
   pop, edu, emp = ds.("population_data", "pop"), ds.("education_data", "education"), ds.("employment_data", "emp")
   rev, caf, c2s = ds.("revenues_data", "rev"), ds.("caf_data", "caf"), ds.("health_insurance_data", "c2s")
   hh, sports, pass = ds.("household_data", "household"), ds.("sports_data", "sports"), ds.("pass_sport_data", "pass_sport")
-  cv = ->(d, key) { t = d[:terrs].find { |x| x[:key] == :commune }; t && d[:latest] ? territory_value(t, d[:latest], key) : nil }
+  cv = ->(d, key) { t = d[:terrs].find { |x| x[:main] }; t && d[:latest] ? territory_value(t, d[:latest], key) : nil }
 
   eq_services = @equipment_data.is_a?(Hash) && @equipment_data["error"].blank? ? @equipment_data["services"].to_a : []
   questions = [

@@ -36,7 +36,11 @@
     dens = syn.dig("density", "label")
     epci = syn["epci"].is_a?(Hash) && items.any? { |i| i["rank_epci"] } ? syn["epci"] : nil
     # du plus petit niveau au plus grand ; ouverture sur le rang EPCI (catégorie si la commune n'a pas de rang EPCI)
-    modes = [["dens", "Rang dans la catégorie"], ["fr", "Rang France"]]
+    # Tableau de bord EPCI : rang parmi les EPCI de même nature (rank_density) et parmi tous les EPCI (rank_france)
+    ep = @epci_mode
+    unit_pl = ep ? "EPCI" : "communes"
+    modes = ep ? [["dens", "Rang parmi les EPCI de même nature"], ["fr", "Rang parmi tous les EPCI"]] :
+                 [["dens", "Rang dans la catégorie"], ["fr", "Rang France"]]
     modes.unshift(["epci", "Rang dans l'EPCI"]) if epci
     default_mode = modes.first[0]
     pill = "display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"
@@ -46,7 +50,7 @@
   <section style="margin:0 0 2rem;padding:16px 18px;border:1px solid #e0e7ff;border-radius:12px;background:#f8faff">
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
       <div>
-        <h3 class="text-base font-medium text-gray-900" data-plain-title>Position de <%= @territory_name %> parmi les communes
+        <h3 class="text-base font-medium text-gray-900" data-plain-title>Position de <%= @territory_name %> parmi les <%= unit_pl %>
           <% modes.each do |mode, _| %>
             <% lvl, lvl_bg, lvl_fg = mode_levels[mode] && enjeu_level_badge(mode_levels[mode]) %>
             <% if lvl %><span data-rank-mode="<%= mode %>" style="display:<%= mode == default_mode ? 'inline-block' : 'none' %>;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:12px;background:<%= lvl_bg %>;color:<%= lvl_fg %>"><%= lvl %></span><% end %>
@@ -55,7 +59,9 @@
         <% modes.each do |mode, _| %>
           <div class="text-xs text-gray-600" data-rank-mode="<%= mode %>" style="margin-top:4px;<%= mode == default_mode ? '' : 'display:none' %>">
             <% if mode == "epci" %>Comparaison avec les communes de l'EPCI : <span style="<%= pill %>"><%= epci["label"] %></span>
+            <% elsif mode == "dens" && ep %>Comparaison avec les EPCI de même nature : <span style="<%= pill %>"><%= dens || "nature inconnue" %></span>
             <% elsif mode == "dens" %>Comparaison avec les communes de la catégorie de densité : <span style="<%= pill %>"><%= dens || "non classée" %></span>
+            <% elsif ep %>Comparaison avec <span style="<%= pill %>">tous les EPCI de France</span>
             <% else %>Comparaison avec <span style="<%= pill %>">toutes les communes de France</span><% end %>
           </div>
         <% end %>
@@ -70,7 +76,7 @@
         <% end %>
       </div>
     </div>
-    <p class="text-xs text-gray-500" style="margin-bottom:6px"><%= FragilityIntensityHelper::INTENSITY_LEGEND %></p>
+    <p class="text-xs text-gray-500" style="margin-bottom:6px"><%= ep ? FragilityIntensityHelper::INTENSITY_LEGEND.gsub("dans la commune", "dans l'EPCI").gsub("autres communes", "autres EPCI") : FragilityIntensityHelper::INTENSITY_LEGEND %></p>
     <div class="text-xs text-gray-500" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <span style="color:<%= FragilityIntensityHelper::INTENSITY_BLUE %>;font-weight:600">enjeu moins marqué</span>
       <span style="display:inline-block;width:120px;height:8px;border-radius:4px;background:<%= FragilityIntensityHelper::INTENSITY_GRADIENT %>"></span>
@@ -83,7 +89,7 @@
           <div class="text-sm text-gray-800"><%= enjeu_label(i) %> <span class="text-xs text-gray-400">(<%= i["year"] %>)</span></div>
           <div class="text-sm text-right font-semibold whitespace-nowrap"><%= fmt_v.(i, i["value"]) %></div>
           <%
-            rank_modes = [["dens", i["rank_density"], i["density_n"], i["density_median"], "médiane de la catégorie"],
+            rank_modes = [["dens", i["rank_density"], i["density_n"], i["density_median"], ep ? "médiane des EPCI de même nature" : "médiane de la catégorie"],
                           ["fr", i["rank_france"], i["france_n"], i["france_value"], "France"]]
             rank_modes << ["epci", i["rank_epci"], i["epci_n"], i["epci_median"], "médiane de l'EPCI"] if epci
           %>
@@ -91,9 +97,9 @@
             <div data-rank-mode="<%= mode %>" style="<%= mode == default_mode ? '' : 'display:none' %>">
               <% if r %>
                 <%= enjeu_bar(i, r) %>
-                <div class="text-xs text-gray-500" style="margin-top:3px"><% if mode == "epci" %><%= enjeu_epci_text(i) %><% else %><%= enjeu_position_text(i, r) %><%= n ? " · #{fmt_count(n)} communes" : "" %><% end %><%= ref ? " · #{ref_label} #{fmt_v.(i, ref)}" : "" %></div>
+                <div class="text-xs text-gray-500" style="margin-top:3px"><% if mode == "epci" %><%= enjeu_epci_text(i) %><% else %><%= enjeu_position_text(i, r) %><%= n ? " · #{fmt_count(n)} #{unit_pl}" : "" %><% end %><%= ref ? " · #{ref_label} #{fmt_v.(i, ref)}" : "" %></div>
               <% else %>
-                <span class="text-xs text-gray-400">commune non classée</span>
+                <span class="text-xs text-gray-400"><%= ep ? "EPCI non classé" : "commune non classée" %></span>
               <% end %>
             </div>
           <% end %>

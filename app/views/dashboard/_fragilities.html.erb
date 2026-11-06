@@ -21,7 +21,7 @@
     department: instance_variable_get("@department_#{dataset}_data"),
     region: instance_variable_get("@region_#{dataset}_data"), france: instance_variable_get("@france_#{dataset}_data")
   }, france_name: france_name || (fr_apl ? "France métropolitaine" : "France"))
-  fr_commune = fr_territories.find { |t| t[:key] == :commune }
+  fr_commune = fr_territories.find { |t| t[:main] }
   fr_france = fr_territories.find { |t| t[:key] == :france }
 %>
 <% if fr_commune %>
@@ -60,9 +60,9 @@
               <% fr_territories.each do |t| %>
                 <%
                   v = territory_value(t, fr_year, key)
-                  worse = t[:key] == :commune && direction != :neutral && fv && v && (direction == :worse_if_lower ? v < fv : v > fv)
+                  worse = t[:main] && direction != :neutral && fv && v && (direction == :worse_if_lower ? v < fv : v > fv)
                 %>
-                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= worse ? 'color:#b91c1c' : '' %>">
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold' : 'text-gray-600' %>" style="<%= worse ? 'color:#b91c1c' : '' %>">
                   <% if v.nil? %><span class="text-gray-400" title="Secret statistique : effectif trop faible">s</span><% elsif format == :decimal %><%= fmt_decimal(v, precision: 1) %><% elsif format == :score %><%= fmt_decimal(v, precision: 2) %><% elsif format == :count %><%= fmt_count(v) %><% elsif format == :signed_pct %><%= v.positive? ? "+" : "" %><%= fmt_pct(v) %><% else %><%= fmt_pct(v) %><% end %>
                 </td>
               <% end %>

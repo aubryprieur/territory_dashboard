@@ -7,7 +7,7 @@
     commune: @tax_households_data, epci: @epci_tax_households_data, department: @department_tax_households_data,
     region: @region_tax_households_data, france: @france_tax_households_data
   })
-  tx_commune = tx_territories.find { |t| t[:key] == :commune }
+  tx_commune = tx_territories.find { |t| t[:main] }
 %>
 <% heading ||= nil %>
 <% card_id ||= nil %>

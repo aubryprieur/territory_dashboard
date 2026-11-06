@@ -8,7 +8,7 @@
     commune: @immigration_data, epci: @epci_immigration_data, department: @department_immigration_data,
     region: @region_immigration_data, france: @france_immigration_data
   })
-  commune = territories.find { |t| t[:key] == :commune }
+  commune = territories.find { |t| t[:main] }
   france = territories.find { |t| t[:key] == :france }
   year = commune && comparison_latest_year(commune[:data], comparison_years(commune[:data], "immigration_data"))
   v = ->(t, key) { t && territory_value(t, year, key) }

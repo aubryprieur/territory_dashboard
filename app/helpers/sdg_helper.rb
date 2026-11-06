@@ -10,7 +10,7 @@ module SdgHelper
 
   # Paramètres communs de _territory_indicator pour un indicateur (nil si la commune ne l'a pas)
   def sdg_common(key, territories = sdg_territories)
-    commune = territories.find { |t| t[:key] == :commune }
+    commune = territories.find { |t| t[:main] }
     return nil unless commune
 
     years = (commune[:data].dig("available_years_by_indicator", key) || []).map(&:to_s).sort

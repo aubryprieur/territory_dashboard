@@ -7,8 +7,8 @@
   c2s_territories = comparison_territories("health_insurance_data", {
     commune: @c2s_data, epci: @epci_c2s_data, department: @department_c2s_data,
     region: @region_c2s_data, france: @france_c2s_data
-  }).map { |t| t[:key] == :commune ? t : t.merge(name: "#{t[:name]} *") }
-  c2s_commune = c2s_territories.find { |t| t[:key] == :commune }
+  }).map { |t| t[:main] ? t : t.merge(name: "#{t[:name]} *") }
+  c2s_commune = c2s_territories.find { |t| t[:main] }
 %>
 <% heading ||= nil %>
 <% card_id ||= nil %>

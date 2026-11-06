@@ -9,7 +9,7 @@
   territories = comparison_territories("delinquency_data", {
     commune: @delinquency_data, department: @department_delinquency_data, region: @region_delinquency_data
   })
-  commune = territories.find { |t| t[:key] == :commune }
+  commune = territories.find { |t| t[:main] }
   years = territories.flat_map { |t| (t[:data]["available_years"] || []).map(&:to_s) }.uniq.sort
   latest = years.last
   comparison = years.reverse.find { |y| y.to_i <= latest.to_i - 5 } || years.first

@@ -45,6 +45,7 @@ module DashboardCache
   # === MÉTHODES CACHÉES POUR LES DONNÉES PRINCIPALES ===
 
   def cached_population_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'population')
     cached_api_call(cache_key, expires_in: 6.hours) do
       Api::PopulationService.get_commune_data(territory_code)
@@ -52,6 +53,7 @@ module DashboardCache
   end
 
   def cached_children_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'children')
     cached_api_call(cache_key, expires_in: 4.hours) do
       Api::PopulationService.get_children_data(territory_code)
@@ -60,6 +62,7 @@ module DashboardCache
 
 
   def cached_schooling_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'schooling')
     cached_api_call(cache_key, expires_in: 6.hours) do
       Api::SchoolingService.get_commune_schooling(territory_code)
@@ -67,6 +70,7 @@ module DashboardCache
   end
 
   def cached_childcare_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'childcare')
     cached_api_call(cache_key, expires_in: 6.hours) do
       Api::ChildcareService.get_coverage_by_commune(territory_code)
@@ -98,6 +102,7 @@ module DashboardCache
   end
 
   def cached_births_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'births')
     cached_api_call(cache_key, expires_in: 8.hours) do
       Api::PopulationService.get_births_data(territory_code)
@@ -105,6 +110,7 @@ module DashboardCache
   end
 
   def cached_employment_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'employment')
     cached_api_call(cache_key, expires_in: 6.hours) do
       Api::EmploymentService.get_commune_employment(territory_code)
@@ -112,6 +118,7 @@ module DashboardCache
   end
 
   def cached_safety_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'safety')
     cached_api_call(cache_key, expires_in: 4.hours) do
       Api::PublicSafetyService.get_commune_safety(territory_code)
@@ -119,6 +126,7 @@ module DashboardCache
   end
 
   def cached_family_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'family')
     cached_api_call(cache_key, expires_in: 6.hours) do
       Api::FamilyService.get_commune_families(territory_code)
@@ -126,6 +134,7 @@ module DashboardCache
   end
 
   def cached_family_employment_under3_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'family_employment_under3')
     cached_api_call(cache_key, expires_in: 6.hours) do
       Api::FamilyEmploymentService.get_under3_commune(territory_code)
@@ -133,6 +142,7 @@ module DashboardCache
   end
 
   def cached_family_employment_3to5_data(territory_code)
+    return nil if territory_code.blank? # tableau de bord EPCI : pas de commune
     cache_key = cache_key_for_territory(territory_code, 'family_employment_3to5')
     cached_api_call(cache_key, expires_in: 6.hours) do
       Api::FamilyEmploymentService.get_3to5_commune(territory_code)
@@ -329,6 +339,8 @@ module DashboardCache
 
   # Équipements et services (BPE 2025) : commune (avec densités comparées et distances calculées par l'API)
   def cached_equipment_data(level, code)
+    # Tableau de bord EPCI : les équipements « de la commune » sont ceux de l'EPCI
+    level, code = :epci, @epci_code if @epci_mode && level == :commune
     return nil if code.blank?
     cache_key = cache_key_for_territory(code, "equipment_#{level}")
     cached_api_call(cache_key, expires_in: 12.hours) { Api::EquipmentService.public_send("get_#{level}", code) }
@@ -521,6 +533,7 @@ module DashboardCache
 
   # Projections démographiques 2023-2033 (API /population-projection/*) : Petite enfance, Enfance-jeunesse, Seniors
   def load_population_projection
+    return @population_projection = nil if @territory_code.blank?
     @population_projection = cached_api_call(cache_key_for_territory(@territory_code, "population_projection"), expires_in: 12.hours) do
       Api::PopulationProjectionService.get_commune(@territory_code)
     end
@@ -549,9 +562,68 @@ module DashboardCache
   # Synthèse des fragilités (API /fragility-synthesis/*) : onglet Synthèse et encadré « Position parmi les communes »
   # en tête des onglets thématiques (_fragility_ranks)
   def load_fragility_synthesis
+    if @epci_mode
+      # Tableau de bord EPCI : rangs parmi les EPCI (même nature et France), valeurs des communes membres
+      @fragility_synthesis = cached_api_call("epci:#{@epci_code}:fragility_synthesis_v1", expires_in: 12.hours) do
+        Api::FragilitySynthesisService.get_epci(@epci_code)
+      end
+      return
+    end
     @fragility_synthesis = cached_api_call(cache_key_for_territory(@territory_code, "fragility_synthesis_v3"), expires_in: 12.hours) do
       Api::FragilitySynthesisService.get_commune(@territory_code)
     end
+  end
+
+  # === TABLEAU DE BORD EPCI : données des communes membres (cartes de comparaison des communes) ===
+  # Jeu de données de l'API pour chaque clé de données des partials (data_key de comparison_territories)
+  EPCI_COMMUNE_DATASETS = {
+    "household_data" => "households", "family_data" => "families", "housing_data" => "housing",
+    "population_data" => "population-structure", "education_data" => "education-training",
+    "employment_data" => "employment-activity", "childcare_data" => "childcare-offer",
+    "caf_data" => "caf-benefits", "revenues_data" => "revenues-poverty", "immigration_data" => "immigration",
+    "economic_fabric_data" => "economic-fabric", "delinquency_data" => "delinquency", "sdg_data" => "sdg-indicators",
+    "job_seekers_data" => "job-seekers", "social_housing_data" => "social-housing",
+    "health_professionals_data" => "health-professionals", "health_insurance_data" => "health-insurance",
+    "sports_data" => "sports", "associations_data" => "associations", "construction_data" => "construction",
+    "business_creations_data" => "business-creations", "tax_households_data" => "tax-households",
+    "fragilities_data" => "fragilities", "senior_fragilities_data" => "senior-fragilities",
+    "elderly_care_data" => "elderly-care", "pass_sport_data" => "pass-sport", "energy_poverty_data" => "energy-poverty",
+    "municipal_elections_data" => "municipal-elections"
+  }.freeze
+
+  def cached_epci_communes(data_key)
+    dataset = EPCI_COMMUNE_DATASETS[data_key.to_s]
+    return nil unless @epci_mode && @epci_code.present? && dataset
+    @epci_communes_cache ||= {}
+    @epci_communes_cache[dataset] ||= cached_api_call("epci:#{@epci_code}:communes:#{dataset}:v1", expires_in: 24.hours) do
+      Api::EpciCommunesDatasetService.get(@epci_code, dataset)
+    end
+  end
+
+  def epci_commune_geometries
+    @epci_commune_geometries ||= cached_api_call("epci:#{@epci_code}:commune_geometries:v1", expires_in: 1.day) do
+      CommuneGeometry.where(epci: @epci_code).pluck(:code_insee, :geojson).to_h
+    end
+  end
+
+  # Carte des communes de l'EPCI au format des cartes IRIS (_iris_map, level: :communes) : chaque commune colorée
+  # selon son écart à l'ensemble de l'EPCI. values : { code => { year => valeur } } ; reference : { year => valeur EPCI }
+  def epci_communes_map(label:, unit:, values:, names:, reference:, years:, source:)
+    geoms = epci_commune_geometries
+    return nil if geoms.blank? || values.blank? || years.blank?
+    features = names.filter_map do |code, name|
+      g = geoms[code]
+      next if g.blank?
+      geometry = g.is_a?(String) ? (JSON.parse(g) rescue nil) : g
+      geometry = geometry["geometry"] if geometry.is_a?(Hash) && geometry["type"] == "Feature"
+      next if geometry.nil?
+      vals = (values[code] || {}).transform_values { |v| { "value" => v } }
+      { "iris_code" => code, "iris_name" => name, "geometry" => geometry, "values" => vals }
+    end
+    return nil if features.size < 2
+    { "indicator" => { "label" => label, "unit" => unit, "additive" => false },
+      "years" => years.map(&:to_s), "features" => features, "irisee" => true, "source" => source,
+      "commune" => { "values" => reference.transform_keys(&:to_s).transform_values { |v| { "value" => v } } } }
   end
 
   def load_ald_comparison
@@ -570,6 +642,8 @@ module DashboardCache
   def load_schools_data
     @schools_data = cached_schools_data(:commune, @territory_code)
     @epci_schools_data = cached_schools_data(:epci, @epci_code)
+    # Tableau de bord EPCI : les établissements de l'EPCI sont les établissements principaux
+    @schools_data, @epci_schools_data = @epci_schools_data, nil if @epci_mode
   end
 
   # Charge les 5 territoires dans @rev_data, @epci_rev_data, ...

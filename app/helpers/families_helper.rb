@@ -14,12 +14,12 @@ module FamiliesHelper
   # Territoires affichés (commune + comparaisons), dans l'ordre, avec leurs données API
   def families_territories
     @families_territories ||= [
-      { key: :commune, name: @territory_name, data: @family_data, main: true },
-      { key: :epci, name: (@epci_code.present? ? epci_display_name : nil), data: @epci_family_data },
+      (@epci_mode ? nil : { key: :commune, name: @territory_name, data: @family_data, main: true }),
+      { key: :epci, name: (@epci_code.present? ? epci_display_name : nil), data: @epci_family_data, main: @epci_mode },
       { key: :department, name: department_display_name, data: @department_family_data },
       { key: :region, name: region_display_name, data: @region_family_data },
       { key: :france, name: "France métropolitaine", data: @france_family_data }
-    ].select { |t| t[:name].present? && t[:data].is_a?(Hash) && t[:data]["family_data"].present? }
+    ].compact.select { |t| t[:name].present? && t[:data].is_a?(Hash) && t[:data]["family_data"].present? }
      .map { |t| t.merge(color: TERRITORY_COLORS[t[:key]]) }
   end
 

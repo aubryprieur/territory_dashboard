@@ -7,7 +7,7 @@
     commune: @fabric_data, epci: @epci_fabric_data, department: @department_fabric_data,
     region: @region_fabric_data, france: @france_fabric_data
   })
-  f_main = fabric.find { |t| t[:key] == :commune }
+  f_main = fabric.find { |t| t[:main] }
   f_france = fabric.find { |t| t[:key] == :france }
   f_years = fabric.flat_map { |t| (t[:data]["available_years"] || []).map(&:to_s) }.uniq.sort
   f_latest, f_start = f_years.last, f_years.first

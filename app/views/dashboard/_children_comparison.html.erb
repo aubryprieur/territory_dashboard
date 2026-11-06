@@ -28,6 +28,7 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <!-- Commune -->
+          <% unless @epci_mode %>
           <tr>
             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
               <%= @territory_name %>
@@ -37,6 +38,7 @@
               <%= number_to_percentage(commune_rate, precision: 2) %>
             </td>
           </tr>
+          <% end %>
 
           <!-- EPCI -->
           <% if @epci_children_data.present? %>
@@ -131,6 +133,7 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <!-- Commune -->
+          <% unless @epci_mode %>
           <tr>
             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
               <%= @territory_name %>
@@ -140,6 +143,7 @@
               <%= number_to_percentage(commune_rate, precision: 2) %>
             </td>
           </tr>
+          <% end %>
 
           <!-- EPCI -->
           <% if @epci_children_data.present? %>

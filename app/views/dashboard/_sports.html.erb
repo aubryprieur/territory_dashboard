@@ -11,7 +11,7 @@
     commune: @sports_data, epci: @epci_sports_data, department: @department_sports_data,
     region: @region_sports_data, france: @france_sports_data
   })
-  sp_commune = sp_territories.find { |t| t[:key] == :commune }
+  sp_commune = sp_territories.find { |t| t[:main] }
   sp_france = sp_territories.find { |t| t[:key] == :france }
 %>
 <% if sp_commune %>
@@ -50,8 +50,8 @@
               <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
               <% sp_territories.each do |t| %>
                 <% v = territory_value(t, sp_year, key) %>
-                <% low = t[:key] == :commune && fr && v && v < fr %>
-                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= low ? 'color:#b91c1c' : '' %>">
+                <% low = t[:main] && fr && v && v < fr %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold' : 'text-gray-600' %>" style="<%= low ? 'color:#b91c1c' : '' %>">
                   <%= v.nil? ? "–" : (kind == :share ? fmt_pct(v) : number_with_precision(v, precision: 1, separator: ",")) %>
                 </td>
               <% end %>

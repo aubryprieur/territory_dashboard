@@ -12,13 +12,13 @@
   years = all_territories.flat_map { |t| (t[:data]["available_years"] || []).map(&:to_s) }.uniq.sort
   latest = years.last
   comparison = years.reverse.find { |y| y.to_i <= latest.to_i - 5 } || years.first
-  commune = all_territories.find { |t| t[:key] == :commune }
+  commune = all_territories.find { |t| t[:main] }
   commune_detailed = commune && territory_value(commune, latest, "detailed")
   # Territoire de référence : la commune si la Cnaf la détaille, sinon l'EPCI (la commune passe en fin de liste)
   focus = commune_detailed ? commune : (all_territories.find { |t| t[:key] == :epci } || all_territories.first)
   territories = commune_detailed ? all_territories :
-    [focus.merge(main: true)] + all_territories.reject { |t| t[:key].in?([:commune, focus[:key]]) } +
-    (commune ? [commune.merge(main: false)] : [])
+    [focus.merge(main: true)] + all_territories.reject { |t| t[:main] || t[:key] == focus[:key] } +
+    (commune && commune[:key] != focus[:key] ? [commune.merge(main: false)] : [])
   detailed = territories.select { |t| territory_value(t, latest, "detailed") }
   # Tableaux : année de comparaison + 3 dernières années (le graphique garde 2017-2023)
   table_years = ([comparison] + years.last(3)).uniq.sort

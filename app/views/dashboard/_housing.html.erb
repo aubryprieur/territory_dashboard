@@ -44,7 +44,7 @@
   <%= render "dashboard/fragility_ranks", tab: "housing" %>
   <%= story_takeaways("housing") %>
 
-  <% if commune && commune[:key] == :commune %>
+  <% if commune && commune[:main] %>
     <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <% [
@@ -63,7 +63,7 @@
   <% end %>
 </div>
 
-<% if commune.nil? || commune[:key] != :commune %>
+<% if commune.nil? || !commune[:main] %>
   <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données logement indisponibles pour ce territoire.</p></div>
 <% else %>
   <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
@@ -211,7 +211,7 @@
 
   <%= story_card("q-housing-5", 5, "Se loger pèse-t-il sur le budget des ménages ?",
         "Dépenses contraintes liées au logement : énergie pour se chauffer et s'éclairer, dépendance à la voiture.") do %>
-    <% if ep_terrs.first&.dig(:key) == :commune && ep_years.any? %>
+    <% if ep_terrs.first&.dig(:main) && ep_years.any? %>
       <%= render "dashboard/territory_indicator", territories: ep_terrs, years: ep_years, latest: ep_latest, comparison: ep_latest,
             title: "Ménages en précarité énergétique logement", theme: "red",
             value_key: "energy_poverty_rate",

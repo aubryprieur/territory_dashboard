@@ -42,7 +42,7 @@
     me_years = comparison_years(@municipal_elections_data, "municipal_elections_data")
     me_latest = comparison_latest_year(@municipal_elections_data, me_years)
   %>
-  <% if me_terrs.first&.dig(:key) == :commune && me_years.any? %>
+  <% if me_terrs.first&.dig(:main) && me_years.any? %>
     <%= render "dashboard/territory_indicator", territories: me_terrs, years: me_years, latest: me_latest, comparison: me_latest,
           title: "Participation aux élections municipales (1er tour)", theme: "indigo",
           value_key: "turnout_rate",

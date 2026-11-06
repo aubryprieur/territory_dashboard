@@ -29,7 +29,7 @@
   <%= render "dashboard/fragility_ranks", tab: "households" %>
   <%= story_takeaways("households") %>
 
-  <% if commune && commune[:key] == :commune %>
+  <% if commune && commune[:main] %>
   <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-teal-50 p-4 rounded-lg">
@@ -60,7 +60,7 @@
   <% end %>
 </div>
 
-<% if commune.nil? || commune[:key] != :commune %>
+<% if commune.nil? || !commune[:main] %>
   <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données ménages indisponibles pour ce territoire.</p></div>
 <% else %>
   <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
@@ -183,7 +183,7 @@
             <tr>
               <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie (<%= latest %>)</th>
               <% territories.each do |t| %>
-                <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" title="<%= t[:name] %>"><%= t[:key] == :commune ? t[:name] : { epci: "EPCI", department: "Dép.", region: "Région", france: "France métro." }[t[:key]] %></th>
+                <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" title="<%= t[:name] %>"><%= t[:main] ? t[:name] : { epci: "EPCI", department: "Dép.", region: "Région", france: "France métro." }[t[:key]] %></th>
               <% end %>
               <th scope="col" class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"><%= comparison %>→<%= latest %></th>
             </tr>

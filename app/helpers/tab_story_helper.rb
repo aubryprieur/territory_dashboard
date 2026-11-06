@@ -62,7 +62,7 @@ module TabStoryHelper
         content_tag(:div, style: "display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px") do
           safe_join([content_tag(:strong, title),
                      (lvl ? content_tag(:span, lvl, style: "padding:1px 8px;border-radius:999px;font-size:12px;background:#{bg};color:#{fg}") : nil),
-                     content_tag(:span, "par rapport aux communes de même densité (#{h[:density] || 'catégorie inconnue'})", class: "text-xs text-gray-500")].compact)
+                     content_tag(:span, (@epci_mode ? "par rapport aux EPCI de même nature (#{h[:density] || 'nature inconnue'})" : "par rapport aux communes de même densité (#{h[:density] || 'catégorie inconnue'})"), class: "text-xs text-gray-500")].compact)
         end,
         (h[:strong].any? ? content_tag(:ul, safe_join(h[:strong].map { |t| content_tag(:li, t) }), style: "margin:0 0 4px 18px;list-style:disc") : nil),
         (h[:weak] ? content_tag(:p, "Enjeu moins marqué qu'ailleurs : #{h[:weak]}", class: "text-gray-600", style: "margin-top:4px") : nil)

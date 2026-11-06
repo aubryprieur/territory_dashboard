@@ -4,6 +4,7 @@ class DashboardController < ApplicationController
   include DashboardCache  # 🚀 Ajout du système de cache
   helper_method :cached_iris_map  # cartes IRIS appelées depuis les vues
   helper_method :cached_grid_map  # cartes carroyées (Filosofi, carreaux de 1 km)
+  helper_method :cached_epci_communes, :epci_communes_map, :epci_mode? # tableau de bord EPCI (cartes des communes)
 
   before_action :check_user_territory
   before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families,
@@ -22,8 +23,28 @@ class DashboardController < ApplicationController
     end
 
     # Vérification que le territoire est valide
-    unless @territory_code.present?
+    unless @territory_code.present? || @epci_mode
       redirect_to root_path, alert: "Aucun territoire disponible pour afficher le dashboard."
+      return
+    end
+
+    # Tableau de bord EPCI : mêmes onglets, l'EPCI est le territoire principal
+    if @epci_mode
+      @basic_info = {
+        commune_name: @territory_name, territory_code: nil, epci_code: @epci_code,
+        department_code: @department_code, region_code: @region_code, epci_mode: true,
+        communes_count: Territory.where(epci: @epci_code).count, is_commune_access_from_epci: false
+      }
+      begin
+        load_fragility_synthesis
+        if @fragility_synthesis.is_a?(Hash)
+          @basic_info[:population] = @fragility_synthesis["population"]&.round
+          @basic_info[:density_label] = @fragility_synthesis.dig("density", "label")
+          @basic_info[:density_code] = @fragility_synthesis.dig("density", "code")
+        end
+      rescue StandardError => e
+        Rails.logger.warn("Synthèse EPCI indisponible : #{e.message}")
+      end
       return
     end
 
@@ -525,9 +546,44 @@ class DashboardController < ApplicationController
     end
   end
 
+  # Tableau de bord EPCI : avant chaque rendu, les données « commune » des partials (@household_data…) reçoivent celles
+  # de l'EPCI (@epci_household_data…) pour que millésimes et chiffres clés suivent l'EPCI ; comparison_territories
+  # écarte la commune et fait de l'EPCI le territoire principal.
+  def render(*args, &block)
+    alias_commune_data_for_epci if @epci_mode
+    super
+  end
+
   private
 
+  def epci_mode?
+    @epci_mode == true
+  end
+
+  def alias_commune_data_for_epci
+    instance_variables.each do |iv|
+      name = iv.to_s
+      next unless name.start_with?("@epci_") && !%w[@epci_code @epci_mode @epci_communes_cache @epci_commune_geometries].include?(name)
+      base = "@#{name.delete_prefix('@epci_')}"
+      instance_variable_set(base, instance_variable_get(iv)) if instance_variable_get(base).nil?
+    end
+  end
+
   def set_territory_info
+    # Tableau de bord EPCI (?epci_code=…) : pas de commune, l'EPCI est le territoire principal ; département et
+    # région de comparaison : ceux de la majorité de ses communes
+    if params[:epci_code].present?
+      @epci_mode = true
+      @epci_code = params[:epci_code].to_s
+      @territory_code = nil
+      @territory_name = Epci.find_by(epci: @epci_code)&.libepci || "EPCI #{@epci_code}"
+      main = Rails.cache.fetch("epci:#{@epci_code}:main_dep_reg:v1", expires_in: 1.day) do
+        Territory.where(epci: @epci_code).group(:dep, :reg).count.max_by { |_, n| n }&.first
+      end
+      @department_code, @region_code = main
+      return
+    end
+
     # Déterminer le code territoire à utiliser
     if params[:commune_code].present?
       # Si un code commune est fourni en paramètre
@@ -568,6 +624,14 @@ class DashboardController < ApplicationController
     Rails.logger.info "User territory code: #{current_user.territory_code}"
     Rails.logger.info "Requested commune_code: #{params[:commune_code]}"
     Rails.logger.info "Session info: #{session[:last_commune_access]}"
+
+    # Tableau de bord EPCI : super admin ou utilisateur rattaché à cet EPCI
+    if params[:epci_code].present?
+      unless current_user.super_admin? || (current_user.territory_type == 'epci' && current_user.territory_code == params[:epci_code].to_s)
+        redirect_to root_path, alert: "Vous n'avez pas l'autorisation d'accéder à cet EPCI."
+      end
+      return
+    end
 
     # Si un paramètre commune_code est fourni, vérifier les autorisations spécifiques
     if params[:commune_code].present?

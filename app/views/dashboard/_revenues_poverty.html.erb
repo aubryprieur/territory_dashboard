@@ -14,7 +14,7 @@
   years = territories.flat_map { |t| (t[:data]["available_years"] || []).map(&:to_s) }.uniq.sort
   latest = years.last
   comparison = years.reverse.find { |y| y.to_i <= latest.to_i - 5 } || years.first
-  commune = territories.find { |t| t[:key] == :commune }
+  commune = territories.find { |t| t[:main] }
   # Dernière année où la commune a le détail (déciles, pauvreté par âge et statut, structure du revenu)
   detail_year = commune && years.reverse.find { |y| territory_value(commune, y, "detailed") }
   detail_years = detail_year ? years.select { |y| y <= detail_year } : []

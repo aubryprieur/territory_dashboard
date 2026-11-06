@@ -9,7 +9,7 @@
     commune: @construction_data, epci: @epci_construction_data, department: @department_construction_data,
     region: @region_construction_data, france: @france_construction_data
   })
-  cn_commune = cn_territories.find { |t| t[:key] == :commune }
+  cn_commune = cn_territories.find { |t| t[:main] }
   cn_france = cn_territories.find { |t| t[:key] == :france }
 %>
 <% heading ||= "Construction neuve" %>
@@ -27,7 +27,7 @@
       cn_authorised = @construction_data.dig("summary", "authorised", "period")
       cn_types = @construction_data["types"] || {}
       cn_years = (@construction_data["started_years"] || []).map(&:to_s)
-      cell = ->(t) { t[:key] == :commune ? 'font-semibold' : 'text-gray-600' }
+      cell = ->(t) { t[:main] ? 'font-semibold' : 'text-gray-600' }
       fmt_avg = ->(v) { fmt_decimal(v, precision: (v && v < 100 ? 1 : 0)) }
     %>
     <div class="overflow-x-auto">
@@ -53,7 +53,7 @@
               <td class="px-4 py-2 text-sm text-gray-900">Logements <%= verb %> par an pour 1 000 habitants</td>
               <% cn_territories.each do |t| %>
                 <% v = cs.(t, kind, "avg_per_1000") %>
-                <% low = t[:key] == :commune && fr && v && v < fr %>
+                <% low = t[:main] && fr && v && v < fr %>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= cell.(t) %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= fmt_decimal(v, precision: 1) %></td>
               <% end %>
             </tr>

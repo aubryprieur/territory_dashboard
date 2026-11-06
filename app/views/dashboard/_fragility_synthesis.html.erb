@@ -13,7 +13,7 @@
 <div class="bg-white shadow rounded-lg p-6 mb-6" data-rank-scope>
   <% if syn.nil? %>
     <h2 class="text-lg font-medium text-gray-900 mb-1">Synthèse des enjeux</h2>
-    <p class="text-sm text-gray-500">Synthèse non disponible pour cette commune.</p>
+    <p class="text-sm text-gray-500">Synthèse non disponible pour <%= @epci_mode ? "cet EPCI" : "cette commune" %>.</p>
   <% else %>
     <%
       inds = syn["indicators"]
@@ -46,10 +46,19 @@
       modes = []
       modes << { key: "epci", label: "Rang dans l'EPCI", rank: ->(i) { i["rank_epci"] },
                  among: "parmi les #{fmt_count(epci['communes'])} communes de #{epci['label']}", short: "de l'EPCI" } if epci
-      modes << { key: "dens", label: "Rang dans la catégorie", rank: ->(i) { i["rank_density"] || i["rank_france"] },
-                 among: "parmi les communes de même densité (#{dens || 'catégorie inconnue'})", short: "de sa catégorie" }
-      modes << { key: "fr", label: "Rang France", rank: ->(i) { i["rank_france"] },
-                 among: "parmi toutes les communes de France", short: "de France" }
+      ep = @epci_mode  # tableau de bord EPCI : rangs parmi les EPCI de même nature et parmi tous les EPCI
+      unit_pl = ep ? "EPCI" : "communes"
+      if ep
+        modes << { key: "dens", label: "Rang parmi les EPCI de même nature", rank: ->(i) { i["rank_density"] || i["rank_france"] },
+                   among: "parmi les EPCI de même nature (#{dens || 'nature inconnue'})", short: "de même nature" }
+        modes << { key: "fr", label: "Rang parmi tous les EPCI", rank: ->(i) { i["rank_france"] },
+                   among: "parmi tous les EPCI de France", short: "de France" }
+      else
+        modes << { key: "dens", label: "Rang dans la catégorie", rank: ->(i) { i["rank_density"] || i["rank_france"] },
+                   among: "parmi les communes de même densité (#{dens || 'catégorie inconnue'})", short: "de sa catégorie" }
+        modes << { key: "fr", label: "Rang France", rank: ->(i) { i["rank_france"] },
+                   among: "parmi toutes les communes de France", short: "de France" }
+      end
       default_mode = modes.first[:key]
 
       # Ordre des onglets du dashboard ; [libellé, onglet, :theme (enjeu de fragilité) ou :group (contexte), clé]
@@ -96,8 +105,8 @@
         <% modes.each do |m| %>
           <div class="text-xs text-gray-600" data-rank-mode="<%= m[:key] %>" style="margin-top:4px;<%= m[:key] == default_mode ? '' : 'display:none' %>">
             <% if m[:key] == "epci" %>Comparaison avec les communes de l'EPCI : <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= epci["label"] %></span>
-            <% elsif m[:key] == "dens" %>Comparaison avec les communes de la catégorie de densité : <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= dens || "non classée" %></span>
-            <% else %>Comparaison avec <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600">toutes les communes de France</span><% end %>
+            <% elsif m[:key] == "dens" %>Comparaison avec <%= ep ? "les EPCI de même nature" : "les communes de la catégorie de densité" %> : <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= dens || "non classée" %></span>
+            <% else %>Comparaison avec <span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= ep ? "tous les EPCI de France" : "toutes les communes de France" %></span><% end %>
           </div>
         <% end %>
       </div>
@@ -108,8 +117,12 @@
         <% end %>
       </div>
     </div>
+    <% if ep %>
+    <p class="text-xs text-gray-500 mb-4">Chaque indicateur situe <%= @territory_name %> parmi les EPCI de même nature (<strong><%= dens || "nature inconnue" %></strong>) et parmi tous les EPCI de France ; les boutons choisissent l'échelle de comparaison. Seuls des taux sont comparés. Chaque indicateur de l'onglet correspondant propose aussi une carte des communes de l'EPCI.</p>
+    <% else %>
     <p class="text-xs text-gray-500 mb-4">Chaque indicateur situe <%= @territory_name %> <%= epci ? "parmi les communes de son EPCI (#{epci['label']}), " : "" %>parmi les communes de même nature (catégorie de densité INSEE : <strong><%= dens || "non classée" %></strong>) et parmi toutes les communes de France ; les boutons choisissent l'échelle de comparaison. Seuls des taux sont comparés ; les effectifs de la commune sont indiqués pour dimensionner les actions.</p>
-    <p class="text-xs text-gray-500 mb-2"><%= FragilityIntensityHelper::INTENSITY_LEGEND %> L'intensité de chaque enjeu (forte, modérée, faible) résume les indicateurs de son onglet : forte si leur intensité moyenne atteint 70 sur 100 (côté rouge) ou si la moitié d'entre eux sont à forte intensité (commune parmi les 20 % de communes où l'enjeu est le plus marqué), modérée si la moyenne atteint 40 (zone grise) ou si un quart sont à forte intensité, faible sinon (côté bleu) ; cela vaut aussi pour les indicateurs de structure (une part plus élevée d'habitants concernés) et pour les évolutions (un écart à la médiane plus fort, à la hausse comme à la baisse).</p>
+    <% end %>
+    <p class="text-xs text-gray-500 mb-2"><%= ep ? FragilityIntensityHelper::INTENSITY_LEGEND.gsub("dans la commune", "dans l'EPCI").gsub("autres communes", "autres EPCI") : FragilityIntensityHelper::INTENSITY_LEGEND %> L'intensité de chaque enjeu (forte, modérée, faible) résume les indicateurs de son onglet : forte si leur intensité moyenne atteint 70 sur 100 (côté rouge) ou si la moitié d'entre eux sont à forte intensité (commune parmi les 20 % de communes où l'enjeu est le plus marqué), modérée si la moyenne atteint 40 (zone grise) ou si un quart sont à forte intensité, faible sinon (côté bleu) ; cela vaut aussi pour les indicateurs de structure (une part plus élevée d'habitants concernés) et pour les évolutions (un écart à la médiane plus fort, à la hausse comme à la baisse).</p>
     <div class="text-xs text-gray-500 mb-4" style="display:flex;align-items:center;gap:8px">
       <span style="color:<%= FragilityIntensityHelper::INTENSITY_BLUE %>;font-weight:600">enjeu moins marqué</span>
       <span style="display:inline-block;width:120px;height:8px;border-radius:4px;background:<%= FragilityIntensityHelper::INTENSITY_GRADIENT %>"></span>
@@ -133,9 +146,9 @@
           <% if high.any? || moderate.any? %>
             À <%= @territory_name %>, les enjeux les plus intenses portent sur <strong><%= (high.presence || moderate).to_sentence(last_word_connector: " et ", two_words_connector: " et ") %></strong><% if high.any? && moderate.any? %>, et dans une moindre mesure sur <%= moderate.to_sentence(last_word_connector: " et ", two_words_connector: " et ") %><% end %>.
           <% else %>
-            À <%= @territory_name %>, aucun enjeu n'est nettement plus marqué que dans les communes <%= m[:short] %>.
+            À <%= @territory_name %>, aucun enjeu n'est nettement plus marqué que dans les <%= unit_pl %> <%= m[:short] %>.
           <% end %>
-          <%= alerts.size %> indicateur<%= alerts.size > 1 ? "s" : "" %> sur <%= judged_items.count { |i| i["value"] } %> <%= alerts.size > 1 ? "sont" : "est" %> à forte intensité (commune parmi les 20 % de communes <%= m[:short] %> où l'enjeu est le plus marqué)<% if top.any? %>, notamment : <%= top.first(3).map { |i| i["label"].sub(/\A./, &:downcase) }.join(" ; ") %><% end %>.
+          <%= alerts.size %> indicateur<%= alerts.size > 1 ? "s" : "" %> sur <%= judged_items.count { |i| i["value"] } %> <%= alerts.size > 1 ? "sont" : "est" %> à forte intensité (<%= ep ? "EPCI parmi les 20 % d'EPCI" : "commune parmi les 20 % de communes" %> <%= m[:short] %> où l'enjeu est le plus marqué)<% if top.any? %>, notamment : <%= top.first(3).map { |i| i["label"].sub(/\A./, &:downcase) }.join(" ; ") %><% end %>.
           <% if not_eval.any? %><span class="text-gray-500">Non évaluable faute de données publiées : <%= not_eval.join(", ") %>.</span><% end %>
           <% if m[:key] == "epci" %><div class="text-xs text-gray-500" style="margin-top:4px">Dans un EPCI de peu de communes, une seule commune d'écart déplace fortement le rang : à lire avec les rangs catégorie et France.</div><% end %>
         </div>
@@ -179,7 +192,7 @@
                   <% if r %>
                     <div style="margin-top:3px" title="<%= tip %>"><%= enjeu_bar(i, r, height: 6) %></div>
                   <% else %>
-                    <div class="text-xs text-gray-400">commune non classée</div>
+                    <div class="text-xs text-gray-400"><%= ep ? "EPCI non classé" : "commune non classée" %></div>
                   <% end %>
                 </div>
               <% end %>
@@ -194,7 +207,8 @@
       <p class="text-xs mb-3" style="color:#b45309">Commune de moins de 1 000 habitants : les taux reposent sur de petits effectifs et le rang peut varier fortement d'une année à l'autre.</p>
     <% end %>
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-      <p>Méthode : pour chaque indicateur, la commune est classée parmi les communes de son EPCI, parmi celles de même catégorie de densité (grille communale de densité INSEE à 7 niveaux, 2025) et parmi toutes les communes de France ayant une valeur publiée ; chaque commune compte pour une. Intensité 100 = enjeu le plus marqué : valeur la plus élevée, ou la plus faible pour les indicateurs où un taux bas signale un besoin (emploi, revenu, scolarisation, accueil du jeune enfant, accès aux soins, licences sportives, foyers imposés, places d'hébergement, participation électorale, IPS) ; pour les évolutions (population, naissances, concentration d'emploi), écart à la médiane dans un sens ou dans l'autre. Intensité d'un enjeu (un par onglet), pour l'échelle choisie, sur tous les indicateurs de l'onglet (intensité de 0 à 100 ; forte intensité : 80 ou plus) : intensité forte si la moyenne des indicateurs atteint 70 ou si au moins la moitié sont à forte intensité, modérée si la moyenne atteint 40 ou si au moins un quart sont à forte intensité, faible sinon ; non évaluable si moins de la moitié des indicateurs sont publiés pour la commune. Aucun score global n'est calculé.</p>
+      <% if ep %><p>Méthode : mêmes indicateurs et millésimes que pour les communes, valeur de l'EPCI (valeurs officielles à l'échelle intercommunale, ou somme des communes pour quelques indicateurs : naissances, jeunes vivant chez leurs parents, moyenne des établissements scolaires) ; l'EPCI est classé parmi les EPCI de même nature (communautés de communes, d'agglomération, communautés urbaines et métropoles) et parmi tous les EPCI ayant une valeur ; chaque EPCI compte pour un. Intensité et niveaux des enjeux : même calcul que pour les communes.</p><% end %>
+      <p<%= ep ? ' style="display:none"'.html_safe : "" %>>Méthode : pour chaque indicateur, la commune est classée parmi les communes de son EPCI, parmi celles de même catégorie de densité (grille communale de densité INSEE à 7 niveaux, 2025) et parmi toutes les communes de France ayant une valeur publiée ; chaque commune compte pour une. Intensité 100 = enjeu le plus marqué : valeur la plus élevée, ou la plus faible pour les indicateurs où un taux bas signale un besoin (emploi, revenu, scolarisation, accueil du jeune enfant, accès aux soins, licences sportives, foyers imposés, places d'hébergement, participation électorale, IPS) ; pour les évolutions (population, naissances, concentration d'emploi), écart à la médiane dans un sens ou dans l'autre. Intensité d'un enjeu (un par onglet), pour l'échelle choisie, sur tous les indicateurs de l'onglet (intensité de 0 à 100 ; forte intensité : 80 ou plus) : intensité forte si la moyenne des indicateurs atteint 70 ou si au moins la moitié sont à forte intensité, modérée si la moyenne atteint 40 ou si au moins un quart sont à forte intensité, faible sinon ; non évaluable si moins de la moitié des indicateurs sont publiés pour la commune. Aucun score global n'est calculé.</p>
       <p>Sources : <%= syn["source"] %>. Millésime de chaque indicateur entre parenthèses. France : France métropolitaine ou France entière selon la source.</p>
     </div>
   <% end %>

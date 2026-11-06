@@ -40,7 +40,7 @@
               <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                 <%= @basic_info[:commune_name] %>
               </h1>
-              <p class="text-gray-600 mt-1">Dashboard territorial interactif</p>
+              <p class="text-gray-600 mt-1"><%= @basic_info[:epci_mode] ? "Tableau de bord intercommunal · #{@basic_info[:communes_count]} communes" : "Dashboard territorial interactif" %></p>
               <% if @basic_info[:is_commune_access_from_epci] %>
                 <div class="mt-2 flex items-center text-sm text-indigo-600">
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,9 +56,9 @@
           </div>
           <div class="flex flex-wrap items-center" style="gap:12px">
             <span class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full text-sm font-semibold shadow-lg">
-              Code INSEE: <%= @basic_info[:territory_code] %>
+              <%= @basic_info[:epci_mode] ? "Code EPCI : #{@basic_info[:epci_code]}" : "Code INSEE: #{@basic_info[:territory_code]}" %>
             </span>
-            <% if @basic_info[:population] > 0 %>
+            <% if @basic_info[:population].to_i > 0 %>
               <div class="bg-green-100 border border-green-200 px-4 py-2 rounded-full">
                 <span class="text-green-800 text-sm font-medium">
                   <%= number_with_delimiter(@basic_info[:population]) %> habitants

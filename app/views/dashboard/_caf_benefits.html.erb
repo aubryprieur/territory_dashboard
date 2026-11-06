@@ -32,7 +32,7 @@
 
   <%= render "dashboard/fragility_ranks", tab: "caf_benefits" %>
   <%= story_takeaways("caf_benefits") %>
-  <% if commune && commune[:key] == :commune %>
+  <% if commune && commune[:main] %>
     <% cv = ->(key, year = latest) { territory_value(commune, year, key) } %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <% [
@@ -51,7 +51,7 @@
   <% end %>
 </div>
 
-<% if commune.nil? || commune[:key] != :commune %>
+<% if commune.nil? || !commune[:main] %>
   <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données CAF indisponibles pour ce territoire.</p></div>
 <% else %>
   <% cv = ->(key, year = latest) { territory_value(commune, year, key) } %>

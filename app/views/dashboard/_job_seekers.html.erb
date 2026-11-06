@@ -7,7 +7,7 @@
     commune: @job_seekers_data, epci: @epci_job_seekers_data, department: @department_job_seekers_data,
     region: @region_job_seekers_data, france: @france_job_seekers_data
   })
-  js_commune = js_territories.find { |t| t[:key] == :commune }
+  js_commune = js_territories.find { |t| t[:main] }
 %>
 <% if js_commune %>
   <%

@@ -8,7 +8,7 @@
     commune: @social_housing_data, epci: @epci_social_housing_data, department: @department_social_housing_data,
     region: @region_social_housing_data, france: @france_social_housing_data
   })
-  sh_commune = sh_territories.find { |t| t[:key] == :commune }
+  sh_commune = sh_territories.find { |t| t[:main] }
 %>
 <% heading ||= "Parc locatif social" %>
 <% card_id ||= nil %>
@@ -68,7 +68,7 @@
                 <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
                 <% sh_territories.each do |t| %>
                   <% v = territory_value(t, sh_latest, key) %>
-                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold text-gray-900' : 'text-gray-600' %>">
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold text-gray-900' : 'text-gray-600' %>">
                     <%= fmt == :pct ? fmt_pct(v) : fmt_decimal(v, precision: 0) %>
                   </td>
                 <% end %>

@@ -29,7 +29,7 @@
   <%= story_takeaways("local_economy") %>
 </div>
 
-<% if commune.nil? || commune[:key] != :commune %>
+<% if commune.nil? || !commune[:main] %>
   <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données sur l'emploi local indisponibles pour ce territoire.</p></div>
 <% else %>
   <%= story_card("q-economy-1", 1, "Combien d'emplois la commune offre-t-elle, et dans quels secteurs ?",

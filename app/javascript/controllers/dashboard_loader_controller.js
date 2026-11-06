@@ -56,7 +56,11 @@ export default class extends Controller {
 
     // Construire l'URL avec le commune_code si présent
     let url = `/dashboard/load_${section}`;
-    if (communeCode) {
+    // Tableau de bord EPCI : ?epci_code=… transmis à chaque onglet
+    const epciCode = new URLSearchParams(window.location.search).get('epci_code');
+    if (epciCode) {
+      url += `?epci_code=${encodeURIComponent(epciCode)}`;
+    } else if (communeCode) {
       url += `?commune_code=${encodeURIComponent(communeCode)}`;
     }
 
@@ -197,7 +201,10 @@ export default class extends Controller {
       try {
         // Construire l'URL avec le commune_code si présent
         let url = '/dashboard/clear_cache';
-        if (this.communeCode) {
+        const epciCode = new URLSearchParams(window.location.search).get('epci_code');
+        if (epciCode) {
+          url += `?epci_code=${encodeURIComponent(epciCode)}`;
+        } else if (this.communeCode) {
           url += `?commune_code=${encodeURIComponent(this.communeCode)}`;
         }
 

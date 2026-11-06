@@ -26,7 +26,7 @@
     ["q-population-4", "Qui arrive dans la commune ?"]
   ]
 %>
-<% if commune.nil? || commune[:key] != :commune %>
+<% if commune.nil? || !commune[:main] %>
   <div class="bg-white shadow rounded-lg p-6 mb-6">
     <h2 class="text-lg font-medium text-gray-900 mb-1">Population</h2>
     <p class="text-sm text-gray-500">Données population indisponibles pour ce territoire.</p>
@@ -127,9 +127,10 @@
         "Naissances domiciliées depuis 2014, comparées aux autres échelles. Projections des naissances : onglet Petite enfance.") do %>
     <%
       bs = @births_series || {}
-      b_years = (bs[:commune].presence || bs[:france] || {}).keys.sort
+      b_main = @epci_mode ? :epci : :commune  # tableau de bord EPCI : série de l'EPCI
+      b_years = (bs[b_main].presence || bs[:france] || {}).keys.sort
       b_first, b_last = b_years.first, b_years.last
-      b_com = bs[:commune] || {}
+      b_com = bs[b_main] || {}
     %>
 
     <% if b_years.size >= 2 && b_com.any? %>

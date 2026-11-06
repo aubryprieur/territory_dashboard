@@ -3,7 +3,8 @@
   + graphique d'évolution. Utilise TerritoryComparisonHelper.
 
   locals :
-    territories  - comparison_territories(...) (la commune en premier)
+    territories  - comparison_territories(...) (la commune en premier ; tableau de bord EPCI : l'EPCI, main)
+                   En mode EPCI, une carte repliée compare les communes membres (EpciCommunesHelper).
     years, latest, comparison - millésimes ("2012", "2017", "2023"), dernier, comparaison
     title        - titre du bloc
     theme        - couleur Tailwind de la carte : "indigo" | "purple" | "blue" | "teal" ...
@@ -76,7 +77,7 @@
     years.each do |y|
       v = territory_value(t, y, value_key)
       next if v.nil?
-      is_commune = t[:key] == :commune
+      is_commune = t[:main]
       xlsx_rows << [xlsx_level(t), t[:name], y.to_i, xlsx_number(v),
                     (is_commune && count_key ? xlsx_number(territory_value(t, y, count_key)) : nil),
                     (is_commune && total_key ? xlsx_number(territory_value(t, y, total_key)) : nil)]
@@ -182,3 +183,9 @@
   </div>
 
 </section>
+<% if @epci_mode %>
+  <%# Tableau de bord EPCI : carte de comparaison des communes membres, repliée %>
+  <%= render "dashboard/iris_map", map: epci_indicator_map(territories, value_key, title: title, value_format: value_format,
+                                                           years: [comparison, latest]),
+        level: :communes, collapsed: true, definition: definition %>
+<% end %>

@@ -6,13 +6,14 @@
 %>
 <%
   definition ||= nil
-  cols = [[:commune, @territory_name], [:epci, (@epci_code.present? ? epci_display_name : nil)],
+  main_col = @epci_mode ? :epci : :commune  # tableau de bord EPCI : pas de colonne commune, l'EPCI est principal
+  cols = [[:commune, (@epci_mode ? nil : @territory_name)], [:epci, (@epci_code.present? ? epci_display_name : nil)],
           [:department, department_display_name], [:region, region_display_name], [:france, "France"]].select { |_, n| n.present? }
   val = ->(row, col) {
     t = row[:ds][:terrs].find { |x| x[:key] == col }
     t && row[:ds][:latest] ? territory_value(t, row[:ds][:latest], row[:key]) : nil
   }
-  shown = rows.select { |r| val.(r, :commune) }
+  shown = rows.select { |r| val.(r, main_col) }
   hidden = rows - shown
 %>
 <% if shown.any? %>
@@ -50,9 +51,9 @@
                 <%
                   v = val.(r, col)
                   dir = r[:direction] || :neutral
-                  worse = col == :commune && dir != :neutral && fv && v && (dir == :worse_if_lower ? v < fv : v > fv)
+                  worse = col == main_col && dir != :neutral && fv && v && (dir == :worse_if_lower ? v < fv : v > fv)
                 %>
-                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= col == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= worse ? 'color:#b91c1c' : '' %>">
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= col == main_col ? 'font-semibold' : 'text-gray-600' %>" style="<%= worse ? 'color:#b91c1c' : '' %>">
                   <%= v.nil? ? "–" : (r[:format] == :decimal ? fmt_decimal(v, precision: 1) : fmt_pct(v)) %>
                 </td>
               <% end %>

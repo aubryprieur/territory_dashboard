@@ -14,7 +14,7 @@
   commune = territories.first
   common = { territories: territories, years: years, latest: latest, comparison: comparison }
 %>
-<% if commune && commune[:key] == :commune %>
+<% if commune && commune[:main] %>
     <%= render "dashboard/territory_indicator", **common,
           title: "Ménages emménagés depuis moins de 2 ans", theme: "blue",
           value_key: "recent_movers_percentage",

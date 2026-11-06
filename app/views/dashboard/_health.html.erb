@@ -11,7 +11,7 @@
     commune: @health_pro_data, epci: @epci_health_pro_data, department: @department_health_pro_data,
     region: @region_health_pro_data, france: @france_health_pro_data
   })
-  pro_commune = pro_territories.find { |t| t[:key] == :commune }
+  pro_commune = pro_territories.find { |t| t[:main] }
   pro_france = pro_territories.find { |t| t[:key] == :france }
   pro_year = pro_commune && comparison_latest_year(@health_pro_data, comparison_years(@health_pro_data, "health_professionals_data"))
   professions = (@health_pro_data.is_a?(Hash) && @health_pro_data["professions"]) || {}
@@ -85,8 +85,8 @@
                 <td class="px-4 py-2 text-sm text-gray-900"><%= label %><%= denominators[key] ? " *" : "" %></td>
                 <% pro_territories.each do |t| %>
                   <% v = territory_value(t, pro_year, "#{key}_density") %>
-                  <% low = t[:key] == :commune && fr && v && v < fr %>
-                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= dens.(v) %></td>
+                  <% low = t[:main] && fr && v && v < fr %>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold' : 'text-gray-600' %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= dens.(v) %></td>
                 <% end %>
               </tr>
             <% end %>

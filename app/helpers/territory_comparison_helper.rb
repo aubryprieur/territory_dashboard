@@ -22,12 +22,15 @@ module TerritoryComparisonHelper
       region: region_display_name,
       france: france_name
     }
+    # Tableau de bord EPCI : pas de commune, l'EPCI est le territoire principal (main)
+    main_key = @epci_mode ? :epci : :commune
     COMPARISON_COLORS.keys.filter_map do |key|
+      next if @epci_mode && key == :commune
       data = sources[key]
       next unless names[key].present? && data.is_a?(Hash) && data[data_key].present?
 
       { key: key, name: names[key], data: data, data_key: data_key,
-        color: COMPARISON_COLORS[key], main: key == :commune }
+        color: COMPARISON_COLORS[key], main: key == main_key }
     end
   end
 

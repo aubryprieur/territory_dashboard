@@ -8,7 +8,7 @@
     commune: @associations_data, epci: @epci_associations_data, department: @department_associations_data,
     region: @region_associations_data, france: @france_associations_data
   }, france_name: "France métropolitaine*")
-  as_commune = as_territories.find { |t| t[:key] == :commune }
+  as_commune = as_territories.find { |t| t[:main] }
   as_france = as_territories.find { |t| t[:key] == :france }
   as_local_law = %w[57 67 68].include?(@department_code.to_s)
 %>
@@ -44,7 +44,7 @@
           <tr>
             <td class="px-4 py-2 text-sm text-gray-900">Associations en activité</td>
             <% as_territories.each do |t| %>
-              <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>"><%= fmt_count(territory_value(t, as_year, "active")) %></td>
+              <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold' : 'text-gray-600' %>"><%= fmt_count(territory_value(t, as_year, "active")) %></td>
             <% end %>
           </tr>
           <% [["Associations pour 1 000 habitants", ->(t) { territory_value(t, as_year, "active_per_1000") }],
@@ -54,15 +54,15 @@
               <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
               <% as_territories.each do |t| %>
                 <% v = getter.(t) %>
-                <% low = t[:key] == :commune && fr && v && v < fr %>
-                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= fmt_decimal(v, precision: (label.start_with?("Créations") ? 2 : 1)) %></td>
+                <% low = t[:main] && fr && v && v < fr %>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold' : 'text-gray-600' %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= fmt_decimal(v, precision: (label.start_with?("Créations") ? 2 : 1)) %></td>
               <% end %>
             </tr>
           <% end %>
           <tr>
             <td class="px-4 py-2 text-sm text-gray-900">Créations d'associations par an (moyenne <%= as_period %>)</td>
             <% as_territories.each do |t| %>
-              <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>"><% n = as_avg.(t, "value") %><%= fmt_decimal(n, precision: (n && n < 100 ? 1 : 0)) %></td>
+              <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold' : 'text-gray-600' %>"><% n = as_avg.(t, "value") %><%= fmt_decimal(n, precision: (n && n < 100 ? 1 : 0)) %></td>
             <% end %>
           </tr>
           <tr class="bg-gray-50">
@@ -73,9 +73,9 @@
             <tr>
               <td class="px-4 py-2 text-sm text-gray-900"><%= label %></td>
               <% as_territories.each do |t| %>
-                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:key] == :commune ? 'font-semibold' : 'text-gray-600' %>">
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= t[:main] ? 'font-semibold' : 'text-gray-600' %>">
                   <%= fmt_pct(territory_value(t, as_year, share)) %>
-                  <% if t[:key] == :commune %><span class="text-xs text-gray-400 font-normal">(<%= fmt_count(territory_value(t, as_year, theme)) %>)</span><% end %>
+                  <% if t[:main] %><span class="text-xs text-gray-400 font-normal">(<%= fmt_count(territory_value(t, as_year, theme)) %>)</span><% end %>
                 </td>
               <% end %>
             </tr>

@@ -7,6 +7,10 @@ class EpciDashboardController < ApplicationController
   before_action :set_epci_variables
 
   def index
+    # Nouveau tableau de bord EPCI : mêmes onglets que les communes, l'EPCI comme territoire principal
+    # (DashboardController en mode EPCI). L'ancien tableau reste accessible avec ?ancien=1 le temps de la transition.
+    return redirect_to(dashboard_path(epci_code: @epci_code)) unless params[:ancien].present?
+
     start_time = Time.current
 
     # Chargement minimal - SEULEMENT les infos de base

@@ -9,7 +9,7 @@
     department: @department_business_creations_data, region: @region_business_creations_data,
     france: @france_business_creations_data
   })
-  bc_commune = bc_territories.find { |t| t[:key] == :commune }
+  bc_commune = bc_territories.find { |t| t[:main] }
   bc_france = bc_territories.find { |t| t[:key] == :france }
 %>
 <% if bc_commune %>
@@ -18,7 +18,7 @@
     bc_period = @business_creations_data.dig("summary", "period")
     bc_sectors = @business_creations_data["sectors"] || {}
     bc_years = (@business_creations_data["available_years"] || []).map(&:to_s)
-    cell = ->(t) { t[:key] == :commune ? 'font-semibold' : 'text-gray-600' }
+    cell = ->(t) { t[:main] ? 'font-semibold' : 'text-gray-600' }
     fr = bc_france && bs.(bc_france, "avg_per_1000")
   %>
   <section style="margin-bottom:2.5rem">
@@ -46,7 +46,7 @@
             <td class="px-4 py-2 text-sm text-gray-900">Créations par an pour 1 000 habitants</td>
             <% bc_territories.each do |t| %>
               <% v = bs.(t, "avg_per_1000") %>
-              <% low = t[:key] == :commune && fr && v && v < fr %>
+              <% low = t[:main] && fr && v && v < fr %>
               <td class="px-3 py-2 whitespace-nowrap text-sm text-right <%= cell.(t) %>" style="<%= low ? 'color:#b91c1c' : '' %>"><%= fmt_decimal(v, precision: 1) %></td>
             <% end %>
           </tr>

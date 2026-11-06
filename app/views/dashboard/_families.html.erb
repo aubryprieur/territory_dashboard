@@ -11,7 +11,7 @@
     ["q-families-2", "Quelles familles demandent une attention particulière ?"],
     ["q-families-3", "Les familles ont-elles des revenus modestes ?"]
   ]
-  fam_ok = families_territories.any? && families_territories.first[:key] == :commune
+  fam_ok = families_territories.any? && families_territories.first[:main]
   latest = fam_ok ? family_latest_year : nil
   commune = families_territories.first
   ars_terrs = comparison_territories("caf_data", {
@@ -173,7 +173,7 @@
 
 <% end %>
 
-<% if ars_terrs.first&.dig(:key) == :commune && ars_years.any? && territory_value(ars_terrs.first, ars_latest, "ars_families_rate") %>
+<% if ars_terrs.first&.dig(:main) && ars_years.any? && territory_value(ars_terrs.first, ars_latest, "ars_families_rate") %>
   <%= story_card("q-families-3", 3, "Les familles ont-elles des revenus modestes ?",
         "Familles aux revenus modestes ayant des enfants scolarisés de 6 à 18 ans.") do %>
     <%= render "dashboard/territory_indicator", territories: ars_terrs, years: ars_years, latest: ars_latest, comparison: ars_comparison,
