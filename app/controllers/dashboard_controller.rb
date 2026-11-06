@@ -4,7 +4,7 @@ class DashboardController < ApplicationController
   include DashboardCache  # 🚀 Ajout du système de cache
   helper_method :cached_iris_map  # cartes IRIS appelées depuis les vues
   helper_method :cached_grid_map  # cartes carroyées (Filosofi, carreaux de 1 km)
-  helper_method :cached_epci_communes, :epci_communes_map, :epci_mode? # tableau de bord EPCI (cartes des communes)
+  helper_method :cached_epci_communes, :cached_epci_communes_births, :epci_communes_map, :epci_mode? # tableau de bord EPCI (cartes des communes)
 
   before_action :check_user_territory
   before_action :set_territory_info, only: [:index, :load_accueil, :load_synthese, :load_families,
@@ -563,7 +563,7 @@ class DashboardController < ApplicationController
   def alias_commune_data_for_epci
     instance_variables.each do |iv|
       name = iv.to_s
-      next unless name.start_with?("@epci_") && !%w[@epci_code @epci_mode @epci_communes_cache @epci_commune_geometries].include?(name)
+      next unless name.start_with?("@epci_") && !%w[@epci_code @epci_mode @epci_communes_cache @epci_commune_geometries @epci_communes_births].include?(name)
       base = "@#{name.delete_prefix('@epci_')}"
       instance_variable_set(base, instance_variable_get(iv)) if instance_variable_get(base).nil?
     end

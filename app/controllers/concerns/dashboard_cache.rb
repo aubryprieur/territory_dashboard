@@ -600,6 +600,14 @@ module DashboardCache
     end
   end
 
+  # Naissances domiciliées par commune de l'EPCI et par année (API /epci/births/{epci}/communes)
+  def cached_epci_communes_births
+    return nil unless @epci_mode && @epci_code.present?
+    @epci_communes_births ||= cached_api_call("epci:#{@epci_code}:communes_births:v1", expires_in: 24.hours) do
+      Api::EpciBirthsService.get_births_by_communes(@epci_code)
+    end
+  end
+
   def epci_commune_geometries
     @epci_commune_geometries ||= cached_api_call("epci:#{@epci_code}:commune_geometries:v1", expires_in: 1.day) do
       CommuneGeometry.where(epci: @epci_code).pluck(:code_insee, :geojson).to_h

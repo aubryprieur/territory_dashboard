@@ -43,6 +43,8 @@ module IrisMapHelper
 
   def fmt_iris(v, unit = "%")
     return "–" if v.nil?
+    return number_with_delimiter(v.round, delimiter: " ") if unit == "n"  # effectifs (habitants, naissances)
+    return "#{v.positive? ? '+' : (v.negative? ? '−' : '')}#{number_with_precision(v.abs, precision: 2, separator: ',')} %/an" if unit == "%/an"
     return "#{number_with_delimiter(v.round, delimiter: ' ')} €" if unit == "€"
     "#{number_with_precision(v, precision: 1, separator: ',', delimiter: ' ')}#{unit == '%' ? ' %' : ''}"
   end

@@ -1,7 +1,8 @@
 <%#
   Plusieurs cartes repliées regroupées : un libellé commun puis des boutons accolés (comme Graphique / Tableau) ;
   un clic ouvre la carte sous les boutons (et referme les autres), un second clic la referme.
-  locals : maps — [{ kind: :iris | :grid, map:, definition:, commune_latest: (optionnel) }] (cartes absentes ignorées)
+  locals : maps — [{ kind: :iris | :grid | :communes, map:, definition:, commune_latest: (optionnel) }] (cartes absentes
+           ignorées ; :communes = carte des communes d'un EPCI, rendue par _iris_map level: :communes)
 %>
 <%
   items = maps.select { |m| m[:map].present? }
@@ -9,12 +10,13 @@
 <% if items.size == 1 %>
   <% m = items.first %>
   <%= render "dashboard/#{m[:kind] == :grid ? 'grid_map' : 'iris_map'}", map: m[:map], collapsed: true,
-        definition: m[:definition], commune_latest: m[:commune_latest] %>
+        definition: m[:definition], commune_latest: m[:commune_latest], level: (m[:kind] == :communes ? :communes : :iris) %>
 <% elsif items.any? %>
   <%
     same = items.map { |m| m[:kind] }.uniq.size == 1
     lead = if !same then "🗺 Voir la carte"
            elsif items.first[:kind] == :grid then "🗺 Voir la carte par carreau de 1 km"
+           elsif items.first[:kind] == :communes then "🗺 Voir la carte des communes"
            else "🗺 Voir la carte par quartier (IRIS)"
            end
     btn = "padding:6px 12px;font-size:13px;font-weight:500;border:1px solid #c7d2fe;cursor:pointer;background:#f8faff;color:#3730a3"
@@ -27,7 +29,7 @@
         <% items.each_with_index do |m, i| %>
           <%
             label = m[:map].dig("indicator", "label").to_s.sub(/\A./, &:downcase)
-            label = "#{m[:kind] == :grid ? 'par carreau' : 'par quartier'} : #{label}" unless same
+            label = "#{{ grid: 'par carreau', communes: 'par commune' }[m[:kind]] || 'par quartier'} : #{label}" unless same
             radius = items.size == 1 ? "8px" : (i.zero? ? "8px 0 0 8px" : (i == items.size - 1 ? "0 8px 8px 0" : "0"))
           %>
           <button type="button" data-idx="<%= i %>" aria-pressed="false" onclick="<%= toggle %>" style="<%= btn %>;border-radius:<%= radius %>;<%= i.zero? ? '' : 'border-left:none;' %>"><%= label %></button>
@@ -36,7 +38,7 @@
     </div>
     <% items.each do |m| %>
       <%= render "dashboard/#{m[:kind] == :grid ? 'grid_map' : 'iris_map'}", map: m[:map], collapsed: :panel,
-            definition: m[:definition], commune_latest: m[:commune_latest] %>
+            definition: m[:definition], commune_latest: m[:commune_latest], level: (m[:kind] == :communes ? :communes : :iris) %>
     <% end %>
   </div>
 <% end %>

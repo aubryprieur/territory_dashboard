@@ -113,6 +113,11 @@
       </div>
     </section>
 
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : habitants et variation annuelle par commune %>
+      <%= render "dashboard/map_group", maps: epci_population_maps(commune, latest) %>
+    <% end %>
+
     <%= render "dashboard/territory_indicator", **common,
           title: "Densité de population", theme: "indigo",
           value_key: "density", value_format: :decimal, unit: "hab./km²", decimals: 0,
@@ -182,6 +187,11 @@
         </div>
         <p class="text-xs text-gray-500 mt-2">Source : INSEE, état civil, naissances domiciliées <%= b_first %>-<%= b_last %> ; France : France entière (outre-mer compris).</p>
       </section>
+    <% end %>
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : naissances de la dernière année par commune %>
+      <%= render "dashboard/map_group", maps: [{ kind: :communes, map: epci_births_map(commune),
+                                                 definition: "Naissances domiciliées : enfants nés vivants dont la mère réside dans la commune." }] %>
     <% end %>
 
 

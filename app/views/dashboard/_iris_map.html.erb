@@ -37,6 +37,27 @@
     first = years.first
     unit = map.dig("indicator", "unit")
     reference = map.dig("commune", "values", latest, "value")
+    # Classes à seuils (map["breaks"] : 4 seuils croissants) pour les effectifs et les taux de variation, sinon écart
+    # relatif à la référence (commune ou EPCI)
+    breaks = map["breaks"]
+    classify = if breaks
+                 ->(v) { v.nil? ? nil : IrisMapHelper::IRIS_CLASSES[breaks.count { |b| v > b }] }
+               else
+                 ->(v) { iris_class(v, reference) }
+               end
+    legend_classes = if breaks
+                       IrisMapHelper::IRIS_CLASSES.each_with_index.map do |c, i|
+                         lo = i.zero? ? nil : breaks[i - 1]
+                         hi = breaks[i]
+                         range = if lo.nil? then "#{fmt_iris(hi, unit)} ou moins"
+                                 elsif hi.nil? then "plus de #{fmt_iris(lo, unit)}"
+                                 else "#{fmt_iris(lo, unit)} à #{fmt_iris(hi, unit)}"
+                                 end
+                         c.merge(range: range)
+                       end
+                     else
+                       iris_legend(reference, unit)
+                     end
     features = (map["features"] || []).sort_by { |f| -(iris_value(f, latest) || -1) }
     count_label = map.dig("indicator", "count_label")
     additive = map.dig("indicator", "additive") != false  # sinon : pas d'effectif (médiane, taux publiés tels quels)
@@ -46,7 +67,7 @@
       value = iris_value(f, latest)
       count = iris_value(f, latest, "count")
       total = iris_value(f, latest, "total")
-      cls = iris_class(value, reference)
+      cls = classify.(value)
       tip = "<strong>#{ERB::Util.h(f['iris_name'])}</strong> (#{lv[:code]} #{f['iris_code']})<br>#{fmt_iris(value, unit)}"
       tip += "<br>#{fmt_count(count)} sur #{fmt_count(total)}" if count && total && additive
       tip += "<br><em>pas de valeur (#{lv[:no_value]})</em>" if value.nil?
@@ -80,7 +101,7 @@
       <%= xlsx_download_button(filename: xlsx_filename(ilabel, lv[:sheet]), notes: iris_notes,
                                sheets: [{ name: lv[:sheet], rows: iris_rows, widths: [12, 36, 8, 22, 12, 12] }]) %>
     </div>
-    <p class="text-xs text-gray-500 mb-4"><%= definition %><%= lv[:intro] %> Couleur : écart de chaque <%= lv[:unit] %> à l'ensemble de <%= lv[:ref] %> (<%= fmt_iris(reference, unit) %> en <%= latest %>).</p>
+    <p class="text-xs text-gray-500 mb-4"><%= definition %><%= lv[:intro] %> <%= map["color_note"] || "Couleur : écart de chaque #{lv[:unit]} à l'ensemble de #{lv[:ref]} (#{fmt_iris(reference, unit)} en #{latest})." %></p>
     <style>
       .iris-layout{display:grid;grid-template-columns:1fr;gap:1.5rem;align-items:start}
       @media (min-width:900px){.iris-layout{grid-template-columns:3fr 2fr}}
@@ -92,7 +113,7 @@
         <!-- Légende : barre segmentée, du plus faible au plus élevé -->
         <div class="mt-3">
           <div style="display:flex;gap:3px">
-            <% iris_legend(reference, unit).each do |c| %>
+            <% legend_classes.each do |c| %>
               <div style="flex:1;min-width:0">
                 <div style="height:10px;border-radius:999px;background:<%= map_color.(c[:color]) %>"></div>
                 <div class="text-gray-500" style="font-size:10px;line-height:1.2;margin-top:4px;text-align:center"><%= c[:range] %></div>
@@ -100,9 +121,9 @@
             <% end %>
           </div>
           <div class="flex items-center justify-between mt-2" style="font-size:11px">
-            <span class="text-gray-500">← Inférieur à <%= lv[:ref] %></span>
+            <span class="text-gray-500">← <%= map["legend_low"] || "Inférieur à #{lv[:ref]}" %></span>
             <span class="inline-flex items-center text-gray-500"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:<%= IrisMapHelper::IRIS_NO_DATA_SWATCH %>;margin-right:4px"></span>Sans valeur</span>
-            <span class="text-gray-500">Supérieur à <%= lv[:ref] %> →</span>
+            <span class="text-gray-500"><%= map["legend_high"] || "Supérieur à #{lv[:ref]}" %> →</span>
           </div>
         </div>
         <div class="text-xs text-gray-500 mt-1" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
@@ -142,7 +163,7 @@
                 <%
                   values = f["values"] || {}
                   v1 = values.dig(latest, "value"); v0 = values.dig(first, "value")
-                  cls = iris_class(v1, reference)
+                  cls = classify.(v1)
                 %>
                 <tr>
                   <td class="px-2 py-2 text-xs text-gray-900">
