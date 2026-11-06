@@ -1,23 +1,34 @@
 <%#
+  Organisé en questions : 1. vie associative 2. participation électorale 3. sport en club.
   Onglet Vie locale — dashboard commune (analyse des besoins sociaux).
     - pratique sportive en club (INJEP, licences 2023 — API /sports/*, partial _sports)
     - vie associative (RNA, export Waldec — API /associations/*, partial _associations)
     - participation électorale (ministère de l'Intérieur, via INSEE / SDES — indicateurs de développement durable)
 %>
+<%
+  questions = [
+    ["q-local_life-1", "La vie associative est-elle dense ?"],
+    ["q-local_life-2", "Les habitants votent-ils ?"],
+    ["q-local_life-3", "Les habitants pratiquent-ils un sport en club ?"]
+  ]
+%>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Vie locale</h2>
-  <p class="text-xs text-gray-500 mb-4">Participation des habitants à la vie sociale, sportive et citoyenne de la commune.</p>
+  <p class="text-xs text-gray-500 mb-4">Participation des habitants à la vie sociale, sportive et citoyenne de la commune : trois questions.</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "local_life" %>
+  <%= story_takeaways("local_life") %>
+</div>
 
-  <!-- 1. Pratique sportive en club -->
-  <%= render "dashboard/sports" %>
-
-  <!-- 2. Vie associative -->
+<%= story_card("q-local_life-1", 1, "La vie associative est-elle dense ?",
+      "Associations actives domiciliées dans la commune et créations récentes.") do %>
   <%= render "dashboard/associations" %>
 
-  <!-- 3. Participation électorale -->
-  <h3 class="text-base font-medium text-gray-900 mb-1 mt-4">Participation citoyenne</h3>
+<% end %>
+
+<%= story_card("q-local_life-2", 2, "Les habitants votent-ils ?",
+      "Participation aux élections présidentielle et municipales : repère de l'engagement citoyen.") do %>
   <%= render "dashboard/sdg_indicator", key: "presidential_turnout", theme: "indigo",
         title: "Participation électorale",
         definition: "Votants au 1er tour de l'élection présidentielle parmi les inscrits. Repère de l'engagement citoyen et du sentiment d'éloignement des institutions." %>
@@ -39,8 +50,14 @@
           definition: "Votants au 1er tour des élections municipales de #{me_latest} parmi les inscrits sur les listes électorales. Scrutin de proximité : à lire avec la participation à la présidentielle, l'écart renseigne sur l'intérêt pour la vie locale. EPCI, département, région et France : somme des communes.",
           details: [{ label: "Blancs et nuls (% des votants)", share_key: "blank_null_rate" }] %>
   <% end %>
+<% end %>
+
+<%= story_card("q-local_life-3", 3, "Les habitants pratiquent-ils un sport en club ?",
+      "Licences sportives pour 100 habitants, selon l'âge et le sexe.") do %>
+  <%= render "dashboard/sports" %>
+
 
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
     <p>Sources : licences sportives : INJEP — MEOS, recensement des licences et clubs sportifs (Observatoire des territoires) ; associations : ministère de l'Intérieur, Répertoire national des associations (RNA) ; participation à la présidentielle : ministère de l'Intérieur, via INSEE / SDES (indicateurs territoriaux de développement durable) ; participation aux municipales : ministère de l'Intérieur, résultats du 1er tour par commune (data.gouv.fr), France = France métropolitaine.</p>
   </div>
-</div>
+<% end %>

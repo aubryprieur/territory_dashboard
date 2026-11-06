@@ -1,4 +1,5 @@
 <%#
+  Organisé en questions : 1. vue d'ensemble 2. violences contre les personnes 3. atteintes aux biens et tranquillité publique.
   Onglet Délinquance — dashboard commune (analyse des besoins sociaux).
   Crimes et délits enregistrés par la police et la gendarmerie (SSMSI, 2016-2025 — API /delinquency/*).
   Les petits effectifs communaux ne sont pas diffusés par le SSMSI : la valeur de la commune est alors « n.d. ».
@@ -20,18 +21,21 @@
   per = ->(key) { indicators.dig(key, "per") || "habitants" }
   fmt_rate = ->(v) { v.nil? ? "–" : number_with_precision(v, precision: 1) }
   department = territories.find { |t| t[:key] == :department }
+  questions = [
+    ["q-delinquency-1", "Quel est le niveau de délinquance enregistrée ?"],
+    ["q-delinquency-2", "Les violences contre les personnes progressent-elles ?"],
+    ["q-delinquency-3", "Les atteintes aux biens et à la tranquillité publique progressent-elles ?"]
+  ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Délinquance et tranquillité publique</h2>
   <p class="text-xs text-gray-500 mb-4">Crimes et délits enregistrés par la police et la gendarmerie, comptés au lieu où ils ont été commis. Ces chiffres reflètent aussi la propension des victimes à porter plainte et l'activité des services : une hausse peut traduire une meilleure révélation des faits (violences intrafamiliales, violences sexuelles).</p>
+  <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "delinquency" %>
-
-  <% if commune.nil? || latest.nil? %>
-    <p class="text-sm text-gray-500">Données de délinquance indisponibles pour ce territoire.</p>
-  <% else %>
-    <!-- Synthèse -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+  <%= story_takeaways("delinquency") %>
+  <% if commune && latest %>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <% [["intrafamily_violence", "Violences intrafamiliales", "red"], ["other_physical_violence", "Violences hors cadre familial", "orange"],
           ["burglary", "Cambriolages de logement", "indigo"], ["vandalism", "Destructions et dégradations", "purple"]].each do |key, label, theme| %>
         <div class="bg-<%= theme %>-50 p-4 rounded-lg">
@@ -41,10 +45,16 @@
         </div>
       <% end %>
     </div>
+  <% end %>
+</div>
 
-    <!-- Vue d'ensemble -->
+<% if commune.nil? || latest.nil? %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données de délinquance indisponibles pour ce territoire.</p></div>
+<% else %>
+<%= story_card("q-delinquency-1", 1, "Quel est le niveau de délinquance enregistrée ?",
+      "Tous les crimes et délits enregistrés, comparés au département et à la région.") do %>
     <section style="margin-bottom:2.5rem">
-      <h3 class="text-base font-medium text-gray-900 mb-1">Vue d'ensemble (<%= latest %>)</h3>
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Vue d'ensemble (<%= latest %>)</h3>
       <p class="text-xs text-gray-500 mb-4">Taux pour 1 000 habitants (pour 1 000 logements pour les cambriolages). En rouge, un taux communal supérieur à celui du département. « n.d. » : effectif trop faible, non diffusé pour la commune.</p>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -80,13 +90,29 @@
       </div>
     </section>
 
-    <!-- Détail et évolution -->
-    <h3 class="text-base font-medium text-gray-900 mb-1">Évolution <%= years.first %>-<%= latest %></h3>
-    <p class="text-xs text-gray-500 mb-4">Taux pour 1 000 habitants (logements pour les cambriolages).</p>
+<% end %>
+
+<%= story_card("q-delinquency-2", 2, "Les violences contre les personnes progressent-elles ?",
+      "Violences intrafamiliales, violences sexuelles et violences physiques hors cadre familial enregistrées.") do %>
+    <p class="text-xs text-gray-500 mb-4">Taux pour 1 000 habitants, <%= years.first %>-<%= latest %>.</p>
     <% [
          ["intrafamily_violence", "red", "Victimes de violences physiques commises au sein de la famille (conjoints, ex-conjoints, enfants, autres membres), enregistrées par la police et la gendarmerie."],
          ["sexual_violence", "purple", "Victimes de viols, tentatives, agressions et harcèlements sexuels enregistrés. Une part importante des faits enregistrés est ancienne ou concerne des mineurs."],
-         ["other_physical_violence", "orange", "Victimes de coups et blessures volontaires et autres violences physiques commises hors du cadre familial."],
+         ["other_physical_violence", "orange", "Victimes de coups et blessures volontaires et autres violences physiques commises hors du cadre familial."]
+       ].each do |key, theme, definition| %>
+      <% next unless territories.any? { |t| rate.(t, key) } %>
+      <%= render "dashboard/territory_indicator", **common,
+            title: indicators.dig(key, "label") || key, theme: theme,
+            value_key: "#{key}_rate", value_format: :decimal, unit: "‰", decimals: 1,
+            definition: definition + (diffused.(key) ? "" : " Effectif de la commune trop faible : non diffusé.") %>
+    <% end %>
+
+<% end %>
+
+<%= story_card("q-delinquency-3", 3, "Les atteintes aux biens et à la tranquillité publique progressent-elles ?",
+      "Cambriolages, destructions et dégradations, usage de stupéfiants.") do %>
+    <p class="text-xs text-gray-500 mb-4">Taux pour 1 000 habitants (logements pour les cambriolages), <%= years.first %>-<%= latest %>.</p>
+    <% [
          ["burglary", "indigo", "Cambriolages de logements (résidences principales et secondaires), pour 1 000 logements."],
          ["vandalism", "green", "Destructions et dégradations volontaires de biens publics et privés (incendies, dégradations de véhicules, de mobilier urbain...)."],
          ["drug_use", "blue", "Personnes mises en cause pour usage de stupéfiants, y compris par amende forfaitaire délictuelle : l'indicateur reflète surtout l'activité des services."]
@@ -102,5 +128,6 @@
       <p>Source : SSMSI, ministère de l'Intérieur — bases communale, départementale et régionale des crimes et délits enregistrés, <%= years.first %>-<%= latest %> (géographie 2026).</p>
       <p>Les faits non signalés aux forces de sécurité n'apparaissent pas : les enquêtes de victimation montrent que seule une partie des victimes porte plainte.</p>
     </div>
-  <% end %>
-</div>
+<% end %>
+
+<% end %>

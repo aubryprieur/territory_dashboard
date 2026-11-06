@@ -1,4 +1,5 @@
 <%#
+  Organisé en questions : 1. présence ou distance des services essentiels 2. densités comparées 3. inventaire.
   Onglet Équipements — dashboard commune (analyse des besoins sociaux).
   Données : INSEE, Base permanente des équipements 2025 (API /equipment/commune/*) : services clés (présence,
   densité pour 10 000 habitants comparée aux territoires de référence, distance au plus proche s'ils sont absents)
@@ -17,17 +18,20 @@
   ref_keys = %w[epci department region france].select { |k| eq && eq.dig("comparison_territories", k) && ref_names[k] }
   density = ->(v) { v.nil? ? "–" : number_with_precision(v, precision: 1) }
   absent = services.select { |s| s["nearest"] }
+  questions = [
+    ["q-equipment-1", "Quels services essentiels sont présents, et à quelle distance ?"],
+    ["q-equipment-2", "La commune est-elle aussi bien équipée que les territoires de comparaison ?"],
+    ["q-equipment-3", "Quels équipements la commune compte-t-elle ?"]
+  ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Équipements et services</h2>
   <p class="text-xs text-gray-500 mb-4">Services de petite enfance, pour les personnes âgées, d'accès aux droits, commerces et équipements culturels et sportifs présents dans la commune, selon la Base permanente des équipements de l'INSEE.</p>
+  <%= story_summary(questions) %>
 
-  <% if eq.nil? %>
-    <p class="text-sm text-gray-500">Données sur les équipements indisponibles pour ce territoire.</p>
-  <% else %>
+  <% if eq %>
     <% cr, fs = by_key["childcare"], by_key["food_shop"] %>
-    <!-- Synthèse -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-indigo-50 p-4 rounded-lg">
         <h4 class="text-xs font-medium text-indigo-800">Équipements recensés (<%= eq["year"] %>)</h4>
         <p class="text-2xl font-bold text-indigo-900"><%= fmt_count(eq.dig("totals", "count")) %></p>
@@ -47,10 +51,44 @@
         <p class="text-xs text-gray-600">distance au plus proche indiquée ci-dessous</p>
       </div>
     </div>
+  <% end %>
+</div>
 
-    <!-- 1. Densités comparées -->
+<% if eq.nil? %>
+  <div class="bg-white shadow rounded-lg p-6 mb-6"><p class="text-sm text-gray-500">Données sur les équipements indisponibles pour ce territoire.</p></div>
+<% else %>
+<%= story_card("q-equipment-1", 1, "Quels services essentiels sont présents, et à quelle distance ?",
+      "Services de petite enfance, pour les personnes âgées, d'accès aux droits et commerces : présents dans la commune ou distance au plus proche.") do %>
     <section style="margin-bottom:2.5rem">
-      <h3 class="text-base font-medium text-gray-900 mb-1">Densité des services de proximité</h3>
+      <p class="text-xs text-gray-500 mb-4">Pour chaque service : nombre dans la commune<%= with_qpv ? " (dont en quartier prioritaire)" : "" %> ou, s'il est absent, distance à vol d'oiseau depuis la mairie jusqu'au plus proche, et commune où il se trouve.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <% services.group_by { |s| s["theme"] }.each do |theme, list| %>
+          <div>
+            <h4 class="text-sm font-semibold text-gray-700 mb-2"><%= theme %></h4>
+            <ul class="text-sm divide-y divide-gray-200">
+              <% list.each do |s| %>
+                <li class="py-1 flex justify-between gap-4">
+                  <span class="text-gray-700"><%= s["label"] %></span>
+                  <% if s["count"].to_i.positive? %>
+                    <span class="whitespace-nowrap font-medium" style="color:#15803d">✓ <%= fmt_count(s["count"]) %><%= with_qpv && s["count_qpv"].to_i.positive? ? " (#{s['count_qpv']} QPV)" : "" %></span>
+                  <% elsif s["nearest"] %>
+                    <span class="whitespace-nowrap" style="color:#b45309">✗ <%= number_with_precision(s.dig("nearest", "distance_km"), precision: 1) %> km · <%= s.dig("nearest", "commune_name").to_s.titleize %></span>
+                  <% else %>
+                    <span class="whitespace-nowrap text-gray-400">✗ absent</span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+<% end %>
+
+<%= story_card("q-equipment-2", 2, "La commune est-elle aussi bien équipée que les territoires de comparaison ?",
+      "Nombre de services pour 10 000 habitants, comparé à l'intercommunalité, au département, à la région et à la France.") do %>
+    <section style="margin-bottom:2.5rem">
       <p class="text-xs text-gray-500 mb-4">Nombre pour 10 000 habitants (population <%= eq["population_year"] %>). En rouge, une densité inférieure à celle de la France métropolitaine. Les professionnels et services de santé sont présentés dans l'onglet Santé.</p>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -77,36 +115,11 @@
       </div>
     </section>
 
-    <!-- 2. Services clés : présence ou distance -->
-    <section style="margin-bottom:2.5rem">
-      <h3 class="text-base font-medium text-gray-900 mb-1">Accès aux services essentiels</h3>
-      <p class="text-xs text-gray-500 mb-4">Pour chaque service : nombre dans la commune<%= with_qpv ? " (dont en quartier prioritaire)" : "" %> ou, s'il est absent, distance à vol d'oiseau depuis la mairie jusqu'au plus proche, et commune où il se trouve.</p>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <% services.group_by { |s| s["theme"] }.each do |theme, list| %>
-          <div>
-            <h4 class="text-sm font-semibold text-gray-700 mb-2"><%= theme %></h4>
-            <ul class="text-sm divide-y divide-gray-200">
-              <% list.each do |s| %>
-                <li class="py-1 flex justify-between gap-4">
-                  <span class="text-gray-700"><%= s["label"] %></span>
-                  <% if s["count"].to_i.positive? %>
-                    <span class="whitespace-nowrap font-medium" style="color:#15803d">✓ <%= fmt_count(s["count"]) %><%= with_qpv && s["count_qpv"].to_i.positive? ? " (#{s['count_qpv']} QPV)" : "" %></span>
-                  <% elsif s["nearest"] %>
-                    <span class="whitespace-nowrap" style="color:#b45309">✗ <%= number_with_precision(s.dig("nearest", "distance_km"), precision: 1) %> km · <%= s.dig("nearest", "commune_name").to_s.titleize %></span>
-                  <% else %>
-                    <span class="whitespace-nowrap text-gray-400">✗ absent</span>
-                  <% end %>
-                </li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
-      </div>
-    </section>
+<% end %>
 
-    <!-- 3. Inventaire -->
+<%= story_card("q-equipment-3", 3, "Quels équipements la commune compte-t-elle ?",
+      "Tous les équipements recensés par l'INSEE dans la commune, par domaine.") do %>
     <section style="margin-bottom:1.5rem">
-      <h3 class="text-base font-medium text-gray-900 mb-1">Inventaire des équipements de la commune</h3>
       <p class="text-xs text-gray-500 mb-4">Tous les équipements recensés, par domaine. Cliquer sur un domaine pour le détail.</p>
       <% eq["inventory"].each do |dom| %>
         <details class="mb-2 border border-gray-200 rounded-lg">
@@ -137,5 +150,6 @@
       <p>Source : <%= eq["source"] %>. Quartiers prioritaires de la politique de la ville : géographie 2024.</p>
       <p>Distances à vol d'oiseau depuis la mairie de la commune : les temps de trajet réels peuvent être nettement plus longs.</p>
     </div>
-  <% end %>
-</div>
+<% end %>
+
+<% end %>
