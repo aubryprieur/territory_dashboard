@@ -126,4 +126,17 @@ module EpciCommunesHelper
     vals = keys.map { |k| series.dig(year.to_s, k) }.select { |v| v.is_a?(Numeric) }
     vals.empty? ? nil : vals.sum
   end
+
+  # Carte des communes d'un indicateur de la synthèse des fragilités (valeurs communales de /fragility-synthesis/epci)
+  def epci_synthesis_map(key, title: nil, unit: "%")
+    return nil unless @epci_mode
+    syn = @fragility_synthesis.is_a?(Hash) ? @fragility_synthesis : {}
+    item = (syn["indicators"].to_a + syn["context_indicators"].to_a).find { |i| i["key"] == key }
+    return nil unless item && item["communes"].present?
+    year = item["year"].to_s
+    names = (syn["communes"] || []).to_h { |c| [c["code"], c["name"]] }
+    epci_communes_map(label: title || item["label"], unit: unit, values: item["communes"].transform_values { |v| { year => v } },
+                      names: names, reference: (item["value"] ? { year => item["value"] } : {}), years: [year],
+                      source: "INSEE, recensement de la population #{year} (synthèse des fragilités)")
+  end
 end

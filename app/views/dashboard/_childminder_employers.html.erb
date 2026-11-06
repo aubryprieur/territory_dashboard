@@ -37,6 +37,16 @@
         </tbody>
       </table>
     </div>
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : familles employeuses pour 100 enfants de moins de 5 ans, par commune %>
+      <div style="margin-top:1.5rem">
+        <%= render "dashboard/iris_map", map: epci_indicator_map(cm, "childminder_employers_per_100_children",
+                                                                 title: "Familles employant une assistante maternelle pour 100 enfants de moins de 5 ans",
+                                                                 value_format: :decimal, years: [cm_year]),
+              level: :communes, collapsed: true,
+              definition: "Particuliers employeurs d'au moins une assistante maternelle au 31 décembre, pour 100 enfants de moins de 5 ans." %>
+      </div>
+    <% end %>
     <p class="text-xs text-gray-500 mt-3">Source : INSEE, Flores <%= cm_year %> ; recensement de la population 2023. L'évolution depuis 2017 n'est pas présentée : la hausse observée partout entre les deux millésimes (+40 % en France métropolitaine) paraît peu vraisemblable au regard de la baisse du nombre d'assistantes maternelles et tient sans doute à la source.</p>
   </div>
 <% end %>
