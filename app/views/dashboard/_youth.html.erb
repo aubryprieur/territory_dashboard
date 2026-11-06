@@ -132,7 +132,7 @@
 <%= story_card("q-youth-3", 3, "Ont-ils accès au sport et aux loisirs ?",
       "Licences sportives, pass Sport et équipements pour les enfants et les jeunes.") do %>
   <%= render "dashboard/youth_table", title: "Sport",
-        definition: "Licences sportives : licences délivrées par les fédérations, à la commune de résidence (une personne peut en avoir plusieurs). Pass Sport : aide de 50 € à l'inscription en club pour les jeunes de 6 à 17 ans dont la famille perçoit l'allocation de rentrée scolaire ou l'AEEH (et certains jeunes adultes) ; le taux rapporte les pass activés à tous les 6-17 ans, ce qui reflète à la fois la part de familles éligibles et le recours. En rouge, une valeur inférieure à la France.",
+        definition: "Licences sportives : licences délivrées par les fédérations, à la commune de résidence. Les taux comptent des licences et non des personnes : un même habitant peut détenir plusieurs licences (plusieurs clubs, sport scolaire), le taux peut donc dépasser 100. Dans les petites communes, quelques licences ou un écart entre les sources (licences rattachées à la commune de résidence déclarée au club, population issue du recensement) suffisent à faire varier fortement le taux : à lire comme un ordre de grandeur. Pass Sport : aide de 50 € à l'inscription en club pour les jeunes de 6 à 17 ans dont la famille perçoit l'allocation de rentrée scolaire ou l'AEEH (et certains jeunes adultes) ; le taux rapporte les pass activés à tous les 6-17 ans, ce qui reflète à la fois la part de familles éligibles et le recours. En rouge, une valeur inférieure à la France.",
         rows: [
           { label: "Licenciés de moins de 15 ans, pour 100 enfants de moins de 15 ans", ds: sports, key: "licence_rate_0_14", format: :decimal, direction: :worse_if_lower },
           { label: "Licenciés de 15-29 ans, pour 100 jeunes de 15-29 ans", ds: sports, key: "licence_rate_15_29", format: :decimal, direction: :worse_if_lower },
@@ -143,8 +143,8 @@
   <% if @epci_mode %>
     <%# Tableau de bord EPCI : licences sportives et Pass Sport par commune %>
     <%= render "dashboard/map_group", maps: [
-        cmap.(sports, "licence_rate_0_14", "Licenciés de moins de 15 ans", "Licences sportives pour 100 enfants de moins de 15 ans.", :decimal),
-        cmap.(sports, "licence_rate_15_29", "Licenciés de 15-29 ans", "Licences sportives pour 100 jeunes de 15 à 29 ans.", :decimal),
+        cmap.(sports, "licence_rate_0_14", "Licenciés de moins de 15 ans", "Licences sportives pour 100 enfants de moins de 15 ans. Un enfant peut détenir plusieurs licences : le taux peut dépasser 100, et varie fortement dans les petites communes.", :decimal),
+        cmap.(sports, "licence_rate_15_29", "Licenciés de 15-29 ans", "Licences sportives pour 100 jeunes de 15 à 29 ans. Un jeune peut détenir plusieurs licences : le taux peut dépasser 100, et varie fortement dans les petites communes.", :decimal),
         cmap.(pass, "rate_6_17", "Pass Sport activés", "Pass Sport activés pour 100 jeunes de 6 à 17 ans.", :decimal)
       ] %>
   <% end %>
