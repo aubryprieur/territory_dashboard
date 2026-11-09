@@ -114,6 +114,23 @@
           { kind: :iris, map: cached_iris_map("alone_55_79_share"),
             definition: "Personnes de 55 à 79 ans vivant seules, en % des 55-79 ans de l'IRIS : isolement avant le grand âge, à prévenir." }
         ] %>
+      <% if @epci_mode %>
+        <%# Tableau de bord EPCI : personnes vivant seules par commune (80 ans ou plus, 65-79 ans, 55-64 ans) %>
+        <%
+          hh_terrs = comparison_territories("household_data", {
+            epci: @epci_household_data, department: @department_household_data, region: @region_household_data,
+            france: @france_household_data })
+          hh_map = ->(key, title, definition) do
+            { kind: :communes, definition: definition,
+              map: epci_indicator_map(hh_terrs, key, title: title, value_format: :pct, years: [hh_latest]) }
+          end
+        %>
+        <%= render "dashboard/map_group", maps: [
+            hh_map.("living_alone_rate_80_plus", "80 ans ou plus vivant seuls", "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de la population des ménages."),
+            hh_map.("living_alone_rate_65_79", "65-79 ans vivant seuls", "Personnes de 65 à 79 ans vivant seules, en % des 65-79 ans de la population des ménages."),
+            hh_map.("living_alone_rate_55_64", "55-64 ans vivant seuls", "Personnes de 55 à 64 ans vivant seules, en % des 55-64 ans de la population des ménages : isolement avant le grand âge, à prévenir.")
+          ] %>
+      <% end %>
     <% else %>
       <p class="text-sm text-gray-500 mb-4">Données sur les ménages indisponibles pour ce territoire.</p>
     <% end %>
