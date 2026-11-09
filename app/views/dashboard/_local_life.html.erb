@@ -1,5 +1,5 @@
 <%#
-  Organisé en questions : 1. vie associative 2. participation électorale 3. sport en club.
+  Organisé en questions : 1. vie associative 2. participation électorale 3. sport en club 4. équipements (carte BPE).
   Onglet Vie locale — dashboard commune (analyse des besoins sociaux).
     - pratique sportive en club (INJEP, licences 2023 — API /sports/*, partial _sports)
     - vie associative (RNA, export Waldec — API /associations/*, partial _associations)
@@ -9,12 +9,13 @@
   questions = [
     ["q-local_life-1", "La vie associative est-elle dense ?"],
     ["q-local_life-2", "Les habitants votent-ils ?"],
-    ["q-local_life-3", "Les habitants pratiquent-ils un sport en club ?"]
+    ["q-local_life-3", "Les habitants pratiquent-ils un sport en club ?"],
+    ["q-local_life-4", "Quels lieux pour la vie sociale, culturelle et sportive ?"]
   ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Vie locale</h2>
-  <p class="text-xs text-gray-500 mb-4">Participation des habitants à la vie sociale, sportive et citoyenne de <%= la_commune %> : trois questions.</p>
+  <p class="text-xs text-gray-500 mb-4">Participation des habitants à la vie sociale, sportive et citoyenne de <%= la_commune %> : quatre questions.</p>
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "local_life" %>
@@ -60,4 +61,9 @@
   <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
     <p>Sources : licences sportives : INJEP — MEOS, recensement des licences et clubs sportifs (Observatoire des territoires) ; associations : ministère de l'Intérieur, Répertoire national des associations (RNA) ; participation à la présidentielle : ministère de l'Intérieur, via INSEE / SDES (indicateurs territoriaux de développement durable) ; participation aux municipales : ministère de l'Intérieur, résultats du 1er tour par commune (data.gouv.fr), France = France métropolitaine.</p>
   </div>
+<% end %>
+
+<%= story_card("q-local_life-4", 4, "Quels lieux pour la vie sociale, culturelle et sportive ?",
+      "Centres sociaux, équipements culturels et sportifs de la commune et des environs, d'après la Base permanente des équipements.") do %>
+  <%= render "dashboard/equipment_points_map", group: "local_life" %>
 <% end %>

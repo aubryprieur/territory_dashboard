@@ -86,10 +86,25 @@
     <% if @epci_mode %>
       <%# Tableau de bord EPCI : associations pour 1 000 habitants par commune %>
       <div style="margin-top:1rem">
-        <%= render "dashboard/map_group", maps: [{ kind: :communes,
+        <%
+          # par thème : associations du thème pour 1 000 habitants = associations pour 1 000 habitants × part du thème
+          theme_map = lambda do |theme, title|
+            { kind: :communes, definition: "#{title} en activité ayant leur siège dans la commune, pour 1 000 habitants.",
+              map: epci_computed_map(as_territories, title: "#{title} pour 1 000 habitants", value_format: :decimal, year: as_year,
+                                     source: "Répertoire national des associations (RNA), #{as_year}") { |sr|
+                y = sr[as_year.to_s] || {}
+                y["active"].to_f.positive? && y[theme] && y["active_per_1000"] ? (y["active_per_1000"] * y[theme] / y["active"]).round(2) : nil } }
+          end
+        %>
+        <%= render "dashboard/map_group", maps: [
+            { kind: :communes,
               map: epci_indicator_map(as_territories, "active_per_1000", title: "Associations en activité pour 1 000 habitants",
                                       value_format: :decimal, years: [as_year], source: "Répertoire national des associations (RNA), #{as_year}"),
-              definition: "Associations en activité ayant leur siège dans la commune, pour 1 000 habitants." }] %>
+              definition: "Associations en activité ayant leur siège dans la commune, pour 1 000 habitants." },
+            theme_map.("theme_culture", "Associations culturelles (culture, pratiques artistiques, patrimoine)"),
+            theme_map.("theme_leisure", "Associations de loisirs et d'animation socioculturelle"),
+            theme_map.("theme_social", "Associations d'action sociale, de santé et de solidarité")
+          ] %>
       </div>
     <% end %>
     <p class="text-xs text-gray-500 mt-2">* France métropolitaine hors Moselle, Bas-Rhin et Haut-Rhin (associations de droit local absentes du répertoire) ; la région Grand Est est calculée de la même façon. Associations déclarées ou modifiées depuis 2009 (fichier Waldec), en activité au 1er octobre <%= as_year %> ; population du recensement <%= @associations_data["population_year"] %>. Le répertoire n'enregistre pas toujours les dissolutions : une partie des associations recensées peut être en sommeil.</p>
