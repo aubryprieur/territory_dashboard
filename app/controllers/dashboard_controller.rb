@@ -381,7 +381,12 @@ class DashboardController < ApplicationController
     load_elderly_care_comparison # hébergement et services à domicile (BPE)
     @equipment_data = cached_equipment_data(:commune, @territory_code) # distance au plus proche
     @household_data = cached_households_data(:commune, @territory_code) # carte IRIS des 80 ans ou plus seuls
-    @epci_household_data = cached_households_data(:epci, @epci_code) if @epci_mode # tableau de bord EPCI : ménages de l'EPCI
+    if @epci_mode # tableau de bord EPCI : ménages de l'EPCI et des territoires de comparaison (personnes vivant seules)
+      @epci_household_data = cached_households_data(:epci, @epci_code)
+      @department_household_data = cached_households_data(:department, @department_code)
+      @region_household_data = cached_households_data(:region, @region_code)
+      @france_household_data = cached_households_data(:france)
+    end
     load_sports_comparison # licences sportives des 60 ans ou plus
 
     respond_to do |format|

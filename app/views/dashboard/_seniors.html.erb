@@ -125,6 +125,30 @@
               map: epci_indicator_map(hh_terrs, key, title: title, value_format: :pct, years: [hh_latest]) }
           end
         %>
+        <section style="margin-bottom:1.5rem">
+          <h3 class="text-sm font-medium text-gray-700 mb-1">Personnes de 80 ans ou plus vivant seules (<%= hh_latest %>)</h3>
+          <p class="text-xs text-gray-500 mb-3">En % des personnes de 80 ans ou plus de la population des ménages (hors maisons de retraite et autres communautés).</p>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" style="max-width:640px">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Territoire</th>
+                  <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Part vivant seules</th>
+                  <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Personnes</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <% hh_terrs.each do |t| %>
+                  <tr>
+                    <td class="px-4 py-2 text-sm text-gray-900 <%= t[:main] ? 'font-semibold' : '' %>"><%= territory_dot(t) %><%= display_territory_name(t[:name]) %></td>
+                    <td class="px-3 py-2 text-sm text-right <%= t[:main] ? 'font-semibold' : 'text-gray-600' %>"><%= fmt_pct(territory_value(t, hh_latest, "living_alone_rate_80_plus")) %></td>
+                    <td class="px-3 py-2 text-sm text-right text-gray-600"><%= fmt_count(territory_value(t, hh_latest, "living_alone_80_plus")) %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </section>
         <%= render "dashboard/map_group", maps: [
             hh_map.("living_alone_rate_80_plus", "80 ans ou plus vivant seuls", "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de la population des ménages."),
             hh_map.("living_alone_rate_65_79", "65-79 ans vivant seuls", "Personnes de 65 à 79 ans vivant seules, en % des 65-79 ans de la population des ménages."),
