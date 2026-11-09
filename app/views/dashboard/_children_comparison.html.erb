@@ -217,7 +217,7 @@
     <%= render "dashboard/iris_map", map: epci_synthesis_map("age_3_5_share", title: "Enfants de 3 à 5 ans"), level: :communes,
           collapsed: true, definition: "Enfants de 3 à 5 ans, en % de la population de la commune." %>
   <% end %>
-  <%= render "dashboard/iris_map", map: cached_iris_map("under_6_share"), collapsed: true,
-        definition: "Enfants de moins de 6 ans, en % de la population de l'IRIS : repère pour situer les besoins d'accueil du jeune enfant, de PMI et d'écoles maternelles. Les quartiers les plus jeunes ne sont pas toujours ceux où l'offre est implantée." %>
+  <%= render "dashboard/iris_map", map: cached_iris_map("age_2_5_share"), collapsed: true,
+        definition: "Enfants de 2 à 5 ans, en % de la population de l'IRIS (recensement 2023). À l'IRIS, l'Insee ne publie pas les 3-5 ans du tableau : la tranche la plus proche est celle des 2-5 ans, qui complète la carte des moins de 2 ans. Repère pour situer les besoins d'écoles maternelles et d'accueil périscolaire." %>
 
 </div>
