@@ -262,9 +262,7 @@
     <p class="text-xs text-gray-500" style="margin:-1.5rem 0 2rem">Le détail par âge est dans les onglets thématiques : <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="children_comparison" style="color:#4f46e5">Petite enfance</button>, <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="youth" style="color:#4f46e5">Enfance, jeunesse</button> (part des 15-24 ans, enfance et jeunesse par tranche d'âge, cartes IRIS) et <button type="button" data-action="click->dashboard-tabs#showTab" data-tab="seniors" style="color:#4f46e5">Seniors</button> (indice de vieillissement, repères sur le vieillissement, cartes IRIS).</p>
     <%= render "dashboard/map_group", maps: [
       { kind: :iris, map: cached_iris_map("age_25_39_share"),
-        definition: "Personnes de 25 à 39 ans, en % de la population de l'IRIS : classes d'âge souvent associées à la parentalité." },
-      { kind: :iris, map: cached_iris_map("aging_index"),
-        definition: "Personnes de 65 ans ou plus pour 100 jeunes de moins de 20 ans (recensement 2023). Au-dessus de 100, les seniors sont plus nombreux que les jeunes. À l'IRIS, l'Insee ne publie pas les 60 ans ou plus : l'indice diffère de celui des communes." }
+        definition: "Personnes de 25 à 39 ans, en % de la population de l'IRIS : classes d'âge souvent associées à la parentalité." }
     ] %>
 
 
