@@ -77,7 +77,7 @@
   <%
     # Export Excel : chaque IRIS et la commune, tous les millésimes, taux + effectif + total
     ilabel = map.dig("indicator", "label")
-    iris_rows = [["Code #{lv[:code]}", "Nom de #{lv[:name_of]}", "Année", "#{ilabel} (#{unit})", "Effectif", "Total"]]
+    iris_rows = [["Code #{lv[:code]}", "Nom de #{lv[:name_of]}", "Année", (unit.present? ? "#{ilabel} (#{unit})" : ilabel), "Effectif", "Total"]]
     (map["features"] || []).sort_by { |f| f["iris_code"].to_s }.each do |f|
       years.each do |y|
         v = f.dig("values", y)

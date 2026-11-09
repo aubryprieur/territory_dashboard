@@ -108,10 +108,9 @@
     <%= render "dashboard/iris_map", map: epci_synthesis_map("age_0_2_share", title: "Enfants de moins de 3 ans"), level: :communes,
           collapsed: true, definition: "Enfants de moins de 3 ans, en % de la population de la commune." %>
   <% end %>
-  <%= render "dashboard/grid_map", map: cached_grid_map("age_0_3_share"), collapsed: true,
-        definition: "Enfants de 0 à 3 ans, en % des habitants du carreau (2021) : tranche absente des données IRIS 2023, utile pour situer les besoins d'accueil du jeune enfant au plus près des habitants." %>
-
-  <!-- Projection des moins de 3 ans : remplacée par le bloc « Projections 2023-2033 » (_population_projection) -->
+  <%= render "dashboard/iris_map", map: cached_iris_map("under_2_share"), collapsed: true,
+        definition: "Enfants de moins de 2 ans, en % de la population de l'IRIS (recensement 2023) : besoins d'accueil du jeune enfant et de PMI au plus près des familles." %>
+    <!-- Projection des moins de 3 ans : remplacée par le bloc « Projections 2023-2033 » (_population_projection) -->
 
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- SECTION 3 : ENFANTS DE 3 À 5 ANS -->

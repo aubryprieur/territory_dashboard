@@ -92,6 +92,8 @@
         rows: [
           { label: "Moins de 20 ans pour 100 personnes de 60 ans ou plus", ds: pop, key: "youth_index", format: :decimal }
         ] %>
+  <%= render "dashboard/iris_map", map: cached_iris_map("youth_ratio"), collapsed: true,
+        definition: "Moins de 20 ans pour 100 personnes de 65 ans ou plus (recensement 2023). À l'IRIS, l'Insee ne publie pas les 60 ans ou plus : l'indice rapporte les jeunes aux 65 ans ou plus et est donc plus élevé que celui du tableau (60 ans ou plus). Au-dessus de 100, les jeunes sont plus nombreux que les seniors." %>
   <% if @epci_mode %>
     <%= render "dashboard/map_group", maps: [
         cmap.(pop, "youth_index", "Indice de jeunesse", "Moins de 20 ans pour 100 personnes de 60 ans ou plus.", :decimal)
