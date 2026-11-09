@@ -3,7 +3,8 @@
 module EpciCommunesHelper
   # Carte des communes pour un indicateur de _territory_indicator (nil hors tableau de bord EPCI ou sans données)
   # data_key : clé des séries quand les territoires n'en portent pas (onglet Familles : families_territories)
-  def epci_indicator_map(territories, value_key, title:, value_format:, years:, source: nil, data_key: nil)
+  # min_coverage : part minimale des communes ayant une valeur (sinon pas de carte : secret statistique, petits effectifs)
+  def epci_indicator_map(territories, value_key, title:, value_format:, years:, source: nil, data_key: nil, min_coverage: 0)
     return nil unless @epci_mode
     main = territories.find { |t| t[:main] }
     main = main.merge(data_key: data_key) if main && data_key
@@ -29,6 +30,7 @@ module EpciCommunesHelper
     return nil if yrs.empty? || values.size < 2
 
     names = (ds["communes"] || []).to_h { |c| [c["code"], c["name"]] }
+    return nil if min_coverage.positive? && values.size < (names.size * min_coverage).ceil
     unit = case value_format when :pct then "%" when :euros then "€" else "" end
     epci_communes_map(label: title, unit: unit, values: values, names: names, reference: reference, years: yrs,
                       source: source || "même source que l'indicateur, valeurs communales (cartes : IGN, Admin Express)")

@@ -71,6 +71,22 @@
         </tbody>
       </table>
     </div>
+    <% if @epci_mode %>
+      <%
+        # Tableau de bord EPCI : une carte des communes par ligne, si au moins la moitié des communes ont une valeur
+        # (les autres sont souvent masquées par le secret statistique) ; ni effectifs ni évolutions signées
+        fr_maps = rows.filter_map do |key, label, _dir, format|
+          next if %i[count signed_pct].include?(format)
+          m = epci_indicator_map(fr_territories, key, title: label, value_format: (format.nil? || format == :pct ? :pct : :decimal),
+                                 years: [fr_year], min_coverage: 0.5,
+                                 source: "Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA)")
+          m && { kind: :communes, map: m, definition: definition }
+        end
+      %>
+      <% if fr_maps.any? %>
+        <div style="margin-top:1rem"><%= render "dashboard/map_group", maps: fr_maps %></div>
+      <% end %>
+    <% end %>
     <% if show_source %>
     <p class="text-xs text-gray-500 mt-2">Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA)<%= dataset == :senior_fragilities ? ", interrégime" : "" %>, <%= fr_year %><%= note ? " ; #{note}" : "" %>. s : secret statistique (effectif trop faible dans la commune).<%= fr_apl ? " France métropolitaine : valeur publiée par l'ANCT." : " France : valeur nationale publiée par l'Observatoire (France entière, outre-mer compris)." %></p>
     <% end %>
