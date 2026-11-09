@@ -25,8 +25,14 @@
             { label: "Emménagés depuis 30 ans ou plus", share_key: "stay_ge30_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("recent_movers_share"), collapsed: true,
-          definition: "Ménages installés dans leur logement depuis moins de 2 ans, en % des ménages de l'IRIS : quartiers à forte rotation, où arrivent les nouveaux habitants (accueil, information sur les services, inscription dans la vie locale)." %>
+    <%= render "dashboard/map_group", maps: [
+      { kind: :iris, map: cached_iris_map("recent_movers_share"),
+        definition: "Ménages installés dans leur logement depuis moins de 2 ans, en % des ménages de l'IRIS : quartiers à forte rotation, où arrivent les nouveaux habitants (accueil, information sur les services, inscription dans la vie locale)." },
+      { kind: :iris, map: cached_iris_map("settled_10y_share"),
+        definition: "Ménages installés dans leur logement depuis 10 ans ou plus, en % des ménages de l'IRIS : ancrage résidentiel." },
+      { kind: :iris, map: cached_iris_map("anchoring_ratio"),
+        definition: "Ménages installés depuis 10 ans ou plus pour 100 ménages arrivés depuis moins de 2 ans. Indicateur descriptif : au-dessus de 100, les ménages anciens dominent ; en dessous, le renouvellement est fort." }
+    ] %>
 
     <%= render "dashboard/territory_indicator", **common,
           title: "Ancienneté moyenne d'emménagement", theme: "blue",

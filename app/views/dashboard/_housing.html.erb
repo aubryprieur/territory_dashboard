@@ -116,8 +116,14 @@
             { label: "Appartements (ensemble des logements)", share_key: "apartments_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("vacancy_rate"), collapsed: true,
-          definition: "Logements vacants, en % de l'ensemble des logements de l'IRIS." %>
+    <%= render "dashboard/map_group", maps: [
+      { kind: :iris, map: cached_iris_map("vacancy_rate"),
+        definition: "Logements vacants, en % de l'ensemble des logements de l'IRIS." },
+      { kind: :iris, map: cached_iris_map("apartments_share"),
+        definition: "Appartements, en % de l'ensemble des logements de l'IRIS." },
+      { kind: :iris, map: cached_iris_map("small_dwellings_share"),
+        definition: "Résidences principales de 1 ou 2 pièces, en % des résidences principales de l'IRIS : logements de personnes seules et de petits ménages." }
+    ] %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
@@ -163,6 +169,8 @@
         { kind: :grid, map: cached_grid_map("social_housing_share"), 
           definition: "Ménages logés dans le parc social, en % des ménages du carreau (2021)." }
       ] %>
+    <%= render "dashboard/iris_map", map: cached_iris_map("owners_share"), collapsed: true,
+          definition: "Résidences principales occupées par leur propriétaire, en % des résidences principales de l'IRIS." %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
@@ -213,8 +221,12 @@
             { label: "Logements de 1 ou 2 pièces", share_key: "small_dwellings_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("overcrowding_rate"), collapsed: true,
-          definition: "Résidences principales suroccupées (il manque au moins une pièce au regard de la composition du ménage), en % des résidences principales de l'IRIS." %>
+    <%= render "dashboard/map_group", maps: [
+      { kind: :iris, map: cached_iris_map("overcrowding_rate"),
+        definition: "Résidences principales suroccupées (il manque au moins une pièce au regard de la composition du ménage), en % des résidences principales de l'IRIS." },
+      { kind: :iris, map: cached_iris_map("underoccupation_rate"),
+        definition: "Résidences principales sous-occupées (au moins une pièce de plus que le besoin du ménage), en % des résidences principales de l'IRIS." }
+    ] %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026) ; peuplement : exploitation complémentaire. Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
@@ -271,10 +283,14 @@
             { label: "Au moins un emplacement de stationnement", share_key: "parking_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("no_car_share"), collapsed: true,
-          definition: "Ménages sans voiture, en % des ménages de l'IRIS.",
-          commune_latest: { year: latest, value: territory_value(commune, latest, "no_car_percentage"),
-                            count: territory_value(commune, latest, "cars_0"), total: territory_value(commune, latest, "dwellings_main") } %>
+    <%= render "dashboard/map_group", maps: [
+      { kind: :iris, map: cached_iris_map("no_car_share"),
+        definition: "Ménages sans voiture, en % des ménages de l'IRIS.",
+        commune_latest: { year: latest, value: territory_value(commune, latest, "no_car_percentage"),
+                            count: territory_value(commune, latest, "cars_0"), total: territory_value(commune, latest, "dwellings_main") } },
+      { kind: :iris, map: cached_iris_map("two_cars_share"),
+        definition: "Ménages disposant d'au moins deux voitures, en % des ménages de l'IRIS : place de la mobilité automobile." }
+    ] %>
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= years.join(", ") %> (géographie au 1er janvier 2026) ; précarité énergétique : Géodip (ONPE). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>

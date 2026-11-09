@@ -168,11 +168,15 @@
             { label: "4 enfants ou plus", count_key: "families_with_4_plus_children", share_key: "families_4_plus_children_percentage" }
           ] %>
 
-    <%= render "dashboard/iris_map", map: cached_iris_map("large_family_share"), collapsed: true,
-          definition: "Familles avec 3 enfants ou plus de moins de 25 ans, en % des familles de l'IRIS.",
-          commune_latest: { year: latest, value: family_value(commune, latest, "large_families_percentage"),
+    <%= render "dashboard/map_group", maps: [
+      { kind: :iris, map: cached_iris_map("large_family_share"),
+        definition: "Familles avec 3 enfants ou plus de moins de 25 ans, en % des familles de l'IRIS.",
+        commune_latest: { year: latest, value: family_value(commune, latest, "large_families_percentage"),
                             count: family_value(commune, latest, "total_large_families"),
-                            total: family_value(commune, latest, "total_families") } %>
+                            total: family_value(commune, latest, "total_families") } },
+      { kind: :iris, map: cached_iris_map("large_family_share_with_children"),
+        definition: "Familles de 3 enfants ou plus de moins de 25 ans, en % des seules familles avec enfants de l'IRIS." }
+    ] %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population <%= family_years.join(", ") %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= family_comparison_year %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>

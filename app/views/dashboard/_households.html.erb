@@ -94,6 +94,12 @@
                   definition: "#{label}, en % des ménages." } } %>
         </div>
       <% end %>
+      <%= render "dashboard/map_group", maps: [
+        { kind: :iris, map: cached_iris_map("one_person_households_share"),
+          definition: "Ménages d'une personne (personnes vivant seules), en % des ménages de l'IRIS." },
+        { kind: :iris, map: cached_iris_map("couples_no_children_share"),
+          definition: "Couples sans enfant au domicile, en % des familles de l'IRIS." }
+      ] %>
 
       <div class="overflow-x-auto mt-6">
         <table class="min-w-full divide-y divide-gray-200">
