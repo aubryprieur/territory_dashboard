@@ -104,7 +104,7 @@
       <%= render "dashboard/territory_indicator", **common,
             title: indicators.dig(key, "label") || key, theme: theme,
             value_key: "#{key}_rate", value_format: :decimal, unit: "‰", decimals: 1,
-            definition: definition + (diffused.(key) ? "" : " Effectif de la commune trop faible : non diffusé.") %>
+            definition: definition + (diffused.(key) ? "" : " Effectif de #{la_commune} trop faible : non diffusé.") %>
     <% end %>
 
 <% end %>
@@ -121,7 +121,7 @@
       <%= render "dashboard/territory_indicator", **common,
             title: indicators.dig(key, "label") || key, theme: theme,
             value_key: "#{key}_rate", value_format: :decimal, unit: "‰", decimals: 1,
-            definition: definition + (diffused.(key) ? "" : " Effectif de la commune trop faible : non diffusé.") %>
+            definition: definition + (diffused.(key) ? "" : " Effectif de #{la_commune} trop faible : non diffusé.") %>
     <% end %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">

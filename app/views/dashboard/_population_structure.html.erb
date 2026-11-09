@@ -236,7 +236,7 @@
         </div>
         <% if pyr %>
           <div data-pyr-mode="projection" style="display:none">
-            <p class="text-xs text-gray-500 mb-4">Barres : population <%= latest %> (recensement). Contour : population projetée en <%= pyr["year"] %> (scénario tendanciel : natalité et migrations récentes de la commune reconduites, mortalité nationale), en % de la population totale de chaque année. Une barre qui dépasse le contour signale une tranche dont le poids diminuera ; un contour qui dépasse la barre, une tranche dont le poids augmentera. Population projetée : <%= fmt_count(ptotal.round) %> habitants en <%= pyr["year"] %>. Détail des projections dans les onglets Petite enfance, Enfance-jeunesse et Seniors.</p>
+            <p class="text-xs text-gray-500 mb-4">Barres : population <%= latest %> (recensement). Contour : population projetée en <%= pyr["year"] %> (scénario tendanciel : natalité et migrations récentes de <%= la_commune %> reconduites, mortalité nationale), en % de la population totale de chaque année. Une barre qui dépasse le contour signale une tranche dont le poids diminuera ; un contour qui dépasse la barre, une tranche dont le poids augmentera. Population projetée : <%= fmt_count(ptotal.round) %> habitants en <%= pyr["year"] %>. Détail des projections dans les onglets Petite enfance, Enfance-jeunesse et Seniors.</p>
             <%= chart_canvas(pconfig, 480, "Pyramide des âges #{latest} et projection #{pyr['year']}") %>
           </div>
         <% end %>

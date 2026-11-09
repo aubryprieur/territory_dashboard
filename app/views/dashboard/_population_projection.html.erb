@@ -28,7 +28,7 @@
   %>
   <section style="margin-bottom:2.5rem">
     <h3 class="text-base font-medium text-gray-900 mb-1 mt-4"><%= title %></h3>
-    <p class="text-xs text-gray-500 mb-4"><%= intro || "Effectifs projetés au 1er janvier, scénario tendanciel (natalité et migrations récentes de la commune reconduites)." %> Une projection n'est pas une prévision : elle montre ce que donnerait la poursuite des tendances observées.</p>
+    <p class="text-xs text-gray-500 mb-4"><%= epci_wording(intro) || epci_wording("Effectifs projetés au 1er janvier, scénario tendanciel (natalité et migrations récentes de la commune reconduites).") %> Une projection n'est pas une prévision : elle montre ce que donnerait la poursuite des tendances observées.</p>
 
     <div style="overflow-x:auto">
       <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">

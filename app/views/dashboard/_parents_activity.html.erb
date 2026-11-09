@@ -31,7 +31,7 @@
 <% heading ||= nil %>
 <% card_id ||= nil %>
 <div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
-  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading || "Emploi des parents de jeunes enfants" %></h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= epci_wording(heading || "Emploi des parents de jeunes enfants") %></h2>
   <p class="text-xs text-gray-500 mb-4">
     Enfants selon la situation d'emploi de leurs parents (<%= latest %>). Repère pour les besoins de modes de garde
     (tous les parents en emploi) et pour les situations de fragilité économique (aucun parent en emploi).

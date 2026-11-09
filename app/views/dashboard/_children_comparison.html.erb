@@ -2,8 +2,8 @@
 <% heading ||= nil %>
 <% card_id ||= nil %>
 <div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
-  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading || "Les jeunes enfants" %></h2>
-  <p class="text-xs text-gray-500 mb-4">Enfants de moins de 3 ans et de 3 à 5 ans au recensement, comparés aux autres échelles ; où vivent-ils dans la commune.</p>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= epci_wording(heading || "Les jeunes enfants") %></h2>
+  <p class="text-xs text-gray-500 mb-4">Enfants de moins de 3 ans et de 3 à 5 ans au recensement, comparés aux autres échelles ; où vivent-ils dans <%= la_commune %>.</p>
 
 
   <!-- ═══════════════════════════════════════════════════════════════ -->

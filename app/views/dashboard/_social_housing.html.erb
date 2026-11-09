@@ -13,7 +13,7 @@
 <% heading ||= "Parc locatif social" %>
 <% card_id ||= nil %>
 <div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
-  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading %></h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= epci_wording(heading) %></h2>
   <p class="text-xs text-gray-500 mb-4">Logements appartenant aux bailleurs sociaux (offices publics de l'habitat, entreprises sociales pour l'habitat, logements conventionnés des SEM), au 1er janvier de chaque année, d'après le répertoire des bailleurs (RPLS).</p>
 
   <% if sh_commune.nil? %>

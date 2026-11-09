@@ -14,7 +14,7 @@
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Vie locale</h2>
-  <p class="text-xs text-gray-500 mb-4">Participation des habitants à la vie sociale, sportive et citoyenne de la commune : trois questions.</p>
+  <p class="text-xs text-gray-500 mb-4">Participation des habitants à la vie sociale, sportive et citoyenne de <%= la_commune %> : trois questions.</p>
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "local_life" %>

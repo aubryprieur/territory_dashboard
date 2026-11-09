@@ -28,7 +28,7 @@
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Emploi et activité</h2>
-  <p class="text-xs text-gray-500 mb-4">Activité, chômage et conditions d'emploi des habitants, au sens du recensement (le chômage « au sens du recensement » est déclaratif : il est plus élevé que le chômage au sens du BIT). L'emploi situé dans la commune est dans l'onglet Tissu économique.</p>
+  <p class="text-xs text-gray-500 mb-4">Activité, chômage et conditions d'emploi des habitants, au sens du recensement (le chômage « au sens du recensement » est déclaratif : il est plus élevé que le chômage au sens du BIT). L'emploi situé dans <%= la_commune %> est dans l'onglet Tissu économique.</p>
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "employment" %>

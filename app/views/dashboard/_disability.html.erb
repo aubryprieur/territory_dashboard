@@ -50,7 +50,7 @@
 <%= story_card("q-disability-1", 1, "Combien d'habitants perçoivent une allocation liée au handicap ?",
       "Allocation aux adultes handicapés (AAH) et allocation d'éducation de l'enfant handicapé (AEEH).") do %>
   <% if @caf_data.present? && latest %>
-    <p class="text-xs text-gray-500 mb-4">La CAF ne publie pas ces allocations pour les communes : la ligne de la commune reste vide, la comparaison commence à l'intercommunalité.</p>
+    <p class="text-xs text-gray-500 mb-4"><%= @epci_mode ? "La CAF ne publie pas ces allocations pour les communes : elles sont présentées pour l'intercommunalité et les échelles supérieures." : "La CAF ne publie pas ces allocations pour les communes : la ligne de la commune reste vide, la comparaison commence à l'intercommunalité." %></p>
 
     <%= render "dashboard/territory_indicator", **common,
           title: "Bénéficiaires de l'allocation aux adultes handicapés (AAH)", theme: "amber",
@@ -73,7 +73,7 @@
       "Établissements et services pour enfants et adultes handicapés implantés dans la commune.") do %>
   <% if eq %>
     <section style="margin-bottom:2rem">
-      <p class="text-xs text-gray-500 mb-3">Nombre d'établissements et de services implantés dans la commune (INSEE, Base permanente des équipements <%= eq["year"] %>). Un service à domicile ou ambulatoire intervient aussi dans les communes voisines.</p>
+      <p class="text-xs text-gray-500 mb-3">Nombre d'établissements et de services implantés dans <%= la_commune %> (INSEE, Base permanente des équipements <%= eq["year"] %>). Un service à domicile ou ambulatoire intervient aussi dans les communes voisines.</p>
       <table class="min-w-full divide-y divide-gray-200" style="max-width:720px">
         <tbody class="bg-white divide-y divide-gray-200">
           <% d6_types.each do |code, label| %>
@@ -86,7 +86,7 @@
         </tbody>
       </table>
       <% if disability && disability["count"].to_i.zero? && disability["nearest"] %>
-        <p class="text-sm mt-3" style="color:#b45309">Aucun établissement ou service dans la commune : le plus proche est à <%= number_with_precision(disability.dig("nearest", "distance_km"), precision: 1, separator: ",") %> km (<%= disability.dig("nearest", "commune_name").to_s.titleize %>).</p>
+        <p class="text-sm mt-3" style="color:#b45309">Aucun établissement ou service dans <%= la_commune %> : le plus proche est à <%= number_with_precision(disability.dig("nearest", "distance_km"), precision: 1, separator: ",") %> km (<%= disability.dig("nearest", "commune_name").to_s.titleize %>).</p>
       <% end %>
     </section>
   <% else %>

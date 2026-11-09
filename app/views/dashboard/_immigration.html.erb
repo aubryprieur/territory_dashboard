@@ -111,7 +111,7 @@
         "Chômage, emploi des femmes et catégories sociales des immigrés comparés à ceux des non-immigrés.") do %>
     <section style="margin-bottom:1.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Immigrés et non-immigrés face à l'emploi (<%= year %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Comparaison des immigrés et des non-immigrés de la commune, avec la France métropolitaine en repère (couleurs claires).</p>
+      <p class="text-xs text-gray-500 mb-4">Comparaison des immigrés et des non-immigrés de <%= la_commune %>, avec la France métropolitaine en repère (couleurs claires).</p>
       <%= immigration_gap_chart(commune, france, year) %>
     </section>
 

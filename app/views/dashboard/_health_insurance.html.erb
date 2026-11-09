@@ -13,7 +13,7 @@
 <% heading ||= nil %>
 <% card_id ||= nil %>
 <div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
-  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading || "Complémentaire santé solidaire" %></h2>
+  <h2 class="text-lg font-medium text-gray-900 mb-1"><%= epci_wording(heading || "Complémentaire santé solidaire") %></h2>
   <p class="text-xs text-gray-500 mb-4">Assurés du régime général de l'assurance maladie bénéficiant de la complémentaire santé solidaire (C2S), au 1er janvier. Sans participation (ex-CMU-C) : ressources inférieures à environ 850 € par mois pour une personne seule ; avec participation (ex-ACS) : jusqu'à 35 % au-dessus de ce plafond.</p>
 
   <% if c2s_commune.nil? %>

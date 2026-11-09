@@ -15,7 +15,7 @@
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Scolarité</h2>
-  <p class="text-xs text-gray-500 mb-4">La scolarisation des enfants et des jeunes qui habitent la commune (recensement), puis les écoles, collèges et lycées situés dans la commune (Éducation nationale) : quatre questions.</p>
+  <p class="text-xs text-gray-500 mb-4">La scolarisation des enfants et des jeunes qui habitent <%= la_commune %> (recensement), puis les écoles, collèges et lycées situés dans <%= la_commune %> (Éducation nationale) : quatre questions.</p>
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "schooling" %>
