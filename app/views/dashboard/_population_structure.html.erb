@@ -271,6 +271,9 @@
           value_key: "dependency_ratio", value_format: :decimal, unit: "", decimals: 1,
           definition: "Nombre de jeunes (moins de 20 ans) et de seniors (65 ans ou plus) pour 100 personnes de 20 à 64 ans. Plus il est élevé, plus la population d'âge actif est faible au regard des âges qui ont le plus besoin de services (petite enfance, école, accompagnement du vieillissement)." %>
 
+    <%= render "dashboard/iris_map", map: cached_iris_map("dependency_ratio"), collapsed: true,
+          definition: "Jeunes de moins de 20 ans et seniors de 65 ans ou plus pour 100 personnes de 20 à 64 ans, dans chaque IRIS (recensement 2023). Même définition que pour la commune." %>
+
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026) ; pyramide des âges <%= latest %> ; projection : calcul par cohortes (détail dans les onglets Petite enfance, Enfance-jeunesse et Seniors). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>
