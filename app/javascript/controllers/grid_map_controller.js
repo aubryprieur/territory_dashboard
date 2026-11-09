@@ -6,6 +6,7 @@ import { Controller } from "@hotwired/stimulus"
 //   cells:  [{ corners: [[lat, lon] x4], color, imputed, tip }]   (carreaux)
 //   shapes: [{ geometry: GeoJSON, color, tip }]                     (IRIS)
 //   outline: [GeoJSON]                                              (contours de repérage, optionnel)
+//   outline_fill: 0.4                                               (voile blanc sur les contours, optionnel)
 //   points: [{ lat, lon, color, tip, faded }]                       (équipements localisés ; faded : hors territoire)
 // }
 // La carte n'est construite qu'à son arrivée à l'écran (IntersectionObserver) : un onglet riche en cartes ne
@@ -63,7 +64,13 @@ export default class extends Controller {
     // Contour et points : créés d'abord, ajoutés à la carte une fois la vue fixée (ajouter des tracés avant la
     // première vue fait échouer le rendu SVG de Leaflet : « Cannot read properties of undefined (reading 'min') »)
     const outlineLayer = (this.dataValue.outline || []).length
-      ? L.geoJSON(this.dataValue.outline, { style: { color: "#1f2937", weight: 1.2, fill: false, opacity: 0.8 }, interactive: false })
+      ? L.geoJSON(this.dataValue.outline, {
+          // outline_fill : voile blanc léger sur le territoire (cartes de points : les points ressortent mieux)
+          style: this.dataValue.outline_fill
+            ? { color: "#1f2937", weight: 1.2, opacity: 0.8, fill: true, fillColor: "#ffffff", fillOpacity: this.dataValue.outline_fill }
+            : { color: "#1f2937", weight: 1.2, fill: false, opacity: 0.8 },
+          interactive: false
+        })
       : null
     // Points (équipements) : cercles colorés par catégorie, atténués hors du territoire
     this.points = (this.dataValue.points || []).map((p) => {
