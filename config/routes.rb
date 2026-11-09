@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-  get "epci_dashboard/index"
   devise_for :users, controllers: {
     sessions: 'users/sessions',
     registrations: 'users/registrations',
@@ -110,33 +109,11 @@ Rails.application.routes.draw do
     get 'clear_cache', to: 'dashboard#clear_cache'
   end
 
-  resources :epci_dashboard, only: [:index] do
-    collection do
-      # 🗑️ Routes pour la gestion du cache (développement/admin)
-      delete :clear_cache       # Vider le cache de l'EPCI
-      delete :clear_france_cache # Vider le cache France
-      get :cache_info          # Voir les infos de cache
-
-      # 🚀 NOUVELLES ROUTES ASYNCHRONES
-      get :load_population
-      get :load_families
-      get :load_births
-      get :load_children
-      get :load_schooling
-      get :load_economic
-      get :load_childcare
-      get :load_family_employment
-      get :load_women_employment
-      get :load_domestic_violence
-    end
-  end
-
   # Redirection conditionnelle selon le type d'utilisateur
   authenticated :user do
     root to: "application#dashboard_router", as: :authenticated_root
   end
 
-  get 'api/communes_geometries/:epci_code', to: 'api/geometries#communes_by_epci'
 
   # Route par défaut
   root "home#index"

@@ -26,35 +26,10 @@ import * as ss from "simple-statistics"
 window.ss = ss
 
 // =========================================
-// EPCI DASHBOARD - SYSTÈME ASYNCHRONE
+// TABLEAU DE BORD EPCI : recherche d'une commune membre (le reste est le tableau de bord des communes)
 // =========================================
 import { initializeCommuneSearch } from "epci/commune_search"
 window.initializeCommuneSearch = initializeCommuneSearch;
-
-// Import du gestionnaire principal (qui gère l'async loader)
-import "epci/dashboard_init"
-
-// Import des composants qui peuvent être chargés de manière asynchrone
-// Ces imports rendent les modules disponibles globalement pour le système async
-
-// EPCI Maps - Chargés de manière asynchrone
-import "maps/epci_births_map"
-import "maps/epci_children_maps"
-import "maps/epci_economic_maps"
-import "maps/epci_families_maps"
-import "maps/epci_women_employment_maps"
-import "maps/epci_schooling_maps"
-import "maps/epci_childcare_map"
-import "maps/epci_domestic_violence_map"
-
-// EPCI Charts - Chargés de manière asynchrone
-import "charts/epci_births_history_chart"
-import "charts/epci_births_projection_chart"
-import "charts/epci_age_pyramid_chart"
-import "charts/epci_domestic_violence_chart"
-import "charts/epci_population_history_chart"
-import "charts/epci_family_employment_chart"
-import "charts/epci_communes_chart"
 
 // =========================================
 // DASHBOARD COMMUNES (chargement normal)
@@ -109,29 +84,6 @@ document.addEventListener('turbo:load', () => {
 // =========================================
 // UTILITAIRES GLOBAUX
 // =========================================
-
-// Fonction utilitaire pour déboguer le système asynchrone
-window.debugAsyncSystem = () => {
-  if (window.asyncSectionLoader) {
-    console.log('📊 Statistiques du système asynchrone:', window.asyncSectionLoader.getLoadingStats());
-  } else {
-    console.log('❌ Système asynchrone non initialisé');
-  }
-};
-
-// Fonction utilitaire pour précharger des sections
-window.preloadSections = (sectionIds) => {
-  if (window.epciDashboardManager) {
-    window.epciDashboardManager.preloadSections(sectionIds);
-  }
-};
-
-// Fonction utilitaire pour recharger une section
-window.reloadSection = (sectionId) => {
-  if (window.epciDashboardManager) {
-    return window.epciDashboardManager.reloadSection(sectionId);
-  }
-};
 
 // =========================================
 // GESTION D'ERREURS GLOBALE

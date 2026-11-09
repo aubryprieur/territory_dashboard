@@ -613,7 +613,7 @@ module DashboardCache
     return nil if codes.empty?
     key = @epci_mode ? "epci:#{@epci_code}" : "commune:#{@territory_code}"
     @equipment_points ||= {}
-    @equipment_points[group] ||= cached_api_call("#{key}:equipment_points_#{group}:v1", expires_in: 24.hours) do
+    @equipment_points[group] ||= cached_api_call("#{key}:equipment_points_#{group}:v#{Api::EquipmentPointsService::DATA_VERSION}", expires_in: 24.hours) do
       geoms = CommuneGeometry.where(code_insee: codes).pluck(:geojson).filter_map { |g| JSON.parse(g) rescue nil }
       coords = geoms.flat_map { |g| equipment_coords(g) }
       next nil if coords.empty?
