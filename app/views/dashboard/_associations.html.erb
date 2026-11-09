@@ -83,6 +83,15 @@
         </tbody>
       </table>
     </div>
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : associations pour 1 000 habitants par commune %>
+      <div style="margin-top:1rem">
+        <%= render "dashboard/map_group", maps: [{ kind: :communes,
+              map: epci_indicator_map(as_territories, "active_per_1000", title: "Associations en activité pour 1 000 habitants",
+                                      value_format: :decimal, years: [as_year], source: "Répertoire national des associations (RNA), #{as_year}"),
+              definition: "Associations en activité ayant leur siège dans la commune, pour 1 000 habitants." }] %>
+      </div>
+    <% end %>
     <p class="text-xs text-gray-500 mt-2">* France métropolitaine hors Moselle, Bas-Rhin et Haut-Rhin (associations de droit local absentes du répertoire) ; la région Grand Est est calculée de la même façon. Associations déclarées ou modifiées depuis 2009 (fichier Waldec), en activité au 1er octobre <%= as_year %> ; population du recensement <%= @associations_data["population_year"] %>. Le répertoire n'enregistre pas toujours les dissolutions : une partie des associations recensées peut être en sommeil.</p>
   <% end %>
 </section>

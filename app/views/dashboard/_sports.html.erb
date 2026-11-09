@@ -62,5 +62,12 @@
     </div>
     <p class="text-xs text-gray-500 mt-2">Source : INJEP — MEOS, recensement des licences et clubs sportifs <%= sp_year %> (Observatoire des territoires). France : valeurs nationales publiées par l'Observatoire des territoires.</p>
     <div style="margin-top:6px"><details class="text-xs text-gray-500" style="margin-bottom:12px"><summary style="cursor:pointer;color:#4f46e5;list-style:none;display:inline">ⓘ Définition</summary><p style="margin-top:4px">Les taux comptent des licences et non des personnes : un même habitant peut détenir plusieurs licences (plusieurs clubs, sport scolaire), le taux peut donc dépasser 100. Dans les petites communes, quelques licences ou un écart entre les sources (licences rattachées à la commune de résidence déclarée au club, population issue du recensement) suffisent à faire varier fortement le taux : à lire comme un ordre de grandeur.</p></details></div>
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : taux de licences par commune %>
+      <%= render "dashboard/map_group", maps: rows.select { |r| r[2] == :rate }.map { |key, label, _|
+            { kind: :communes, map: epci_indicator_map(sp_territories, key, title: label, value_format: :decimal, years: [sp_year],
+                                                       source: "INJEP — MEOS, recensement des licences sportives #{sp_year}"),
+              definition: "#{label}. Un même habitant peut détenir plusieurs licences : le taux peut dépasser 100." } } %>
+    <% end %>
   </section>
 <% end %>

@@ -594,7 +594,7 @@ module DashboardCache
     "business_creations_data" => "business-creations", "tax_households_data" => "tax-households",
     "fragilities_data" => "fragilities", "senior_fragilities_data" => "senior-fragilities",
     "elderly_care_data" => "elderly-care", "pass_sport_data" => "pass-sport", "energy_poverty_data" => "energy-poverty",
-    "municipal_elections_data" => "municipal-elections"
+    "municipal_elections_data" => "municipal-elections", "equipment_data" => "equipment"
   }.freeze
 
   def cached_epci_communes(data_key)

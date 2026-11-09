@@ -1,10 +1,18 @@
 # Tableau de bord EPCI : cartes de comparaison des communes membres, au format des cartes IRIS (_iris_map, level:
 # :communes). Valeurs des communes : API /epci-communes/{epci}/{jeu de données} (mêmes séries que la route communale).
 module EpciCommunesHelper
+  # Pas de carte si moins de la moitié des communes ont une valeur (secret statistique, données réservées aux communes
+  # les plus peuplées ou découpées en IRIS) : une carte surtout grise induit en erreur
+  EPCI_MIN_COVERAGE = 0.5
+
+  def epci_coverage_ok?(values, names, min_coverage = EPCI_MIN_COVERAGE)
+    values.size >= 2 && values.size >= (names.size * min_coverage).ceil
+  end
+
   # Carte des communes pour un indicateur de _territory_indicator (nil hors tableau de bord EPCI ou sans données)
   # data_key : clé des séries quand les territoires n'en portent pas (onglet Familles : families_territories)
   # min_coverage : part minimale des communes ayant une valeur (sinon pas de carte : secret statistique, petits effectifs)
-  def epci_indicator_map(territories, value_key, title:, value_format:, years:, source: nil, data_key: nil, min_coverage: 0)
+  def epci_indicator_map(territories, value_key, title:, value_format:, years:, source: nil, data_key: nil, min_coverage: EPCI_MIN_COVERAGE)
     return nil unless @epci_mode
     main = territories.find { |t| t[:main] }
     main = main.merge(data_key: data_key) if main && data_key
@@ -30,7 +38,7 @@ module EpciCommunesHelper
     return nil if yrs.empty? || values.size < 2
 
     names = (ds["communes"] || []).to_h { |c| [c["code"], c["name"]] }
-    return nil if min_coverage.positive? && values.size < (names.size * min_coverage).ceil
+    return nil unless epci_coverage_ok?(values, names, min_coverage)
     unit = case value_format when :pct then "%" when :euros then "€" else "" end
     epci_communes_map(label: title, unit: unit, values: values, names: names, reference: reference, years: yrs,
                       source: source || "même source que l'indicateur, valeurs communales (cartes : IGN, Admin Express)")
@@ -115,8 +123,8 @@ module EpciCommunesHelper
       values[code] = { y => v.to_f } if v.is_a?(Numeric)
     end
     ref = value_of.call(main[:data].dig(dk) || {})
-    return nil if values.size < 2
     names = (ds["communes"] || []).to_h { |c| [c["code"], c["name"]] }
+    return nil unless epci_coverage_ok?(values, names)
     unit = case value_format when :pct then "%" when :euros then "€" else "" end
     epci_communes_map(label: title, unit: unit, values: values, names: names,
                       reference: (ref.is_a?(Numeric) ? { y => ref.to_f } : {}), years: [y],
@@ -130,15 +138,34 @@ module EpciCommunesHelper
   end
 
   # Carte des communes d'un indicateur de la synthèse des fragilités (valeurs communales de /fragility-synthesis/epci)
-  def epci_synthesis_map(key, title: nil, unit: "%")
+  def epci_synthesis_map(key, title: nil, unit: "%", source: nil)
     return nil unless @epci_mode
     syn = @fragility_synthesis.is_a?(Hash) ? @fragility_synthesis : {}
     item = (syn["indicators"].to_a + syn["context_indicators"].to_a).find { |i| i["key"] == key }
     return nil unless item && item["communes"].present?
     year = item["year"].to_s
     names = (syn["communes"] || []).to_h { |c| [c["code"], c["name"]] }
+    return nil unless epci_coverage_ok?(item["communes"], names)
     epci_communes_map(label: title || item["label"], unit: unit, values: item["communes"].transform_values { |v| { year => v } },
                       names: names, reference: (item["value"] ? { year => item["value"] } : {}), years: [year],
-                      source: "INSEE, recensement de la population #{year} (synthèse des fragilités)")
+                      source: source || "INSEE, recensement de la population #{year} (synthèse des fragilités)")
+  end
+
+  # Onglet Équipements : densité d'un service (pour 10 000 habitants) dans chaque commune de l'EPCI
+  def epci_equipment_density_map(service)
+    return nil unless @epci_mode
+    ds = cached_epci_communes("equipment_data")
+    return nil unless ds.is_a?(Hash) && ds["values"].is_a?(Hash)
+    key = service["key"]
+    y = (@equipment_data.is_a?(Hash) ? @equipment_data["year"] : nil).to_s.presence || "2025"
+    values = ds["values"].each_with_object({}) do |(code, d), h|
+      s = (d["services"] || []).find { |x| x["key"] == key }
+      h[code] = { y => s["density"].to_f } if s && s["density"].is_a?(Numeric)
+    end
+    names = (ds["communes"] || []).to_h { |c| [c["code"], c["name"]] }
+    return nil unless epci_coverage_ok?(values, names)
+    epci_communes_map(label: "#{service['label']} pour 10 000 habitants", unit: "", values: values, names: names,
+                      reference: (service["density"].is_a?(Numeric) ? { y => service["density"] } : {}), years: [y],
+                      source: "INSEE, Base permanente des équipements")
   end
 end

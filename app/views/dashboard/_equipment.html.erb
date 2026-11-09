@@ -114,6 +114,11 @@
         </table>
       </div>
     </section>
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : densité de chaque service par commune %>
+      <%= render "dashboard/map_group", maps: services.select { |s| s["density_compared"] }.map { |s|
+            { kind: :communes, map: epci_equipment_density_map(s), definition: "#{s['label']} : nombre pour 10 000 habitants dans chaque commune." } } %>
+    <% end %>
 
 <% end %>
 

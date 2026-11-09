@@ -86,6 +86,14 @@
         ]
       %>
       <%= comparison_stacked_chart(territories, latest, composition, "Composition des ménages par territoire") %>
+      <% if @epci_mode %>
+        <%# Tableau de bord EPCI : types de ménages par commune %>
+        <div style="margin-top:1rem">
+          <%= render "dashboard/map_group", maps: composition.map { |key, label, _|
+                { kind: :communes, map: epci_indicator_map(territories, key, title: label, value_format: :pct, years: [latest]),
+                  definition: "#{label}, en % des ménages." } } %>
+        </div>
+      <% end %>
 
       <div class="overflow-x-auto mt-6">
         <table class="min-w-full divide-y divide-gray-200">
@@ -176,6 +184,14 @@
         ]
       %>
       <%= comparison_stacked_chart(territories, latest, pcs, "Ménages par catégorie socioprofessionnelle et par territoire") %>
+      <% if @epci_mode %>
+        <%# Tableau de bord EPCI : catégories socioprofessionnelles par commune (agriculteurs et « autres sans activité » exceptés) %>
+        <div style="margin-top:1rem">
+          <%= render "dashboard/map_group", maps: pcs.reject { |key, _, _| %w[pcs_1_percentage pcs_9_percentage].include?(key) }.map { |key, label, _|
+                { kind: :communes, map: epci_indicator_map(territories, key, title: label, value_format: :pct, years: [latest]),
+                  definition: "Ménages dont la personne de référence est de cette catégorie, en % des ménages." } } %>
+        </div>
+      <% end %>
 
       <div class="overflow-x-auto mt-6">
         <table class="min-w-full divide-y divide-gray-200">

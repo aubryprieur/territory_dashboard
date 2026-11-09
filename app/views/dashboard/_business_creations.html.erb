@@ -71,6 +71,20 @@
       </table>
     </div>
 
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : créations d'entreprises par commune (valeurs de la synthèse : moyenne des 5 dernières années) %>
+      <div style="margin-top:1.5rem">
+        <%= render "dashboard/map_group", maps: [
+            { kind: :communes, map: epci_synthesis_map("business_creation_rate", title: "Créations d'entreprises par an pour 1 000 habitants", unit: "",
+                                                       source: "Insee, SIDE (moyenne des 5 dernières années)"),
+              definition: "Entreprises créées par an pour 1 000 habitants, moyenne des cinq dernières années." },
+            { kind: :communes, map: epci_synthesis_map("individual_creations_share", title: "Part des entreprises individuelles",
+                                                       source: "Insee, SIDE (5 dernières années)"),
+              definition: "Entreprises individuelles (micro-entrepreneurs compris), en % des créations." }
+          ] %>
+      </div>
+    <% end %>
+
     <h4 class="text-sm font-medium text-gray-900 mt-6 mb-2">Créations d'entreprises pour 1 000 habitants, <%= bc_years.first %>-<%= bc_years.last %></h4>
     <%= comparison_line_chart(bc_territories, bc_years, "created_per_1000", unit: "", digits: 1) %>
     <p class="text-xs text-gray-500 mt-2">

@@ -102,6 +102,16 @@
           ["ets_size_50p_share", "50 ou plus", "#312e81"]
         ], "Établissements par taille et par territoire") %>
     <p class="text-xs text-gray-500 mt-3">Source : INSEE, Flores <%= f_start %> et <%= f_latest %> (établissements actifs employeurs, postes salariés au 31 décembre, hors particuliers employeurs). EPCI, département, région et France métropolitaine : sommes des communes.</p>
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : structure de l'emploi salarié par commune %>
+      <%= render "dashboard/map_group", maps: [
+          ["presential_posts_share", "Postes de l'économie présentielle", "Postes salariés de la sphère présentielle (activités tournées vers les besoins des habitants), en % des postes salariés."],
+          ["public_posts_share", "Postes de l'emploi public", "Postes salariés des administrations et établissements publics, en % des postes salariés."],
+          ["small_ets_share", "Petits établissements", "Établissements employeurs de moins de 10 salariés, en % des établissements employeurs."]
+        ].map { |key, title, definition|
+          { kind: :communes, definition: definition,
+            map: epci_indicator_map(fabric, key, title: title, value_format: :pct, years: [f_latest], source: "INSEE, Flores #{f_latest}") } } %>
+    <% end %>
   </section>
 <% else %>
   <p class="text-sm text-gray-500 mb-4">Données sur les établissements employeurs indisponibles pour ce territoire.</p>

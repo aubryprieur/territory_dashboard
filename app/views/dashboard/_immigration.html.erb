@@ -93,6 +93,15 @@
             ["immigrant_share_ge55", "Immigrés parmi les 55 ans ou +"]
           ], "Part des immigrés et des étrangers par territoire", height: 240) %>
     </section>
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : immigrés et étrangers par commune %>
+      <%= render "dashboard/map_group", maps: [
+          { kind: :communes, map: epci_indicator_map(territories, "immigrant_rate", title: "Part d'immigrés", value_format: :pct, years: [year]),
+            definition: "Personnes nées étrangères à l'étranger et résidant en France, en % de la population." },
+          { kind: :communes, map: epci_indicator_map(territories, "foreigner_rate", title: "Part d'étrangers", value_format: :pct, years: [year]),
+            definition: "Personnes de nationalité étrangère, en % de la population." }
+        ] %>
+    <% end %>
 
     <%= render "dashboard/map_group", maps: [
         { kind: :iris, map: cached_iris_map("immigrant_share"),
@@ -114,6 +123,15 @@
       <p class="text-xs text-gray-500 mb-4">Comparaison des immigrés et des non-immigrés de <%= la_commune %>, avec la France métropolitaine en repère (couleurs claires).</p>
       <%= immigration_gap_chart(commune, france, year) %>
     </section>
+    <% if @epci_mode %>
+      <%# Tableau de bord EPCI : emploi des immigrés par commune %>
+      <%= render "dashboard/map_group", maps: [
+          { kind: :communes, map: epci_indicator_map(territories, "imm_unemployment_rate", title: "Chômage des immigrés", value_format: :pct, years: [year]),
+            definition: "Chômeurs parmi les actifs immigrés de 15 ans ou plus, au sens du recensement, en %." },
+          { kind: :communes, map: epci_indicator_map(territories, "imm_women_employment_rate_25_54", title: "Emploi des femmes immigrées de 25-54 ans", value_format: :pct, years: [year]),
+            definition: "Femmes immigrées de 25 à 54 ans en emploi, en %." }
+        ] %>
+    <% end %>
 
     <div class="text-xs text-gray-500 border-t pt-3 mt-4" style="border-color:#e5e7eb">
       <p>Source : INSEE, recensement de la population 2023 (exploitation principale ; catégories socioprofessionnelles : exploitation complémentaire). Effectifs estimés à partir d'enquêtes annuelles : ⚠ à interpréter avec prudence en dessous de 200 personnes.</p>
