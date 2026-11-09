@@ -7,6 +7,7 @@ import { Controller } from "@hotwired/stimulus"
 //   shapes: [{ geometry: GeoJSON, color, tip }]                     (IRIS)
 //   outline: [GeoJSON]                                              (contours de repérage, optionnel)
 //   outline_fill: 0.4                                               (voile blanc sur les contours, optionnel)
+//   zones: [{ geometry: GeoJSON, tip }]                             (quartiers IRIS sous les points, voile blanc, optionnel)
 //   points: [{ lat, lon, color, tip, faded }]                       (équipements localisés ; faded : hors territoire)
 // }
 // La carte n'est construite qu'à son arrivée à l'écran (IntersectionObserver) : un onglet riche en cartes ne
@@ -86,6 +87,13 @@ export default class extends Controller {
     this.fit = () => { if (group) this.map.fitBounds(group.getBounds(), { padding: [4, 4] }) }
     this.fit()
     if (!group) this.map.setView([46.6, 2.5], 6)
+    // Quartiers IRIS (cartes de points d'une commune) : contour fin, voile blanc, nom au survol
+    ;(this.dataValue.zones || []).forEach((z) => {
+      L.geoJSON(z.geometry, {
+        style: { color: "#64748b", weight: 0.8, opacity: 0.9, fill: true, fillColor: "#ffffff",
+                 fillOpacity: this.dataValue.outline_fill || 0.4 }
+      }).bindTooltip(z.tip, { sticky: true }).addTo(this.map)
+    })
     if (outlineLayer) outlineLayer.addTo(this.map)
     this.points.forEach((m) => m.addTo(this.map))
     this.map.on("click", () => this.map.scrollWheelZoom.enable())

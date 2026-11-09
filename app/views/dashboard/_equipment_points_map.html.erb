@@ -23,17 +23,22 @@
     counts = data["points"].select { |p| members.include?(p["depcom"].to_s) }.group_by { |p| p["category"] }.transform_values(&:size)
     around = data["points"].count { |p| !members.include?(p["depcom"].to_s) }
     terr = @epci_mode ? "l'intercommunalité" : "la commune"
+    # Tableau de bord d'une commune découpée en IRIS : quartiers tracés sous les points (géométries d'une carte IRIS)
+    iris_ref = @epci_mode ? nil : cached_iris_map("age_6_10_share")
+    zones = (iris_ref && iris_ref["features"] || []).map do |f|
+      { geometry: f["geometry"], tip: "<strong>#{ERB::Util.h(f['iris_name'])}</strong> (IRIS #{f['iris_code']})" }
+    end
   %>
   <details class="map-fold" style="margin:0 0 2rem">
     <summary style="cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #c7d2fe;border-radius:8px;background:#f8faff;color:#3730a3;font-size:13px;font-weight:500">🗺 Voir les équipements sur la carte</summary>
     <section style="margin-top:12px">
       <h3 class="text-sm font-medium text-gray-700 mb-1"><%= title %> (<%= data["year"] %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Un point par équipement recensé dans <%= terr %> (contour noir)<%= around.positive? ? ", et en plus pâle les #{fmt_count(around)} équipements des environs" : "" %>. Survoler un point pour son nom et sa commune ; cocher ou décocher une catégorie pour l'afficher ou la masquer.</p>
+      <p class="text-xs text-gray-500 mb-4">Un point par équipement recensé dans <%= terr %> (contour noir<%= zones.any? ? " ; quartiers IRIS en gris, nom au survol" : "" %>)<%= around.positive? ? ", et en plus pâle les #{fmt_count(around)} équipements des environs" : "" %>. Survoler un point pour son nom et sa commune ; cocher ou décocher une catégorie pour l'afficher ou la masquer.</p>
       <style>
         .eqp-layout{display:grid;grid-template-columns:1fr;gap:1.5rem;align-items:start}
         @media (min-width:900px){.eqp-layout{grid-template-columns:3fr 1fr}}
       </style>
-      <div class="eqp-layout" data-controller="grid-map" data-grid-map-data-value="<%= { points: pts, outline: data["outline"] || [], outline_fill: 0.4 }.to_json %>">
+      <div class="eqp-layout" data-controller="grid-map" data-grid-map-data-value="<%= { points: pts, outline: data["outline"] || [], outline_fill: (zones.any? ? nil : 0.4), zones: zones }.to_json %>">
         <div data-grid-map-target="map" style="height:480px;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;z-index:0;position:relative;background:#f8fafc"></div>
         <div>
           <ul class="text-sm" style="display:flex;flex-direction:column;gap:6px">
