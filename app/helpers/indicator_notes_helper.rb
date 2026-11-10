@@ -53,9 +53,34 @@ module IndicatorNotesHelper
   # Lien « Source » en bas du bloc : source du dernier indicator_notes (ou texte / modèle passé, avec years:)
   # bloc : texte complet de la source (HTML avec ERB de la vue), prioritaire
   def indicator_source_note(source = nil, years: nil, style: nil, &block)
-    text = block ? capture(&block) : (source ? indicator_source(source, years) : @indicator_source_pending)
-    @indicator_source_pending = nil
+    text = if block then capture(&block)
+           elsif source then indicator_source(source, years)
+           else
+             pending, @indicator_source_pending = @indicator_source_pending, nil
+             pending
+           end
     indicator_notes_widget([["src", "⊙ Source", text]], style: style || "margin:10px 0 0", muted: true)
+  end
+
+  # Cartes (IRIS, communes d'un EPCI, carreaux, localisation) : définition et intérêt de la carte, sans modifier la
+  # source en attente du bloc qui l'englobe. Intérêt : entrée « map__<indicateur> » du catalogue, sinon texte générique.
+  MAP_INTEREST = {
+    iris: "La carte révèle les écarts entre quartiers que la moyenne communale masque : elle repère les secteurs où " \
+          "l'enjeu se concentre, pour cibler les actions (quartiers prioritaires, permanences, démarches d'aller-vers) " \
+          "et nourrir le diagnostic de quartier.",
+    communes: "La carte compare les communes de l'intercommunalité entre elles : elle repère celles où l'enjeu est le " \
+              "plus marqué, pour territorialiser les actions et la répartition des services.",
+    grid: "Le carroyage de 1 km affine la lecture au-delà des limites administratives : il montre les poches de " \
+          "fragilité ou d'aisance à l'intérieur de la commune, y compris là où il n'y a pas d'IRIS.",
+    points: "Localiser les équipements et services permet de repérer les secteurs bien desservis et ceux qui en sont " \
+            "éloignés, d'apprécier l'accessibilité pour les habitants peu mobiles et d'identifier les partenaires de proximité."
+  }.freeze
+
+  def map_notes(kind, indicator_key: nil, definition: nil, style: nil)
+    n = indicator_key ? indicator_note("map__#{indicator_key}") : {}
+    indicator_notes_widget([["def", "ⓘ Définition", definition.presence || n["definition"]],
+                            ["use", "◎ Intérêt", n["interest"].presence || MAP_INTEREST[kind]]],
+                           style: style || "margin:0 0 10px")
   end
 
   def indicator_notes_widget(texts, style:, muted: false)

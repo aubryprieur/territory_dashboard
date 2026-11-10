@@ -49,6 +49,7 @@
     <summary style="cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #c7d2fe;border-radius:8px;background:#f8faff;color:#3730a3;font-size:13px;font-weight:500">🗺 Voir les équipements sur la carte</summary>
     <section style="margin-top:12px">
       <h3 class="text-sm font-medium text-gray-700 mb-1"><%= title %> (<%= data["year"] %>)</h3>
+      <%= map_notes(:points, definition: "Équipements et services localisés à l'adresse (un point par équipement), d'après la Base permanente des équipements de l'INSEE#{group.to_s == 'public_services' ? " et l'Annuaire de l'administration (DILA)" : ''}. Les catégories regroupent des types d'équipements proches ; le nombre indiqué compte les équipements situés dans le territoire.") %>
       <p class="text-xs text-gray-500 mb-4">Un point par équipement recensé dans <%= terr %> (contour noir<%= zones.any? ? " ; #{zone_kind}" : "" %>)<%= around.positive? ? ", et en plus pâle les #{fmt_count(around)} équipements des environs" : "" %>. Survoler un point pour son nom et sa commune ; cocher ou décocher une catégorie pour l'afficher ou la masquer.</p>
       <style>
         .eqp-layout{display:grid;grid-template-columns:1fr;gap:1.5rem;align-items:start}
@@ -69,9 +70,10 @@
               </li>
             <% end %>
           </ul>
-          <p class="text-xs text-gray-500 mt-3">Nombre d'équipements dans <%= terr %>. Source : <%= data["source"] %> ; fond de carte : Plan IGN (Géoplateforme). Certaines localisations sont approximatives (adresse ou centre de la commune).<%= local_assigns[:note] ? " #{note}" : "" %><%= data["truncated"] ? " Affichage limité à 20 000 équipements." : "" %></p>
+          <p class="text-xs text-gray-500 mt-3">Nombre d'équipements dans <%= terr %>. Certaines localisations sont approximatives (adresse ou centre de la commune).<%= local_assigns[:note] ? " #{note}" : "" %><%= data["truncated"] ? " Affichage limité à 20 000 équipements." : "" %></p>
         </div>
       </div>
+      <%= indicator_source_note("#{data['source']} ; fond de carte : Plan IGN (Géoplateforme).") %>
     </section>
   </details>
 <% end %>

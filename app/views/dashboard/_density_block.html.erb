@@ -2,7 +2,7 @@
   Densité de population : la densité évolue très peu, d'où un bloc compact sur le dernier millésime (pas de courbe ni
   de tableau par année) : chiffre clé et rapport à la France, catégorie de densité INSEE (grille à 7 niveaux, celle des
   rangs « comparé aux communes de même densité »), barres par échelle, puis carte ouverte (IRIS pour une commune,
-  communes pour un EPCI). locals : territories, latest
+  communes pour un EPCI) ; export Excel de tous les millésimes. locals : territories, latest, years (optionnel)
 %>
 <%
   d = ->(t) { territory_value(t, latest, "density") }
@@ -20,10 +20,25 @@
   bars = territories.filter_map { |t| (v = d.(t)) && [t, v] }
   vmax = bars.map(&:last).max.to_f
   hab = ->(v) { v.nil? ? "–" : "#{fmt_count(v.round)} hab/km²" }
+  xyears = (local_assigns[:years].presence || [latest]).map(&:to_s)
+  xlsx_rows = [["Niveau", "Territoire", "Année", "Densité de population (hab/km²)"]]
+  territories.each do |t|
+    xyears.each do |y|
+      v = territory_value(t, y, "density")
+      xlsx_rows << [xlsx_level(t), t[:name], y.to_i, xlsx_number(v&.round(1))] unless v.nil?
+    end
+  end
+  xlsx_notes = ["Densité de population", "Nombre d'habitants par km² (superficie actuelle du territoire).",
+                category ? "#{@epci_mode ? 'Nature de l\'EPCI' : 'Catégorie de densité (INSEE)'} : #{category}" : nil,
+                "Source : INSEE, recensements de la population #{xyears.join(', ')} (géographie au 1er janvier 2026)."].compact
 %>
 <% if value %>
   <section style="margin-bottom:2rem">
-    <h3 class="text-sm font-medium text-gray-700 mb-1">Densité de population (<%= latest %>)</h3>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <h3 class="text-sm font-medium text-gray-700 mb-1">Densité de population (<%= latest %>)</h3>
+      <%= xlsx_download_button(filename: xlsx_filename("Densité de population"), notes: xlsx_notes,
+                               sheets: [{ name: "Données", rows: xlsx_rows, widths: [14, 42, 8, 30] }]) %>
+    </div>
     <%= indicator_notes("density", years: [latest],
           definition: "Nombre d'habitants par km² (superficie actuelle du territoire). La densité évolue très peu d'un recensement à l'autre : seul le dernier millésime est présenté. Catégorie : grille communale de densité de l'INSEE (7 niveaux), utilisée pour les rangs « comparé aux communes de même densité ».") %>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6" style="align-items:center">

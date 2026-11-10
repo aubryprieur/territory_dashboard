@@ -104,7 +104,7 @@
             definition: "Taux de variation annuel moyen de la population de chaque IRIS entre les recensements 2017 et 2023 (à l'IRIS, 2018 n'est pas disponible)." }
         ] %>
 
-    <%= render "dashboard/density_block", territories: territories, latest: latest %>
+    <%= render "dashboard/density_block", territories: territories, latest: latest, years: years %>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>

@@ -101,7 +101,9 @@
       <%= xlsx_download_button(filename: xlsx_filename(ilabel, lv[:sheet]), notes: iris_notes,
                                sheets: [{ name: lv[:sheet], rows: iris_rows, widths: [12, 36, 8, 22, 12, 12] }]) %>
     </div>
-    <p class="text-xs text-gray-500 mb-4"><%= definition %><%= lv[:intro] %> <%= map["color_note"] || "Couleur : écart de chaque #{lv[:unit]} à l'ensemble de #{lv[:ref]} (#{fmt_iris(reference, unit)} en #{latest})." %></p>
+    <%= map_notes(level == :communes ? :communes : :iris, indicator_key: map.dig("indicator", "key"),
+          definition: "#{definition}#{lv[:intro]}".strip.presence) %>
+    <p class="text-xs text-gray-500 mb-3"><%= map["color_note"] || "Couleur : écart de chaque #{lv[:unit]} à l'ensemble de #{lv[:ref]} (#{fmt_iris(reference, unit)} en #{latest})." %></p>
     <style>
       .iris-layout{display:grid;grid-template-columns:1fr;gap:1.5rem;align-items:start}
       @media (min-width:900px){.iris-layout{grid-template-columns:3fr 2fr}}
@@ -189,9 +191,9 @@
         <% if commune_latest && commune_latest[:year].to_s != latest.to_s %>
           <p class="text-xs text-gray-600 mt-2 bg-gray-50 border border-gray-200 rounded p-2">Dernier millésime à l'IRIS : <%= latest %>. Chiffre communal affiché plus haut : <%= commune_latest[:year] %> (<%= fmt_iris(commune_latest[:value], unit) %><% if commune_latest[:count] && commune_latest[:total] %>, soit <%= fmt_count(commune_latest[:count]) %> sur <%= fmt_count(commune_latest[:total]) %><% end %>).<% if additive && two_years %> Même valeur pour un même millésime (<%= first %> : <%= fmt_iris(cv.dig(first, "value"), unit) %>).<% end %></p>
         <% end %>
-        <p class="text-xs text-gray-500 mt-2">Source : <%= map["source"] %> (<%= years.join(" et ") %>) ; fond de carte : Plan IGN (Géoplateforme).</p>
       </div>
     </div>
+    <%= indicator_source_note("#{map['source']} (#{years.join(' et ')}) ; fond de carte : Plan IGN (Géoplateforme).") %>
   </section>
   <% if collapsed == :panel %></div><% elsif collapsed %></div></details><% end %>
 <% end %>
