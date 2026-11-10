@@ -126,6 +126,14 @@
           value_key: "density", value_format: :decimal, unit: "hab./km²", decimals: 0,
           definition: "Nombre d'habitants par km² (superficie actuelle du territoire). Repère pour l'organisation des services : en territoire peu dense, les distances d'accès pèsent davantage." %>
 
+    <%# Répartition des habitants entre les quartiers (commune découpée en IRIS) %>
+    <%= render "dashboard/map_group", maps: [
+          { kind: :iris, map: cached_iris_map("pop_share"),
+            definition: "Nombre d'habitants de chaque IRIS et part qu'il représente dans la population de la commune : repère les quartiers les plus peuplés." },
+          { kind: :iris, map: cached_iris_map("density"),
+            definition: "Habitants par km² de chaque IRIS. La surface est celle du contour de l'IRIS, espaces non bâtis compris (zones d'activité, parcs, voies ferrées) : un IRIS étendu mais peu habité paraît peu dense." }
+        ] %>
+
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : INSEE, recensements de la population 1968 à <%= latest %> (géographie au 1er janvier 2026). Évolutions en points de pourcentage entre <%= comparison %> et <%= latest %>. <span style="color:#d97706">⚠</span> Effectif inférieur à 200 : à interpréter avec prudence.</p>
     </div>

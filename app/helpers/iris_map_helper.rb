@@ -46,12 +46,14 @@ module IrisMapHelper
     return number_with_delimiter(v.round, delimiter: " ") if unit == "n"  # effectifs (habitants, naissances)
     return "#{v.positive? ? '+' : (v.negative? ? '−' : '')}#{number_with_precision(v.abs, precision: 2, separator: ',')} %/an" if unit == "%/an"
     return "#{number_with_delimiter(v.round, delimiter: ' ')} €" if unit == "€"
+    return "#{number_with_delimiter(v.round, delimiter: ' ')} hab/km²" if unit == "hab/km²"
     "#{number_with_precision(v, precision: 1, separator: ',', delimiter: ' ')}#{unit == '%' ? ' %' : ''}"
   end
 
   # Écart entre deux millésimes : points pour un taux, euros pour un montant
   def iris_trend(v0, v1, unit)
     return "–" if v0.nil? || v1.nil?
+    return fmt_trend(v0, v1, unit: :count, precision: 0, suffix: "hab/km²") if unit == "hab/km²"
     unit == "€" ? fmt_trend(v0, v1, unit: :euros) : fmt_trend(v0, v1)
   end
 
