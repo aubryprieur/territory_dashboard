@@ -1,0 +1,63 @@
+<%#
+  Densité de population : la densité évolue très peu, d'où un bloc compact sur le dernier millésime (pas de courbe ni
+  de tableau par année) : chiffre clé et rapport à la France, catégorie de densité INSEE (grille à 7 niveaux, celle des
+  rangs « comparé aux communes de même densité »), barres par échelle, puis carte ouverte (IRIS pour une commune,
+  communes pour un EPCI). locals : territories, latest
+%>
+<%
+  d = ->(t) { territory_value(t, latest, "density") }
+  main = territories.find { |t| t[:main] } || territories.first
+  france = territories.find { |t| t[:key] == :france }
+  value, ref = main && d.(main), france && d.(france)
+  ratio = value && ref.to_f.positive? ? value / ref : nil
+  ratio_text = if ratio.nil? then nil
+               elsif ratio >= 1.2 then "#{fmt_decimal(ratio, precision: ratio >= 10 ? 0 : 1)} fois la densité moyenne en France"
+               elsif ratio <= 0.83 then "#{fmt_decimal(1 / ratio, precision: (1 / ratio) >= 10 ? 0 : 1)} fois moins dense que la moyenne en France"
+               else "proche de la densité moyenne en France"
+               end
+  syn = @fragility_synthesis.is_a?(Hash) && @fragility_synthesis["error"].blank? ? @fragility_synthesis : nil
+  category = syn && syn.dig("density", "label")
+  bars = territories.filter_map { |t| (v = d.(t)) && [t, v] }
+  vmax = bars.map(&:last).max.to_f
+  hab = ->(v) { v.nil? ? "–" : "#{fmt_count(v.round)} hab/km²" }
+%>
+<% if value %>
+  <section style="margin-bottom:2rem">
+    <h3 class="text-sm font-medium text-gray-700 mb-1">Densité de population (<%= latest %>)</h3>
+    <%= indicator_notes("density", years: [latest],
+          definition: "Nombre d'habitants par km² (superficie actuelle du territoire). La densité évolue très peu d'un recensement à l'autre : seul le dernier millésime est présenté. Catégorie : grille communale de densité de l'INSEE (7 niveaux), utilisée pour les rangs « comparé aux communes de même densité ».") %>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" style="align-items:center">
+      <div class="bg-indigo-50 p-4 rounded-lg">
+        <p class="text-2xl font-bold text-indigo-900"><%= hab.(value) %></p>
+        <% if ratio_text %><p class="text-xs text-indigo-700" style="margin-top:2px"><%= ratio_text %></p><% end %>
+        <% if category %>
+          <p class="text-xs text-gray-600" style="margin-top:8px"><%= @epci_mode ? "Nature de l'EPCI" : "Catégorie de densité" %> :
+            <span style="display:inline-block;padding:1px 8px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"><%= category %></span></p>
+        <% end %>
+      </div>
+      <div class="md:col-span-2" style="display:flex;flex-direction:column;gap:6px">
+        <% bars.each do |t, v| %>
+          <div style="display:grid;grid-template-columns:minmax(120px,1.2fr) 3fr minmax(90px,auto);gap:10px;align-items:center" class="text-sm">
+            <span class="<%= t[:main] ? 'font-medium text-gray-900' : 'text-gray-600' %>" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="<%= t[:name] %>"><%= territory_dot(t) %><%= display_territory_name(t[:name]) %></span>
+            <span style="display:block;height:10px;border-radius:5px;background:#eef2ff">
+              <span style="display:block;height:10px;border-radius:5px;width:<%= vmax.positive? ? [(v / vmax * 100).round(1), 0.8].max : 0 %>%;background:<%= t[:main] ? '#4f46e5' : (t[:color] || '#a5b4fc') %>"></span>
+            </span>
+            <span class="text-right <%= t[:main] ? 'font-semibold text-gray-900' : 'text-gray-600' %>" style="white-space:nowrap"><%= hab.(v) %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <div style="margin-top:1.25rem">
+      <% if @epci_mode %>
+        <%= render "dashboard/iris_map", map: epci_indicator_map(territories, "density", title: "Densité de population",
+                                                                 value_format: :decimal, years: [latest]),
+              level: :communes, collapsed: false,
+              definition: "Habitants par km² de chaque commune de l'intercommunalité : où se concentrent les habitants, et donc les besoins de services de proximité." %>
+      <% else %>
+        <%= render "dashboard/iris_map", map: cached_iris_map("density"), collapsed: false,
+              definition: "Habitants par km² de chaque IRIS. La surface est celle du contour de l'IRIS, espaces non bâtis compris (zones d'activité, parcs, voies ferrées) : un IRIS étendu mais peu habité paraît peu dense." %>
+      <% end %>
+    </div>
+    <%= indicator_source_note %>
+  </section>
+<% end %>
