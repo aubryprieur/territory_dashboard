@@ -158,7 +158,7 @@
   <% if youth_eq.any? %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-base font-medium text-gray-900 mb-1">Équipements pour les enfants et les jeunes</h3>
-      <p class="text-xs text-gray-500 mb-3">Présence dans la commune ou distance à la commune équipée la plus proche (INSEE, BPE <%= @equipment_data["year"] %>).</p>
+      <%= indicator_notes("youth__equipements_pour_les_enfants_et_les_jeunes") do %>Présence dans la commune ou distance à la commune équipée la plus proche (INSEE, BPE <%= @equipment_data["year"] %>).<% end %>
       <ul class="text-sm text-gray-800" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:4px 24px">
         <% youth_eq.each do |s| %>
           <li class="py-1">

@@ -14,7 +14,7 @@
   <% card_id ||= nil %>
   <div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
     <h2 class="text-lg font-medium text-gray-900 mb-1"><%= heading ? "#{epci_wording(heading)} (#{cm_year})" : "Familles employant une assistante maternelle (#{cm_year})" %></h2>
-    <p class="text-xs text-gray-500 mb-4">Particuliers employeurs d'au moins une assistante maternelle au 31 décembre, rapportés aux enfants de moins de 5 ans (recensement 2023). Ordre de grandeur du recours effectif aux assistantes maternelles, à rapprocher des places disponibles ci-dessus ; une famille peut aussi employer une assistante maternelle pour un enfant scolarisé.</p>
+    <%= indicator_notes("childminder_employers") do %>Particuliers employeurs d'au moins une assistante maternelle au 31 décembre, rapportés aux enfants de moins de 5 ans (recensement 2023). Ordre de grandeur du recours effectif aux assistantes maternelles, à rapprocher des places disponibles ci-dessus ; une famille peut aussi employer une assistante maternelle pour un enfant scolarisé.<% end %>
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
         <thead>

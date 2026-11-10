@@ -73,13 +73,13 @@
         "Évolution depuis 1968, part du solde naturel (naissances moins décès) et du solde migratoire (arrivées moins départs), densité.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Population en base 100 en 1968</h3>
-      <p class="text-xs text-gray-500 mb-4">Indice 100 = population de 1968 de chaque territoire : permet de comparer les dynamiques quelle que soit la taille.</p>
+      <%= indicator_notes("population_structure__population_en_base_100_en_1968") do %>Indice 100 = population de 1968 de chaque territoire : permet de comparer les dynamiques quelle que soit la taille.<% end %>
       <%= history_index_chart(territories) %>
     </section>
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Moteurs de l'évolution à <%= commune[:name] %></h3>
-      <p class="text-xs text-gray-500 mb-4">Taux de variation annuel moyen de la population, décomposé entre le solde naturel (naissances moins décès) et le solde migratoire apparent (arrivées moins départs), en % par an.</p>
+      <%= indicator_notes("population_structure__moteurs_de_l_evolution_a") do %>Taux de variation annuel moyen de la population, décomposé entre le solde naturel (naissances moins décès) et le solde migratoire apparent (arrivées moins départs), en % par an.<% end %>
       <%= history_components_chart(commune) %>
       <div class="overflow-x-auto mt-6">
         <table class="min-w-full divide-y divide-gray-200">
@@ -162,7 +162,7 @@
       %>
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Naissances en base 100 en <%= b_first %></h3>
-        <p class="text-xs text-gray-500 mb-4">Naissances domiciliées (enfants dont la mère réside dans le territoire), indice 100 = naissances de <%= b_first %> de chaque territoire : compare les dynamiques quelle que soit la taille.<%= b_avg < 30 ? " Avec en moyenne #{b_avg} naissances par an, la courbe de la commune varie fortement d'une année à l'autre : regarder la tendance plutôt que chaque année." : "" %></p>
+        <%= indicator_notes("population_structure__naissances_en_base_100_en") do %>Naissances domiciliées (enfants dont la mère réside dans le territoire), indice 100 = naissances de <%= b_first %> de chaque territoire : compare les dynamiques quelle que soit la taille.<%= b_avg < 30 ? " Avec en moyenne #{b_avg} naissances par an, la courbe de la commune varie fortement d'une année à l'autre : regarder la tendance plutôt que chaque année." : "" %><% end %>
         <% if b_datasets.any? %>
           <%= chart_canvas({ type: "line", unit: "", labels: b_years, datasets: b_datasets }, 260, "Évolution des naissances depuis #{b_first} (base 100) par territoire") %>
         <% end %>
@@ -170,6 +170,7 @@
 
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Naissances à <%= commune[:name] %> (<%= b_first %>-<%= b_last %>)</h3>
+        <%= indicator_notes("population_structure__naissances_a") %>
         <p class="text-xs text-gray-500 mb-4">
           <%= fmt_count(b_com[b_last]) %> naissances en <%= b_last %><% if b_change %>, <%= b_change.positive? ? "+" : "" %><%= number_with_precision(b_change, precision: 1, separator: ",") %> % par rapport à <%= b_first %><% end %> ; <%= fmt_count(b_avg) %> par an en moyenne sur la période.
         </p>
@@ -241,6 +242,7 @@
             </div>
           <% end %>
         </div>
+        <%= indicator_notes("population_structure__pyramide_des_ages") %>
         <div data-pyr-mode="france">
           <p class="text-xs text-gray-500 mb-4">Part de chaque tranche d'âge de 5 ans dans la population totale, en %. Contour : <%= france ? france[:name] : "référence" %>. Une barre qui dépasse le contour signale une tranche surreprésentée.</p>
           <%= age_pyramid_chart(commune, france, latest, pyr_groups, labels["pyramid"] || {}) %>
@@ -256,7 +258,7 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Population par grande tranche d'âge (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">En %.</p>
+      <%= indicator_notes("population_structure__population_par_grande_tranche_d_age") do %>En %.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["age_lt15_percentage", "Moins de 15 ans", "#93c5fd"],
             ["age_15_24_percentage", "15-24 ans", "#3b82f6"],
@@ -302,7 +304,7 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Âge des nouveaux arrivants (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Répartition par âge des habitants arrivés d'une autre commune dans l'année, en %.</p>
+      <%= indicator_notes("population_structure__age_des_nouveaux_arrivants") do %>Répartition par âge des habitants arrivés d'une autre commune dans l'année, en %.<% end %>
       <%= comparison_grouped_bar_chart(territories, latest,
             (labels["newcomer_ages"] || {}).map { |k, l| ["newcomers_#{k}_percentage", l] },
             "Âge des nouveaux arrivants par territoire") %>

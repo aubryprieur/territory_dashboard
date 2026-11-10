@@ -81,7 +81,7 @@
       <% end %>
     </div>
 
-    <p class="text-xs text-gray-500 mb-4"><%= definitions["ips"] %> Le décile situe l'établissement parmi tous les établissements du même type en France (public et privé) : le 1er décile regroupe les 10 % d'établissements au public le plus défavorisé, le 10e les 10 % au public le plus favorisé.</p>
+    <%= indicator_notes("schools__ips") do %><%= definitions["ips"] %> Le décile situe l'établissement parmi tous les établissements du même type en France (public et privé) : le 1er décile regroupe les 10 % d'établissements au public le plus défavorisé, le 10e les 10 % au public le plus favorisé.<% end %>
 
     <section style="margin-bottom:2rem">
       <%= schools_positions_chart(main, others, national, key: "ips",
@@ -139,7 +139,7 @@
 
   <%= story_card("q-schooling-3", 3, "Les collèges et les lycées font-ils progresser leurs élèves ?",
         "Valeur ajoutée des collèges (diplôme national du brevet) et des lycées (baccalauréat).") do %>
-    <p class="text-xs text-gray-500 mb-4"><%= definitions["va"] %> Elle mesure l'action propre de l'établissement, indépendamment du profil social de ses élèves.</p>
+    <%= indicator_notes("schools__valeur_ajoutee") do %><%= definitions["va"] %> Elle mesure l'action propre de l'établissement, indépendamment du profil social de ses élèves.<% end %>
 
     <% college_rows = colleges %>
     <% if colleges.empty? && epci_colleges.any? { |s| school_last(s, "dnb_success_rate").last } %>
@@ -236,7 +236,7 @@
     <% remote_main = (colleges + lycees).select { |s| school_last(s, "remoteness").last } %>
     <% remote_rows = remote_main.any? ? remote_main : (epci_colleges + epci_lycees).select { |s| school_last(s, "remoteness").last } %>
     <% if remote_rows.any? %>
-      <p class="text-xs text-gray-500 mb-4"><%= definitions["remoteness"] %> Le 10e décile regroupe les 10 % d'établissements les plus éloignés des ressources.</p>
+      <%= indicator_notes("schools__eloignement") do %><%= definitions["remoteness"] %> Le 10e décile regroupe les 10 % d'établissements les plus éloignés des ressources.<% end %>
       <section style="margin-bottom:2rem">
         <%= schools_positions_chart(remote_main.any? ? remote_main : [], remote_main.any? ? (epci_colleges + epci_lycees) : [], national, key: "remoteness",
               aria: "Indice d'éloignement des collèges et lycées parmi les déciles nationaux") %>

@@ -62,7 +62,7 @@
 
     <section class="mb-6" style="margin-bottom:1.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Familles selon le nombre d'enfants de moins de 25 ans (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Répartition de l'ensemble des familles, en %. Survolez les barres pour le détail.</p>
+      <%= indicator_notes("families__familles_selon_le_nombre_d_enfants_de_moins_de_25_") do %>Répartition de l'ensemble des familles, en %. Survolez les barres pour le détail.<% end %>
       <%= families_children_chart %>
     </section>
 
@@ -70,10 +70,8 @@
     <% if blended_rate %>
       <section class="mb-10" style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Familles recomposées (<%= latest %>)</h3>
-        <p class="text-xs text-gray-500 mb-4">
-          Couples avec au moins un enfant d'un seul des deux conjoints, en % des couples avec enfants.
-          Indicateur publié par l'INSEE à partir du recensement <%= latest %> uniquement : pas d'évolution disponible.
-        </p>
+        <%= indicator_notes("families__familles_recomposees") do %>Couples avec au moins un enfant d'un seul des deux conjoints, en % des couples avec enfants.
+          Indicateur publié par l'INSEE à partir du recensement <%= latest %> uniquement : pas d'évolution disponible.<% end %>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="md:col-span-1">
             <div class="bg-purple-50 p-4 rounded-md h-full">

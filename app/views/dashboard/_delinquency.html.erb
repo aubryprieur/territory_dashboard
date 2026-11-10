@@ -55,7 +55,7 @@
       "Tous les crimes et délits enregistrés, comparés au département et à la région.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Vue d'ensemble (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Taux pour 1 000 habitants (pour 1 000 logements pour les cambriolages). En rouge, un taux communal supérieur à celui du département. « n.d. » : effectif trop faible, non diffusé pour la commune.</p>
+      <%= indicator_notes("delinquency__vue_d_ensemble") do %>Taux pour 1 000 habitants (pour 1 000 logements pour les cambriolages). En rouge, un taux communal supérieur à celui du département. « n.d. » : effectif trop faible, non diffusé pour la commune.<% end %>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
           <thead>

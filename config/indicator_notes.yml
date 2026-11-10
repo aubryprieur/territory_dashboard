@@ -1,0 +1,719 @@
+# Définition (si la vue n'en fournit pas) et intérêt de chaque indicateur des tableaux de bord communes et EPCI.
+# Clé : value_key de l'indicateur, clé « onglet__bloc » des graphiques, ou titre « parameterize ».
+# Rendu : IndicatorNotesHelper#indicator_notes (liens « ⓘ Définition » et « ◎ Intérêt », repliés).
+# « la commune » est remplacé par « l'intercommunalité » sur le tableau de bord EPCI.
+
+# ── Population ──────────────────────────────────────────────────────────────────────────────────────
+population_structure__population_en_base_100_en_1968:
+  interest: >-
+    Situe la trajectoire longue du territoire (croissance, stagnation, déclin) par rapport aux autres échelles.
+    Une population qui croît appelle de nouveaux services ; une population qui décline pose la question de
+    l'attractivité, du vieillissement et du maintien des équipements.
+population_structure__moteurs_de_l_evolution_a:
+  interest: >-
+    Distingue ce qui relève des naissances et décès de ce qui relève des arrivées et départs. Un solde migratoire
+    négatif oriente vers les causes de départ (logement, emploi, cadre de vie) ; un solde naturel négatif signale
+    une population vieillissante.
+density:
+  interest: >-
+    Conditionne l'organisation des réponses : en territoire dense, les besoins se concentrent et les services de
+    proximité sont plus faciles à déployer ; en territoire peu dense, la distance et la mobilité deviennent un
+    enjeu d'accès aux droits et aux services.
+population_structure__naissances_en_base_100_en:
+  interest: >-
+    La tendance des naissances anticipe les besoins en petite enfance (modes d'accueil, PMI) puis en écoles.
+    Une baisse durable invite à interroger l'attractivité du territoire pour les jeunes ménages.
+population_structure__naissances_a:
+  definition: >-
+    Naissances domiciliées : enfants nés vivants dont la mère réside dans le territoire, quel que soit le lieu de
+    l'accouchement (état civil, INSEE).
+  interest: >-
+    Le volume annuel de naissances dimensionne directement l'offre d'accueil du jeune enfant et les effectifs
+    scolaires à venir.
+population_structure__pyramide_des_ages:
+  definition: >-
+    Répartition de la population par sexe et tranche d'âge de 5 ans (recensement), comparée à la France ou,
+    au choix, à la population projetée.
+  interest: >-
+    Donne en un coup d'œil le profil du territoire : creux ou excès de jeunes adultes, poids des familles, des
+    seniors. C'est la base pour anticiper les publics des politiques sociales (petite enfance, jeunesse,
+    autonomie).
+population_structure__population_par_grande_tranche_d_age:
+  interest: >-
+    Résume l'équilibre entre jeunes, actifs et seniors, qui oriente la priorité donnée aux services pour les
+    familles ou à l'accompagnement du vieillissement.
+dependency_ratio:
+  interest: >-
+    Mesure le poids des âges qui ont le plus besoin de services (enfants, seniors) par rapport aux âges actifs.
+    Un rapport élevé signale une charge forte sur les aidants et sur les services publics locaux.
+newcomers_percentage:
+  interest: >-
+    Repère des besoins d'accueil et d'information des nouveaux habitants (accès aux droits, inscriptions,
+    repérage des services). Un renouvellement élevé peut aussi fragiliser les liens de voisinage.
+population_structure__age_des_nouveaux_arrivants:
+  interest: >-
+    Indique quels publics le territoire attire (étudiants, jeunes actifs, familles, retraités) et donc quels
+    services d'accueil prévoir.
+population_projection:
+  definition: >-
+    Projection par cohortes à partir de la population du dernier recensement : les naissances et les migrations
+    récentes du territoire sont reconduites, la mortalité suit les tables nationales. Scénario tendanciel, non
+    une prévision.
+  interest: >-
+    Permet d'anticiper l'évolution des publics sur dix ans (enfants à accueillir, jeunes, seniors très âgés) et
+    d'ajuster à temps l'offre de services plutôt que de constater les besoins après coup.
+
+# ── Profil de la population (âges, catégories sociales) ───────────────────────────────────────────────
+population_focus__tranches_d_age:
+  interest: >-
+    Permet de repérer les tranches d'âge surreprésentées et les publics prioritaires des politiques sociales
+    du territoire.
+age_15_24_percentage:
+  interest: >-
+    Les 15-24 ans traversent des transitions sensibles (fin d'études, premier emploi, premier logement).
+    Leur poids oriente les besoins en information jeunesse, insertion, mobilité et logement des jeunes.
+population_focus__reperes_sur_le_vieillissement:
+  interest: >-
+    Situe l'ampleur du vieillissement et la part des plus âgés, qui concentrent les besoins d'aide à domicile,
+    de lutte contre l'isolement et d'adaptation des logements.
+aging_index:
+  interest: >-
+    Indicateur synthétique de l'équilibre entre générations : au-dessus de 100, l'accompagnement du vieillissement
+    devient un axe central du diagnostic ; très en dessous, ce sont les besoins des familles et des jeunes.
+population_focus__population_de_15_ans_ou_plus_par_categorie:
+  interest: >-
+    Dessine le profil social du territoire, qui conditionne les ressources des ménages, leur rapport à l'emploi
+    et les besoins d'accompagnement.
+working_class_percentage:
+  interest: >-
+    Les employés et ouvriers sont plus exposés aux bas salaires, à la précarité de l'emploi et aux difficultés
+    de santé : leur poids donne une première mesure des fragilités sociales potentielles.
+upper_to_working_class_ratio:
+  interest: >-
+    Mesure la mixité sociale du territoire. Un rapport faible signale une population à dominante populaire ;
+    un rapport élevé, un territoire plus favorisé où les poches de précarité peuvent être moins visibles.
+
+# ── Ménages ─────────────────────────────────────────────────────────────────────────────────────────
+average_household_size:
+  interest: >-
+    Sa baisse traduit le vieillissement et la progression des personnes seules ou des familles monoparentales :
+    autant de ménages plus exposés à l'isolement et aux difficultés financières, et de besoins en petits logements.
+households__composition_des_menages:
+  interest: >-
+    Identifie les configurations familiales dominantes (personnes seules, couples, familles monoparentales) et
+    donc les publics à cibler par les politiques d'action sociale.
+households__personnes_vivant_seules_selon_l_age:
+  interest: >-
+    Vivre seul n'a pas le même sens à 25 et à 80 ans : chez les jeunes, il signale l'autonomie ; chez les plus
+    âgés, un risque d'isolement et de perte d'autonomie sans aidant au domicile.
+living_alone_rate_65_plus:
+  interest: >-
+    Repère direct du risque d'isolement des seniors, pour cibler le repérage, les visites de convivialité,
+    le portage de repas ou la téléassistance.
+households__menages_selon_la_categorie_socioprofessionnelle_de:
+  interest: >-
+    Situe le profil social des ménages (et non seulement des individus), utile pour estimer leurs ressources
+    et leurs besoins, notamment ceux des ménages de retraités ou d'inactifs.
+housing_mobility__anciennete_moyenne_d_emmenagement_selon_le_statut:
+  interest: >-
+    Une installation longue traduit un ancrage, mais aussi parfois un blocage des parcours résidentiels
+    (locataires HLM sans possibilité de mobilité, propriétaires âgés dans un logement devenu inadapté).
+recent_movers_percentage:
+  interest: >-
+    Mesure le renouvellement des habitants : une rotation forte appelle des actions d'accueil et d'information ;
+    une rotation faible peut signaler un marché du logement bloqué.
+average_stay:
+  interest: >-
+    Complète le taux d'emménagés récents : une ancienneté élevée signale une population ancrée, souvent plus âgée,
+    dont les besoins évoluent sur place (adaptation du logement, maintien à domicile).
+
+# ── Familles ────────────────────────────────────────────────────────────────────────────────────────
+couples_with_children_percentage:
+  interest: >-
+    Repère du poids des familles avec enfants, principaux usagers des services petite enfance, scolaires,
+    périscolaires et de loisirs.
+families__familles_selon_le_nombre_d_enfants_de_moins_de_25_:
+  interest: >-
+    La taille des familles influe sur le niveau de vie, les besoins en grands logements et en modes de garde.
+families__familles_recomposees:
+  interest: >-
+    Les recompositions familiales complexifient l'organisation (résidence alternée, logement, budget) et peuvent
+    appeler un soutien à la parentalité ou une médiation familiale.
+single_parent_families_percentage:
+  interest: >-
+    Les familles monoparentales, le plus souvent des mères seules, sont parmi les plus exposées à la pauvreté,
+    aux difficultés de garde et d'accès à l'emploi : un public prioritaire du diagnostic social.
+large_families_percentage:
+  interest: >-
+    Les familles nombreuses cumulent plus souvent revenus par personne faibles et suroccupation du logement :
+    un repère pour les aides aux familles et l'offre de grands logements.
+ars_families_rate:
+  interest: >-
+    Versée sous conditions de ressources, l'allocation de rentrée scolaire mesure la part des familles modestes
+    avec enfants scolarisés, et donc les besoins de soutien éducatif et financier.
+
+# ── Logement ────────────────────────────────────────────────────────────────────────────────────────
+housing__categories_de_logements:
+  interest: >-
+    Situe la place des résidences principales, secondaires et des logements vacants : un parc tourné vers
+    les résidences secondaires ou très vacant limite l'offre accessible aux habitants permanents.
+vacancy_rate:
+  interest: >-
+    Une vacance élevée peut signaler un parc dégradé ou inadapté, une faible attractivité, voire de l'habitat
+    indigne ; une vacance très basse, un marché tendu où se loger devient difficile pour les ménages modestes.
+housing__periode_de_construction_des_residences_principales:
+  interest: >-
+    L'âge du parc annonce les besoins de rénovation énergétique et d'adaptation, et le risque de logements
+    énergivores coûteux à chauffer pour les ménages modestes.
+housing__taille_des_residences_principales:
+  interest: >-
+    L'adéquation entre la taille des logements et celle des ménages conditionne la suroccupation (familles)
+    comme la sous-occupation (seniors) et les possibilités de parcours résidentiel.
+housing__statut_d_occupation_des_residences_principales:
+  interest: >-
+    Propriétaires, locataires du privé et du parc social n'ont ni les mêmes ressources ni les mêmes leviers
+    d'action : le statut oriente vers les aides à la rénovation, l'accompagnement des locataires ou le partenariat
+    avec les bailleurs.
+owners_percentage:
+  interest: >-
+    Un fort taux de propriétaires âgés ou modestes signale des besoins d'adaptation du logement et des risques
+    de copropriétés ou maisons dégradées que les occupants n'ont pas les moyens d'entretenir.
+tenants_social_percentage:
+  interest: >-
+    Le parc social accueille une part importante des ménages modestes : son poids indique où se concentrent
+    les publics de l'action sociale et l'importance du partenariat avec les bailleurs.
+social_housing__caracteristiques_du_parc_social:
+  interest: >-
+    L'âge, la taille et les financements du parc social déterminent à qui il est accessible (niveaux de loyer,
+    grands logements pour les familles) et ses besoins de réhabilitation.
+social_dwellings_index:
+  interest: >-
+    Indique si l'offre de logements sociaux progresse au rythme des besoins, notamment au regard des demandes
+    en attente et des obligations SRU.
+mobility_rate:
+  interest: >-
+    Une faible rotation signifie peu de logements libérés chaque année pour les demandeurs : les délais d'accès
+    au parc social s'allongent et les parcours résidentiels se bloquent.
+avg_rent_m2:
+  interest: >-
+    Le niveau des loyers sociaux conditionne l'accessibilité du parc aux ménages les plus modestes, et le reste
+    à vivre après loyer.
+housing__peuplement_des_residences_principales:
+  interest: >-
+    Met en regard suroccupation (familles à l'étroit) et sous-occupation (personnes âgées dans de grands
+    logements) : deux enjeux d'adéquation entre parc et ménages, aux réponses différentes.
+persons_per_dwelling:
+  interest: >-
+    Suit le desserrement des ménages : même à population constante, il faut plus de logements, et davantage de
+    petits logements pour les personnes seules.
+overcrowding_rate:
+  interest: >-
+    Vivre à l'étroit pèse sur la santé, la scolarité des enfants (pas d'espace pour les devoirs) et les relations
+    familiales : un repère du mal-logement à croiser avec la taille des familles et les revenus.
+energy_poverty_rate:
+  interest: >-
+    Repère des ménages pour qui se chauffer pèse trop lourd dans le budget : cible des aides à la rénovation,
+    du chèque énergie et des actions de prévention des impayés.
+housing__combustible_principal_de_chauffage:
+  interest: >-
+    Le mode de chauffage expose plus ou moins les ménages aux hausses de prix de l'énergie : le fioul et
+    l'électricité dans un logement mal isolé sont des facteurs de précarité énergétique.
+no_car_percentage:
+  interest: >-
+    Sans voiture, l'accès à l'emploi, aux soins et aux services dépend des transports en commun : un enjeu
+    fort de mobilité solidaire hors des centres urbains.
+construction:
+  interest: >-
+    La construction neuve conditionne l'arrivée de nouveaux ménages et la capacité à répondre aux besoins
+    (desserrement, parcours résidentiels, logement social). Elle annonce aussi des besoins en équipements.
+
+# ── Petite enfance ──────────────────────────────────────────────────────────────────────────────────
+children__moins_de_3_ans:
+  definition: >-
+    Enfants de moins de 3 ans au recensement : effectif, part dans la population et évolution, comparés aux
+    autres échelles ; carte de leur répartition par quartier ou par commune.
+  interest: >-
+    C'est le public cible de l'offre d'accueil du jeune enfant et des services de PMI : son volume et sa
+    localisation dimensionnent les besoins en places et en accompagnement des jeunes parents.
+children__3_5_ans:
+  definition: >-
+    Enfants de 3 à 5 ans au recensement : effectif, part dans la population et évolution.
+  interest: >-
+    Âge de l'école maternelle et de l'accueil périscolaire et de loisirs : un repère pour les besoins des
+    familles en dehors du temps scolaire.
+rate_global:
+  interest: >-
+    Indicateur central pour répondre à la question de l'offre d'accueil : il mesure combien d'enfants peuvent
+    être accueillis et donc les marges ou les manques pour permettre aux parents de travailler ou de se former.
+childcare_offer__couverture_par_mode_d_accueil:
+  interest: >-
+    Montre sur quels modes repose l'offre (crèches, assistantes maternelles, école) : une offre très dépendante
+    des assistantes maternelles est fragile face aux départs en retraite.
+rate_eaje:
+  interest: >-
+    L'accueil collectif, avec des tarifs liés aux revenus, est souvent le plus accessible aux familles modestes
+    et aux parents en insertion.
+rate_childminder:
+  interest: >-
+    Premier mode d'accueil en France mais en recul : son évolution signale les tensions à venir sur l'offre
+    et les besoins de renouvellement de la profession.
+rate_preschool:
+  interest: >-
+    La scolarisation à 2 ans complète l'offre d'accueil et favorise la réussite des enfants de milieux
+    défavorisés, notamment en éducation prioritaire.
+childcare_offer__evolution_du_nombre_de_places_a:
+  interest: >-
+    Indique si l'offre suit l'évolution du nombre d'enfants : une baisse des places à effectif d'enfants
+    constant accroît les tensions pour les familles.
+childcare_offer__places_d_accueil_par_mode:
+  interest: >-
+    Détaille les volumes par mode pour repérer ceux qui progressent ou reculent et cibler les leviers
+    (création de crèche, relais petite enfance, maison d'assistantes maternelles).
+childminder_employers:
+  interest: >-
+    Mesure le recours effectif des familles aux assistantes maternelles, au-delà des places théoriques :
+    un écart important peut signaler des places inoccupées ou, au contraire, des besoins non couverts.
+family_employment__moins_de_3_ans:
+  definition: >-
+    Familles avec au moins un enfant de moins de 3 ans selon la situation d'activité des parents (deux parents
+    actifs occupés, un seul, aucun ; parent seul en emploi ou non), recensement.
+  interest: >-
+    Les familles où tous les parents travaillent ont besoin d'un mode d'accueil ; celles où un parent est sans
+    emploi peuvent avoir besoin d'un accueil pour se former ou chercher un emploi.
+family_employment__3_5_ans:
+  definition: >-
+    Familles avec au moins un enfant de 3 à 5 ans selon la situation d'activité des parents, recensement.
+  interest: >-
+    Repère des besoins d'accueil périscolaire et de loisirs pour concilier vie familiale et vie professionnelle.
+parents_activity__selon_l_activite_de_leurs_parents:
+  definition: >-
+    Enfants de la tranche d'âge selon la situation d'activité de leurs parents (recensement) : deux parents ou
+    parent seul, en emploi ou non.
+  interest: >-
+    Estime le nombre d'enfants dont tous les parents travaillent, donc susceptibles d'avoir besoin d'un mode
+    d'accueil, et celui des enfants vivant dans une famille sans emploi, plus exposée à la pauvreté.
+
+# ── Enfance, jeunesse, scolarité ────────────────────────────────────────────────────────────────────
+indice-de-jeunesse:
+  definition: >-
+    Nombre de jeunes de moins de 20 ans pour 100 personnes de 60 ans ou plus, et effectifs des enfants et des
+    jeunes par tranche d'âge.
+  interest: >-
+    Situe le poids des jeunes générations et son évolution : un indice élevé place l'enfance et la jeunesse
+    au cœur des priorités (accueil, loisirs, insertion) ; un indice en baisse annonce une population qui vieillit.
+conditions-de-vie:
+  interest: >-
+    Rassemble les repères de pauvreté et de conditions familiales des enfants et des jeunes : grandir dans une
+    famille pauvre ou monoparentale pèse sur la santé, la scolarité et l'insertion.
+sport:
+  interest: >-
+    La pratique sportive en club des jeunes reflète l'accès aux loisirs encadrés, qui dépend des ressources
+    des familles, de l'offre locale et des freins de mobilité.
+youth__equipements_pour_les_enfants_et_les_jeunes:
+  interest: >-
+    La présence d'équipements de proximité (accueils de loisirs, centres sociaux, équipements sportifs et
+    culturels) conditionne l'accès des jeunes aux loisirs sans dépendre d'un adulte motorisé.
+schooling_by_age__taux_de_scolarisation_selon_l_age:
+  interest: >-
+    Repère les âges où des jeunes quittent le système scolaire, signal de décrochage et de besoins
+    d'accompagnement vers la formation ou l'emploi.
+schooling_rate_2:
+  interest: >-
+    Une scolarisation précoce favorise l'acquisition du langage et la réussite des enfants de milieux modestes ;
+    elle complète aussi l'offre d'accueil du jeune enfant.
+schooling_rate_3_5:
+  interest: >-
+    L'instruction étant obligatoire dès 3 ans, un taux inférieur à 100 % peut signaler des enfants non scolarisés
+    ou instruits en famille, à repérer.
+schooling_rate_15_17:
+  interest: >-
+    Un taux bas signale des sorties précoces du système scolaire, alors que la formation est obligatoire jusqu'à
+    18 ans : un public pour les missions locales et les dispositifs de lutte contre le décrochage.
+schooling_rate_18_24:
+  interest: >-
+    Distingue un territoire étudiant d'un territoire où les jeunes entrent tôt dans la vie active : à lire avec
+    l'emploi et le chômage des jeunes.
+schools__ips:
+  interest: >-
+    Le profil social des élèves accueillis renseigne sur la concentration des difficultés sociales dans les
+    établissements et sur la mixité scolaire du territoire.
+schools__valeur_ajoutee:
+  interest: >-
+    Indique si les établissements font progresser leurs élèves au-delà de ce que leur profil social laisserait
+    attendre : un repère sur la qualité de l'offre éducative locale.
+schools__eloignement:
+  interest: >-
+    Mesure l'éloignement des collèges des ressources culturelles, sportives et de formation : un handicap pour
+    l'orientation et l'ouverture des élèves des territoires isolés.
+diplomas__repartition_selon_le_diplome_le_plus_eleve:
+  interest: >-
+    Le niveau de diplôme conditionne fortement l'accès à l'emploi, les revenus et le recours aux droits :
+    il éclaire les besoins en formation et en accompagnement.
+higher_education_percentage:
+  interest: >-
+    Repère du capital scolaire du territoire et de son attractivité pour les actifs qualifiés ; un écart fort
+    avec les autres échelles signale une polarisation sociale.
+no_diploma_percentage:
+  interest: >-
+    Les personnes sans diplôme sont les plus exposées au chômage, aux emplois précaires et aux difficultés dans
+    les démarches administratives : un public prioritaire de l'insertion et de l'accès aux droits.
+cap_bep_percentage:
+  interest: >-
+    Les diplômes professionnels courts sont liés à des emplois d'exécution, plus exposés aux mutations
+    économiques : un repère des besoins de reconversion et de formation continue.
+young_no_diploma_rate:
+  interest: >-
+    Les jeunes sortis sans diplôme ont un risque élevé de chômage durable : leur part oriente les actions de
+    raccrochage scolaire et d'accompagnement vers la qualification.
+young_neet_rate:
+  interest: >-
+    Les jeunes ni en emploi, ni en études, ni en formation sont le public prioritaire des missions locales :
+    leur part mesure l'enjeu d'insertion des jeunes du territoire.
+
+# ── Emploi ──────────────────────────────────────────────────────────────────────────────────────────
+employment__situation_des_15_64_ans:
+  interest: >-
+    Répartit les 15-64 ans entre emploi, chômage, études, retraite et autres inactifs : les « autres inactifs »
+    (au foyer, en incapacité) sont souvent un public éloigné de l'emploi peu visible dans les chiffres du chômage.
+employment_rate_15_64:
+  interest: >-
+    Indicateur le plus direct de l'accès à l'emploi : un taux bas signale une part importante d'habitants sans
+    revenus d'activité, donc plus dépendants des prestations sociales.
+employment__taux_d_emploi_selon_l_age_et_le_sexe:
+  interest: >-
+    Fait apparaître les groupes les plus éloignés de l'emploi (jeunes, seniors, femmes) pour cibler les
+    actions d'insertion.
+unemployment_rate_15_64:
+  interest: >-
+    Le chômage déclaré au recensement mesure la part des actifs privés d'emploi : un repère des besoins
+    d'accompagnement vers l'emploi et des risques de pauvreté.
+employment__taux_de_chomage_selon_le_diplome:
+  interest: >-
+    Montre à quel point le diplôme protège du chômage localement et quels publics peu qualifiés sont les plus
+    exposés.
+long_term_unemployed_share:
+  interest: >-
+    Le chômage de longue durée fragilise durablement les revenus, la santé et les liens sociaux : il appelle un
+    accompagnement renforcé et global (emploi, santé, mobilité, garde d'enfants).
+employment_rate_15_64_women:
+  interest: >-
+    L'emploi des femmes conditionne l'autonomie financière des mères, notamment des mères seules ; un taux
+    faible peut révéler des freins de garde d'enfants, de mobilité ou de qualification.
+employment_gap_women_men:
+  interest: >-
+    Mesure les inégalités d'accès à l'emploi entre femmes et hommes, souvent liées à la charge des enfants
+    et à l'offre d'accueil.
+homemakers_rate_15_64_women:
+  interest: >-
+    Les femmes au foyer peuvent souhaiter (re)travailler mais rencontrer des freins (garde, langue,
+    qualification, mobilité) : un public souvent absent des statistiques de demandeurs d'emploi.
+employment_rate_15_24:
+  interest: >-
+    À lire avec la scolarisation : un taux d'emploi bas avec peu d'études signale des jeunes sans activité,
+    public des missions locales.
+unemployment_rate_15_24:
+  interest: >-
+    Le chômage des jeunes actifs signale des difficultés d'insertion professionnelle à l'entrée dans la vie
+    active, qui peuvent marquer durablement les parcours.
+fixed_term_percentage:
+  interest: >-
+    Les contrats courts exposent à l'instabilité des revenus, compliquent l'accès au logement et au crédit :
+    un repère de la précarité de l'emploi au-delà du chômage.
+salaried_part_time_percentage:
+  interest: >-
+    Le temps partiel, souvent subi, entraîne des revenus faibles malgré l'emploi : il éclaire la pauvreté des
+    travailleurs et le recours à la prime d'activité.
+employment__temps_partiel_des_salaries_selon_l_age_et_le_sexe:
+  interest: >-
+    Montre quels publics sont les plus concernés par le temps partiel, le plus souvent les femmes et les jeunes.
+part_time_gap_women_men:
+  interest: >-
+    Mesure un facteur majeur des inégalités de revenus et de retraite entre femmes et hommes.
+employment__actifs_selon_la_categorie_socioprofessionnelle:
+  interest: >-
+    Le profil des actifs indique les niveaux de qualification et de revenus attendus, et l'exposition aux
+    mutations économiques.
+work_in_commune_percentage:
+  interest: >-
+    Indique la dépendance des habitants aux déplacements pour travailler : une faible part signale des besoins
+    de mobilité et des contraintes pour les ménages sans voiture.
+employment__mode_de_transport_principal_pour_aller_travailler:
+  interest: >-
+    La dépendance à la voiture freine l'accès à l'emploi des personnes non motorisées (jeunes, ménages modestes) :
+    un enjeu de mobilité solidaire.
+commute_minutes:
+  interest: >-
+    Des trajets longs pèsent sur le budget, la fatigue et la conciliation avec la vie familiale, et peuvent
+    exclure de certains emplois les personnes sans solution de mobilité.
+commute_km:
+  interest: >-
+    La distance au lieu de travail renseigne sur le coût des déplacements pour les ménages et leur exposition
+    aux hausses du prix du carburant.
+
+# ── Demandeurs d'emploi ─────────────────────────────────────────────────────────────────────────────
+abc_index:
+  interest: >-
+    Compare la dynamique du nombre de demandeurs d'emploi à celle des autres territoires : une hausse plus forte
+    signale une dégradation locale du marché du travail.
+abc_per_100_active:
+  interest: >-
+    Plus large que le chômage du recensement (il inclut l'activité réduite), il mesure l'ampleur des besoins
+    d'accompagnement vers l'emploi et la pression sur les acteurs de l'insertion.
+lt25_share:
+  interest: >-
+    La part des jeunes parmi les demandeurs d'emploi oriente vers les dispositifs dédiés (mission locale,
+    Contrat d'engagement jeune) et la coordination avec France Travail.
+
+# ── Économie locale ─────────────────────────────────────────────────────────────────────────────────
+employment_concentration:
+  interest: >-
+    Distingue un pôle d'emploi d'un territoire résidentiel : dans ce dernier, l'accès à l'emploi suppose de se
+    déplacer, ce qui pèse sur les ménages sans voiture.
+local_economy__emplois_selon_le_secteur_d_activite:
+  interest: >-
+    La structure des emplois indique les opportunités locales pour les habitants et leur sensibilité aux
+    difficultés de certains secteurs.
+ess_jobs_share:
+  interest: >-
+    L'économie sociale et solidaire porte une part des services aux habitants (aide à domicile, insertion,
+    action sociale) : un repère des partenaires mobilisables.
+local_economy__etablissements_et_postes_salaries:
+  interest: >-
+    Le tissu d'établissements et la part de l'économie présentielle disent si l'emploi local répond aux besoins
+    des habitants et s'il est accessible aux moins qualifiés.
+local_economy__postes_salaries_selon_le_secteur:
+  interest: >-
+    Repère des secteurs qui emploient sur le territoire, et donc des partenaires pour l'insertion et
+    l'apprentissage.
+local_economy__etablissements_selon_le_nombre_de_salaries:
+  interest: >-
+    Un tissu de petites structures offre des emplois de proximité mais moins de formations internes ; quelques
+    grands employeurs rendent le territoire dépendant de leurs décisions.
+business_creations__creations_d_entreprises:
+  interest: >-
+    La création d'entreprises reflète le dynamisme économique ; une forte part de micro-entreprises peut aussi
+    traduire des formes d'emploi précaires (auto-entrepreneuriat de nécessité).
+
+# ── Revenus et pauvreté ─────────────────────────────────────────────────────────────────────────────
+median_living_standard:
+  interest: >-
+    Situe le niveau de vie typique des habitants par rapport aux autres territoires : c'est le repère de base
+    pour apprécier la richesse ou la fragilité économique du territoire.
+poverty_rate:
+  interest: >-
+    Indicateur central du diagnostic social : il mesure la part des habitants vivant avec des ressources
+    insuffisantes et oriente l'ensemble des politiques de solidarité.
+poverty_rate_tenants:
+  interest: >-
+    Les locataires concentrent la pauvreté : leur taux éclaire les besoins d'aide au logement, de prévention
+    des impayés et d'accompagnement budgétaire.
+revenues_poverty__taux_de_pauvrete_selon_l_age_du_referent_fiscal:
+  interest: >-
+    Identifie les âges de la vie où la pauvreté est la plus forte (jeunes ménages, seniors) pour adapter
+    les réponses.
+revenues_poverty__taux_de_pauvrete_selon_l_age_des_personnes:
+  interest: >-
+    Met en évidence la pauvreté des enfants, souvent plus élevée que celle des adultes : un enjeu pour les
+    politiques familiales et éducatives.
+interdecile_ratio:
+  interest: >-
+    Mesure les inégalités entre les plus modestes et les plus aisés : un écart élevé signale des situations
+    contrastées que la moyenne masque, et un enjeu de cohésion sociale.
+revenues_poverty__composition_des_revenus:
+  interest: >-
+    Montre de quoi vivent les ménages (salaires, retraites, prestations) : une forte part de pensions signale
+    une population retraitée, une forte part de prestations, une dépendance aux transferts sociaux.
+share_social_benefits:
+  interest: >-
+    Repère de la dépendance des ménages aux aides : une part élevée rend le territoire sensible aux réformes
+    des prestations et appelle une vigilance sur l'accès aux droits.
+taxed_share:
+  interest: >-
+    Une faible part de foyers imposés signale des revenus modestes ; c'est un repère disponible pour toutes les
+    communes, y compris les plus petites.
+low_rfr_share:
+  interest: >-
+    Repère des foyers aux revenus très faibles, potentiellement éligibles à de nombreuses aides (énergie,
+    tarifs sociaux, CCAS) : utile pour estimer le public à informer sur ses droits.
+
+# ── Accès aux droits (CAF, C2S, services publics) ───────────────────────────────────────────────────
+population_covered_rate:
+  interest: >-
+    Mesure la part des habitants qui dépendent au moins en partie des prestations de la CAF : un repère de
+    la place des familles et des revenus modestes dans le territoire.
+caf_benefits__poids_de_chaque_prestation_parmi_les_foyers_alloca:
+  interest: >-
+    Indique quelles prestations pèsent le plus (logement, prime d'activité, familles, RSA) et donc la nature
+    des difficultés principales des allocataires.
+caf_benefits__prestations_versees_a:
+  interest: >-
+    Donne les volumes et les montants en jeu, utiles pour dimensionner l'accompagnement et suivre l'évolution
+    du nombre de foyers aidés.
+rsa_population_rate:
+  interest: >-
+    Repère direct de la grande pauvreté et de l'éloignement de l'emploi : il oriente l'accompagnement social
+    et professionnel des allocataires et la coordination avec le département.
+ppa_population_rate:
+  interest: >-
+    Signale les travailleurs pauvres (temps partiel, bas salaires, contrats courts) : une pauvreté dans l'emploi
+    souvent peu visible dans les dispositifs d'action sociale.
+housing_population_rate:
+  interest: >-
+    Repère du poids du logement dans le budget des ménages modestes et de leur sensibilité aux hausses de loyer
+    et de charges.
+asf_single_parent_rate:
+  interest: >-
+    Les mères seules sans pension alimentaire sont particulièrement exposées à la pauvreté : l'indicateur aide
+    à repérer ce public et à vérifier le recours à l'aide au recouvrement des pensions.
+aah_rate:
+  interest: >-
+    Repère du nombre d'adultes en situation de handicap aux ressources limitées, et donc des besoins d'accès
+    aux droits, de logement adapté et d'accompagnement vers l'emploi.
+c2s_free_rate:
+  interest: >-
+    La C2S gratuite est réservée aux plus faibles ressources : elle mesure la précarité et, comparée aux
+    personnes éligibles, le non-recours aux droits en santé.
+health_insurance__c2s_sans_participation_selon_l_age:
+  interest: >-
+    Montre à quels âges la précarité en santé se concentre (enfants des familles pauvres, jeunes adultes,
+    seniors) pour cibler l'information sur les droits.
+complementaire-sante-solidaire-toutes-communes:
+  interest: >-
+    Seul repère de la précarité en santé disponible pour toutes les communes, y compris les petites : utile
+    pour comparer le territoire à ses voisins.
+equipment__services_essentiels:
+  interest: >-
+    La présence ou la distance des services essentiels conditionne l'accès aux droits et aux soins, surtout
+    pour les personnes âgées ou sans voiture.
+
+# ── Santé ───────────────────────────────────────────────────────────────────────────────────────────
+gp_accessibility:
+  interest: >-
+    L'accès au médecin généraliste conditionne le suivi de santé et l'entrée dans le parcours de soins : une
+    accessibilité faible signale un risque de renoncement aux soins, surtout pour les publics peu mobiles.
+accessibilite-aux-medecins-de-moins-de-65-ans-et-aux-dentistes:
+  interest: >-
+    Anticipe la fragilité de l'offre à venir (départs en retraite des médecins) et l'accès aux soins dentaires,
+    fréquemment reportés par les ménages modestes.
+health__professionnels_de_sante_liberaux:
+  interest: >-
+    Situe l'offre de soins de premier recours par rapport aux autres territoires : un déficit appelle des
+    réponses (maison de santé, centre de santé, mobilité vers les soins).
+health__services_de_sante_de_proximite:
+  interest: >-
+    La présence de pharmacies, laboratoires ou services d'urgence à proximité facilite l'accès aux soins des
+    personnes âgées et non motorisées.
+recours-aux-soins-et-prevention:
+  interest: >-
+    Le non-recours aux soins et aux dépistages repère les populations éloignées du système de santé, cibles
+    des actions de prévention et de médiation en santé.
+etat-de-sante:
+  interest: >-
+    Les maladies chroniques et l'invalidité pèsent sur l'emploi, les revenus et l'autonomie : un repère des
+    besoins d'accompagnement en santé.
+
+# ── Seniors ─────────────────────────────────────────────────────────────────────────────────────────
+seniors__personnes_de_80_ans_ou_plus_vivant_seules:
+  interest: >-
+    Les 80 ans ou plus vivant seuls sont le public le plus exposé à l'isolement et à la perte d'autonomie sans
+    aidant : cible prioritaire du repérage et du maintien à domicile.
+fragilite-sociale-des-retraites:
+  interest: >-
+    Le score composite repère les retraités qui cumulent les facteurs de risque, pour cibler les actions de
+    prévention de la perte d'autonomie et de l'isolement.
+ressources-des-retraites:
+  interest: >-
+    Les retraités aux faibles pensions sont exposés aux difficultés de logement, de santé et de chauffage :
+    un repère pour l'accès aux droits (minimum vieillesse, aides au logement, CSG réduite).
+parcours-et-situation-familiale:
+  interest: >-
+    Le veuvage et les parcours de vie (carrières incomplètes) signalent des risques d'isolement et de baisse de
+    ressources au grand âge.
+sante-et-recours-aux-soins-des-55-ans-ou-plus:
+  interest: >-
+    Le non-recours aux soins des seniors annonce des risques de dégradation de la santé et de l'autonomie :
+    un levier pour les actions de prévention.
+vaccination-antigrippale:
+  interest: >-
+    La vaccination contre la grippe est un repère simple de l'accès à la prévention des personnes âgées et
+    des marges de progrès des actions de sensibilisation.
+taux-d-equipement-en-hebergement:
+  definition: >-
+    Places en établissements d'hébergement pour personnes âgées (Ehpad, résidences autonomie…) rapportées
+    à la population de 75 ans ou plus.
+  interest: >-
+    Situe la capacité d'accueil en établissement au regard du vieillissement : une offre faible reporte les
+    besoins sur le maintien à domicile et les aidants.
+
+# ── Handicap ────────────────────────────────────────────────────────────────────────────────────────
+aeeh_rate:
+  interest: >-
+    Repère des familles qui élèvent un enfant en situation de handicap, avec des besoins de garde adaptée,
+    d'inclusion scolaire et de répit pour les parents.
+
+# ── Immigration ─────────────────────────────────────────────────────────────────────────────────────
+immigration__comparaison_territoriale:
+  interest: >-
+    Situe la présence des immigrés et des étrangers par rapport aux autres territoires, pour adapter l'offre
+    d'apprentissage du français, d'accès aux droits et d'accompagnement.
+immigration__immigres_et_non_immigres_face_a_l_emploi:
+  interest: >-
+    Les écarts d'accès à l'emploi entre immigrés et non-immigrés révèlent des freins spécifiques (langue,
+    reconnaissance des diplômes, discriminations) à prendre en compte dans l'insertion.
+
+# ── Délinquance ─────────────────────────────────────────────────────────────────────────────────────
+delinquency__vue_d_ensemble:
+  interest: >-
+    Situe le niveau de délinquance enregistrée par rapport aux autres territoires : un repère du sentiment
+    d'insécurité et des besoins de prévention, à lire en sachant que les chiffres dépendent aussi des plaintes.
+intrafamily_violence_rate:
+  interest: >-
+    Les violences intrafamiliales concernent directement l'action sociale (protection des victimes et des
+    enfants, hébergement d'urgence) ; leur hausse traduit aussi une meilleure libération de la parole.
+sexual_violence_rate:
+  interest: >-
+    Repère des besoins d'accompagnement des victimes et de prévention, notamment auprès des jeunes.
+other_physical_violence_rate:
+  interest: >-
+    Les violences hors cadre familial pèsent sur le sentiment de sécurité et la vie dans l'espace public.
+burglary_rate:
+  interest: >-
+    Les cambriolages touchent particulièrement les personnes âgées et nourrissent le sentiment d'insécurité :
+    un repère pour les actions de prévention.
+vandalism_rate:
+  interest: >-
+    Les dégradations signalent des tensions dans l'espace public et pèsent sur le cadre de vie des quartiers.
+drug_use_rate:
+  interest: >-
+    Reflète surtout l'activité des services ; à lire comme un signal d'un enjeu de prévention des addictions
+    plus que comme une mesure de la consommation.
+
+# ── Vie locale ──────────────────────────────────────────────────────────────────────────────────────
+associations__vie_associative:
+  definition: >-
+    Associations créées et actives inscrites au Répertoire national des associations, rapportées à la
+    population, par domaine d'activité.
+  interest: >-
+    La vie associative est une ressource pour le lien social, l'entraide et les partenariats ; une faible
+    densité peut signaler un tissu social à soutenir.
+presidential_turnout:
+  interest: >-
+    La participation électorale renseigne sur l'engagement citoyen et le sentiment d'éloignement des
+    institutions, souvent plus fort dans les territoires précaires.
+turnout_rate:
+  interest: >-
+    Le scrutin municipal est le plus proche des habitants : une faible participation interroge sur le lien entre
+    les habitants et les institutions locales et sur la participation à la vie publique.
+sports__bloc:
+  interest: >-
+    La pratique sportive en club favorise la santé et le lien social ; les écarts selon l'âge et le sexe
+    signalent des publics moins touchés (filles, seniors) pour orienter l'offre.
+
+# ── Équipements ────────────────────────────────────────────────────────────────────────────────────
+equipment__densite_d_equipements:
+  interest: >-
+    Compare le niveau d'équipement du territoire à ceux de référence : un sous-équipement oblige les habitants
+    à se déplacer et pénalise les moins mobiles.
+equipment__inventaire:
+  interest: >-
+    L'inventaire complet aide à identifier les ressources locales et les partenaires potentiels d'un plan d'action.

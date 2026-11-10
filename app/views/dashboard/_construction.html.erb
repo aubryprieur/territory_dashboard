@@ -16,7 +16,7 @@
 <% card_id ||= nil %>
 <div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
   <h2 class="text-lg font-medium text-gray-900 mb-1"><%= epci_wording(heading) %></h2>
-  <p class="text-xs text-gray-500 mb-4">Logements autorisés (permis de construire) et commencés (ouverture de chantier), d'après la base Sitadel. Repère de la dynamique résidentielle et de la capacité du territoire à accueillir de nouveaux ménages. En rouge, une valeur inférieure à la France métropolitaine.</p>
+  <%= indicator_notes("construction") do %>Logements autorisés (permis de construire) et commencés (ouverture de chantier), d'après la base Sitadel. Repère de la dynamique résidentielle et de la capacité du territoire à accueillir de nouveaux ménages. En rouge, une valeur inférieure à la France métropolitaine.<% end %>
 
   <% if cn_commune.nil? %>
     <p class="text-sm text-gray-500">Données de construction neuve non disponibles pour la commune.</p>

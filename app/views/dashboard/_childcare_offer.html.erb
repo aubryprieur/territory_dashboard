@@ -86,7 +86,7 @@
     <% if detailed.any? %>
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Couverture par mode d'accueil (<%= latest %>)</h3>
-        <p class="text-xs text-gray-500 mb-4">Places pour 100 enfants de moins de 3 ans. La longueur totale de la barre correspond au taux de couverture global.</p>
+        <%= indicator_notes("childcare_offer__couverture_par_mode_d_accueil") do %>Places pour 100 enfants de moins de 3 ans. La longueur totale de la barre correspond au taux de couverture global.<% end %>
         <%= comparison_stacked_chart(detailed, latest, [
               ["rate_eaje_psu", "Crèches financées par la PSU", "#1d4ed8"],
               ["rate_eaje_hors_psu", "Micro-crèches et autres hors PSU", "#93c5fd"],
@@ -128,7 +128,7 @@
     <% if territory_value(focus, latest, "detailed") %>
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Évolution du nombre de places à <%= display_territory_name(focus[:name]) %> (<%= years.first %>-<%= latest %>)</h3>
-        <p class="text-xs text-gray-500 mb-4">Nombre de places par mode d'accueil chaque année. Courbe : enfants de moins de 3 ans (estimés à partir des places et du taux de couverture).</p>
+        <%= indicator_notes("childcare_offer__evolution_du_nombre_de_places_a") do %>Nombre de places par mode d'accueil chaque année. Courbe : enfants de moins de 3 ans (estimés à partir des places et du taux de couverture).<% end %>
         <%= territory_stacked_columns_chart(focus, years, [
               ["places_eaje_psu", "Crèches PSU", "#1d4ed8"],
               ["places_eaje_hors_psu", "Micro-crèches, hors PSU", "#93c5fd"],
@@ -142,7 +142,7 @@
     <% if detailed.any? %>
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Places d'accueil par mode (<%= latest %>)</h3>
-        <p class="text-xs text-gray-500 mb-4">Nombre de places et évolution depuis <%= comparison %>.</p>
+        <%= indicator_notes("childcare_offer__places_d_accueil_par_mode") do %>Nombre de places et évolution depuis <%= comparison %>.<% end %>
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">

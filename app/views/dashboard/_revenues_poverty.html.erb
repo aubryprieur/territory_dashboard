@@ -126,7 +126,7 @@
 
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de pauvreté selon l'âge du référent fiscal (<%= detail_year %>)</h3>
-        <p class="text-xs text-gray-500 mb-4">En %. Le référent fiscal est le déclarant principal du ménage.</p>
+        <%= indicator_notes("revenues_poverty__taux_de_pauvrete_selon_l_age_du_referent_fiscal") do %>En %. Le référent fiscal est le déclarant principal du ménage.<% end %>
         <%= comparison_grouped_bar_chart(territories, detail_year,
               (labels["reference_ages"] || {}).map { |k, l| ["poverty_rate_ref_#{k}", l] },
               "Taux de pauvreté par âge du référent fiscal et par territoire") %>
@@ -135,7 +135,7 @@
     <% if with_individual.any? %>
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de pauvreté selon l'âge des personnes (<%= latest %>)</h3>
-        <p class="text-xs text-gray-500 mb-4">En %. Publié par l'INSEE pour les départements, les régions et la France uniquement. Le taux des moins de 18 ans mesure la pauvreté des enfants.</p>
+        <%= indicator_notes("revenues_poverty__taux_de_pauvrete_selon_l_age_des_personnes") do %>En %. Publié par l'INSEE pour les départements, les régions et la France uniquement. Le taux des moins de 18 ans mesure la pauvreté des enfants.<% end %>
         <%= comparison_grouped_bar_chart(with_individual, latest,
               (labels["individual_ages"] || {}).map { |k, l| ["poverty_rate_ind_#{k}", l] },
               "Taux de pauvreté par âge et par territoire") %>
@@ -169,7 +169,7 @@
           definition: "Niveau de vie en dessous duquel vivent les 10 % des habitants les plus modestes de l'IRIS, en euros par an (Filosofi). Publié pour les IRIS assez peuplés." }
       ] %>
       <h3 class="text-sm font-medium text-gray-700 mb-1">Composition des revenus (<%= detail_year %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Répartition des revenus des ménages avant impôts, en %. La part des prestations y est un peu plus faible que dans l'indicateur ci-dessous, que l'INSEE rapporte au revenu disponible (après impôts).</p>
+      <%= indicator_notes("revenues_poverty__composition_des_revenus") do %>Répartition des revenus des ménages avant impôts, en %. La part des prestations y est un peu plus faible que dans l'indicateur ci-dessous, que l'INSEE rapporte au revenu disponible (après impôts).<% end %>
 
       <section style="margin-bottom:2.5rem">
         <%= comparison_stacked_chart(territories, detail_year, [

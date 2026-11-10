@@ -23,7 +23,7 @@
   %>
   <section style="margin-bottom:2.5rem">
     <h3 class="text-sm font-medium text-gray-700 mb-1">Créations d'entreprises (<%= bc_period %>)</h3>
-    <p class="text-xs text-gray-500 mb-4">Entreprises créées dans l'année, rattachées à la commune de leur siège, micro-entrepreneurs compris. Repère du dynamisme entrepreneurial et de l'installation d'activités à son compte. En rouge, une valeur inférieure à la France métropolitaine.</p>
+    <%= indicator_notes("business_creations__creations_d_entreprises") do %>Entreprises créées dans l'année, rattachées à la commune de leur siège, micro-entrepreneurs compris. Repère du dynamisme entrepreneurial et de l'installation d'activités à son compte. En rouge, une valeur inférieure à la France métropolitaine.<% end %>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">

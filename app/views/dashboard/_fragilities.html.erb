@@ -41,7 +41,8 @@
       <%= xlsx_download_button(filename: xlsx_filename(title), notes: fr_notes,
                                sheets: [{ name: "Données", rows: fr_xlsx, widths: [48, 8] + [18] * fr_territories.size }]) %>
     </div>
-    <% if definition %><p class="text-xs text-gray-500 mb-4"><%= definition %> En rouge, une situation moins favorable qu'en France.</p><% end %>
+    <%= indicator_notes(local_assigns[:note], title, definition: definition) %>
+    <p class="text-xs text-gray-400" style="margin:-4px 0 8px">En rouge, une situation moins favorable qu'en France.</p>
     <div class="overflow-x-auto">
       <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">

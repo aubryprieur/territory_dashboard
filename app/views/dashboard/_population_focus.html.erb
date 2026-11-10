@@ -33,10 +33,8 @@
     <% if pv.("age_0_2") %>
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Tranches d'âge (<%= latest %>)</h3>
-        <p class="text-xs text-gray-500 mb-4">
-          Part de chaque tranche d'âge dans la population, en %. À <%= commune[:name] %> :
-          <%= (labels["childhood"] || {}).except("0_2", "3_5").map { |k, l| "#{fmt_count(pv.("age_#{k}"))} #{l.sub(' ans', '')} ans" }.join(" · ") %>.
-        </p>
+        <%= indicator_notes("population_focus__tranches_d_age") do %>Part de chaque tranche d'âge dans la population, en %. À <%= commune[:name] %> :
+          <%= (labels["childhood"] || {}).except("0_2", "3_5").map { |k, l| "#{fmt_count(pv.("age_#{k}"))} #{l.sub(' ans', '')} ans" }.join(" · ") %>.<% end %>
         <%= comparison_grouped_bar_chart(territories, latest,
               (labels["childhood"] || {}).except("0_2", "3_5").map { |k, l| ["age_#{k}_percentage", l] },
               "Tranches d'âge des enfants et des jeunes par territoire") %>
@@ -64,7 +62,7 @@
          ] %>
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1">Repères sur le vieillissement (<%= latest %>)</h3>
-        <p class="text-xs text-gray-500 mb-4">Indicateurs calculés à partir des tranches d'âge de 5 ans, disponibles pour le seul recensement <%= latest %>.</p>
+        <%= indicator_notes("population_focus__reperes_sur_le_vieillissement") do %>Indicateurs calculés à partir des tranches d'âge de 5 ans, disponibles pour le seul recensement <%= latest %>.<% end %>
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -98,7 +96,7 @@
   <% elsif focus == :pcs %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Population de 15 ans ou plus par catégorie (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">En %.</p>
+      <%= indicator_notes("population_focus__population_de_15_ans_ou_plus_par_categorie") do %>En %.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["pcs_1_percentage", "Agriculteurs", "#84cc16"],
             ["pcs_2_percentage", "Artisans, commerçants, chefs d'entr.", "#f59e0b"],

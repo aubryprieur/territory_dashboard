@@ -18,7 +18,8 @@
     count_key    - effectif à afficher sous la valeur (optionnel)
     total_key    - dénominateur à afficher "x sur y" (optionnel)
     count_label  - libellé de l'effectif (ex. "ménages")
-    definition   - phrase d'explication (optionnel)
+    definition   - phrase d'explication (optionnel ; sinon config/indicator_notes.yml)
+    note         - clé du catalogue config/indicator_notes.yml (optionnel ; défaut : value_key, puis titre)
     details      - [{ label:, count_key:, share_key:, euros_key: }] (optionnel ; euros_key : montant en €)
   Affichage : carte du chiffre clé (avec repère France) à gauche ; à droite, bascule Graphique / Tableau (graphique par
   défaut, tableau seul s'il n'y a qu'un millésime) ; définition repliable (ⓘ Définition).
@@ -92,12 +93,7 @@
     <%= xlsx_download_button(filename: xlsx_filename(title), notes: xlsx_notes,
                              sheets: [{ name: "Données", rows: xlsx_rows, widths: [14, 42, 8, 22, 18, 16] }]) %>
   </div>
-  <% if definition %>
-    <details class="text-xs text-gray-500" style="margin-bottom:12px">
-      <summary style="cursor:pointer;color:#4f46e5;list-style:none;display:inline">ⓘ Définition</summary>
-      <p style="margin-top:4px"><%= definition %></p>
-    </details>
-  <% end %>
+  <%= indicator_notes(local_assigns[:note], value_key, title, definition: definition) %>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
     <div class="md:col-span-1">

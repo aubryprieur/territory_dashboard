@@ -70,7 +70,7 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Poids de chaque prestation parmi les foyers allocataires (<%= latest %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Part des foyers allocataires de la CAF qui perçoivent chaque prestation, en % (un foyer peut en percevoir plusieurs).</p>
+      <%= indicator_notes("caf_benefits__poids_de_chaque_prestation_parmi_les_foyers_alloca") do %>Part des foyers allocataires de la CAF qui perçoivent chaque prestation, en % (un foyer peut en percevoir plusieurs).<% end %>
       <%= comparison_grouped_bar_chart(territories, latest, [
             ["housing_share", "Aides au logement"], ["ppa_share", "Prime d'activité"], ["af_share", "Allocations familiales"],
             ["rsa_share", "RSA"], ["paje_share", "Paje"], ["asf_share", "ASF"], ["aah_share", "AAH"]
@@ -80,7 +80,7 @@
     <!-- 6. Détail des prestations de la commune -->
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Prestations versées à <%= commune[:name] %></h3>
-      <p class="text-xs text-gray-500 mb-4">Foyers allocataires, personnes couvertes et montant mensuel moyen par foyer au 31 décembre <%= latest %> ; évolution du nombre de foyers depuis <%= comparison %>. Effectifs communaux arrondis à 5 par la Cnaf. Montant de l'allocation de rentrée scolaire non affiché (versée en août).</p>
+      <%= indicator_notes("caf_benefits__prestations_versees_a") do %>Foyers allocataires, personnes couvertes et montant mensuel moyen par foyer au 31 décembre <%= latest %> ; évolution du nombre de foyers depuis <%= comparison %>. Effectifs communaux arrondis à 5 par la Cnaf. Montant de l'allocation de rentrée scolaire non affiché (versée en août).<% end %>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">

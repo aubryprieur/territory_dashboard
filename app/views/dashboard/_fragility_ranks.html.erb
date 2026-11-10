@@ -45,6 +45,8 @@
     default_mode = modes.first[0]
     pill = "display:inline-block;padding:2px 9px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:600"
     btn = "padding:4px 10px;font-size:12px;border:1px solid #c7d2fe;cursor:pointer"
+    # ⓘ Information : légende de lecture et détail des rangs, repliés par défaut (pages plus légères)
+    info_toggle = "var s=this.closest('section'),on=this.getAttribute('aria-expanded')!=='true';this.setAttribute('aria-expanded',on);s.querySelectorAll('[data-rank-info]').forEach(function(e){e.style.display=on?'':'none'})"
     toggle = "var b=this,s=b.closest('section');s.querySelectorAll('[data-rank-mode]').forEach(function(e){e.style.display=e.getAttribute('data-rank-mode')===b.getAttribute('data-mode')?'':'none'});s.querySelectorAll('button[data-mode]').forEach(function(x){var on=x===b;x.style.background=on?'#4f46e5':'#fff';x.style.color=on?'#fff':'#3730a3'})"
   %>
   <section style="margin:0 0 2rem;padding:16px 18px;border:1px solid #e0e7ff;border-radius:12px;background:#f8faff">
@@ -66,6 +68,8 @@
           </div>
         <% end %>
       </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+      <button type="button" aria-expanded="false" onclick="<%= info_toggle %>" class="text-xs" style="color:#4f46e5;cursor:pointer;background:none;border:none;padding:0">ⓘ Information</button>
       <div style="display:inline-flex;border-radius:8px;overflow:hidden">
         <% modes.each_with_index do |(mode, label), idx| %>
           <%
@@ -75,7 +79,9 @@
           <button type="button" data-mode="<%= mode %>" onclick="<%= toggle %>" style="<%= btn %>;<%= idx.zero? ? '' : 'border-left:none;' %>border-radius:<%= radius %>;background:<%= on ? '#4f46e5' : '#fff' %>;color:<%= on ? '#fff' : '#3730a3' %>"><%= label %></button>
         <% end %>
       </div>
+      </div>
     </div>
+    <div data-rank-info style="display:none">
     <p class="text-xs text-gray-500" style="margin-bottom:6px"><%= ep ? FragilityIntensityHelper::INTENSITY_LEGEND.gsub("dans la commune", "dans l'EPCI").gsub("autres communes", "autres EPCI") : FragilityIntensityHelper::INTENSITY_LEGEND %></p>
     <div class="text-xs text-gray-500" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <span style="color:<%= FragilityIntensityHelper::INTENSITY_BLUE %>;font-weight:600">enjeu moins marqué</span>
@@ -83,9 +89,11 @@
       <span style="color:<%= FragilityIntensityHelper::INTENSITY_RED %>;font-weight:600">enjeu plus marqué</span>
       <% if epci %><span data-rank-mode="epci">· dans un EPCI de peu de communes, une seule commune d'écart déplace fortement le rang</span><% end %>
     </div>
+    <p class="text-xs text-gray-500" style="margin-bottom:6px">Sous chaque barre : rang, nombre de territoires comparés et valeur de référence.</p>
+    </div>
     <div>
       <% items.each do |i| %>
-        <div style="display:grid;grid-template-columns:minmax(200px,2fr) 90px minmax(160px,3fr);gap:12px;align-items:center;padding:6px 0;border-top:1px solid #eef2ff">
+        <div style="display:grid;grid-template-columns:minmax(200px,2fr) 90px minmax(160px,3fr);gap:12px;align-items:center;padding:4px 0;border-top:1px solid #eef2ff">
           <div class="text-sm text-gray-800"><%= enjeu_label(i) %> <span class="text-xs text-gray-400">(<%= i["year"] %>)</span></div>
           <div class="text-sm text-right font-semibold whitespace-nowrap"><%= fmt_v.(i, i["value"]) %></div>
           <%
@@ -97,7 +105,7 @@
             <div data-rank-mode="<%= mode %>" style="<%= mode == default_mode ? '' : 'display:none' %>">
               <% if r %>
                 <%= enjeu_bar(i, r) %>
-                <div class="text-xs text-gray-500" style="margin-top:3px"><% if mode == "epci" %><%= enjeu_epci_text(i) %><% else %><%= enjeu_position_text(i, r) %><%= n ? " · #{fmt_count(n)} #{unit_pl}" : "" %><% end %><%= ref ? " · #{ref_label} #{fmt_v.(i, ref)}" : "" %></div>
+                <div class="text-xs text-gray-500" data-rank-info style="margin-top:3px;display:none"><% if mode == "epci" %><%= enjeu_epci_text(i) %><% else %><%= enjeu_position_text(i, r) %><%= n ? " · #{fmt_count(n)} #{unit_pl}" : "" %><% end %><%= ref ? " · #{ref_label} #{fmt_v.(i, ref)}" : "" %></div>
               <% else %>
                 <span class="text-xs text-gray-400"><%= ep ? "EPCI non classé" : "commune non classée" %></span>
               <% end %>

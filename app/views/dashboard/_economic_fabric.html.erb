@@ -24,7 +24,7 @@
   end
 %>
 <% if f_main && f_latest %>
-  <p class="text-xs text-gray-500 mb-4">Établissements actifs employeurs et postes salariés situés sur le territoire au 31 décembre (Flores). La sphère présentielle regroupe les activités tournées vers les besoins des habitants (commerce de proximité, santé, action sociale, enseignement, services publics...) ; la sphère productive, celles qui produisent pour l'extérieur du territoire.</p>
+  <%= indicator_notes("local_economy__etablissements_et_postes_salaries") do %>Établissements actifs employeurs et postes salariés situés sur le territoire au 31 décembre (Flores). La sphère présentielle regroupe les activités tournées vers les besoins des habitants (commerce de proximité, santé, action sociale, enseignement, services publics...) ; la sphère productive, celles qui produisent pour l'extérieur du territoire.<% end %>
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <div class="bg-indigo-50 p-4 rounded-lg">
@@ -82,7 +82,7 @@
     </div>
 
     <h4 class="text-sm font-medium text-gray-700 mb-1">Postes salariés selon le secteur (<%= f_latest %>)</h4>
-    <p class="text-xs text-gray-500 mb-3">En % des postes salariés des établissements du territoire.</p>
+    <%= indicator_notes("local_economy__postes_salaries_selon_le_secteur") do %>En % des postes salariés des établissements du territoire.<% end %>
     <%= comparison_stacked_chart(fabric, f_latest, [
           ["posts_agriculture_share", "Agriculture", "#84cc16"],
           ["posts_industry_share", "Industrie", "#1e3a8a"],
@@ -93,7 +93,7 @@
         ], "Postes salariés par secteur et par territoire") %>
 
     <h4 class="text-sm font-medium text-gray-700 mb-1 mt-6">Établissements selon le nombre de salariés (<%= f_latest %>)</h4>
-    <p class="text-xs text-gray-500 mb-3">En % des établissements employeurs.</p>
+    <%= indicator_notes("local_economy__etablissements_selon_le_nombre_de_salaries") do %>En % des établissements employeurs.<% end %>
     <%= comparison_stacked_chart(fabric, f_latest, [
           ["ets_size_0_share", "Aucun salarié au 31/12", "#e5e7eb"],
           ["ets_size_1_9_share", "1 à 9", "#c7d2fe"],
