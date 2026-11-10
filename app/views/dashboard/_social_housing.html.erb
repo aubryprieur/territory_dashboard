@@ -47,7 +47,7 @@
     %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Caractéristiques du parc social (<%= sh_latest %>)</h3>
-      <%= indicator_notes("social_housing__caracteristiques_du_parc_social") do %>En % du parc, sauf mention.
+      <%= indicator_notes("social_housing__caracteristiques_du_parc_social", years: [sh_latest]) do %>En % du parc, sauf mention.
         <% sold, demolished, new_ls = sv.("sold"), sv.("demolished"), sv.("new_dwellings") %>
         À <%= sh_commune[:name] %> : <%= fmt_count(new_ls || 0) %> logement(s) mis en service, <%= fmt_count(sold || 0) %> vendu(s) et <%= fmt_count(demolished || 0) %> démoli(s) dans l'année précédant le <%= "1er janvier #{sh_latest}" %>.<% end %>
       <div class="overflow-x-auto">
@@ -75,6 +75,7 @@
           </tbody>
         </table>
       </div>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/territory_indicator", **sh_common.merge(comparison: sh_first),

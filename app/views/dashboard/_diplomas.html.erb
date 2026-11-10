@@ -57,7 +57,7 @@
         "Répartition selon le diplôme le plus élevé et part des diplômés du supérieur.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Répartition selon le diplôme le plus élevé (<%= latest %>)</h3>
-      <%= indicator_notes("diplomas__repartition_selon_le_diplome_le_plus_eleve") do %>Population de 15 ans ou plus non scolarisée, en %.<% end %>
+      <%= indicator_notes("diplomas__repartition_selon_le_diplome_le_plus_eleve", years: [latest]) do %>Population de 15 ans ou plus non scolarisée, en %.<% end %>
       <%
         levels = [
           ["no_diploma_percentage", "Sans diplôme ou CEP", "#7f1d1d"],
@@ -99,6 +99,7 @@
         </table>
         <p class="text-xs text-gray-500 mt-2">Bac + 3 ou 4 et bac + 5 ou plus ne sont distingués par l'INSEE qu'à partir de 2017.</p>
       </div>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/territory_indicator", **common,

@@ -16,7 +16,7 @@
 <% card_id ||= nil %>
 <div class="bg-white shadow rounded-lg p-6 mb-6" <%= card_id ? "id=#{card_id} style=scroll-margin-top:90px".html_safe : "" %>>
   <h2 class="text-lg font-medium text-gray-900 mb-1"><%= epci_wording(heading) %></h2>
-  <%= indicator_notes("construction") do %>Logements autorisés (permis de construire) et commencés (ouverture de chantier), d'après la base Sitadel. Repère de la dynamique résidentielle et de la capacité du territoire à accueillir de nouveaux ménages. En rouge, une valeur inférieure à la France métropolitaine.<% end %>
+  <%= indicator_notes("construction", years: (@construction_data.is_a?(Hash) ? @construction_data["started_years"] : nil)) do %>Logements autorisés (permis de construire) et commencés (ouverture de chantier), d'après la base Sitadel. Repère de la dynamique résidentielle et de la capacité du territoire à accueillir de nouveaux ménages. En rouge, une valeur inférieure à la France métropolitaine.<% end %>
 
   <% if cn_commune.nil? %>
     <p class="text-sm text-gray-500">Données de construction neuve non disponibles pour la commune.</p>
@@ -97,6 +97,7 @@
       <%= cn_years.map { |y| "#{y} : #{fmt_count(territory_value(cn_commune, y, 'started_total'))}" }.join(" · ") %>.
     </p>
 
+    <%= indicator_source_note %>
     <div class="pt-4 mt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
       <p>Source : SDES, base Sitadel — logements autorisés et commencés, données annuelles communales (septembre 2026). Logements commencés publiés jusqu'en <%= cn_years.last %>. Taux calculés sur la population du recensement le plus proche (2012, 2017 ou 2023). Dans une petite commune, une seule opération peut faire varier fortement les chiffres d'une année à l'autre.</p>
       <p>Individuel groupé : maisons construites dans une même opération (lotissement, programme) ; résidence : résidences services pour étudiants, personnes âgées ou tourisme.</p>

@@ -31,7 +31,7 @@
       <%= xlsx_download_button(filename: xlsx_filename(title), notes: [title, definition],
                                sheets: [{ name: "Données", rows: yt_xlsx, widths: [48, 8] + [18] * cols.size }]) %>
     </div>
-    <%= indicator_notes(local_assigns[:note], title, definition: definition) %>
+    <%= indicator_notes(local_assigns[:note], title, definition: definition, years: rows.map { |r| r[:ds] && r[:ds][:latest] }.compact) %>
     <div class="overflow-x-auto">
       <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
@@ -65,5 +65,6 @@
     <% if hidden.any? %>
       <p class="text-xs text-gray-500 mt-2">Non publié pour <%= @territory_name %> : <%= hidden.map { |r| r[:label].sub(/\A./, &:downcase) }.join(" ; ") %>.</p>
     <% end %>
+    <%= indicator_source_note %>
   </section>
 <% end %>

@@ -44,7 +44,7 @@
       <% total = territory_value(commune, latest, "children_#{age}_total") %>
       <section style="margin-bottom:2.5rem">
         <h3 class="text-sm font-medium text-gray-700 mb-1"><%= age_label %> selon l'activité de leurs parents (<%= latest %>)</h3>
-        <%= indicator_notes("parents_activity__selon_l_activite_de_leurs_parents") %>
+        <%= indicator_notes("parents_activity__selon_l_activite_de_leurs_parents", years: [latest]) %>
         <p class="text-xs text-gray-500 mb-4"><%= fmt_count(total) %> enfants à <%= @territory_name %><%= small_count_flag(total) %>. Répartition en %.</p>
 
         <div class="overflow-x-auto mb-4">
@@ -73,6 +73,7 @@
         <%= comparison_stacked_chart(territories, latest,
               categories.map { |k, l, c| ["children_#{age}_#{k}_percentage", l, c] },
               "#{age_label} selon l'activité des parents, par territoire") %>
+        <%= indicator_source_note %>
       </section>
     <% end %>
 

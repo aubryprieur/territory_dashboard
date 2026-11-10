@@ -72,17 +72,18 @@
         "#{fmt_count(hv.("dwellings"))} logements en #{latest}, dont #{fmt_count(hv.("dwellings_main"))} résidences principales : nature, ancienneté et taille du parc.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Catégories de logements (<%= latest %>)</h3>
-      <%= indicator_notes("housing__categories_de_logements") do %>Part de chaque catégorie dans l'ensemble des logements, en %.<% end %>
+      <%= indicator_notes("housing__categories_de_logements", years: [latest]) do %>Part de chaque catégorie dans l'ensemble des logements, en %.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["main_rate", "Résidences principales", "#1d4ed8"],
             ["secondary_rate", "Résidences secondaires et logements occasionnels", "#93c5fd"],
             ["vacancy_rate", "Logements vacants", "#f59e0b"]
           ], "Catégories de logements par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Période de construction des résidences principales (<%= latest %>)</h3>
-      <%= indicator_notes("housing__periode_de_construction_des_residences_principales") do %>Logements achevés avant <%= latest.to_i - 2 %>, en %. Les logements anciens, surtout d'avant 1975 (premières réglementations thermiques), sont les plus exposés aux besoins de rénovation énergétique.<% end %>
+      <%= indicator_notes("housing__periode_de_construction_des_residences_principales", years: [latest]) do %>Logements achevés avant <%= latest.to_i - 2 %>, en %. Les logements anciens, surtout d'avant 1975 (premières réglementations thermiques), sont les plus exposés aux besoins de rénovation énergétique.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["built_lt1919_percentage", "Avant 1919", "#7c2d12"],
             ["built_1919_1945_percentage", "1919 à 1945", "#c2410c"],
@@ -91,11 +92,12 @@
             ["built_1991_2005_percentage", "1991 à 2005", "#93c5fd"],
             ["built_2006_plus_percentage", "2006 ou après", "#1d4ed8"]
           ], "Période de construction par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Taille des résidences principales (<%= latest %>)</h3>
-      <%= indicator_notes("housing__taille_des_residences_principales") do %>Nombre de pièces, en %.<% end %>
+      <%= indicator_notes("housing__taille_des_residences_principales", years: [latest]) do %>Nombre de pièces, en %.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["rooms_r1_percentage", "1 pièce", "#fde68a"],
             ["rooms_r2_percentage", "2 pièces", "#f59e0b"],
@@ -103,6 +105,7 @@
             ["rooms_r4_percentage", "4 pièces", "#3b82f6"],
             ["rooms_r5p_percentage", "5 pièces ou plus", "#1e3a8a"]
           ], "Taille des résidences principales par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/territory_indicator", **common,
@@ -134,7 +137,7 @@
         "Statut d'occupation des ménages : propriétaires, locataires du parc privé ou social. Le parc social est détaillé dans la question suivante.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Statut d'occupation des résidences principales (<%= latest %>)</h3>
-      <%= indicator_notes("housing__statut_d_occupation_des_residences_principales") do %>En %.<% end %>
+      <%= indicator_notes("housing__statut_d_occupation_des_residences_principales", years: [latest]) do %>En %.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["owners_percentage", "Propriétaires", "#1e3a8a"],
             ["tenants_private_percentage", "Locataires du parc privé", "#3b82f6"],
@@ -142,6 +145,7 @@
             ["tenants_furnished_percentage", "Meublé, chambre d'hôtel", "#93c5fd"],
             ["free_percentage", "Logés gratuitement", "#e5e7eb"]
           ], "Statut d'occupation par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/territory_indicator", **common,
@@ -183,7 +187,7 @@
         "Adéquation entre la taille des logements et celle des ménages : suroccupation, sous-occupation, taille moyenne des ménages.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Peuplement des résidences principales (<%= latest %>)</h3>
-      <%= indicator_notes("housing__peuplement_des_residences_principales") do %>En %. La sous-occupation concerne surtout des personnes âgées vivant seules ou en couple dans de grands logements.<% end %>
+      <%= indicator_notes("housing__peuplement_des_residences_principales", years: [latest]) do %>En %. La sous-occupation concerne surtout des personnes âgées vivant seules ou en couple dans de grands logements.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["occ_over_severe_percentage", "Suroccupation accentuée", "#b91c1c"],
             ["occ_over_moderate_percentage", "Suroccupation modérée", "#ef4444"],
@@ -192,6 +196,7 @@
             ["occ_under_severe_percentage", "Sous-occupation accentuée", "#3b82f6"],
             ["occ_under_very_severe_percentage", "Sous-occupation très accentuée", "#1e3a8a"]
           ], "Peuplement des résidences principales par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <% if @epci_mode %>
@@ -244,7 +249,7 @@
     <% end %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Combustible principal de chauffage (<%= latest %>)</h3>
-      <%= indicator_notes("housing__combustible_principal_de_chauffage") do %>Résidences principales, en %. Le fioul et le gaz en bouteille exposent davantage les ménages à la précarité énergétique.<% end %>
+      <%= indicator_notes("housing__combustible_principal_de_chauffage", years: [latest]) do %>Résidences principales, en %. Le fioul et le gaz en bouteille exposent davantage les ménages à la précarité énergétique.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["heat_town_gas_percentage", "Gaz de ville, réseau de chaleur", "#1d4ed8"],
             ["heat_electric_percentage", "Électricité", "#93c5fd"],
@@ -252,6 +257,7 @@
             ["heat_bottled_gas_percentage", "Gaz en bouteille ou citerne", "#f59e0b"],
             ["heat_other_percentage", "Autre (bois, pompe à chaleur...)", "#84cc16"]
           ], "Combustible principal de chauffage par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <% if @epci_mode %>

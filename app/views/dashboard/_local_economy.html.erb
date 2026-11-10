@@ -47,7 +47,7 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Emplois selon le secteur d'activité (<%= latest %>)</h3>
-      <%= indicator_notes("local_economy__emplois_selon_le_secteur_d_activite") do %>Emplois au lieu de travail, en %.<% end %>
+      <%= indicator_notes("local_economy__emplois_selon_le_secteur_d_activite", years: [latest]) do %>Emplois au lieu de travail, en %.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["jobs_agriculture_percentage", "Agriculture", "#84cc16"],
             ["jobs_industry_percentage", "Industrie", "#1e3a8a"],
@@ -55,6 +55,7 @@
             ["jobs_trade_services_percentage", "Commerce, transports, services", "#93c5fd"],
             ["jobs_public_services_percentage", "Adm. publique, enseignement, santé, social", "#0d9488"]
           ], "Emplois par secteur et par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/sdg_indicator", key: "ess_jobs_share", theme: "green",

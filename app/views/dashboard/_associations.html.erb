@@ -14,7 +14,7 @@
 %>
 <section style="margin-bottom:2.5rem">
   <h3 class="text-base font-medium text-gray-900 mb-1">Vie associative</h3>
-  <%= indicator_notes("associations__vie_associative") %>
+  <%= indicator_notes("associations__vie_associative", years: [@associations_data.is_a?(Hash) ? @associations_data["stock_year"] : nil]) %>
   <% if as_local_law %>
     <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-sm text-gray-700">
       En Moselle, dans le Bas-Rhin et le Haut-Rhin, les associations relèvent du droit local et sont inscrites au registre du tribunal judiciaire : elles ne figurent pas dans le Répertoire national des associations.
@@ -110,4 +110,5 @@
     <% end %>
     <p class="text-xs text-gray-500 mt-2">* France métropolitaine hors Moselle, Bas-Rhin et Haut-Rhin (associations de droit local absentes du répertoire) ; la région Grand Est est calculée de la même façon. Associations déclarées ou modifiées depuis 2009 (fichier Waldec), en activité au 1er octobre <%= as_year %> ; population du recensement <%= @associations_data["population_year"] %>. Le répertoire n'enregistre pas toujours les dissolutions : une partie des associations recensées peut être en sommeil.</p>
   <% end %>
+<%= indicator_source_note %>
 </section>

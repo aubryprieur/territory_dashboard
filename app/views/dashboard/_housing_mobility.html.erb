@@ -41,11 +41,12 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Ancienneté moyenne d'emménagement selon le statut (<%= latest %>)</h3>
-      <%= indicator_notes("housing_mobility__anciennete_moyenne_d_emmenagement_selon_le_statut") do %>En années. Une ancienneté élevée chez les locataires HLM peut signaler un parc social peu mobile (peu de logements libérés).<% end %>
+      <%= indicator_notes("housing_mobility__anciennete_moyenne_d_emmenagement_selon_le_statut", years: [latest]) do %>En années. Une ancienneté élevée chez les locataires HLM peut signaler un parc social peu mobile (peu de logements libérés).<% end %>
       <%= comparison_grouped_bar_chart(territories, latest, [
             ["average_stay", "Ensemble"], ["average_stay_owners", "Propriétaires"],
             ["average_stay_tenants", "Locataires"], ["average_stay_social", "Locataires HLM"]
           ], "Ancienneté moyenne d'emménagement par statut et par territoire", unit: "ans") %>
+      <%= indicator_source_note %>
     </section>
 
 <% end %>

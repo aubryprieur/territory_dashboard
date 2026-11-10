@@ -23,7 +23,7 @@
   %>
   <section style="margin-bottom:2.5rem">
     <h3 class="text-sm font-medium text-gray-700 mb-1">Créations d'entreprises (<%= bc_period %>)</h3>
-    <%= indicator_notes("business_creations__creations_d_entreprises") do %>Entreprises créées dans l'année, rattachées à la commune de leur siège, micro-entrepreneurs compris. Repère du dynamisme entrepreneurial et de l'installation d'activités à son compte. En rouge, une valeur inférieure à la France métropolitaine.<% end %>
+    <%= indicator_notes("business_creations__creations_d_entreprises", years: bc_period.to_s) do %>Entreprises créées dans l'année, rattachées à la commune de leur siège, micro-entrepreneurs compris. Repère du dynamisme entrepreneurial et de l'installation d'activités à son compte. En rouge, une valeur inférieure à la France métropolitaine.<% end %>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
@@ -91,7 +91,7 @@
       <%= @territory_name %>, créations par année :
       <%= bc_years.map { |y| "#{y} : #{fmt_count(territory_value(bc_commune, y, 'created'))}" }.join(" · ") %>.
     </p>
-    <p class="text-xs text-gray-500 mt-2">Source : Insee, Système d'information sur la démographie d'entreprises (SIDE), créations d'entreprises <%= bc_years.first %>-<%= bc_years.last %>, champ marchand non agricole. Taux calculés sur la population du recensement le plus proche (2017 ou 2023). La plupart des créations sont des micro-entreprises sans salarié, dont une partie n'a pas ou peu d'activité.</p>
+    <%= indicator_source_note do %>Insee, Système d'information sur la démographie d'entreprises (SIDE), créations d'entreprises <%= bc_years.first %>-<%= bc_years.last %>, champ marchand non agricole. Taux calculés sur la population du recensement le plus proche (2017 ou 2023). La plupart des créations sont des micro-entreprises sans salarié, dont une partie n'a pas ou peu d'activité.<% end %>
   </section>
 <% else %>
   <p class="text-sm text-gray-500 mb-4">Données sur les créations d'entreprises indisponibles pour ce territoire.</p>

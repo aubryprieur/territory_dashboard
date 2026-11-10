@@ -75,7 +75,7 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Composition des ménages (<%= latest %>)</h3>
-      <%= indicator_notes("households__composition_des_menages") do %>Répartition des ménages selon leur type, en %. Un ménage = l'ensemble des personnes partageant un même logement.<% end %>
+      <%= indicator_notes("households__composition_des_menages", years: [latest]) do %>Répartition des ménages selon leur type, en %. Un ménage = l'ensemble des personnes partageant un même logement.<% end %>
       <%
         composition = [
           ["one_person_percentage", "Personnes seules", "#a78bfa"],
@@ -129,6 +129,7 @@
           </tbody>
         </table>
       </div>
+      <%= indicator_source_note %>
     </section>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
@@ -140,12 +141,13 @@
         "Personnes vivant seules selon l'âge, en particulier les seniors : repère de l'isolement.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Personnes vivant seules selon l'âge (<%= latest %>)</h3>
-      <%= indicator_notes("households__personnes_vivant_seules_selon_l_age") do %>Part des personnes vivant seules dans chaque tranche d'âge (population des ménages), en %.<% end %>
+      <%= indicator_notes("households__personnes_vivant_seules_selon_l_age", years: [latest]) do %>Part des personnes vivant seules dans chaque tranche d'âge (population des ménages), en %.<% end %>
       <%= comparison_grouped_bar_chart(territories, latest, [
             ["living_alone_rate_15_24", "15-24 ans"], ["living_alone_rate_25_39", "25-39 ans"],
             ["living_alone_rate_40_54", "40-54 ans"], ["living_alone_rate_55_64", "55-64 ans"],
             ["living_alone_rate_65_79", "65-79 ans"], ["living_alone_rate_80_plus", "80 ans ou plus"]
           ], "Personnes vivant seules par tranche d'âge et par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/territory_indicator", **common,
@@ -176,7 +178,7 @@
         "Catégorie socioprofessionnelle de la personne de référence du ménage.") do %>
     <section style="margin-bottom:1.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Ménages selon la catégorie socioprofessionnelle de la personne de référence (<%= latest %>)</h3>
-      <%= indicator_notes("households__menages_selon_la_categorie_socioprofessionnelle_de") do %>Répartition des ménages, en %. La personne de référence est en général l'adulte le plus âgé du couple, ou la personne seule.<% end %>
+      <%= indicator_notes("households__menages_selon_la_categorie_socioprofessionnelle_de", years: [latest]) do %>Répartition des ménages, en %. La personne de référence est en général l'adulte le plus âgé du couple, ou la personne seule.<% end %>
       <%
         pcs = [
           ["pcs_1_percentage", "Agriculteurs", "#84cc16"],
@@ -223,6 +225,7 @@
           </tbody>
         </table>
       </div>
+      <%= indicator_source_note %>
     </section>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">

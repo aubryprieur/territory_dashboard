@@ -57,7 +57,7 @@
         "Part des immigrés et des étrangers dans la population, comparée aux autres territoires, et répartition par quartier.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Comparaison territoriale (<%= year %>)</h3>
-      <%= indicator_notes("immigration__comparaison_territoriale") do %>Chômage au sens du recensement (personnes se déclarant au chômage), parmi les actifs de 15 ans ou plus. Ouvriers et employés : parmi les personnes de 15 ans ou plus ayant une profession ou en ayant eu une.<% end %>
+      <%= indicator_notes("immigration__comparaison_territoriale", years: [year]) do %>Chômage au sens du recensement (personnes se déclarant au chômage), parmi les actifs de 15 ans ou plus. Ouvriers et employés : parmi les personnes de 15 ans ou plus ayant une profession ou en ayant eu une.<% end %>
       <div class="overflow-x-auto mb-6">
         <table class="min-w-full text-sm">
           <thead>
@@ -92,6 +92,7 @@
             ["immigrant_rate", "Part d'immigrés"], ["foreigner_rate", "Part d'étrangers"],
             ["immigrant_share_ge55", "Immigrés parmi les 55 ans ou +"]
           ], "Part des immigrés et des étrangers par territoire", height: 240) %>
+      <%= indicator_source_note %>
     </section>
     <% if @epci_mode %>
       <%# Tableau de bord EPCI : immigrés et étrangers par commune %>
@@ -120,8 +121,9 @@
         "Chômage, emploi des femmes et catégories sociales des immigrés comparés à ceux des non-immigrés.") do %>
     <section style="margin-bottom:1.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Immigrés et non-immigrés face à l'emploi (<%= year %>)</h3>
-      <%= indicator_notes("immigration__immigres_et_non_immigres_face_a_l_emploi") do %>Comparaison des immigrés et des non-immigrés de <%= la_commune %>, avec la France métropolitaine en repère (couleurs claires).<% end %>
+      <%= indicator_notes("immigration__immigres_et_non_immigres_face_a_l_emploi", years: [year]) do %>Comparaison des immigrés et des non-immigrés de <%= la_commune %>, avec la France métropolitaine en repère (couleurs claires).<% end %>
       <%= immigration_gap_chart(commune, france, year) %>
+      <%= indicator_source_note %>
     </section>
     <% if @epci_mode %>
       <%# Tableau de bord EPCI : emploi des immigrés par commune %>

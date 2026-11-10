@@ -32,8 +32,8 @@
   %>
   <section style="margin-bottom:2.5rem">
     <h3 class="text-base font-medium text-gray-900 mb-1"><%= title || "Pratique sportive en club" %> (<%= sp_year %>)</h3>
-    <%= indicator_notes("sports__bloc") %>
-    <p class="text-xs text-gray-500 mb-4"><%= intro %> Licences délivrées par les fédérations sportives, comptées dans la commune de résidence du licencié. Repère de l'accès des habitants à une pratique encadrée et de la place des filles et des femmes dans le sport. En rouge, une valeur inférieure à la France métropolitaine.</p>
+    <% if intro.present? %><p class="text-xs text-gray-500 mb-2"><%= intro %></p><% end %>
+    <%= indicator_notes("sports__bloc", years: [sp_year]) do %>Licences délivrées par les fédérations sportives, comptées dans la commune de résidence du licencié. En rouge, une valeur inférieure à la France métropolitaine. Les taux comptent des licences et non des personnes : un même habitant peut détenir plusieurs licences (plusieurs clubs, sport scolaire), le taux peut donc dépasser 100. Dans les petites communes, quelques licences ou un écart entre les sources (licences rattachées à la commune de résidence déclarée au club, population issue du recensement) suffisent à faire varier fortement le taux : à lire comme un ordre de grandeur.<% end %>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
@@ -61,8 +61,7 @@
         </tbody>
       </table>
     </div>
-    <p class="text-xs text-gray-500 mt-2">Source : INJEP — MEOS, recensement des licences et clubs sportifs <%= sp_year %> (Observatoire des territoires). France : valeurs nationales publiées par l'Observatoire des territoires.</p>
-    <div style="margin-top:6px"><details class="text-xs text-gray-500" style="margin-bottom:12px"><summary style="cursor:pointer;color:#4f46e5;list-style:none;display:inline">ⓘ Définition</summary><p style="margin-top:4px">Les taux comptent des licences et non des personnes : un même habitant peut détenir plusieurs licences (plusieurs clubs, sport scolaire), le taux peut donc dépasser 100. Dans les petites communes, quelques licences ou un écart entre les sources (licences rattachées à la commune de résidence déclarée au club, population issue du recensement) suffisent à faire varier fortement le taux : à lire comme un ordre de grandeur.</p></details></div>
+    <%= indicator_source_note do %>INJEP — MEOS, recensement des licences et clubs sportifs <%= sp_year %> (Observatoire des territoires). France : valeurs nationales publiées par l'Observatoire des territoires.<% end %>
     <% if @epci_mode %>
       <%# Tableau de bord EPCI : taux de licences par commune %>
       <%= render "dashboard/map_group", maps: rows.select { |r| r[2] == :rate }.map { |key, label, _|

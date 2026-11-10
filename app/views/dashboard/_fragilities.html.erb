@@ -41,7 +41,7 @@
       <%= xlsx_download_button(filename: xlsx_filename(title), notes: fr_notes,
                                sheets: [{ name: "Données", rows: fr_xlsx, widths: [48, 8] + [18] * fr_territories.size }]) %>
     </div>
-    <%= indicator_notes(local_assigns[:note], title, definition: definition) %>
+    <%= indicator_notes(title, definition: definition, years: [fr_year]) %>
     <p class="text-xs text-gray-400" style="margin:-4px 0 8px">En rouge, une situation moins favorable qu'en France.</p>
     <div class="overflow-x-auto">
       <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
@@ -89,7 +89,9 @@
       <% end %>
     <% end %>
     <% if show_source %>
-    <p class="text-xs text-gray-500 mt-2">Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA)<%= dataset == :senior_fragilities ? ", interrégime" : "" %>, <%= fr_year %><%= note ? " ; #{note}" : "" %>. s : secret statistique (effectif trop faible dans la commune).<%= fr_apl ? " France métropolitaine : valeur publiée par l'ANCT." : " France : valeur nationale publiée par l'Observatoire (France entière, outre-mer compris)." %></p>
+      <%= indicator_source_note("Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA)#{dataset == :senior_fragilities ? ', interrégime' : ''}, #{fr_year}#{note ? " ; #{note}" : ''}. s : secret statistique (effectif trop faible dans la commune).#{fr_apl ? ' France métropolitaine : valeur publiée par l’ANCT.' : ' France : valeur nationale publiée par l’Observatoire (France entière, outre-mer compris).'}") %>
+    <% else %>
+      <%= indicator_source_note %>
     <% end %>
   </section>
 <% end %>

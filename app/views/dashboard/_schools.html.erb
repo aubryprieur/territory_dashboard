@@ -81,7 +81,7 @@
       <% end %>
     </div>
 
-    <%= indicator_notes("schools__ips") do %><%= definitions["ips"] %> Le décile situe l'établissement parmi tous les établissements du même type en France (public et privé) : le 1er décile regroupe les 10 % d'établissements au public le plus défavorisé, le 10e les 10 % au public le plus favorisé.<% end %>
+    <%= indicator_notes("schools__ips", years: "rentrées 2022 à 2025") do %><%= definitions["ips"] %> Le décile situe l'établissement parmi tous les établissements du même type en France (public et privé) : le 1er décile regroupe les 10 % d'établissements au public le plus défavorisé, le 10e les 10 % au public le plus favorisé.<% end %>
 
     <section style="margin-bottom:2rem">
       <%= schools_positions_chart(main, others, national, key: "ips",
@@ -135,11 +135,12 @@
       <% end %>
       <p class="text-xs text-gray-500 mt-2">Département et France : IPS moyen des établissements du même type (lycées : même type de lycée), pondéré par les effectifs d'élèves. Évolution depuis la première rentrée disponible.</p>
     </section>
+    <%= indicator_source_note %>
   <% end %>
 
   <%= story_card("q-schooling-3", 3, "Les collèges et les lycées font-ils progresser leurs élèves ?",
         "Valeur ajoutée des collèges (diplôme national du brevet) et des lycées (baccalauréat).") do %>
-    <%= indicator_notes("schools__valeur_ajoutee") do %><%= definitions["va"] %> Elle mesure l'action propre de l'établissement, indépendamment du profil social de ses élèves.<% end %>
+    <%= indicator_notes("schools__valeur_ajoutee", years: "rentrées 2022 à 2025") do %><%= definitions["va"] %> Elle mesure l'action propre de l'établissement, indépendamment du profil social de ses élèves.<% end %>
 
     <% college_rows = colleges %>
     <% if colleges.empty? && epci_colleges.any? { |s| school_last(s, "dnb_success_rate").last } %>
@@ -229,6 +230,7 @@
               ], aria: "Valeur ajoutée des lycées parmi les déciles nationaux") %>
       </section>
     <% end %>
+    <%= indicator_source_note %>
   <% end %>
 
   <%= story_card("q-schooling-4", 4, "Les collèges et les lycées sont-ils éloignés des ressources ?",
@@ -236,7 +238,7 @@
     <% remote_main = (colleges + lycees).select { |s| school_last(s, "remoteness").last } %>
     <% remote_rows = remote_main.any? ? remote_main : (epci_colleges + epci_lycees).select { |s| school_last(s, "remoteness").last } %>
     <% if remote_rows.any? %>
-      <%= indicator_notes("schools__eloignement") do %><%= definitions["remoteness"] %> Le 10e décile regroupe les 10 % d'établissements les plus éloignés des ressources.<% end %>
+      <%= indicator_notes("schools__eloignement", years: "rentrées 2022 à 2025") do %><%= definitions["remoteness"] %> Le 10e décile regroupe les 10 % d'établissements les plus éloignés des ressources.<% end %>
       <section style="margin-bottom:2rem">
         <%= schools_positions_chart(remote_main.any? ? remote_main : [], remote_main.any? ? (epci_colleges + epci_lycees) : [], national, key: "remoteness",
               aria: "Indice d'éloignement des collèges et lycées parmi les déciles nationaux") %>
@@ -271,6 +273,7 @@
           <p class="text-xs text-gray-500 mt-2">Pas de collège ni de lycée dans la commune : établissements de <%= epci_label %>.</p>
         <% end %>
       </section>
+      <%= indicator_source_note %>
     <% else %>
       <p class="text-sm text-gray-500 mb-4">Aucun indice d'éloignement publié pour les collèges et lycées de la commune ou de l'intercommunalité.</p>
     <% end %>

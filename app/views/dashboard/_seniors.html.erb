@@ -129,7 +129,7 @@
         %>
         <section style="margin-bottom:1.5rem">
           <h3 class="text-sm font-medium text-gray-700 mb-1">Personnes de 80 ans ou plus vivant seules (<%= hh_latest %>)</h3>
-          <%= indicator_notes("seniors__personnes_de_80_ans_ou_plus_vivant_seules") do %>En % des personnes de 80 ans ou plus de la population des ménages (hors maisons de retraite et autres communautés).<% end %>
+          <%= indicator_notes("seniors__personnes_de_80_ans_ou_plus_vivant_seules", years: [hh_latest]) do %>En % des personnes de 80 ans ou plus de la population des ménages (hors maisons de retraite et autres communautés).<% end %>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200" style="max-width:640px">
               <thead class="bg-gray-50">
@@ -150,6 +150,7 @@
               </tbody>
             </table>
           </div>
+          <%= indicator_source_note %>
         </section>
         <%= render "dashboard/map_group", maps: [
             hh_map.("living_alone_rate_80_plus", "80 ans ou plus vivant seuls", "Personnes de 80 ans ou plus vivant seules, en % des 80 ans ou plus de la population des ménages."),

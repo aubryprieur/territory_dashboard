@@ -93,7 +93,7 @@
     <%= xlsx_download_button(filename: xlsx_filename(title), notes: xlsx_notes,
                              sheets: [{ name: "Données", rows: xlsx_rows, widths: [14, 42, 8, 22, 18, 16] }]) %>
   </div>
-  <%= indicator_notes(local_assigns[:note], value_key, title, definition: definition) %>
+  <%= indicator_notes(local_assigns[:note], value_key, title, definition: definition, years: years) %>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
     <div class="md:col-span-1">
@@ -178,6 +178,7 @@
     </div>
   </div>
 
+<%= indicator_source_note %>
 </section>
 <% communes_map = true if local_assigns[:communes_map].nil? %>
 <% if @epci_mode && communes_map %>

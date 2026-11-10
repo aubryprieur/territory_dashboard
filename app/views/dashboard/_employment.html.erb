@@ -63,7 +63,7 @@
         "Situation des habitants de 15 à 64 ans : en emploi, au chômage, en études, à la retraite ou au foyer.") do %>
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Situation des 15-64 ans (<%= latest %>)</h3>
-      <%= indicator_notes("employment__situation_des_15_64_ans") do %>Répartition de la population de 15 à 64 ans, en %.<% end %>
+      <%= indicator_notes("employment__situation_des_15_64_ans", years: [latest]) do %>Répartition de la population de 15 à 64 ans, en %.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["employment_rate_15_64", "En emploi", "#1d4ed8"],
             ["unemployed_pop_rate_15_64", "Au chômage", "#ef4444"],
@@ -72,6 +72,7 @@
             ["homemakers_rate_15_64", "Au foyer", "#f59e0b"],
             ["other_inactive_rate_15_64", "Autres inactifs", "#e5e7eb"]
           ], "Situation de la population de 15 à 64 ans par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/territory_indicator", **common,
@@ -92,11 +93,12 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Taux d'emploi selon l'âge et le sexe (<%= latest %>)</h3>
-      <%= indicator_notes("employment__taux_d_emploi_selon_l_age_et_le_sexe") do %>Part des personnes ayant un emploi dans chaque groupe, en %.<% end %>
+      <%= indicator_notes("employment__taux_d_emploi_selon_l_age_et_le_sexe", years: [latest]) do %>Part des personnes ayant un emploi dans chaque groupe, en %.<% end %>
       <%= comparison_grouped_bar_chart(territories, latest, [
             ["employment_rate_15_24", "15-24 ans"], ["employment_rate_25_54", "25-54 ans"], ["employment_rate_55_64", "55-64 ans"],
             ["employment_rate_15_64_women", "Femmes 15-64"], ["employment_rate_15_64_men", "Hommes 15-64"]
           ], "Taux d'emploi par âge et sexe et par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
@@ -125,12 +127,13 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Taux de chômage selon le diplôme (<%= latest %>)</h3>
-      <%= indicator_notes("employment__taux_de_chomage_selon_le_diplome") do %>Actifs de 15 à 64 ans, en %. Détail disponible pour le seul millésime <%= latest %>.<% end %>
+      <%= indicator_notes("employment__taux_de_chomage_selon_le_diplome", years: [latest]) do %>Actifs de 15 à 64 ans, en %. Détail disponible pour le seul millésime <%= latest %>.<% end %>
       <%= comparison_grouped_bar_chart(territories, latest, [
             ["unemployment_rate_no_diploma", "Sans diplôme"], ["unemployment_rate_bepc", "Brevet"],
             ["unemployment_rate_cap_bep", "CAP-BEP"], ["unemployment_rate_bac", "Bac"],
             ["unemployment_rate_bac2", "Bac+2"], ["unemployment_rate_bac3_4", "Bac+3/4"], ["unemployment_rate_bac5_plus", "Bac+5 ou +"]
           ], "Taux de chômage par diplôme et par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/sdg_indicator", key: "long_term_unemployed_share", theme: "red",
@@ -237,12 +240,13 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Temps partiel des salariés selon l'âge et le sexe (<%= latest %>)</h3>
-      <%= indicator_notes("employment__temps_partiel_des_salaries_selon_l_age_et_le_sexe") do %>Part des salariés à temps partiel dans chaque groupe, en %.<% end %>
+      <%= indicator_notes("employment__temps_partiel_des_salaries_selon_l_age_et_le_sexe", years: [latest]) do %>Part des salariés à temps partiel dans chaque groupe, en %.<% end %>
       <%= comparison_grouped_bar_chart(territories, latest, [
             ["salaried_part_time_percentage_15_24", "15-24 ans"], ["salaried_part_time_percentage_25_54", "25-54 ans"],
             ["salaried_part_time_percentage_55_64", "55-64 ans"],
             ["salaried_part_time_percentage_women", "Femmes"], ["salaried_part_time_percentage_men", "Hommes"]
           ], "Temps partiel des salariés par âge et sexe et par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <div class="pt-4 border-t border-gray-200 text-xs text-gray-500 space-y-1">
@@ -256,7 +260,7 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Actifs selon la catégorie socioprofessionnelle (<%= latest %>)</h3>
-      <%= indicator_notes("employment__actifs_selon_la_categorie_socioprofessionnelle") do %>Actifs de 15 à 64 ans (en emploi ou au chômage), en %.<% end %>
+      <%= indicator_notes("employment__actifs_selon_la_categorie_socioprofessionnelle", years: [latest]) do %>Actifs de 15 à 64 ans (en emploi ou au chômage), en %.<% end %>
       <% pcs = [["1", "Agriculteurs", "#84cc16"], ["2", "Artisans, commerçants, chefs d'entr.", "#f59e0b"], ["3", "Cadres, prof. intell. sup.", "#1e3a8a"],
                 ["4", "Professions intermédiaires", "#3b82f6"], ["5", "Employés", "#93c5fd"], ["6", "Ouvriers", "#ef4444"]] %>
       <%= comparison_stacked_chart(territories, latest, pcs.map { |c, l, col| ["pcs_#{c}_active_percentage", l, col] }, "Actifs par catégorie socioprofessionnelle et par territoire") %>
@@ -285,6 +289,7 @@
         </table>
         <p class="text-xs text-gray-500 mt-2">Chômage : part des chômeurs parmi les actifs de la catégorie (selon le dernier emploi occupé).</p>
       </div>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/iris_map", map: cached_iris_map("workers_employees_share"), collapsed: true,
@@ -322,7 +327,7 @@
 
     <section style="margin-bottom:2.5rem">
       <h3 class="text-sm font-medium text-gray-700 mb-1">Mode de transport principal pour aller travailler (<%= latest %>)</h3>
-      <%= indicator_notes("employment__mode_de_transport_principal_pour_aller_travailler") do %>Actifs occupés, en %. Une forte dépendance à la voiture peut freiner l'accès à l'emploi des personnes non motorisées.<% end %>
+      <%= indicator_notes("employment__mode_de_transport_principal_pour_aller_travailler", years: [latest]) do %>Actifs occupés, en %. Une forte dépendance à la voiture peut freiner l'accès à l'emploi des personnes non motorisées.<% end %>
       <%= comparison_stacked_chart(territories, latest, [
             ["commute_car_percentage", "Voiture, camion", "#1e3a8a"],
             ["commute_public_percentage", "Transports en commun", "#0d9488"],
@@ -330,6 +335,7 @@
             ["commute_walk_percentage", "Marche", "#84cc16"],
             ["commute_none_percentage", "Pas de transport", "#e5e7eb"]
           ], "Mode de transport domicile-travail par territoire") %>
+      <%= indicator_source_note %>
     </section>
 
     <%= render "dashboard/sdg_indicator", key: "commute_minutes", theme: "teal",

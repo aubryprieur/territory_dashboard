@@ -29,7 +29,7 @@
   <section style="margin-bottom:2.5rem">
     <h3 class="text-base font-medium text-gray-900 mb-1 mt-4"><%= title %></h3>
     <p class="text-xs text-gray-500 mb-4"><%= epci_wording(intro) || epci_wording("Effectifs projetés au 1er janvier, scénario tendanciel (natalité et migrations récentes de la commune reconduites).") %> Une projection n'est pas une prévision : elle montre ce que donnerait la poursuite des tendances observées.</p>
-    <%= indicator_notes(local_assigns[:note], "population_projection") %>
+    <%= indicator_notes(local_assigns[:note], "population_projection", source: (pj["source"] if pj.is_a?(Hash))) %>
 
     <div style="overflow-x:auto">
       <table data-xlsx-skip class="min-w-full divide-y divide-gray-200">
@@ -108,5 +108,6 @@
       <% if small %><p style="color:#b45309">⚠ Commune de moins de 2 000 habitants : les effectifs par âge sont faibles et les projections doivent être lues comme des ordres de grandeur.</p><% end %>
       <p>Source : <%= pj["source"] %>.</p>
     </div>
+    <%= indicator_source_note %>
   </section>
 <% end %>
