@@ -40,7 +40,7 @@ module EpciCommunesHelper
     names = (ds["communes"] || []).to_h { |c| [c["code"], c["name"]] }
     return nil unless epci_coverage_ok?(values, names, min_coverage)
     unit = case value_format when :pct then "%" when :euros then "€" else "" end
-    epci_communes_map(label: title, unit: unit, values: values, names: names, reference: reference, years: yrs,
+    epci_communes_map(label: title, unit: unit, values: values, names: names, reference: reference, years: yrs, key: value_key,
                       source: source || "même source que l'indicateur, valeurs communales (cartes : IGN, Admin Express)")
   end
 
@@ -60,7 +60,7 @@ module EpciCommunesHelper
     maps = []
     if ds.is_a?(Hash) && ds["values"].is_a?(Hash)
       pops = ds["values"].transform_values { |d| d.dig("population_data", latest.to_s, "pop") }.select { |_, v| v.is_a?(Numeric) }
-      m = epci_communes_map(label: "Nombre d'habitants", unit: "n", values: pops.transform_values { |v| { latest.to_s => v } },
+      m = epci_communes_map(label: "Nombre d'habitants", unit: "n", key: "population", values: pops.transform_values { |v| { latest.to_s => v } },
                             names: names, reference: { latest.to_s => territory_value(main, latest, "pop") }, years: [latest],
                             source: "INSEE, recensement de la population #{latest}")
       if m
@@ -76,7 +76,7 @@ module EpciCommunesHelper
       year = growth["year"].to_s
       vals = growth["communes"].transform_values { |v| { year => v } }
       names = names.presence || (syn["communes"] || []).to_h { |c| [c["code"], c["name"]] }
-      m = epci_communes_map(label: "Variation annuelle de la population #{year.to_i - 6}-#{year}", unit: "%/an", values: vals,
+      m = epci_communes_map(label: "Variation annuelle de la population #{year.to_i - 6}-#{year}", unit: "%/an", key: "pop_growth", values: vals,
                             names: names, reference: { year => growth["value"] }, years: [year],
                             source: "INSEE, recensements de la population (série historique)")
       if m
@@ -100,7 +100,7 @@ module EpciCommunesHelper
     vals = by_code.transform_values { |c| (c["births_by_year"] || {}).transform_keys(&:to_s)[year] }.select { |_, v| v.is_a?(Numeric) }
     names = by_code.transform_values { |c| c["name"] }
     total = vals.values.sum
-    m = epci_communes_map(label: "Naissances #{year}", unit: "n", values: vals.transform_values { |v| { year => v } }, names: names,
+    m = epci_communes_map(label: "Naissances #{year}", unit: "n", key: "births", values: vals.transform_values { |v| { year => v } }, names: names,
                           reference: { year => total }, years: [year], source: "INSEE, état civil, naissances domiciliées #{year}")
     m && m.merge("breaks" => epci_quintile_breaks(vals.values), "legend_low" => "Moins de naissances", "legend_high" => "Plus de naissances",
                  "color_note" => "Couleur : cinq classes comptant chacune environ un cinquième des communes ; #{fmt_count(total)} naissances dans l'EPCI en #{year}.")
@@ -146,7 +146,7 @@ module EpciCommunesHelper
     year = item["year"].to_s
     names = (syn["communes"] || []).to_h { |c| [c["code"], c["name"]] }
     return nil unless epci_coverage_ok?(item["communes"], names)
-    epci_communes_map(label: title || item["label"], unit: unit, values: item["communes"].transform_values { |v| { year => v } },
+    epci_communes_map(label: title || item["label"], unit: unit, key: key, values: item["communes"].transform_values { |v| { year => v } },
                       names: names, reference: (item["value"] ? { year => item["value"] } : {}), years: [year],
                       source: source || "INSEE, recensement de la population #{year} (synthèse des fragilités)")
   end
@@ -164,7 +164,7 @@ module EpciCommunesHelper
     end
     names = (ds["communes"] || []).to_h { |c| [c["code"], c["name"]] }
     return nil unless epci_coverage_ok?(values, names)
-    epci_communes_map(label: "#{service['label']} pour 10 000 habitants", unit: "", values: values, names: names,
+    epci_communes_map(label: "#{service['label']} pour 10 000 habitants", unit: "", key: "equipment_density", values: values, names: names,
                       reference: (service["density"].is_a?(Numeric) ? { y => service["density"] } : {}), years: [y],
                       source: "INSEE, Base permanente des équipements")
   end

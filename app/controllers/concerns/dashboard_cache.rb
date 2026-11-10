@@ -665,7 +665,7 @@ module DashboardCache
 
   # Carte des communes de l'EPCI au format des cartes IRIS (_iris_map, level: :communes) : chaque commune colorée
   # selon son écart à l'ensemble de l'EPCI. values : { code => { year => valeur } } ; reference : { year => valeur EPCI }
-  def epci_communes_map(label:, unit:, values:, names:, reference:, years:, source:)
+  def epci_communes_map(label:, unit:, values:, names:, reference:, years:, source:, key: nil)
     geoms = epci_commune_geometries
     return nil if geoms.blank? || values.blank? || years.blank?
     features = names.filter_map do |code, name|
@@ -678,7 +678,7 @@ module DashboardCache
       { "iris_code" => code, "iris_name" => name, "geometry" => geometry, "values" => vals }
     end
     return nil if features.size < 2
-    { "indicator" => { "label" => label, "unit" => unit, "additive" => false },
+    { "indicator" => { "key" => key, "label" => label, "unit" => unit, "additive" => false },
       "years" => years.map(&:to_s), "features" => features, "irisee" => true, "source" => source,
       "commune" => { "values" => reference.transform_keys(&:to_s).transform_values { |v| { "value" => v } } } }
   end

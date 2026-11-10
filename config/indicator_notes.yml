@@ -880,6 +880,347 @@ equipment__inventaire:
   interest: >-
     L'inventaire complet aide à identifier les ressources locales et les partenaires potentiels d'un plan d'action.
 
+# ── Cartes IRIS et carroyées : intérêt de la lecture par quartier (clé map__<indicateur>) ─────────────────
+map__pop_share:
+  interest: >-
+    Repère les quartiers où vivent le plus d'habitants : c'est là que les besoins pèsent le plus en volume, à
+    croiser avec les cartes de fragilité pour prioriser les quartiers à la fois peuplés et en difficulté.
+map__density:
+  interest: >-
+    Montre où se concentrent les habitants à l'intérieur de la commune (grands ensembles, centre ancien) et les
+    secteurs peu habités : utile pour implanter les services de proximité au plus près de la population.
+map__pop_growth:
+  interest: >-
+    Distingue les quartiers qui gagnent des habitants (opérations neuves, renouvellement) de ceux qui en perdent
+    (vieillissement, vacance, démolitions) : les besoins en équipements et en accompagnement s'y déplacent.
+map__under_18_share:
+  interest: >-
+    Localise les quartiers les plus familiaux, où se concentrent les besoins d'accueil périscolaire, de loisirs
+    et de soutien à la parentalité.
+map__under_2_share:
+  interest: >-
+    Repère les quartiers où naissent et grandissent les tout-petits : un appui pour implanter ou renforcer
+    l'accueil du jeune enfant, la PMI et les lieux d'accueil enfants-parents.
+map__under_6_share:
+  interest: >-
+    Situe les quartiers où vivent le plus de jeunes enfants, pour adapter l'offre d'accueil, d'écoles maternelles
+    et de services aux jeunes familles.
+map__age_2_5_share:
+  interest: >-
+    Repère les quartiers où vivent le plus d'enfants d'âge maternelle : besoins d'accueil périscolaire, de
+    loisirs et de lieux de socialisation avant l'école élémentaire.
+map__age_6_10_share:
+  interest: >-
+    Situe les enfants d'âge élémentaire : un repère pour l'accueil périscolaire, les centres de loisirs et les
+    actions d'accompagnement à la scolarité au plus près des familles.
+map__age_11_17_share:
+  interest: >-
+    Localise les collégiens et lycéens : utile pour l'animation jeunesse, la prévention spécialisée et
+    l'implantation de lieux d'accueil pour les adolescents.
+map__age_6_17_share:
+  interest: >-
+    Repère les quartiers où vivent le plus d'enfants et d'adolescents, pour territorialiser l'offre éducative,
+    de loisirs et de prévention.
+map__age_18_24_share:
+  interest: >-
+    Situe les jeunes adultes (étudiants, jeunes actifs, jeunes en insertion) : repère pour l'information
+    jeunesse, l'insertion et le logement des jeunes.
+map__age_25_39_share:
+  interest: >-
+    Localise les jeunes adultes et jeunes parents, souvent en début de parcours résidentiel et professionnel :
+    besoins de garde d'enfants, d'emploi et de logement abordable.
+map__youth_ratio:
+  interest: >-
+    Oppose les quartiers jeunes et les quartiers âgés : les besoins prioritaires n'y sont pas les mêmes (familles
+    et jeunesse d'un côté, maintien à domicile de l'autre).
+map__aging_index:
+  interest: >-
+    Repère les quartiers où les seniors l'emportent sur les jeunes : cibles des actions de maintien à domicile,
+    de lutte contre l'isolement et d'adaptation des logements.
+map__dependency_ratio:
+  interest: >-
+    Montre où le poids des enfants et des seniors est le plus fort par rapport aux actifs : quartiers où les
+    besoins de services et d'aide aux aidants sont les plus importants.
+map__age_65p_share:
+  interest: >-
+    Localise les quartiers les plus âgés, pour cibler le repérage des fragilités, l'aide à domicile et
+    l'accessibilité des services.
+map__age_65_79_share:
+  interest: >-
+    Situe les jeunes retraités, public des actions de prévention de la perte d'autonomie et ressource pour le
+    bénévolat et la vie associative.
+map__age_80p_share:
+  interest: >-
+    Repère les quartiers où vivent les plus âgés, les plus exposés à la perte d'autonomie : priorité pour le
+    repérage, l'aide à domicile et le portage de repas.
+map__alone_80p_share:
+  interest: >-
+    Localise les personnes très âgées vivant seules, les plus exposées à l'isolement : cibles prioritaires des
+    visites de convivialité, de la téléassistance et des plans canicule.
+map__alone_55_79_share:
+  interest: >-
+    Repère les seniors vivant seuls avant le grand âge : un public pour la prévention de l'isolement, avant que
+    la perte d'autonomie ne s'installe.
+map__living_alone_share:
+  interest: >-
+    Situe les quartiers où l'on vit le plus souvent seul, avec des risques d'isolement et des besoins de petits
+    logements et de lieux de lien social.
+map__one_person_households_share:
+  interest: >-
+    Repère les quartiers de petits ménages, où l'isolement et la fragilité financière des personnes seules
+    sont plus fréquents.
+map__young_alone_share:
+  interest: >-
+    Localise les jeunes vivant seuls (étudiants, jeunes actifs, jeunes en rupture) : repère pour le logement des
+    jeunes et l'accès aux droits.
+map__families_with_children_share:
+  interest: >-
+    Montre les quartiers les plus familiaux, où l'offre petite enfance, scolaire et de loisirs doit être la plus
+    présente.
+map__couples_no_children_share:
+  interest: >-
+    Repère les quartiers de couples sans enfant (jeunes couples ou couples âgés dont les enfants sont partis) :
+    leurs besoins diffèrent de ceux des quartiers familiaux.
+map__single_parent_share:
+  interest: >-
+    Localise les familles monoparentales, très exposées à la pauvreté : un appui pour cibler l'accueil des
+    enfants, le soutien à la parentalité et l'accompagnement vers l'emploi.
+map__large_family_share:
+  interest: >-
+    Repère les quartiers de familles nombreuses, où se cumulent souvent faibles revenus par personne et
+    logements trop petits.
+map__large_family_share_with_children:
+  interest: >-
+    Situe les familles de 3 enfants ou plus parmi les familles avec enfants : besoins de grands logements, d'aides
+    aux familles et d'accueil des enfants.
+map__immigrant_share:
+  interest: >-
+    Situe les quartiers où vivent le plus d'immigrés, pour adapter l'offre d'apprentissage du français,
+    d'accès aux droits et de médiation.
+map__foreigner_share:
+  interest: >-
+    Repère les quartiers où vivent le plus d'étrangers, dont les démarches (titres de séjour, droits sociaux)
+    appellent un accompagnement spécifique.
+map__recent_movers_share:
+  interest: >-
+    Repère les quartiers où la population se renouvelle le plus, où l'accueil des nouveaux habitants et le lien
+    social sont des enjeux.
+map__settled_10y_share:
+  interest: >-
+    Localise les quartiers à population ancrée, souvent plus âgée, où les besoins évoluent sur place (adaptation
+    du logement, maintien à domicile).
+map__anchoring_ratio:
+  interest: >-
+    Oppose les quartiers stables aux quartiers de passage : la stabilité facilite le lien social, une forte
+    rotation peut signaler un parc peu attractif ou transitoire.
+map__social_housing_share:
+  interest: >-
+    Situe le parc social, qui concentre une part importante des ménages modestes : repère des secteurs
+    d'intervention prioritaire et du partenariat avec les bailleurs.
+map__renters_share:
+  interest: >-
+    Localise les quartiers de locataires, plus exposés aux impayés de loyer et à la mobilité résidentielle subie.
+map__owners_share:
+  interest: >-
+    Repère les quartiers de propriétaires occupants, où l'enjeu porte sur l'entretien, la rénovation et
+    l'adaptation des logements, notamment pour les propriétaires âgés ou modestes.
+map__apartments_share:
+  interest: >-
+    Distingue les quartiers d'habitat collectif de ceux de maisons : les formes urbaines conditionnent la
+    densité, les espaces de rencontre et les modes d'intervention.
+map__small_dwellings_share:
+  interest: >-
+    Situe les petits logements, qui accueillent personnes seules et jeunes ménages et peuvent être trop petits
+    pour les familles.
+map__vacancy_rate:
+  interest: >-
+    Repère les poches de vacance, possibles signes de logements dégradés ou peu attractifs, voire d'habitat
+    indigne : cibles des actions de remise sur le marché ou de renouvellement urbain.
+map__overcrowding_rate:
+  interest: >-
+    Localise le mal-logement par suroccupation, qui pèse sur la santé et la scolarité des enfants : repère
+    pour cibler les demandes de mutation et l'accès à un logement adapté.
+map__underoccupation_rate:
+  interest: >-
+    Repère les grands logements occupés par peu de personnes, souvent des seniors : enjeu d'adaptation et de
+    parcours résidentiels (accès à des logements plus petits et accessibles).
+map__no_car_share:
+  interest: >-
+    Localise les ménages sans voiture, dépendants des transports en commun et de la proximité des services : un
+    enjeu d'accès à l'emploi, aux soins et aux droits.
+map__two_cars_share:
+  interest: >-
+    Repère les quartiers très motorisés, souvent plus aisés ou éloignés des transports : en creux, il fait
+    ressortir les secteurs où la mobilité repose sur peu de moyens.
+map__no_diploma_share:
+  interest: >-
+    Situe les habitants sans diplôme, plus exposés au chômage et aux difficultés d'accès aux droits : cibles de
+    la formation, de l'insertion et de l'accompagnement aux démarches.
+map__higher_education_share:
+  interest: >-
+    Repère les quartiers les plus diplômés : la carte fait ressortir par contraste les secteurs au faible niveau
+    de qualification et la polarisation sociale de la commune.
+map__schooling_15_17_rate:
+  interest: >-
+    Localise les quartiers où des jeunes de 15 à 17 ans ne sont plus scolarisés : repère du décrochage, pour
+    cibler les actions de raccrochage.
+map__schooling_18_24_rate:
+  interest: >-
+    Distingue les quartiers d'étudiants de ceux où les jeunes entrent tôt dans la vie active ou restent sans
+    activité.
+map__unemployment_rate:
+  interest: >-
+    Repère les quartiers où le chômage se concentre, pour territorialiser l'accompagnement vers l'emploi et les
+    permanences des acteurs de l'insertion.
+map__youth_unemployment_rate:
+  interest: >-
+    Localise le chômage des jeunes, pour orienter l'action de la mission locale et les démarches d'aller-vers.
+map__employment_rate:
+  interest: >-
+    Situe les quartiers où une part importante des habitants est sans emploi, chômeurs ou inactifs : cibles
+    prioritaires de l'insertion.
+map__women_activity_rate:
+  interest: >-
+    Repère les quartiers où les femmes sont peu présentes sur le marché du travail : freins de garde d'enfants,
+    de mobilité ou de qualification à lever.
+map__women_employment_rate:
+  interest: >-
+    Localise les quartiers où l'emploi des femmes est faible, pour cibler l'accueil des jeunes enfants et
+    l'accompagnement vers l'emploi des mères.
+map__workers_employees_share:
+  interest: >-
+    Situe les quartiers populaires, où les revenus sont plus modestes et les emplois plus exposés à la précarité.
+map__part_time_share:
+  interest: >-
+    Repère les quartiers où le temps partiel est fréquent, souvent subi : pauvreté dans l'emploi et recours à la
+    prime d'activité.
+map__precarious_share:
+  interest: >-
+    Localise l'emploi précaire (CDD, intérim, contrats aidés), source d'instabilité des revenus et de difficultés
+    d'accès au logement.
+map__work_other_commune_share:
+  interest: >-
+    Montre les quartiers dont les actifs travaillent ailleurs, donc dépendants des déplacements domicile-travail.
+map__walk_commute_share:
+  interest: >-
+    Repère les quartiers où l'on va travailler à pied, signe d'une proximité entre habitat et emplois.
+map__car_commute_share:
+  interest: >-
+    Localise la dépendance à la voiture pour travailler, un frein pour les ménages non motorisés et une charge
+    pour les budgets modestes.
+map__transit_commute_share:
+  interest: >-
+    Situe les quartiers bien reliés par les transports en commun, et en creux ceux où l'offre manque.
+map__median_income:
+  interest: >-
+    Dessine la géographie des revenus : écarts entre quartiers, repérage des secteurs les plus modestes à
+    prioriser dans les politiques de solidarité.
+map__poverty_rate:
+  interest: >-
+    Localise la pauvreté à l'échelle des quartiers : le repère central pour cibler les quartiers prioritaires
+    et l'implantation des services sociaux.
+map__income_d1:
+  interest: >-
+    Montre le niveau de vie des plus modestes dans chaque quartier : là où il est le plus bas, la grande
+    pauvreté et les besoins d'aide d'urgence sont les plus forts.
+map__interdecile_ratio:
+  interest: >-
+    Repère les quartiers les plus inégalitaires, où cohabitent ménages aisés et très modestes, et ceux plus
+    homogènes, aisés ou pauvres.
+map__social_benefits_share:
+  interest: >-
+    Localise la dépendance des ménages aux prestations sociales, repère de précarité et de sensibilité aux
+    évolutions des aides.
+map__c2s_free_rate:
+  interest: >-
+    Situe les assurés aux plus faibles ressources, repère de précarité et des besoins d'accès aux soins et aux
+    droits.
+map__social_turnover_rate:
+  interest: >-
+    Repère les résidences sociales où les locataires changent souvent (parc peu attractif ou transitoire) ou
+    rarement (parcours bloqués).
+map__social_vacancy_rate:
+  interest: >-
+    Localise la vacance dans le parc social, signe possible de logements peu attractifs ou en attente de
+    réhabilitation.
+map__job_seekers_abc:
+  interest: >-
+    Repère les quartiers où les demandeurs d'emploi sont nombreux, pour implanter les permanences et les
+    actions d'accompagnement au plus près.
+
+# ── Carroyage Filosofi (carreaux de 1 km) ─────────────────────────────────────────────────────────────
+map__living_standard:
+  interest: >-
+    Affine la géographie des revenus au carreau de 1 km : poches de pauvreté ou d'aisance que les limites
+    administratives masquent, y compris dans les communes non découpées en IRIS.
+map__poor_households_share:
+  interest: >-
+    Localise les ménages pauvres au carreau de 1 km, pour repérer des poches de précarité invisibles à l'échelle
+    de la commune entière.
+map__age_0_3_share:
+  interest: >-
+    Situe les très jeunes enfants au carreau de 1 km, utile pour implanter l'accueil du jeune enfant même
+    dans les communes sans IRIS.
+
+# ── Cartes de localisation des équipements (clé map__points_<groupe>) ─────────────────────────────────
+map__points_public_services:
+  interest: >-
+    Localiser les services publics et d'accès aux droits permet de repérer les secteurs éloignés de tout accueil,
+    d'apprécier la proximité des permanences pour les publics fragiles et d'identifier les partenaires mobilisables.
+map__points_youth:
+  interest: >-
+    Montre la répartition des lieux d'accueil, d'éducation et de loisirs pour les jeunes : quartiers bien dotés et
+    secteurs où les jeunes doivent se déplacer pour accéder à une activité.
+map__points_early_childhood:
+  interest: >-
+    Localise l'offre d'accueil du jeune enfant et les écoles au regard des quartiers où vivent les tout-petits :
+    repère des secteurs sous-équipés pour implanter de nouvelles places.
+map__points_seniors:
+  interest: >-
+    Situe les établissements et services pour les personnes âgées : proximité de l'aide à domicile, des soins et
+    de l'hébergement pour les quartiers les plus âgés.
+map__points_local_life:
+  interest: >-
+    Montre où se trouvent les lieux de vie sociale, culturelle et sportive, supports du lien social : quartiers
+    bien dotés et secteurs dépourvus de lieux de rencontre.
+map__points_shops:
+  interest: >-
+    Repère les commerces et services du quotidien : les secteurs qui en sont éloignés pénalisent les habitants sans
+    voiture, notamment les personnes âgées.
+
+# ── Cartes des communes d'un EPCI (clé map_communes__<indicateur> ; à défaut, intérêt de l'indicateur) ─
+map_communes__population:
+  interest: >-
+    Situe le poids de chaque commune dans l'intercommunalité : les communes les plus peuplées concentrent les
+    besoins en volume, les petites communes posent la question de l'accès aux services mutualisés.
+map_communes__pop_growth:
+  interest: >-
+    Distingue les communes qui gagnent des habitants de celles qui en perdent : les besoins en équipements et en
+    services se déplacent au sein de l'intercommunalité.
+map_communes__births:
+  interest: >-
+    Repère où naissent les enfants de l'intercommunalité, pour répartir l'offre d'accueil du jeune enfant et
+    anticiper les effectifs scolaires.
+map_communes__age_0_2_share:
+  interest: >-
+    Situe les communes où les jeunes enfants pèsent le plus, pour répartir l'offre d'accueil du jeune enfant à
+    l'échelle intercommunale.
+map_communes__age_3_5_share:
+  interest: >-
+    Repère les communes où vivent le plus d'enfants d'âge maternelle : besoins d'accueil périscolaire et de
+    loisirs.
+map_communes__equipment_density:
+  interest: >-
+    Compare le niveau d'équipement des communes : les communes sous-équipées dépendent de leurs voisines, ce qui
+    pèse sur les habitants peu mobiles.
+map_communes__business_creation_rate:
+  interest: >-
+    Situe le dynamisme entrepreneurial des communes de l'intercommunalité et ses pôles d'activité.
+map_communes__individual_creations_share:
+  interest: >-
+    Repère les communes où la création repose surtout sur les entreprises individuelles, parfois signe d'un
+    auto-entrepreneuriat de nécessité.
+
 # ── Sources : modèles (« %{years} » = millésimes affichés par le bloc) ─────────────────────────────────
 _sources:
   rp: "INSEE, recensements de la population %{years} (géographie au 1er janvier 2026)."

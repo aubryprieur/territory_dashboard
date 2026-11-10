@@ -76,10 +76,20 @@ module IndicatorNotesHelper
             "éloignés, d'apprécier l'accessibilité pour les habitants peu mobiles et d'identifier les partenaires de proximité."
   }.freeze
 
+  # Intérêt : « map__<indicateur> » (cartes IRIS et carreaux), « map__points_<groupe> » (localisation),
+  # « map_communes__<indicateur> » (communes d'un EPCI ; à défaut, intérêt de l'indicateur précédé d'une phrase sur la
+  # comparaison des communes), puis texte générique du type de carte.
   def map_notes(kind, indicator_key: nil, definition: nil, style: nil)
-    n = indicator_key ? indicator_note("map__#{indicator_key}") : {}
-    indicator_notes_widget([["def", "ⓘ Définition", definition.presence || n["definition"]],
-                            ["use", "◎ Intérêt", n["interest"].presence || MAP_INTEREST[kind]]],
+    interest = nil
+    if kind == :communes
+      interest = indicator_note("map_communes__#{indicator_key}")["interest"] if indicator_key
+      base = indicator_key && indicator_note(indicator_key)["interest"]
+      interest ||= "Comparer les communes de l'intercommunalité permet de repérer celles où l'enjeu est le plus marqué. #{base}" if base.present?
+    elsif indicator_key
+      interest = indicator_note("map__#{indicator_key}")["interest"]
+    end
+    indicator_notes_widget([["def", "ⓘ Définition", definition.presence],
+                            ["use", "◎ Intérêt", interest.presence || MAP_INTEREST[kind]]],
                            style: style || "margin:0 0 10px")
   end
 
