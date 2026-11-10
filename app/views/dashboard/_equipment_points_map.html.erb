@@ -9,13 +9,16 @@
 <% if data.is_a?(Hash) && data["points"].present? %>
   <%
     title ||= data["label"]
-    palette = %w[#2563eb #7c3aed #0891b2 #0f766e #ca8a04 #ea580c #dc2626 #db2777 #65a30d #475569]
+    palette = %w[#2563eb #7c3aed #0891b2 #0f766e #ca8a04 #ea580c #dc2626 #db2777 #65a30d #475569 #92400e #4338ca]
     cats = data["categories"] || {}
     colors = cats.keys.each_with_index.to_h { |k, i| [k, palette[i % palette.size]] }
     members = (data["members"] || []).to_set
     pts = data["points"].map do |p|
       inside = members.include?(p["depcom"].to_s)
-      tip = "<strong>#{ERB::Util.h(cats[p['category']])}</strong><br>#{ERB::Util.h(p['name'].to_s.titleize)}" \
+      # Noms de la BPE en capitales (mis en forme) ; ceux de l'annuaire DILA déjà en casse normale
+      name = p["name"].to_s
+      name = name.titleize if name == name.upcase
+      tip = "<strong>#{ERB::Util.h(cats[p['category']])}</strong><br>#{ERB::Util.h(name)}" \
             "<br>#{ERB::Util.h(p['commune'])}#{p['qpv'] ? ' · quartier prioritaire' : ''}" \
             "#{p['quality'] == 'mauvaise' ? '<br><em>localisation approximative</em>' : ''}"
       { lat: p["lat"], lon: p["lon"], color: colors[p["category"]], tip: tip, faded: !inside, category: p["category"] }
@@ -23,17 +26,30 @@
     counts = data["points"].select { |p| members.include?(p["depcom"].to_s) }.group_by { |p| p["category"] }.transform_values(&:size)
     around = data["points"].count { |p| !members.include?(p["depcom"].to_s) }
     terr = @epci_mode ? "l'intercommunalité" : "la commune"
-    # Tableau de bord d'une commune découpée en IRIS : quartiers tracés sous les points (géométries d'une carte IRIS)
-    iris_ref = @epci_mode ? nil : cached_iris_map("age_6_10_share")
-    zones = (iris_ref && iris_ref["features"] || []).map do |f|
-      { geometry: f["geometry"], tip: "<strong>#{ERB::Util.h(f['iris_name'])}</strong> (IRIS #{f['iris_code']})" }
+    # Tableau de bord d'une commune découpée en IRIS : quartiers tracés sous les points (géométries d'une carte IRIS) ;
+    # tableau de bord d'un EPCI : communes tracées sous les points, avec leur nombre d'équipements au survol
+    if @epci_mode
+      by_commune = data["points"].group_by { |p| p["depcom"].to_s }
+      zones = equipment_commune_zones.map do |z|
+        n = by_commune.fetch(z["code"], []).group_by { |p| p["category"] }.transform_values(&:size)
+        detail = cats.filter_map { |k, label| n[k] ? "#{ERB::Util.h(label)} : #{n[k]}" : nil }
+        { geometry: z["geometry"],
+          tip: "<strong>#{ERB::Util.h(z['name'])}</strong><br>#{n.values.sum} équipement#{'s' if n.values.sum > 1}" \
+               "#{detail.any? ? "<br><span style='font-size:11px'>#{detail.join('<br>')}</span>" : ''}" }
+      end
+    else
+      iris_ref = cached_iris_map("age_6_10_share")
+      zones = (iris_ref && iris_ref["features"] || []).map do |f|
+        { geometry: f["geometry"], tip: "<strong>#{ERB::Util.h(f['iris_name'])}</strong> (IRIS #{f['iris_code']})" }
+      end
     end
+    zone_kind = @epci_mode ? "communes en gris, nom et nombre d'équipements au survol" : "quartiers IRIS en gris, nom au survol"
   %>
   <details class="map-fold" style="margin:0 0 2rem">
     <summary style="cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #c7d2fe;border-radius:8px;background:#f8faff;color:#3730a3;font-size:13px;font-weight:500">🗺 Voir les équipements sur la carte</summary>
     <section style="margin-top:12px">
       <h3 class="text-sm font-medium text-gray-700 mb-1"><%= title %> (<%= data["year"] %>)</h3>
-      <p class="text-xs text-gray-500 mb-4">Un point par équipement recensé dans <%= terr %> (contour noir<%= zones.any? ? " ; quartiers IRIS en gris, nom au survol" : "" %>)<%= around.positive? ? ", et en plus pâle les #{fmt_count(around)} équipements des environs" : "" %>. Survoler un point pour son nom et sa commune ; cocher ou décocher une catégorie pour l'afficher ou la masquer.</p>
+      <p class="text-xs text-gray-500 mb-4">Un point par équipement recensé dans <%= terr %> (contour noir<%= zones.any? ? " ; #{zone_kind}" : "" %>)<%= around.positive? ? ", et en plus pâle les #{fmt_count(around)} équipements des environs" : "" %>. Survoler un point pour son nom et sa commune ; cocher ou décocher une catégorie pour l'afficher ou la masquer.</p>
       <style>
         .eqp-layout{display:grid;grid-template-columns:1fr;gap:1.5rem;align-items:start}
         @media (min-width:900px){.eqp-layout{grid-template-columns:3fr 1fr}}
@@ -53,7 +69,7 @@
               </li>
             <% end %>
           </ul>
-          <p class="text-xs text-gray-500 mt-3">Nombre d'équipements dans <%= terr %>. Source : <%= data["source"] %> ; fond de carte : Plan IGN (Géoplateforme). Certaines localisations sont approximatives (adresse ou centre de la commune).<%= data["truncated"] ? " Affichage limité à 20 000 équipements." : "" %></p>
+          <p class="text-xs text-gray-500 mt-3">Nombre d'équipements dans <%= terr %>. Source : <%= data["source"] %> ; fond de carte : Plan IGN (Géoplateforme). Certaines localisations sont approximatives (adresse ou centre de la commune).<%= local_assigns[:note] ? " #{note}" : "" %><%= data["truncated"] ? " Affichage limité à 20 000 équipements." : "" %></p>
         </div>
       </div>
     </section>

@@ -1,5 +1,5 @@
 <%#
-  Organisé en questions : 1. couverture CAF 2. RSA et prime d'activité 3. aides au logement 4. familles et handicap 5. complémentaire santé solidaire (_health_insurance).
+  Organisé en questions : 1. couverture CAF 2. RSA et prime d'activité 3. aides au logement 4. familles et handicap 5. complémentaire santé solidaire (_health_insurance) 6. carte des services publics et d'accès aux droits (_equipment_points_map, groupe public_services).
   Onglet Accès aux droits (prestations CAF, puis complémentaire santé solidaire : _health_insurance) — dashboard commune (analyse des besoins sociaux).
   Données : Cnaf, data.caf.fr, foyers allocataires au 31 décembre 2020 à 2024 (API /caf-benefits/*).
   Taux rapportés au recensement 2023 du territoire (ménages, population, familles).
@@ -22,12 +22,13 @@
     ["q-rights-2", "Combien d'habitants vivent du RSA ou d'un bas revenu d'activité ?"],
     ["q-rights-3", "Combien d'habitants sont aidés pour se loger ?"],
     ["q-rights-4", "Quelles aides pour les familles et les personnes handicapées ?"],
-    ["q-rights-5", "Les habitants ont-ils accès à une complémentaire santé ?"]
+    ["q-rights-5", "Les habitants ont-ils accès à une complémentaire santé ?"],
+    ["q-rights-6", "Où s'adresser pour faire valoir ses droits ?"]
   ]
 %>
 <div class="bg-white shadow rounded-lg p-6 mb-6">
   <h2 class="text-lg font-medium text-gray-900 mb-1">Accès aux droits</h2>
-  <p class="text-xs text-gray-500 mb-4">Prestations de la CAF et complémentaire santé solidaire : cinq questions. Foyers allocataires et personnes couvertes au 31 décembre (<%= years.first %>-<%= latest %>). Les taux rapportent les effectifs CAF à la population et aux ménages du recensement 2023.</p>
+  <p class="text-xs text-gray-500 mb-4">Prestations de la CAF, complémentaire santé solidaire et lieux d'accueil : six questions. Foyers allocataires et personnes couvertes au 31 décembre (<%= years.first %>-<%= latest %>). Les taux rapportent les effectifs CAF à la population et aux ménages du recensement 2023.</p>
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "caf_benefits" %>
@@ -195,3 +196,9 @@
         rows: [["c2s_rate", "Bénéficiaires de la C2S (régime général, toute population)", :worse_if_higher]] %>
 <% end %>
 <%= render "dashboard/health_insurance", heading: "5. Les habitants ont-ils accès à une complémentaire santé ?", card_id: "q-rights-5", extra: c2s_all %>
+
+<%= story_card("q-rights-6", 6, "Où s'adresser pour faire valoir ses droits ?",
+      "Services publics, organismes de protection sociale, lieux d'accès au droit et d'accompagnement social de la commune et des environs.") do %>
+  <%= render "dashboard/equipment_points_map", group: "public_services",
+        note: "L'annuaire recense les accueils déclarés par les administrations : certaines antennes et permanences (mission locale, CAF, CPAM…) peuvent manquer." %>
+<% end %>

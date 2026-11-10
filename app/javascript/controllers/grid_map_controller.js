@@ -7,7 +7,7 @@ import { Controller } from "@hotwired/stimulus"
 //   shapes: [{ geometry: GeoJSON, color, tip }]                     (IRIS)
 //   outline: [GeoJSON]                                              (contours de repérage, optionnel)
 //   outline_fill: 0.4                                               (voile blanc sur les contours, optionnel)
-//   zones: [{ geometry: GeoJSON, tip }]                             (quartiers IRIS sous les points, voile blanc, optionnel)
+//   zones: [{ geometry: GeoJSON, tip }]                             (IRIS ou communes de l'EPCI sous les points, voile blanc, optionnel)
 //   points: [{ lat, lon, color, tip, faded }]                       (équipements localisés ; faded : hors territoire)
 // }
 // La carte n'est construite qu'à son arrivée à l'écran (IntersectionObserver) : un onglet riche en cartes ne

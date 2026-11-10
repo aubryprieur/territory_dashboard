@@ -626,6 +626,20 @@ module DashboardCache
     end
   end
 
+  # Communes de l'EPCI tracées sous les points des cartes de localisation : [{ "code", "name", "geometry" }]
+  def equipment_commune_zones
+    return [] unless @epci_mode && @epci_code.present?
+    @equipment_commune_zones ||= begin
+      names = Territory.where(epci: @epci_code).pluck(:codgeo, :libgeo).to_h
+      epci_commune_geometries.filter_map do |code, g|
+        geometry = g.is_a?(String) ? (JSON.parse(g) rescue nil) : g
+        geometry = geometry["geometry"] if geometry.is_a?(Hash) && geometry["type"] == "Feature"
+        next if geometry.nil?
+        { "code" => code.to_s, "name" => names[code] || code.to_s, "geometry" => geometry }
+      end.sort_by { |z| z["name"].to_s }
+    end
+  end
+
   def equipment_coords(geometry)
     g = geometry["type"] == "Feature" ? geometry["geometry"] : geometry
     case g&.dig("type")
