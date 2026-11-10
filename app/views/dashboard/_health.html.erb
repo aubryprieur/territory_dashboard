@@ -36,7 +36,6 @@
   <p class="text-xs text-gray-500 mb-4">Offre de soins de proximité, recours aux soins et état de santé : quatre questions. La complémentaire santé solidaire est présentée dans l'onglet Accès aux droits.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "health" %>
 </div>
 
 <%= story_card("q-health-1", 1, "Les habitants ont-ils facilement accès à un médecin ?",
@@ -152,3 +151,6 @@
     <p>Sources : accessibilité aux médecins généralistes : DREES, via INSEE / SDES (indicateurs territoriaux de développement durable) ; professionnels de santé libéraux : Observatoire des territoires (ANCT) — RPPS, Adeli, INSEE BPE 2025 et recensement 2023, France métropolitaine = moyenne des régions pondérée par la population ; services de santé : INSEE, Base permanente des équipements 2025 ; recours aux soins, prévention, ALD, invalidité : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), 2025 ; APL des médecins de moins de 65 ans et des dentistes : ANCT, 2024.</p>
   </div>
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "health" %>

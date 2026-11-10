@@ -42,7 +42,6 @@
     <p class="text-xs text-gray-500 mb-4">Population municipale au sens du recensement : quatre questions sur le nombre d'habitants, les naissances, l'âge et les arrivées. Les catégories socioprofessionnelles sont dans l'onglet Emploi ; le détail par âge dans les onglets Petite enfance, Enfance-jeunesse et Seniors.</p>
     <%= story_summary(questions) %>
 
-    <%= render "dashboard/fragility_ranks", tab: "synthese" %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-indigo-50 p-4 rounded-lg">
         <h3 class="text-sm font-medium text-indigo-800 mb-1">Population <%= latest %></h3>
@@ -321,3 +320,6 @@
   <% end %>
 
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "synthese" %>

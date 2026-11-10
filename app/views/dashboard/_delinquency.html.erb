@@ -32,7 +32,6 @@
   <p class="text-xs text-gray-500 mb-4">Crimes et délits enregistrés par la police et la gendarmerie, comptés au lieu où ils ont été commis. Ces chiffres reflètent aussi la propension des victimes à porter plainte et l'activité des services : une hausse peut traduire une meilleure révélation des faits (violences intrafamiliales, violences sexuelles).</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "delinquency" %>
   <% if commune && latest %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <% [["intrafamily_violence", "Violences intrafamiliales", "red"], ["other_physical_violence", "Violences hors cadre familial", "orange"],
@@ -131,3 +130,6 @@
 <% end %>
 
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "delinquency" %>

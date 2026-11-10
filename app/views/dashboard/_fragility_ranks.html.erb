@@ -1,6 +1,6 @@
 <%#
-  Position de la commune parmi les communes (API /fragility-synthesis/commune/*), affichée en tête d'un onglet,
-  avant les tableaux par échelle. Indicateurs de l'onglet : liste « tab_keys » de l'API (catalogue de la synthèse).
+  « Intensité de l'enjeu : indicateurs clés » : rang de la commune (ou de l'EPCI) sur quelques indicateurs clés de
+  l'onglet (API /fragility-synthesis/*), affiché en bas de l'onglet, après les questions. Indicateurs de l'onglet : liste « tab_keys » de l'API (catalogue de la synthèse).
   Lecture en intensité de l'enjeu, du bleu (moins marqué qu'ailleurs) au rouge (plus marqué) : FragilityIntensityHelper.
   Bascule entre le rang parmi les communes de l'EPCI (défaut, calculé à la volée par l'API), dans la catégorie de
   densité INSEE et parmi toutes les communes de France.
@@ -52,7 +52,7 @@
   <section style="margin:0 0 2rem;padding:16px 18px;border:1px solid #e0e7ff;border-radius:12px;background:#f8faff">
     <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
       <div>
-        <h3 class="text-base font-medium text-gray-900" data-plain-title>Position de <%= @territory_name %> parmi les <%= unit_pl %>
+        <h3 class="text-base font-medium text-gray-900" data-plain-title>Intensité de l'enjeu : indicateurs clés
           <% modes.each do |mode, _| %>
             <% lvl, lvl_bg, lvl_fg = mode_levels[mode] && enjeu_level_badge(mode_levels[mode]) %>
             <% if lvl %><span data-rank-mode="<%= mode %>" style="display:<%= mode == default_mode ? 'inline-block' : 'none' %>;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:12px;background:<%= lvl_bg %>;color:<%= lvl_fg %>"><%= lvl %></span><% end %>
@@ -60,11 +60,12 @@
         </h3>
         <% modes.each do |mode, _| %>
           <div class="text-xs text-gray-600" data-rank-mode="<%= mode %>" style="margin-top:4px;<%= mode == default_mode ? '' : 'display:none' %>">
-            <% if mode == "epci" %>Comparaison avec les communes de l'EPCI : <span style="<%= pill %>"><%= epci["label"] %></span>
-            <% elsif mode == "dens" && ep %>Comparaison avec les EPCI de même nature : <span style="<%= pill %>"><%= dens || "nature inconnue" %></span>
-            <% elsif mode == "dens" %>Comparaison avec les communes de la catégorie de densité : <span style="<%= pill %>"><%= dens || "non classée" %></span>
-            <% elsif ep %>Comparaison avec <span style="<%= pill %>">tous les EPCI de France</span>
-            <% else %>Comparaison avec <span style="<%= pill %>">toutes les communes de France</span><% end %>
+            <% who = "Rang de #{@territory_name} comparé" %>
+            <% if mode == "epci" %><%= who %> aux communes de l'EPCI : <span style="<%= pill %>"><%= epci["label"] %></span>
+            <% elsif mode == "dens" && ep %><%= who %> aux EPCI de même nature : <span style="<%= pill %>"><%= dens || "nature inconnue" %></span>
+            <% elsif mode == "dens" %><%= who %> aux communes de même densité : <span style="<%= pill %>"><%= dens || "non classée" %></span>
+            <% elsif ep %><%= who %> à <span style="<%= pill %>">tous les EPCI de France</span>
+            <% else %><%= who %> à <span style="<%= pill %>">toutes les communes de France</span><% end %>
           </div>
         <% end %>
       </div>

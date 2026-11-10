@@ -25,7 +25,6 @@
   <p class="text-xs text-gray-500 mb-4">Emplois et entreprises implantés sur le territoire, quel que soit le lieu de résidence des personnes qui y travaillent : poids de l'emploi local, secteurs d'activité, taille des établissements, activités tournées vers les habitants.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "local_economy" %>
 </div>
 
 <% if commune.nil? || !commune[:main] %>
@@ -78,3 +77,6 @@
     </div>
   <% end %>
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "local_economy" %>

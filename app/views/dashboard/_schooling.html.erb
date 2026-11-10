@@ -18,7 +18,6 @@
   <p class="text-xs text-gray-500 mb-4">La scolarisation des enfants et des jeunes qui habitent <%= la_commune %> (recensement), puis les écoles, collèges et lycées situés dans <%= la_commune %> (Éducation nationale) : quatre questions.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "schooling" %>
 </div>
 
 <%= story_card("q-schooling-1", 1, "Les enfants et les jeunes de la commune sont-ils scolarisés ?",
@@ -27,3 +26,6 @@
 <% end %>
 
 <%= render "dashboard/schools" %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "schooling" %>

@@ -31,7 +31,6 @@
   <p class="text-xs text-gray-500 mb-4">Activité, chômage et conditions d'emploi des habitants, au sens du recensement (le chômage « au sens du recensement » est déclaratif : il est plus élevé que le chômage au sens du BIT). L'emploi situé dans <%= la_commune %> est dans l'onglet Tissu économique.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "employment" %>
 
   <% if commune && commune[:main] %>
     <% ev = ->(key, year = latest) { territory_value(commune, year, key) } %>
@@ -351,3 +350,6 @@
   <% end %>
 
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "employment" %>

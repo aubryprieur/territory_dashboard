@@ -27,7 +27,6 @@
   <p class="text-xs text-gray-500 mb-4">Familles avec enfants de moins de 25 ans : trois questions sur leur composition, celles qui demandent une attention particulière et leurs revenus. Taux en % de l'ensemble des familles sauf mention.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "families" %>
   <% if fam_ok %>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <% [
@@ -200,3 +199,6 @@
   <% end %>
 
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "families" %>

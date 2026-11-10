@@ -25,7 +25,6 @@
   <p class="text-xs text-gray-500 mb-4">Diplôme le plus élevé de la population de 15 ans ou plus <strong>non scolarisée</strong> (les élèves et étudiants ne sont pas comptés) : trois questions sur le niveau de formation et l'insertion des jeunes.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "diplomas" %>
 
   <% if commune && commune[:main] %>
   <% ev = ->(key, year = latest) { territory_value(commune, year, key) } %>
@@ -172,3 +171,6 @@
   <% end %>
 
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "diplomas" %>

@@ -41,7 +41,6 @@
   <p class="text-xs text-gray-500 mb-4">Parc de logements et conditions de logement des ménages : six questions pour comprendre la situation du territoire.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "housing" %>
 
   <% if commune && commune[:main] %>
     <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
@@ -303,3 +302,6 @@
 <% end %>
 
 <%= render "dashboard/construction", heading: "6. #{@epci_mode ? "L'intercommunalité construit-elle ?" : 'La commune construit-elle ?'}", card_id: "q-housing-6" %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "housing" %>

@@ -39,7 +39,6 @@
   <p class="text-xs text-gray-500 mb-4">Enfants et jeunes de 6 à 24 ans : trois questions sur leur nombre, leurs conditions de vie et leurs loisirs. Scolarité, diplômes et emploi des jeunes sont dans leurs onglets ; la petite enfance a son propre onglet.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "youth" %>
   <%
     cards = [
       ["6-10 ans", cv.(edu, "pop_6_10"), "recensement #{edu[:latest]}"],
@@ -185,3 +184,5 @@
 
 <% end %>
 
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "youth" %>

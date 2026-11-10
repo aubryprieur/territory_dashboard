@@ -39,7 +39,6 @@
   <p class="text-xs text-gray-500 mb-4">Niveau de vie des ménages (revenu disponible par unité de consommation), pauvreté monétaire et impôt sur le revenu, d'après les sources fiscales et sociales (Filosofi, DGFiP) : quatre questions.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "revenues_poverty" %>
 
   <% unless commune.nil? || latest.nil? %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -211,3 +210,6 @@
 <% end %>
 
 <%= render "dashboard/tax_households", heading: "4. Les foyers paient-ils l'impôt sur le revenu ?", card_id: "q-revenues-4" %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "revenues_poverty" %>

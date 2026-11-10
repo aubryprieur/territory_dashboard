@@ -22,7 +22,6 @@
   <p class="text-xs text-gray-500 mb-4">Un immigré est une personne née étrangère à l'étranger et résidant en France ; une partie des immigrés est devenue française. Un étranger est une personne qui n'a pas la nationalité française ; une partie des étrangers est née en France. Deux questions.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "immigration" %>
   <% if commune %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-indigo-50 p-4 rounded-lg">
@@ -139,3 +138,6 @@
     </div>
   <% end %>
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "immigration" %>

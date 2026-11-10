@@ -31,7 +31,6 @@
   <p class="text-xs text-gray-500 mb-4">Prestations de la CAF, complémentaire santé solidaire et lieux d'accueil : six questions. Foyers allocataires et personnes couvertes au 31 décembre (<%= years.first %>-<%= latest %>). Les taux rapportent les effectifs CAF à la population et aux ménages du recensement 2023.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "caf_benefits" %>
   <% if commune && commune[:main] %>
     <% cv = ->(key, year = latest) { territory_value(commune, year, key) } %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -203,3 +202,6 @@
   <%= render "dashboard/equipment_points_map", group: "public_services",
         note: "L'annuaire recense les accueils déclarés par les administrations : certaines antennes et permanences (mission locale, CAF, CPAM…) peuvent manquer." %>
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "caf_benefits" %>

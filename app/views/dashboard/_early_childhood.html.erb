@@ -19,7 +19,6 @@
   <p class="text-xs text-gray-500 mb-4">Enfants de moins de 6 ans, naissances, offre d'accueil du jeune enfant : quatre questions pour situer les besoins. L'activité des parents de jeunes enfants est dans l'onglet Emploi.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "children_comparison" %>
 </div>
 
 <%= render "dashboard/children_comparison", **local_assigns.merge(heading: "1. Combien de jeunes enfants vivent dans la commune ?", card_id: "q-early-1") %>
@@ -33,3 +32,6 @@
 
 <%= render "dashboard/childcare_offer", heading: "3. L'offre d'accueil répond-elle aux besoins ?", card_id: "q-early-3" %>
 <%= render "dashboard/childminder_employers", heading: "4. Les familles emploient-elles une assistante maternelle ?", card_id: "q-early-4" %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "children_comparison" %>

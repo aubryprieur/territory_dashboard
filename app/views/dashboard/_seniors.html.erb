@@ -25,7 +25,6 @@
   <p class="text-xs text-gray-500 mb-4">Poids des seniors dans la population (recensement), situation des retraités et des assurés de 55 ans ou plus, tous régimes de retraite et d'assurance maladie réunis (régime général, MSA…), lieux de vie et isolement, hébergement et services.</p>
   <%= story_summary(questions) %>
 
-  <%= render "dashboard/fragility_ranks", tab: "seniors" %>
 </div>
 
 <%= story_card("q-seniors-1", 1, "Combien de seniors vivent dans la commune, et combien demain ?",
@@ -235,3 +234,6 @@
     <p>Source : Observatoire interrégimes des situations de fragilité (Assurance maladie, Assurance retraite, MSA), Géofragilité, données 2025 (score de non-recours aux soins : 2024 ; nombre de retraités 2017 pour l'évolution). Population : retraités et assurés de 55 ans ou plus, tous régimes. « s » : secret statistique (effectif trop faible). En rouge : situation moins favorable qu'en France. France : France entière, outre-mer compris ; valeurs publiées par l'Observatoire, sauf le minimum vieillesse (moyenne des départements pondérée par le nombre de retraités). Effectifs de retraités : commune seulement. Part des retraités à risque et évolution du nombre de retraités : EPCI, département, région et France calculés en additionnant les communes non soumises au secret.</p>
   </div>
 <% end %>
+
+<%# Synthèse des rangs sur les indicateurs clés de l'onglet, en bas de page %>
+<%= render "dashboard/fragility_ranks", tab: "seniors" %>
