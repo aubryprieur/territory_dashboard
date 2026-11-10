@@ -1,6 +1,6 @@
 <%#
   Onglet Emploi — dashboard commune (analyse des besoins sociaux).
-  Organisé en questions (sommaire, « À retenir », une carte par question, cartes IRIS repliées) :
+  Organisé en questions (sommaire, une carte par question, cartes IRIS repliées) :
     1. Qui travaille ? 2. Qui est au chômage ? (dont demandeurs d'emploi France Travail) 3. Femmes et jeunes
     4. Parents de jeunes enfants (_parents_activity) 5. Stabilité de l'emploi 6. Milieux sociaux 7. Lieu de travail et trajets
   Données : INSEE RP 2012, 2017, 2023 (API /employment-activity/*), INSEE / SDES (indicateurs de développement durable),
@@ -32,7 +32,6 @@
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "employment" %>
-  <%= story_takeaways("employment") %>
 
   <% if commune && commune[:main] %>
     <% ev = ->(key, year = latest) { territory_value(commune, year, key) } %>

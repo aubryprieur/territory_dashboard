@@ -1,5 +1,5 @@
 <%#
-  Onglet Petite enfance, organisé en questions (sommaire, « À retenir », une carte par question) :
+  Onglet Petite enfance, organisé en questions (sommaire, une carte par question) :
     1. Combien de jeunes enfants vivent dans la commune ? (moins de 3 ans, 3-5 ans, cartes : _children_comparison)
     2. Combien de jeunes enfants demain ? (projections 2023-2033, naissances : _population_projection)
     3. L'offre d'accueil répond-elle aux besoins ? (Cnaf : _childcare_offer)
@@ -20,7 +20,6 @@
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "children_comparison" %>
-  <%= story_takeaways("children_comparison") %>
 </div>
 
 <%= render "dashboard/children_comparison", **local_assigns.merge(heading: "1. Combien de jeunes enfants vivent dans la commune ?", card_id: "q-early-1") %>

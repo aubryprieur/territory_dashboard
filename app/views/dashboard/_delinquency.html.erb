@@ -33,7 +33,6 @@
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "delinquency" %>
-  <%= story_takeaways("delinquency") %>
   <% if commune && latest %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <% [["intrafamily_violence", "Violences intrafamiliales", "red"], ["other_physical_violence", "Violences hors cadre familial", "orange"],

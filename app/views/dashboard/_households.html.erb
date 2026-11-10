@@ -27,7 +27,6 @@
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "households" %>
-  <%= story_takeaways("households") %>
 
   <% if commune && commune[:main] %>
   <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>

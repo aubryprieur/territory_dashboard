@@ -1,5 +1,5 @@
 <%#
-  Onglet Familles — dashboard commune, organisé en questions (sommaire, « À retenir », une carte par question) :
+  Onglet Familles — dashboard commune, organisé en questions (sommaire, une carte par question) :
     1. Quelles familles vivent dans la commune ? (couples avec enfants, nombre d'enfants, familles recomposées)
     2. Quelles familles demandent une attention particulière ? (monoparentales, nombreuses)
     3. Les familles ont-elles des revenus modestes ? (allocation de rentrée scolaire, Cnaf)
@@ -28,7 +28,6 @@
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "families" %>
-  <%= story_takeaways("families") %>
   <% if fam_ok %>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <% [

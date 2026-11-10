@@ -32,7 +32,6 @@
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "caf_benefits" %>
-  <%= story_takeaways("caf_benefits") %>
   <% if commune && commune[:main] %>
     <% cv = ->(key, year = latest) { territory_value(commune, year, key) } %>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

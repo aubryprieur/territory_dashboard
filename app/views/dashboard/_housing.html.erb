@@ -1,6 +1,6 @@
 <%#
   Onglet Logement — dashboard commune (analyse des besoins sociaux), organisé en questions (onglet pilote de la mise en
-  récit : sommaire, « À retenir », une carte par question, cartes IRIS repliées, bascule graphique / tableau).
+  récit : sommaire, une carte par question, cartes IRIS repliées, bascule graphique / tableau).
     1. De quels logements dispose la commune ? (catégories, période de construction, taille, vacance)
     2. Qui occupe les logements ? (statut d'occupation, propriétaires, HLM)
     3. Le parc locatif social (RPLS, _social_housing)
@@ -42,7 +42,6 @@
   <%= story_summary(questions) %>
 
   <%= render "dashboard/fragility_ranks", tab: "housing" %>
-  <%= story_takeaways("housing") %>
 
   <% if commune && commune[:main] %>
     <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
