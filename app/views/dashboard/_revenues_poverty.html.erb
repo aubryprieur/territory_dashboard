@@ -41,30 +41,6 @@
 
 
   <% unless commune.nil? || latest.nil? %>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-      <div class="bg-indigo-50 p-4 rounded-lg">
-        <h3 class="text-sm font-medium text-indigo-800 mb-1">Niveau de vie médian <%= latest %></h3>
-        <p class="text-2xl font-bold text-indigo-900"><%= cv.("median_living_standard") ? "#{fmt_count(cv.("median_living_standard"))} €" : "–" %></p>
-        <p class="text-xs text-indigo-700">par an et par unité de consommation · <%= fmt_trend(cv.("median_living_standard", comparison), cv.("median_living_standard"), unit: :euros) %> depuis <%= comparison %></p>
-      </div>
-      <div class="bg-purple-50 p-4 rounded-lg">
-        <h3 class="text-sm font-medium text-purple-800 mb-1">Taux de pauvreté <%= latest %></h3>
-        <p class="text-2xl font-bold text-purple-900"><%= fmt_pct(cv.("poverty_rate")) %></p>
-        <p class="text-xs text-purple-700">au seuil de 60 % du niveau de vie médian · <%= fmt_trend(cv.("poverty_rate", comparison), cv.("poverty_rate")) %> depuis <%= comparison %></p>
-      </div>
-      <% if detail_year %>
-        <div class="bg-orange-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-orange-800 mb-1">Pauvreté des locataires <%= detail_year %></h3>
-          <p class="text-2xl font-bold text-orange-900"><%= fmt_pct(cv.("poverty_rate_tenants", detail_year)) %></p>
-          <p class="text-xs text-orange-700">propriétaires : <%= fmt_pct(cv.("poverty_rate_owners", detail_year)) %></p>
-        </div>
-        <div class="bg-teal-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-teal-800 mb-1">Écart de revenus D9/D1 <%= detail_year %></h3>
-          <p class="text-2xl font-bold text-teal-800"><%= fmt_decimal(cv.("interdecile_ratio", detail_year), precision: 1) %></p>
-          <p class="text-xs text-teal-700">les 10 % les plus aisés ont au moins <%= fmt_decimal(cv.("interdecile_ratio", detail_year), precision: 1) %> fois le niveau de vie des 10 % les plus modestes</p>
-        </div>
-      <% end %>
-    </div>
 
     <% if detail_year && detail_year != latest %>
       <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

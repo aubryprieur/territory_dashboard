@@ -32,18 +32,6 @@
   <p class="text-xs text-gray-500 mb-4">Crimes et délits enregistrés par la police et la gendarmerie, comptés au lieu où ils ont été commis. Ces chiffres reflètent aussi la propension des victimes à porter plainte et l'activité des services : une hausse peut traduire une meilleure révélation des faits (violences intrafamiliales, violences sexuelles).</p>
   <%= story_summary(questions) %>
 
-  <% if commune && latest %>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <% [["intrafamily_violence", "Violences intrafamiliales", "red"], ["other_physical_violence", "Violences hors cadre familial", "orange"],
-          ["burglary", "Cambriolages de logement", "indigo"], ["vandalism", "Destructions et dégradations", "purple"]].each do |key, label, theme| %>
-        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
-          <h4 class="text-xs font-medium text-<%= theme %>-800"><%= label %> (<%= latest %>)</h4>
-          <p class="text-2xl font-bold text-<%= theme %>-900"><%= diffused.(key) ? "#{fmt_rate.(rate.(commune, key))} ‰" : "n.d." %></p>
-          <p class="text-xs text-gray-600">pour 1 000 <%= per.(key) %> · <%= department ? display_territory_name(department[:name]) : "Département" %> <%= fmt_rate.(rate.(department, key)) %> ‰</p>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
 </div>
 
 <% if commune.nil? || latest.nil? %>

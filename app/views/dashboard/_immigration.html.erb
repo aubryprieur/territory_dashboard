@@ -22,30 +22,6 @@
   <p class="text-xs text-gray-500 mb-4">Un immigré est une personne née étrangère à l'étranger et résidant en France ; une partie des immigrés est devenue française. Un étranger est une personne qui n'a pas la nationalité française ; une partie des étrangers est née en France. Deux questions.</p>
   <%= story_summary(questions) %>
 
-  <% if commune %>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-indigo-50 p-4 rounded-lg">
-        <h4 class="text-xs font-medium text-indigo-800">Immigrés (<%= year %>)</h4>
-        <p class="text-2xl font-bold text-indigo-900"><%= fmt_pct(v.(commune, "immigrant_rate")) %></p>
-        <p class="text-xs text-gray-600"><%= fmt_count(v.(commune, "imm")) %> personnes<%= small_count_flag(v.(commune, "imm")) %> · France métropolitaine <%= fmt_pct(v.(france, "immigrant_rate")) %></p>
-      </div>
-      <div class="bg-purple-50 p-4 rounded-lg">
-        <h4 class="text-xs font-medium text-purple-800">Étrangers (<%= year %>)</h4>
-        <p class="text-2xl font-bold text-purple-900"><%= fmt_pct(v.(commune, "foreigner_rate")) %></p>
-        <p class="text-xs text-gray-600"><%= fmt_count(v.(commune, "foreign")) %> personnes<%= small_count_flag(v.(commune, "foreign")) %> · France métropolitaine <%= fmt_pct(v.(france, "foreigner_rate")) %></p>
-      </div>
-      <div class="bg-red-50 p-4 rounded-lg">
-        <h4 class="text-xs font-medium text-red-800">Chômage des immigrés</h4>
-        <p class="text-2xl font-bold text-red-900"><%= fmt_pct(v.(commune, "imm_unemployment_rate")) %></p>
-        <p class="text-xs text-gray-600">non-immigrés : <%= fmt_pct(v.(commune, "nonimm_unemployment_rate")) %> · actifs de 15 ans ou plus<%= small_count_flag(v.(commune, "imm_employed_15p").to_f + v.(commune, "imm_unemployed_15p").to_f) %></p>
-      </div>
-      <div class="bg-orange-50 p-4 rounded-lg">
-        <h4 class="text-xs font-medium text-orange-800">Emploi des femmes immigrées de 25-54 ans</h4>
-        <p class="text-2xl font-bold text-orange-900"><%= fmt_pct(v.(commune, "imm_women_employment_rate_25_54")) %></p>
-        <p class="text-xs text-gray-600">non-immigrées : <%= fmt_pct(v.(commune, "nonimm_women_employment_rate_25_54")) %> · au foyer : <%= fmt_pct(v.(commune, "imm_women_homemakers_rate_25_54")) %><%= small_count_flag(v.(commune, "imm_women_25_54")) %></p>
-      </div>
-    </div>
-  <% end %>
 </div>
 
 <% if commune.nil? %>

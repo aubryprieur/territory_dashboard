@@ -29,29 +29,6 @@
   <p class="text-xs text-gray-500 mb-4">Services de petite enfance, pour les personnes âgées, d'accès aux droits, commerces et équipements culturels et sportifs présents dans <%= la_commune %>, selon la Base permanente des équipements de l'INSEE.</p>
   <%= story_summary(questions) %>
 
-  <% if eq %>
-    <% cr, fs = by_key["childcare"], by_key["food_shop"] %>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-indigo-50 p-4 rounded-lg">
-        <h4 class="text-xs font-medium text-indigo-800">Équipements recensés (<%= eq["year"] %>)</h4>
-        <p class="text-2xl font-bold text-indigo-900"><%= fmt_count(eq.dig("totals", "count")) %></p>
-        <p class="text-xs text-gray-600"><%= with_qpv ? "dont #{fmt_count(eq.dig('totals', 'count_qpv'))} en quartier prioritaire" : "services, commerces, écoles, équipements de santé, de sport..." %></p>
-      </div>
-      <% [[cr, "Crèches ou micro-crèches", "teal"], [fs, "Commerces alimentaires de proximité", "green"]].each do |s, label, theme| %>
-        <% next unless s %>
-        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
-          <h4 class="text-xs font-medium text-gray-700"><%= label %> pour 10 000 habitants</h4>
-          <p class="text-2xl font-bold text-gray-900"><%= density.(s["density"]) %></p>
-          <p class="text-xs text-gray-600"><%= fmt_count(s["count"]) %> dans <%= la_commune %> · France métropolitaine <%= density.(s.dig("comparison", "france")) %></p>
-        </div>
-      <% end %>
-      <div class="bg-orange-50 p-4 rounded-lg">
-        <h4 class="text-xs font-medium text-orange-800">Services clés absents de <%= la_commune %></h4>
-        <p class="text-2xl font-bold text-orange-900"><%= absent.size %> sur <%= services.size %></p>
-        <p class="text-xs text-gray-600">distance au plus proche indiquée ci-dessous</p>
-      </div>
-    </div>
-  <% end %>
 </div>
 
 <% if eq.nil? %>

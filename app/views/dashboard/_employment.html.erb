@@ -34,20 +34,6 @@
 
   <% if commune && commune[:main] %>
     <% ev = ->(key, year = latest) { territory_value(commune, year, key) } %>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <% [
-           ["Taux d'emploi 15-64 ans", "employment_rate_15_64", "indigo"],
-           ["Taux de chômage 15-64 ans", "unemployment_rate_15_64", "purple"],
-           ["Taux d'emploi des femmes", "employment_rate_15_64_women", "blue"],
-           ["Chômage des 15-24 ans", "unemployment_rate_15_24", "teal"]
-         ].each do |label, key, theme| %>
-        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-<%= theme %>-800 mb-1"><%= label %></h3>
-          <p class="text-2xl font-bold text-<%= theme %>-900"><%= fmt_pct(ev.(key)) %></p>
-          <p class="text-xs text-<%= theme %>-700"><%= fmt_trend(ev.(key, comparison), ev.(key)) %> depuis <%= comparison %></p>
-        </div>
-      <% end %>
-    </div>
 
   <% end %>
 </div>

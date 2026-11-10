@@ -27,20 +27,6 @@
   <p class="text-xs text-gray-500 mb-4">Familles avec enfants de moins de 25 ans : trois questions sur leur composition, celles qui demandent une attention particulière et leurs revenus. Taux en % de l'ensemble des familles sauf mention.</p>
   <%= story_summary(questions) %>
 
-  <% if fam_ok %>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <% [
-           ["Couples avec enfants", "indigo", "couples_with_children_percentage", "couples_with_children"],
-           ["Familles monoparentales", "purple", "single_parent_families_percentage", "single_parent_families"],
-           ["Familles nombreuses", "blue", "large_families_percentage", "total_large_families"]
-         ].each do |label, theme, rate_key, count_key| %>
-        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-<%= theme %>-800 mb-1"><%= label %></h3>
-          <p class="text-2xl font-bold text-<%= theme %>-900"><%= family_pct(family_value(commune, latest, rate_key), precision: 2) %></p>
-          <p class="text-sm text-<%= theme %>-600"><%= family_count(family_value(commune, latest, count_key)) %> familles en <%= latest %></p>
-        </div>
-      <% end %>
-  <% end %>
 </div>
 
 <% if !fam_ok %>

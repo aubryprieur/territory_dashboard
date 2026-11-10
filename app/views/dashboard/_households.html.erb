@@ -29,31 +29,6 @@
 
   <% if commune && commune[:main] %>
   <% hv = ->(key, year = latest) { territory_value(commune, year, key) } %>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-teal-50 p-4 rounded-lg">
-        <h3 class="text-sm font-medium text-teal-800 mb-1">Ménages</h3>
-        <p class="text-2xl font-bold text-teal-900"><%= fmt_count(hv.("households")) %></p>
-        <p class="text-xs text-teal-700">
-          <% h0 = hv.("households", comparison); h1 = hv.("households") %>
-          <% if h0 && h1 && h0.positive? %><%= (h1 >= h0 ? "+" : "−") + number_with_precision(((h1 - h0) / h0 * 100).abs, precision: 1) %> % depuis <%= comparison %><% end %>
-        </p>
-      </div>
-      <div class="bg-indigo-50 p-4 rounded-lg">
-        <h3 class="text-sm font-medium text-indigo-800 mb-1">Taille moyenne</h3>
-        <p class="text-2xl font-bold text-indigo-900"><%= fmt_decimal(hv.("average_household_size")) %> pers.</p>
-        <p class="text-xs text-indigo-700">par ménage en <%= latest %></p>
-      </div>
-      <div class="bg-purple-50 p-4 rounded-lg">
-        <h3 class="text-sm font-medium text-purple-800 mb-1">Ménages d'une personne</h3>
-        <p class="text-2xl font-bold text-purple-900"><%= fmt_pct(hv.("one_person_percentage")) %></p>
-        <p class="text-xs text-purple-700"><%= fmt_count(hv.("one_person")) %> ménages</p>
-      </div>
-      <div class="bg-blue-50 p-4 rounded-lg">
-        <h3 class="text-sm font-medium text-blue-800 mb-1">80 ans ou plus vivant seuls</h3>
-        <p class="text-2xl font-bold text-blue-900"><%= fmt_pct(hv.("living_alone_rate_80_plus")) %></p>
-        <p class="text-xs text-blue-700"><%= fmt_count(hv.("living_alone_80_plus")) %> personnes<%= small_count_flag(hv.("living_alone_80_plus")) %></p>
-      </div>
-    </div>
 
   <% end %>
 </div>

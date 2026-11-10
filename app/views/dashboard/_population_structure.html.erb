@@ -42,28 +42,6 @@
     <p class="text-xs text-gray-500 mb-4">Population municipale au sens du recensement : quatre questions sur le nombre d'habitants, les naissances, l'âge et les arrivées. Les catégories socioprofessionnelles sont dans l'onglet Emploi ; le détail par âge dans les onglets Petite enfance, Enfance-jeunesse et Seniors.</p>
     <%= story_summary(questions) %>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-indigo-50 p-4 rounded-lg">
-        <h3 class="text-sm font-medium text-indigo-800 mb-1">Population <%= latest %></h3>
-        <p class="text-2xl font-bold text-indigo-900"><%= fmt_count(pv.("pop")) %></p>
-        <p class="text-xs text-indigo-700">
-          <% if last_period["annual_growth_rate"] %>
-            <%= last_period["annual_growth_rate"] >= 0 ? "+" : "" %><%= number_with_precision(last_period["annual_growth_rate"], precision: 2) %> % par an depuis <%= last_period["start_year"] %>
-          <% end %>
-        </p>
-      </div>
-      <% [
-           ["Moins de 15 ans", "age_lt15_percentage", "blue"],
-           ["65 ans ou plus", "age_ge65_percentage", "purple"],
-           ["80 ans ou plus", "age_ge80_percentage", "teal"]
-         ].each do |label, key, theme| %>
-        <div class="bg-<%= theme %>-50 p-4 rounded-lg">
-          <h3 class="text-sm font-medium text-<%= theme %>-800 mb-1"><%= label %></h3>
-          <p class="text-2xl font-bold text-<%= theme %>-900"><%= fmt_pct(pv.(key)) %></p>
-          <p class="text-xs text-<%= theme %>-700">de la population · <%= fmt_trend(pv.(key, comparison), pv.(key)) %> depuis <%= comparison %></p>
-        </div>
-      <% end %>
-    </div>
 
   </div>
 
