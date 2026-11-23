@@ -1,4 +1,9 @@
 module ApplicationHelper
+  # Adresse de contact de la page d'accueil et du pied de page (variable d'environnement CONTACT_EMAIL)
+  def contact_email
+    ENV.fetch("CONTACT_EMAIL", "contact@exemple.fr")
+  end
+
   def admin_stats
     {
       total_users: User.count,

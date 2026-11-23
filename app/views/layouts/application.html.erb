@@ -34,7 +34,8 @@
 
     <%= render "layouts/navbar" %>
 
-    <main class="flex-grow container mx-auto px-4 pt-24 pb-10">
+    <%# Page pleine largeur (page d'accueil publique) : content_for :full_width %>
+    <main class="<%= content_for?(:full_width) ? 'flex-grow' : 'flex-grow container mx-auto px-4 pt-24 pb-10' %>">
       <%= yield %>
     </main>
 

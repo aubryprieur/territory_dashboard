@@ -1,479 +1,197 @@
-<% if user_signed_in? && current_user.super_admin? %>
-  <div class="bg-indigo-50 p-4 mb-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm font-medium text-indigo-800">
-            Bienvenue, Super Admin! Vous pouvez accéder à la <a href="<%= admin_users_path %>" class="font-bold underline">gestion des utilisateurs</a> depuis le menu ou cliquer directement sur ce lien.
-          </p>
+<%#
+  Page d'accueil publique : l'observatoire social de territoire (chiffres de l'outil, avant / après, fonctionnalités,
+  thématiques, publics, tarif sur demande). Les enquêtes sont mises de côté.
+  Captures : déposer app/assets/images/accueil/capture_dashboard.png (bloc « Avec l'outil ») ; à défaut, emplacement.
+%>
+<% content_for :full_width, true %>
+<%
+  files = ["Recensement – population", "Recensement – logement", "Filosofi – revenus", "CAF – prestations", "France Travail – DEFM", "RPLS – parc social", "BPE – équipements", "Contours IRIS"]
+  features = [
+    ["Organisé en questions", "Chaque thématique se lit comme un chapitre de diagnostic : quelles familles vivent ici ? qui vit seul ? les habitants accèdent-ils à leurs droits ?"],
+    ["Comparé à 5 échelles", "Chaque indicateur est situé par rapport à l'intercommunalité, au département, à la région et à la France, avec son évolution."],
+    ["Cartographié par quartier", "Les cartes par IRIS révèlent les écarts entre quartiers que la moyenne communale masque."],
+    ["Synthèse des enjeux", "Le rang du territoire parmi les communes de même densité situe l'intensité de chaque enjeu."],
+    ["Définition, intérêt, source", "Chaque indicateur est défini, commenté pour l'analyse sociale et sourcé avec son millésime."],
+    ["Export Excel", "Les données de chaque graphique, tableau et carte se téléchargent en Excel pour alimenter vos rapports et présentations."]
+  ]
+  themes = ["Population", "Ménages", "Familles", "Logement", "Petite enfance", "Enfance et jeunesse", "Scolarité", "Diplômes et formation", "Emploi", "Tissu économique", "Revenus et pauvreté", "Immigrés et étrangers", "Accès aux droits", "Santé", "Seniors", "Handicap", "Équipements et services", "Vie locale", "Délinquance"]
+  capture = %w[png jpg webp].map { |ext| "capture_dashboard.#{ext}" }
+                            .find { |f| Rails.root.join("app/assets/images/accueil", f).exist? }
+%>
+<div style="font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; color: #111827; background: #ffffff; width: 100%">
+  <!-- Hero -->
+  <section id="top" style="background: #f8fafc; border-bottom: 1px solid #eef2f7">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 72px 24px; display: flex; flex-wrap: wrap; gap: 48px; align-items: center">
+      <div style="flex: 1 1 440px; min-width: 0">
+        <p style="margin: 0 0 14px; font-size: 14px; font-weight: 600; color: #4338ca; letter-spacing: 0.04em; text-transform: uppercase">Analyse des besoins sociaux · diagnostic de territoire</p>
+        <h1 style="margin: 0; font-size: 48px; line-height: 1.08; font-weight: 700; color: #0f172a">Votre observatoire social de territoire, prêt à l'emploi</h1>
+        <p style="margin: 20px 0 0; font-size: 19px; line-height: 1.55; color: #374151">Plus de 160 indicateurs issus des principales sources publiques, déjà mis en forme en graphiques, tableaux et cartes par quartier, pour chaque commune et chaque intercommunalité de France.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px">
+          <a href="#contact" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 8px; background: #4f46e5; color: #ffffff; text-decoration: none; font-weight: 600">Demander une présentation</a>
+          <a href="#outil" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 8px; border: 1px solid #cbd5e1; color: #1f2937; text-decoration: none; font-weight: 600; background: #ffffff">Découvrir l'outil</a>
         </div>
       </div>
-    </div>
-  </div>
-<% end %>
 
-<!-- Hero Section -->
-<div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-    <div class="flex flex-col md:flex-row items-center">
-      <div class="md:w-1/2 mb-12 md:mb-0">
-        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-          Valorisez les données de votre territoire
-        </h1>
-        <p class="text-xl text-indigo-100 mb-8">
-          Une solution complète pour analyser et visualiser les données démographiques, socio-économiques et créer des enquêtes pour votre commune.
-        </p>
-        <div class="flex space-x-4">
-          <a href="#" class="inline-flex items-center justify-center bg-white text-indigo-600 hover:text-indigo-500 font-medium py-3 px-6 rounded-md">
-            Démarrer
-          </a>
-          <a href="#" class="inline-flex items-center justify-center bg-transparent border border-white text-white hover:bg-white hover:text-indigo-600 font-medium py-3 px-6 rounded-md">
-            En savoir plus
-          </a>
-        </div>
-      </div>
-      <div class="md:w-1/2">
-        <div class="bg-white p-4 rounded-lg shadow-lg">
-          <div class="aspect-w-16 aspect-h-9 bg-gray-100 rounded">
-            <div class="flex items-center justify-center h-64">
-              <span class="text-gray-400">Aperçu du tableau de bord</span>
+      <!-- Aperçu du tableau de bord (capture à remplacer) -->
+      <div style="flex: 1 1 520px; min-width: 0">
+        <div style="border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff; box-shadow: 0 12px 32px rgba(15,23,42,0.08); overflow: hidden">
+          <div style="display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-bottom: 1px solid #eef2f7; background: #f8fafc">
+            <span style="width: 10px; height: 10px; border-radius: 99px; background: #e2e8f0"></span>
+            <span style="width: 10px; height: 10px; border-radius: 99px; background: #e2e8f0"></span>
+            <span style="width: 10px; height: 10px; border-radius: 99px; background: #e2e8f0"></span>
+            <span style="margin-left: 10px; font-size: 12px; color: #6b7280">Tableau de bord · onglet Revenus et pauvreté</span>
+          </div>
+          <div style="padding: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+            <div style="grid-column: span 2; display: flex; flex-wrap: wrap; gap: 8px">
+              <span style="font-size: 12px; padding: 5px 10px; border-radius: 99px; background: #eef2ff; color: #3730a3">1. Quel niveau de vie ?</span>
+              <span style="font-size: 12px; padding: 5px 10px; border-radius: 99px; background: #eef2ff; color: #3730a3">2. Qui vit sous le seuil de pauvreté ?</span>
+              <span style="font-size: 12px; padding: 5px 10px; border-radius: 99px; background: #eef2ff; color: #3730a3">3. Des revenus inégaux ?</span>
+            </div>
+            <div style="border: 1px solid #eef2f7; border-radius: 10px; padding: 14px">
+              <p style="margin: 0 0 10px; font-size: 12px; font-weight: 600; color: #374151">Taux de pauvreté, 5 échelles</p>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #374151">Commune</span><span style="height: 9px; width: 82%; border-radius: 5px; background: #4f46e5"></span></div>
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #4b5563">EPCI</span><span style="height: 9px; width: 62%; border-radius: 5px; background: #a5b4fc"></span></div>
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #4b5563">Département</span><span style="height: 9px; width: 55%; border-radius: 5px; background: #a5b4fc"></span></div>
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #4b5563">Région</span><span style="height: 9px; width: 58%; border-radius: 5px; background: #a5b4fc"></span></div>
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #4b5563">France</span><span style="height: 9px; width: 50%; border-radius: 5px; background: #cbd5e1"></span></div>
+              </div>
+            </div>
+            <div style="border: 1px solid #eef2f7; border-radius: 10px; padding: 14px">
+              <p style="margin: 0 0 10px; font-size: 12px; font-weight: 600; color: #374151">Carte par quartier (IRIS)</p>
+              <svg viewBox="0 0 200 120" width="100%" height="120" role="img" aria-label="Carte schématique des quartiers colorés selon l'indicateur">
+                <path d="M10 20 L70 10 L80 50 L30 60 Z" fill="#fde68a" stroke="#ffffff" stroke-width="2"></path>
+                <path d="M70 10 L130 18 L120 58 L80 50 Z" fill="#f97316" stroke="#ffffff" stroke-width="2"></path>
+                <path d="M130 18 L190 30 L180 70 L120 58 Z" fill="#fdba74" stroke="#ffffff" stroke-width="2"></path>
+                <path d="M30 60 L80 50 L90 100 L20 108 Z" fill="#fed7aa" stroke="#ffffff" stroke-width="2"></path>
+                <path d="M80 50 L120 58 L130 105 L90 100 Z" fill="#c2410c" stroke="#ffffff" stroke-width="2"></path>
+                <path d="M120 58 L180 70 L175 112 L130 105 Z" fill="#fb923c" stroke="#ffffff" stroke-width="2"></path>
+              </svg>
+            </div>
+            <div style="grid-column: span 2; display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #4338ca">
+              <span>ⓘ Définition</span><span>◎ Intérêt</span><span>⊙ Source</span><span style="margin-left: auto; color: #047857">↓ Excel</span>
             </div>
           </div>
         </div>
-      </div>
+              </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<!-- Features Section -->
-<div class="py-16 bg-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-16">
-      <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
-        Fonctionnalités principales
-      </h2>
-      <p class="text-xl text-gray-500 max-w-3xl mx-auto">
-        Tout ce dont vous avez besoin pour analyser, visualiser et exploiter les données de votre territoire.
-      </p>
+  <!-- Chiffres clés de l'outil -->
+  <section style="border-bottom: 1px solid #eef2f7">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px">
+      <div><p style="margin: 0; font-size: 40px; font-weight: 700; color: #4338ca">160+</p><p style="margin: 4px 0 0; color: #374151">indicateurs définis, sourcés et commentés</p></div>
+      <div><p style="margin: 0; font-size: 40px; font-weight: 700; color: #4338ca">19</p><p style="margin: 4px 0 0; color: #374151">thématiques, organisées en questions</p></div>
+      <div><p style="margin: 0; font-size: 40px; font-weight: 700; color: #4338ca">5</p><p style="margin: 4px 0 0; color: #374151">échelles comparées : commune, EPCI, département, région, France</p></div>
+      <div><p style="margin: 0; font-size: 40px; font-weight: 700; color: #4338ca">60+</p><p style="margin: 4px 0 0; color: #374151">indicateurs cartographiés par quartier (IRIS)</p></div>
     </div>
+  </section>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <!-- Feature 1 -->
-      <div class="p-6 bg-gray-50 rounded-lg">
-        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-md flex items-center justify-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2">Données territoriales</h3>
-        <p class="text-gray-600">
-          Visualisez les données démographiques, socio-économiques, de natalité, de scolarisation et de sécurité publique de votre commune.
-        </p>
-      </div>
+  <!-- Avant / après -->
+  <section id="outil" style="background: #ffffff">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 80px 24px">
+      <h2 style="margin: 0; font-size: 36px; font-weight: 700; color: #0f172a; max-width: 760px">Des dizaines de fichiers à croiser, ou un tableau de bord déjà prêt</h2>
+      <p style="margin: 14px 0 0; font-size: 18px; line-height: 1.55; color: #374151; max-width: 760px">Un diagnostic social demande d'ordinaire des jours de téléchargement, de nettoyage et de mise en forme. L'outil fait ce travail en amont : vous partez directement de l'analyse.</p>
 
-      <!-- Feature 2 -->
-      <div class="p-6 bg-gray-50 rounded-lg">
-        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-md flex items-center justify-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.088.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2">Création d'enquêtes</h3>
-        <p class="text-gray-600">
-          Concevez, diffusez et analysez des enquêtes personnalisées avec différents types de questions et rapports détaillés des résultats.
-        </p>
-      </div>
-
-      <!-- Feature 3 -->
-      <div class="p-6 bg-gray-50 rounded-lg">
-        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-md flex items-center justify-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2">Analyses et rapports</h3>
-        <p class="text-gray-600">
-          Générez des analyses comparatives, des graphiques interactifs et exportez vos données en PDF ou CSV pour vos présentations.
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Main Modules Section -->
-<div class="py-16 bg-gray-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-16">
-      <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
-        Modules principaux
-      </h2>
-      <p class="text-xl text-gray-500 max-w-3xl mx-auto">
-        Une solution complète pour vos besoins d'analyse territoriale
-      </p>
-    </div>
-
-    <!-- Module Rows -->
-    <!-- Module 1 -->
-    <div class="mb-16">
-      <div class="flex flex-col md:flex-row items-center bg-white rounded-lg overflow-hidden shadow-lg">
-        <div class="md:w-1/2 p-8">
-          <h3 class="text-2xl font-bold text-gray-900 mb-4">Analyse démographique</h3>
-          <p class="text-gray-600 mb-4">
-            Explorez les données démographiques détaillées de votre commune : population par âge, évolution historique, natalité et structure familiale.
-          </p>
-          <ul class="space-y-2 mb-6">
-            <li class="flex items-center">
-              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <span>Comparaison avec l'EPCI, le département et la région</span>
-            </li>
-            <li class="flex items-center">
-              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <span>Évolution historique sur 10 ans</span>
-            </li>
-            <li class="flex items-center">
-              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <span>Analyse des tendances démographiques</span>
-            </li>
+      <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-top: 40px; align-items: stretch">
+        <div style="flex: 1 1 420px; min-width: 0; border: 1px solid #e5e7eb; border-radius: 14px; padding: 24px; background: #f9fafb">
+          <p style="margin: 0 0 16px; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #6b7280">Sans l'outil</p>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <% files.each do |f| %>
+              <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; background: #ffffff; border: 1px solid #e5e7eb; font-size: 13px; color: #374151; min-width: 0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6"></path><path d="M8 13l4 4M12 13l-4 4"></path></svg>
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"><%= f %></span>
+              </div>
+            <% end %>
+          </div>
+          <ul style="margin: 20px 0 0; padding-left: 18px; color: #4b5563; font-size: 15px; line-height: 1.7">
+            <li>Télécharger les bases, retrouver les bons millésimes</li>
+            <li>Isoler sa commune, son EPCI et les territoires de comparaison</li>
+            <li>Calculer les taux, construire graphiques et cartes</li>
           </ul>
-          <a href="#" class="inline-flex items-center font-medium text-indigo-600 hover:text-indigo-500">
-            Découvrir cette fonctionnalité
-            <svg class="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </a>
         </div>
-        <div class="md:w-1/2 bg-gray-100 p-8 flex items-center justify-center">
-          <div class="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
-            <span class="text-gray-400">Graphique démographique</span>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Module 2 -->
-    <div class="mb-16">
-      <div class="flex flex-col md:flex-row-reverse items-center bg-white rounded-lg overflow-hidden shadow-lg">
-        <div class="md:w-1/2 p-8">
-          <h3 class="text-2xl font-bold text-gray-900 mb-4">Gestion d'enquêtes</h3>
-          <p class="text-gray-600 mb-4">
-            Créez et gérez des enquêtes personnalisées pour consulter vos habitants et recueillir leurs avis sur vos projets communaux.
-          </p>
-          <ul class="space-y-2 mb-6">
-            <li class="flex items-center">
-              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <span>Multiples types de questions (choix unique, multiple, texte libre)</span>
-            </li>
-            <li class="flex items-center">
-              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <span>Génération de QR codes et affiches personnalisées</span>
-            </li>
-            <li class="flex items-center">
-              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <span>Statistiques en temps réel et analyse des résultats</span>
-            </li>
+        <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0 4px">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+        </div>
+
+        <div style="flex: 1 1 420px; min-width: 0; border: 1px solid #c7d2fe; border-radius: 14px; padding: 24px; background: #eef2ff">
+          <p style="margin: 0 0 16px; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #3730a3">Avec l'outil</p>
+          <% if capture %>
+            <%= image_tag "accueil/#{capture}", alt: "Onglet du tableau de bord : graphique de comparaison et carte par quartier", style: "width: 100%; border-radius: 10px; border: 1px solid #e0e7ff; display: block" %>
+          <% else %>
+            <div style="border-radius: 10px; background: #ffffff; border: 1px solid #e0e7ff; height: 210px; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; text-align: center; padding: 16px">Capture à venir : un onglet du tableau de bord (graphique de comparaison et carte par quartier)</div>
+          <% end %>
+          <ul style="margin: 20px 0 0; padding-left: 18px; color: #312e81; font-size: 15px; line-height: 1.7">
+            <li>Les indicateurs à jour, comparés aux autres échelles</li>
+            <li>Graphiques, tableaux et cartes déjà mis en forme</li>
+            <li>Export Excel de chaque bloc pour vos rapports</li>
           </ul>
-          <a href="#" class="inline-flex items-center font-medium text-indigo-600 hover:text-indigo-500">
-            Découvrir cette fonctionnalité
-            <svg class="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </a>
-        </div>
-        <div class="md:w-1/2 bg-gray-100 p-8 flex items-center justify-center">
-          <div class="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
-            <span class="text-gray-400">Interface d'enquête</span>
-          </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- Module 3 -->
-    <div>
-      <div class="flex flex-col md:flex-row items-center bg-white rounded-lg overflow-hidden shadow-lg">
-        <div class="md:w-1/2 p-8">
-          <h3 class="text-2xl font-bold text-gray-900 mb-4">Données socio-économiques</h3>
-          <p class="text-gray-600 mb-4">
-            Analysez les données socio-économiques de votre territoire : revenus, emploi, scolarisation et sécurité publique.
-          </p>
-          <ul class="space-y-2 mb-6">
-            <li class="flex items-center">
-              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <span>Indicateurs de revenus et d'emploi</span>
-            </li>
-            <li class="flex items-center">
-              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <span>Données sur la scolarisation et l'accueil petite enfance</span>
-            </li>
-            <li class="flex items-center">
-              <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <span>Statistiques de sécurité publique</span>
-            </li>
-          </ul>
-          <a href="#" class="inline-flex items-center font-medium text-indigo-600 hover:text-indigo-500">
-            Découvrir cette fonctionnalité
-            <svg class="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
-          </a>
-        </div>
-        <div class="md:w-1/2 bg-gray-100 p-8 flex items-center justify-center">
-          <div class="w-full h-64 bg-gray-200 rounded flex items-center justify-center">
-            <span class="text-gray-400">Graphiques socio-économiques</span>
+  <!-- Fonctionnalités -->
+  <section style="background: #f8fafc; border-top: 1px solid #eef2f7; border-bottom: 1px solid #eef2f7">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 80px 24px">
+      <h2 style="margin: 0; font-size: 36px; font-weight: 700; color: #0f172a">Pensé pour le diagnostic, pas seulement pour la donnée</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 36px">
+        <% features.each do |ft_title, ft_text| %>
+          <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 22px">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 600; color: #111827"><%= ft_title %></h3>
+            <p style="margin: 8px 0 0; font-size: 15px; line-height: 1.55; color: #4b5563"><%= ft_text %></p>
           </div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <!-- Thématiques -->
+  <section id="thematiques" style="background: #ffffff">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 80px 24px">
+      <h2 style="margin: 0; font-size: 36px; font-weight: 700; color: #0f172a">19 thématiques, de la petite enfance au grand âge</h2>
+      <p style="margin: 14px 0 0; font-size: 18px; line-height: 1.55; color: #374151; max-width: 760px">Chaque thématique répond à quelques questions simples, puis une synthèse situe l'intensité de chaque enjeu par rapport aux territoires comparables.</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 32px">
+        <% themes.each do |t| %>
+          <div style="padding: 14px 16px; border-radius: 10px; border: 1px solid #e5e7eb; font-size: 15px; font-weight: 500; color: #1f2937"><%= t %></div>
+        <% end %>
+      </div>
+      <p style="margin: 28px 0 0; font-size: 14px; line-height: 1.6; color: #4b5563">Sources : INSEE (recensements, Filosofi, état civil, BPE, Flores), Cnaf, France Travail, Assurance maladie, Observatoire des fragilités, SDES (RPLS, Sitadel), SSMSI, Éducation nationale, Annuaire de l'administration.</p>
+    </div>
+  </section>
+
+  <!-- Pour qui -->
+  <section id="pour-qui" style="background: #f8fafc; border-top: 1px solid #eef2f7; border-bottom: 1px solid #eef2f7">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 80px 24px">
+      <h2 style="margin: 0; font-size: 36px; font-weight: 700; color: #0f172a">Pour celles et ceux qui préparent les politiques sociales</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 36px">
+        <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 26px">
+          <h3 style="margin: 0; font-size: 20px; font-weight: 600; color: #111827">CCAS et CIAS</h3>
+          <p style="margin: 10px 0 0; font-size: 15px; line-height: 1.6; color: #4b5563">Réaliser l'analyse des besoins sociaux obligatoire et la mettre à jour chaque année, sans repartir de zéro. Les données sont prêtes ; vous consacrez votre temps aux entretiens, aux partenaires et au plan d'action.</p>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 26px">
+          <h3 style="margin: 0; font-size: 20px; font-weight: 600; color: #111827">Chargés de mission</h3>
+          <p style="margin: 10px 0 0; font-size: 15px; line-height: 1.6; color: #4b5563">Documenter un contrat de ville, une convention territoriale globale avec la CAF, un projet éducatif ou un schéma petite enfance : chiffres, cartes par quartier et sources citables en quelques clics.</p>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 26px">
+          <h3 style="margin: 0; font-size: 20px; font-weight: 600; color: #111827">Intercommunalités</h3>
+          <p style="margin: 10px 0 0; font-size: 15px; line-height: 1.6; color: #4b5563">Comparer les communes membres sur chaque indicateur, repérer celles où l'enjeu se concentre et ouvrir le tableau de bord de chacune d'elles.</p>
         </div>
       </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<!-- Testimonials Section -->
-<div class="py-16 bg-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-16">
-      <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
-        Ce que disent nos utilisateurs
-      </h2>
-      <p class="text-xl text-gray-500 max-w-3xl mx-auto">
-        Découvrez l'expérience des collectivités qui utilisent déjà notre plateforme.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Testimonial 1 -->
-      <div class="p-6 bg-gray-50 rounded-lg">
-        <div class="flex items-center mb-4">
-          <div class="w-12 h-12 bg-gray-300 rounded-full mr-4"></div>
-          <div>
-            <h3 class="text-lg font-bold text-gray-900">Marie Dumas</h3>
-            <p class="text-gray-600">Directrice des services, Commune de 5000 habitants</p>
-          </div>
-        </div>
-        <p class="text-gray-600 italic">
-          "Grâce à Territory Dashboard, nous avons pu facilement analyser les tendances démographiques de notre commune et adapter nos services en conséquence. Les enquêtes nous ont permis de mieux comprendre les besoins de nos habitants."
-        </p>
+  <!-- Tarif et contact -->
+  <section id="tarif" style="background: #ffffff">
+    <div id="contact" style="max-width: 1200px; margin: 0 auto; padding: 80px 24px; display: flex; flex-wrap: wrap; gap: 40px; align-items: center; justify-content: space-between">
+      <div style="flex: 1 1 520px; min-width: 0">
+        <h2 style="margin: 0; font-size: 36px; font-weight: 700; color: #0f172a">Tarif sur demande</h2>
+        <p style="margin: 14px 0 0; font-size: 18px; line-height: 1.55; color: #374151">L'abonnement dépend de la taille du territoire (commune ou intercommunalité). Contactez-nous pour une présentation de l'outil sur votre territoire et un devis.</p>
       </div>
-
-      <!-- Testimonial 2 -->
-      <div class="p-6 bg-gray-50 rounded-lg">
-        <div class="flex items-center mb-4">
-          <div class="w-12 h-12 bg-gray-300 rounded-full mr-4"></div>
-          <div>
-            <h3 class="text-lg font-bold text-gray-900">Thomas Martin</h3>
-            <p class="text-gray-600">Maire adjoint, Commune de 15000 habitants</p>
-          </div>
-        </div>
-        <p class="text-gray-600 italic">
-          "L'interface intuitive et les visualisations claires nous ont permis de prendre des décisions basées sur des données concrètes. La génération de rapports PDF nous fait gagner un temps précieux lors de nos présentations en conseil municipal."
-        </p>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px">
+        <a href="mailto:<%= contact_email %>" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 8px; background: #4f46e5; color: #ffffff; text-decoration: none; font-weight: 600">Nous contacter</a>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Pricing Section -->
-<div class="py-16 bg-gray-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-16">
-      <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
-        Tarifs adaptés à la taille de votre commune
-      </h2>
-      <p class="text-xl text-gray-500 max-w-3xl mx-auto">
-        Des formules d'abonnement annuel selon le nombre d'habitants de votre territoire.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <!-- Pricing 1 -->
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="p-8">
-          <h3 class="text-lg font-medium text-gray-900">Petites communes</h3>
-          <div class="mt-4 flex items-baseline text-indigo-600">
-            <span class="text-5xl font-extrabold tracking-tight">1000€</span>
-            <span class="ml-1 text-xl font-medium text-gray-500">/an</span>
-          </div>
-          <p class="mt-5 text-gray-500">
-            Pour les communes jusqu'à 3500 habitants
-          </p>
-        </div>
-        <div class="px-6 pt-6 pb-8">
-          <ul class="space-y-4">
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Toutes les données démographiques</span>
-            </li>
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Création de 3 enquêtes par an</span>
-            </li>
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Exports PDF et CSV</span>
-            </li>
-          </ul>
-          <div class="mt-8">
-            <a href="#" class="block w-full text-center rounded-md bg-indigo-600 px-6 py-3 text-white font-medium hover:bg-indigo-700">
-              Commencer
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pricing 2 -->
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-indigo-500">
-        <div class="p-8">
-          <h3 class="text-lg font-medium text-gray-900">Communes moyennes</h3>
-          <div class="mt-4 flex items-baseline text-indigo-600">
-            <span class="text-5xl font-extrabold tracking-tight">1500€</span>
-            <span class="ml-1 text-xl font-medium text-gray-500">/an</span>
-          </div>
-          <p class="mt-5 text-gray-500">
-            Pour les communes de 3501 à 10000 habitants
-          </p>
-        </div>
-        <div class="px-6 pt-6 pb-8">
-          <ul class="space-y-4">
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Toutes les données démographiques</span>
-            </li>
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Création de 5 enquêtes par an</span>
-            </li>
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Analyse comparative avancée</span>
-            </li>
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Support prioritaire</span>
-            </li>
-          </ul>
-          <div class="mt-8">
-            <a href="#" class="block w-full text-center rounded-md bg-indigo-600 px-6 py-3 text-white font-medium hover:bg-indigo-700">
-              Commencer
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pricing 3 -->
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="p-8">
-          <h3 class="text-lg font-medium text-gray-900">Grandes communes</h3>
-          <div class="mt-4 flex items-baseline text-indigo-600">
-            <span class="text-5xl font-extrabold tracking-tight">2000€</span>
-            <span class="ml-1 text-xl font-medium text-gray-500">/an</span>
-          </div>
-          <p class="mt-5 text-gray-500">
-            Pour les communes de 10001 à 100000 habitants
-          </p>
-        </div>
-        <div class="px-6 pt-6 pb-8">
-          <ul class="space-y-4">
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Fonctionnalités complètes</span>
-            </li>
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Enquêtes illimitées</span>
-            </li>
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Données historiques étendues</span>
-            </li>
-            <li class="flex items-start">
-              <svg class="h-6 w-6 text-green-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="ml-3 text-gray-700">Formation et accompagnement</span>
-            </li>
-          </ul>
-          <div class="mt-8">
-            <a href="#" class="block w-full text-center rounded-md bg-indigo-600 px-6 py-3 text-white font-medium hover:bg-indigo-700">
-              Commencer
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Custom pricing -->
-    <div class="mt-10 text-center">
-      <p class="text-gray-600">
-        Vous êtes une métropole ou une commune de plus de 100000 habitants ?
-      </p>
-      <a href="#" class="inline-flex items-center mt-2 font-medium text-indigo-600 hover:text-indigo-500">
-        Contactez-nous pour une offre sur mesure
-        <svg class="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-        </svg>
-      </a>
-    </div>
-  </div>
-</div>
-
-<!-- CTA Section -->
-<div class="bg-indigo-700 text-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-    <h2 class="text-3xl font-extrabold mb-4">
-      Prêt à optimiser la gestion de votre territoire ?
-    </h2>
-    <p class="text-xl text-indigo-200 mb-8 max-w-3xl mx-auto">
-      Rejoignez les collectivités qui utilisent déjà Territory Dashboard pour analyser leurs données territoriales et créer des enquêtes efficaces.
-    </p>
-    <div class="inline-flex space-x-4">
-      <a href="#" class="inline-flex items-center justify-center bg-white text-indigo-600 hover:bg-indigo-50 font-medium py-3 px-8 rounded-md text-lg">
-        Demander une démo
-      </a>
-      <a href="#" class="inline-flex items-center justify-center bg-transparent border border-white text-white hover:bg-white hover:text-indigo-600 font-medium py-3 px-8 rounded-md text-lg">
-        Nous contacter
-      </a>
-    </div>
-  </div>
+  </section>
 </div>
