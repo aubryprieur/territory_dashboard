@@ -14,8 +14,11 @@ export default class extends Controller {
     const section = this.element.closest("section") || this.element.closest(".bg-white")
     const heading = section && section.querySelector("h3")
     const title = this.clean(heading ? heading.textContent : chart.getAttribute("aria-label"))
-    const subtitle = this.clean(chart.getAttribute("aria-label")) !== title ? this.clean(chart.getAttribute("aria-label")) : ""
-    const territory = this.territoryName()
+    const aria = this.clean(chart.getAttribute("aria-label"))
+    // description du graphique, sauf si elle répète le titre ou n'énumère que des années
+    const subtitle = aria !== title && !/(\d{4}, ){3,}/.test(aria) ? aria : ""
+    const name = this.territoryName()
+    const territory = name && !title.includes(name) ? name : ""
     const srcNode = section && section.querySelector('[data-note="src"]')
     const source = srcNode ? `Source : ${this.clean(srcNode.textContent)}` : ""
 
@@ -66,7 +69,7 @@ export default class extends Controller {
       if (!blob) return
       const a = document.createElement("a")
       a.href = URL.createObjectURL(blob)
-      a.download = `${this.slug([title, territory].filter(Boolean).join(" "))}.png`
+      a.download = `${this.slug([title, name].filter((t, i) => t && (i === 0 || !title.includes(t))).join(" "))}.png`
       document.body.appendChild(a)
       a.click()
       a.remove()
