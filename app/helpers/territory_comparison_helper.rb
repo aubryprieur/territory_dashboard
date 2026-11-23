@@ -204,9 +204,21 @@ module TerritoryComparisonHelper
 
   private
 
+  # Graphique (dessiné par charts/families_charts.js) et, dessous, bouton « Image » (chart_image_controller.js) :
+  # PNG sur fond blanc avec titre du bloc, territoire et source
   def chart_canvas(config, height, aria_label)
-    content_tag(:div, class: "relative", style: "height: #{height}px") do
-      content_tag(:canvas, nil, data: { families_chart: config.to_json }, role: "img", "aria-label": aria_label)
+    content_tag(:div, data: { controller: "chart-image" }) do
+      safe_join([
+        content_tag(:div, class: "relative", style: "height: #{height}px") do
+          content_tag(:canvas, nil, data: { families_chart: config.to_json, chart_image_target: "canvas" },
+                      role: "img", "aria-label": aria_label)
+        end,
+        content_tag(:div, style: "display:flex;justify-content:flex-end;margin-top:4px") do
+          content_tag(:button, "⤓ Image", type: "button", data: { action: "click->chart-image#download" },
+                      title: "Enregistrer le graphique en image (PNG)",
+                      style: "background:none;border:none;padding:2px 0;cursor:pointer;color:#6b7280;font-size:12px")
+        end
+      ])
     end
   end
 end
