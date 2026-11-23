@@ -600,7 +600,8 @@ class DashboardController < ApplicationController
       @territory_code = params[:commune_code]
       territory = Territory.find_by(codgeo: @territory_code)
       @territory_name = territory&.libgeo || "Commune inconnue"
-      @is_commune_access_from_epci = true
+      # Super administrateur : consultation depuis sa page d'accueil (recherche de territoire), pas depuis un EPCI
+      @is_commune_access_from_epci = !current_user.super_admin?
 
       # 🔧 CORRECTION : Stocker les informations dans la session pour debugging
       session[:last_commune_access] = {

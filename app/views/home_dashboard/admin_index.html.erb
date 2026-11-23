@@ -22,6 +22,22 @@
       </div>
     </div>
 
+    <!-- Consultation d'un territoire : recherche d'une commune ou d'un EPCI, ouverture de son tableau de bord -->
+    <div class="px-4 sm:px-0">
+      <div class="bg-white shadow-lg rounded-lg p-6 border-l-4 border-indigo-500">
+        <h2 class="text-lg font-medium text-gray-900">Consulter un territoire</h2>
+        <p class="text-sm text-gray-500 mt-1 mb-4">Tapez le nom ou le code d'une commune ou d'une intercommunalité pour ouvrir son tableau de bord.</p>
+        <div class="relative max-w-2xl" data-controller="territory-search" data-territory-search-dashboard-url-value="<%= dashboard_path %>">
+          <input type="search" autocomplete="off" placeholder="Ex. Sotteville-lès-Rouen, Métropole Rouen Normandie, 76681…"
+                 data-territory-search-target="input"
+                 data-action="input->territory-search#search keydown->territory-search#keydown"
+                 class="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none">
+          <div data-territory-search-target="results" hidden
+               class="absolute z-20 mt-1 w-full max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Cards d'administration -->
     <div class="px-4 py-6 sm:px-0">
       <div class="grid md:grid-cols-2 gap-6">

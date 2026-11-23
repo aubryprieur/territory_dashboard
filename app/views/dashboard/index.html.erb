@@ -1,3 +1,10 @@
+<% if current_user.super_admin? %>
+  <%# Super administrateur : bandeau de consultation et retour à la recherche de territoire %>
+  <div class="bg-indigo-50 border-l-4 border-indigo-400 px-4 py-3 mb-6 flex flex-wrap items-center justify-between gap-3 text-sm text-indigo-800">
+    <span>Consultation administrateur : <strong><%= @territory_name %></strong><%= @epci_mode ? " (intercommunalité)" : "" %></span>
+    <a href="<%= home_dashboard_path %>" class="underline hover:text-indigo-900">← Consulter un autre territoire</a>
+  </div>
+<% end %>
 <% if @is_commune_access_from_epci %>
   <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
     <div class="flex">
