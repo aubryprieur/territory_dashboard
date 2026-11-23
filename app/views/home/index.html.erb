@@ -1,7 +1,8 @@
 <%#
   Page d'accueil publique : l'observatoire social de territoire (chiffres de l'outil, avant / après, fonctionnalités,
   thématiques, publics, tarif sur demande). Les enquêtes sont mises de côté.
-  Captures : déposer app/assets/images/accueil/capture_dashboard.png (bloc « Avec l'outil ») ; à défaut, emplacement.
+  Captures (app/assets/images/accueil/) : apercu_carte.jpg (haut de page), apercu_indicateur.jpg (« Avec l'outil »),
+  apercu_carte_tableau.jpg (carte et classement des quartiers).
 %>
 <% content_for :full_width, true %>
 <%
@@ -15,8 +16,6 @@
     ["Export image et Excel", "Chaque graphique et chaque carte s'enregistre en image, avec son titre, sa légende et sa source ; les données de chaque bloc se téléchargent en Excel. Prêts pour vos rapports et présentations."]
   ]
   themes = ["Population", "Ménages", "Familles", "Logement", "Petite enfance", "Enfance et jeunesse", "Scolarité", "Diplômes et formation", "Emploi", "Tissu économique", "Revenus et pauvreté", "Immigrés et étrangers", "Accès aux droits", "Santé", "Seniors", "Handicap", "Équipements et services", "Vie locale", "Délinquance"]
-  capture = %w[png jpg webp].map { |ext| "capture_dashboard.#{ext}" }
-                            .find { |f| Rails.root.join("app/assets/images/accueil", f).exist? }
 %>
 <div style="font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; color: #111827; background: #ffffff; width: 100%">
   <!-- Hero -->
@@ -32,48 +31,13 @@
         <p style="margin: 20px 0 0; font-size: 14px; color: #4b5563">Un observatoire réalisé par <a href="https://www.copas.coop/" target="_blank" rel="noopener" style="color: #3730a3; font-weight: 600">Copas</a>, coopérative qui accompagne les collectivités depuis plus de 40 ans.</p>
       </div>
 
-      <!-- Aperçu du tableau de bord (capture à remplacer) -->
+      <!-- Aperçu : carte du taux de pauvreté par quartier (capture du tableau de bord de Lille) -->
       <div style="flex: 1 1 520px; min-width: 0">
-        <div style="border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff; box-shadow: 0 12px 32px rgba(15,23,42,0.08); overflow: hidden">
-          <div style="display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-bottom: 1px solid #eef2f7; background: #f8fafc">
-            <span style="width: 10px; height: 10px; border-radius: 99px; background: #e2e8f0"></span>
-            <span style="width: 10px; height: 10px; border-radius: 99px; background: #e2e8f0"></span>
-            <span style="width: 10px; height: 10px; border-radius: 99px; background: #e2e8f0"></span>
-            <span style="margin-left: 10px; font-size: 12px; color: #6b7280">Tableau de bord · onglet Revenus et pauvreté</span>
-          </div>
-          <div style="padding: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
-            <div style="grid-column: span 2; display: flex; flex-wrap: wrap; gap: 8px">
-              <span style="font-size: 12px; padding: 5px 10px; border-radius: 99px; background: #eef2ff; color: #3730a3">1. Quel niveau de vie ?</span>
-              <span style="font-size: 12px; padding: 5px 10px; border-radius: 99px; background: #eef2ff; color: #3730a3">2. Qui vit sous le seuil de pauvreté ?</span>
-              <span style="font-size: 12px; padding: 5px 10px; border-radius: 99px; background: #eef2ff; color: #3730a3">3. Des revenus inégaux ?</span>
-            </div>
-            <div style="border: 1px solid #eef2f7; border-radius: 10px; padding: 14px">
-              <p style="margin: 0 0 10px; font-size: 12px; font-weight: 600; color: #374151">Taux de pauvreté, 5 échelles</p>
-              <div style="display: flex; flex-direction: column; gap: 8px">
-                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #374151">Commune</span><span style="height: 9px; width: 82%; border-radius: 5px; background: #4f46e5"></span></div>
-                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #4b5563">EPCI</span><span style="height: 9px; width: 62%; border-radius: 5px; background: #a5b4fc"></span></div>
-                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #4b5563">Département</span><span style="height: 9px; width: 55%; border-radius: 5px; background: #a5b4fc"></span></div>
-                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #4b5563">Région</span><span style="height: 9px; width: 58%; border-radius: 5px; background: #a5b4fc"></span></div>
-                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 64px; font-size: 11px; color: #4b5563">France</span><span style="height: 9px; width: 50%; border-radius: 5px; background: #cbd5e1"></span></div>
-              </div>
-            </div>
-            <div style="border: 1px solid #eef2f7; border-radius: 10px; padding: 14px">
-              <p style="margin: 0 0 10px; font-size: 12px; font-weight: 600; color: #374151">Carte par quartier (IRIS)</p>
-              <svg viewBox="0 0 200 120" width="100%" height="120" role="img" aria-label="Carte schématique des quartiers colorés selon l'indicateur">
-                <path d="M10 20 L70 10 L80 50 L30 60 Z" fill="#fde68a" stroke="#ffffff" stroke-width="2"></path>
-                <path d="M70 10 L130 18 L120 58 L80 50 Z" fill="#f97316" stroke="#ffffff" stroke-width="2"></path>
-                <path d="M130 18 L190 30 L180 70 L120 58 Z" fill="#fdba74" stroke="#ffffff" stroke-width="2"></path>
-                <path d="M30 60 L80 50 L90 100 L20 108 Z" fill="#fed7aa" stroke="#ffffff" stroke-width="2"></path>
-                <path d="M80 50 L120 58 L130 105 L90 100 Z" fill="#c2410c" stroke="#ffffff" stroke-width="2"></path>
-                <path d="M120 58 L180 70 L175 112 L130 105 Z" fill="#fb923c" stroke="#ffffff" stroke-width="2"></path>
-              </svg>
-            </div>
-            <div style="grid-column: span 2; display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #4338ca">
-              <span>ⓘ Définition</span><span>◎ Intérêt</span><span>⊙ Source</span><span style="margin-left: auto; color: #6b7280">⤓ Image</span><span style="color: #047857">↓ Excel</span>
-            </div>
-          </div>
-        </div>
-              </div>
+        <figure style="margin: 0">
+          <%= image_tag "accueil/apercu_carte.jpg", alt: "Carte du taux de pauvreté par quartier (IRIS) à Lille, extraite du tableau de bord", style: "width: 100%; height: auto; display: block; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 12px 32px rgba(15,23,42,0.08); background: #ffffff" %>
+          <figcaption style="margin-top: 10px; font-size: 13px; color: #4b5563">Le taux de pauvreté par quartier à Lille, tel qu'il apparaît dans le tableau de bord.</figcaption>
+        </figure>
+      </div>
     </div>
   </section>
 
@@ -117,11 +81,7 @@
 
         <div style="flex: 1 1 420px; min-width: 0; border: 1px solid #c7d2fe; border-radius: 14px; padding: 24px; background: #eef2ff">
           <p style="margin: 0 0 16px; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #3730a3">Avec l'outil</p>
-          <% if capture %>
-            <%= image_tag "accueil/#{capture}", alt: "Onglet du tableau de bord : graphique de comparaison et carte par quartier", style: "width: 100%; border-radius: 10px; border: 1px solid #e0e7ff; display: block" %>
-          <% else %>
-            <div style="border-radius: 10px; background: #ffffff; border: 1px solid #e0e7ff; height: 210px; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; text-align: center; padding: 16px">Capture à venir : un onglet du tableau de bord (graphique de comparaison et carte par quartier)</div>
-          <% end %>
+          <%= image_tag "accueil/apercu_indicateur.jpg", alt: "Bloc indicateur « Familles monoparentales » à Lille : chiffre clé et comparaison avec la métropole, le département, la région et la France", style: "width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid #e0e7ff; background: #ffffff" %>
           <ul style="margin: 20px 0 0; padding-left: 18px; color: #312e81; font-size: 15px; line-height: 1.7">
             <li>Les indicateurs à jour, comparés aux autres échelles</li>
             <li>Graphiques, tableaux et cartes déjà mis en forme</li>
@@ -129,6 +89,15 @@
           </ul>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Aperçu : carte par quartier et classement des IRIS -->
+  <section style="background: #ffffff">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px 80px">
+      <h2 style="margin: 0; font-size: 28px; font-weight: 700; color: #0f172a">Chaque indicateur, quartier par quartier</h2>
+      <p style="margin: 10px 0 24px; font-size: 17px; line-height: 1.55; color: #374151; max-width: 760px">La carte situe chaque quartier par rapport à la commune ; le tableau fait ressortir ceux où l'enjeu est le plus et le moins marqué, avec leur évolution.</p>
+      <%= image_tag "accueil/apercu_carte_tableau.jpg", alt: "Carte de la part des familles monoparentales par quartier à Lille, avec le tableau des quartiers les plus et les moins concernés", style: "width: 100%; height: auto; display: block; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 12px 32px rgba(15,23,42,0.08)" %>
     </div>
   </section>
 
