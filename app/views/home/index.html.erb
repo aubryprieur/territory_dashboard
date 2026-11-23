@@ -97,7 +97,18 @@
     <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px 80px">
       <h2 style="margin: 0; font-size: 28px; font-weight: 700; color: #0f172a">Chaque indicateur, quartier par quartier</h2>
       <p style="margin: 10px 0 24px; font-size: 17px; line-height: 1.55; color: #374151; max-width: 760px">La carte situe chaque quartier par rapport à la commune ; le tableau fait ressortir ceux où l'enjeu est le plus et le moins marqué, avec leur évolution.</p>
-      <%= image_tag "accueil/apercu_carte_tableau.jpg", alt: "Carte de la part des familles monoparentales par quartier à Lille, avec le tableau des quartiers les plus et les moins concernés", style: "width: 100%; height: auto; display: block; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 12px 32px rgba(15,23,42,0.08)" %>
+      <%# Capture présentée dans une fenêtre de navigateur, à la largeur du texte %>
+      <div style="border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; background: #ffffff; box-shadow: 0 12px 32px rgba(15,23,42,0.08)">
+        <div style="display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-bottom: 1px solid #eef2f7; background: #f8fafc">
+          <span style="width: 10px; height: 10px; border-radius: 99px; background: #e2e8f0"></span>
+          <span style="width: 10px; height: 10px; border-radius: 99px; background: #e2e8f0"></span>
+          <span style="width: 10px; height: 10px; border-radius: 99px; background: #e2e8f0"></span>
+          <span style="margin-left: 10px; font-size: 12px; color: #6b7280">Tableau de bord · Lille · Familles</span>
+        </div>
+        <div style="padding: 24px 16px">
+          <%= image_tag "accueil/apercu_carte_tableau.jpg", alt: "Carte de la part des familles monoparentales par quartier à Lille, avec le tableau des quartiers les plus et les moins concernés", style: "width: 100%; max-width: 880px; height: auto; display: block; margin: 0 auto" %>
+        </div>
+      </div>
     </div>
   </section>
 
