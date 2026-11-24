@@ -1,38 +1,22 @@
-Bienvenue sur Territory Dashboard !
+Bienvenue sur l'Observatoire social de territoire
 
-Bonjour <%= @user.email %>,
+Bonjour,
 
-Un administrateur vous a créé un compte sur Territory Dashboard pour accéder aux données de <%= @territory_name %> (<%= @territory_type %>).
+Un compte a été créé pour <%= @territory_label %> sur l'Observatoire social de territoire. Vous y trouverez le tableau de bord de votre territoire : plus de 160 indicateurs (population, familles, logement, emploi, revenus, accès aux droits, santé…), comparés à l'intercommunalité, au département, à la région et à la France, avec des cartes par quartier.
 
-VOS IDENTIFIANTS TEMPORAIRES :
-Email : <%= @user.email %>
+VOS IDENTIFIANTS
+Adresse e-mail : <%= @user.email %>
 Mot de passe temporaire : <%= @temporary_password %>
 
-CONNEXION :
-Rendez-vous sur : <%= @login_url %>
+Se connecter : <%= @login_url %>
 
-SÉCURITÉ IMPORTANTE :
-Vous devez changer ce mot de passe lors de votre première connexion.
+À votre première connexion, vous choisirez votre propre mot de passe : au moins 12 caractères, avec une minuscule, une majuscule, un chiffre et un caractère spécial (@$!%*?&).
 
-Votre nouveau mot de passe doit respecter ces critères :
-- Au moins 12 caractères
-- Au moins une lettre minuscule
-- Au moins une lettre majuscule
-- Au moins un chiffre
-- Au moins un caractère spécial (@$!%*?&)
-- Ne doit pas être un mot de passe courant
+Une question ? Écrivez-nous : <%= contact_email %>
 
-QUE POUVEZ-VOUS FAIRE ?
-- Consulter les données démographiques de votre territoire
-- Analyser les indicateurs économiques et sociaux
-- Créer et gérer des enquêtes personnalisées
-- Comparer votre territoire avec d'autres échelles géographiques
-
-Si vous avez des questions, n'hésitez pas à contacter notre équipe de support.
-
-Bonne découverte !
-L'équipe Territory Dashboard
+À bientôt sur l'Observatoire,
+L'équipe Copas
 
 ---
-Cet email a été envoyé automatiquement. Merci de ne pas y répondre.
-© <%= Date.current.year %> Territory Dashboard. Tous droits réservés.
+L'Observatoire social de territoire est réalisé par Copas, coopérative qui accompagne les collectivités depuis plus de 40 ans — https://www.copas.coop/
+Cet e-mail a été envoyé automatiquement, merci de ne pas y répondre.

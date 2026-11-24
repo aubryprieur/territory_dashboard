@@ -4,12 +4,17 @@ class UserMailer < ApplicationMailer
     @user = user
     @temporary_password = temporary_password
     @login_url = user_session_url
-    @territory_type = @user.territory_type&.humanize
     @territory_name = @user.territory_name
+    # « la commune de Lille », « l'intercommunalité Métropole Européenne de Lille »
+    @territory_label = case @user.territory_type
+                       when "commune" then "la commune de #{@territory_name}"
+                       when "epci" then "l'intercommunalité #{@territory_name}"
+                       else @territory_name
+                       end
 
     mail(
       to: @user.email,
-      subject: 'Bienvenue sur Territory Dashboard - Configurez votre mot de passe'
+      subject: "Bienvenue sur l'Observatoire social de territoire – vos accès"
     )
   end
 
