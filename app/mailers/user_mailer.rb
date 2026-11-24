@@ -1,5 +1,4 @@
 class UserMailer < ApplicationMailer
-  default from: 'noreply@territory-dashboard.fr'
 
   def welcome_new_user(user, temporary_password)
     @user = user
