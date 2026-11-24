@@ -17,19 +17,14 @@
     <%= form.email_field :email, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" %>
   </div>
 
-  <div class="mb-4">
-    <%= form.label :password, class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= form.password_field :password, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" %>
+  <%# Pas de mot de passe saisi par l'administrateur : un mot de passe temporaire est généré et envoyé par e-mail,
+      l'utilisateur choisit le sien à sa première connexion (bouton « Renvoyer l'e-mail de bienvenue » pour le réinitialiser) %>
+  <div class="mb-4 rounded-md bg-indigo-50 border border-indigo-100 p-3 text-sm text-indigo-800">
     <% if @user.persisted? %>
-      <p class="mt-1 text-sm text-gray-500">
-        Laissez vide si vous ne souhaitez pas changer le mot de passe
-      </p>
+      Le mot de passe appartient à l'utilisateur. Pour le réinitialiser, utilisez « Renvoyer l'e-mail de bienvenue » : il recevra un nouveau mot de passe temporaire et en choisira un nouveau à sa prochaine connexion.
+    <% else %>
+      Pas de mot de passe à saisir : l'utilisateur recevra par e-mail un mot de passe temporaire et choisira le sien à sa première connexion.
     <% end %>
-  </div>
-
-  <div class="mb-4">
-    <%= form.label :password_confirmation, class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= form.password_field :password_confirmation, class: "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" %>
   </div>
 
   <div class="mb-4">

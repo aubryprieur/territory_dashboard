@@ -147,7 +147,8 @@ class Admin::UsersController < ApplicationController
   end
 
   def user_params
-    params.require(:user).permit(:email, :password, :password_confirmation, :role, :territory_type, :territory_code, :territory_name)
+    # Le mot de passe n'est jamais saisi par l'administrateur (mot de passe temporaire envoyé par e-mail)
+    params.require(:user).permit(:email, :role, :territory_type, :territory_code, :territory_name)
   end
 
   def generate_secure_temporary_password
