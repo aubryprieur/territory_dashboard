@@ -20,12 +20,18 @@ class UserMailer < ApplicationMailer
 
   def password_setup_reminder(user)
     @user = user
-    @setup_url = edit_user_registration_url
+    # Connexion avec le mot de passe temporaire : l'application demande alors de choisir le mot de passe définitif
+    @login_url = user_session_url
     @days_remaining = days_until_expiry(user)
+    @territory_label = case @user.territory_type
+                       when "commune" then "la commune de #{@user.territory_name}"
+                       when "epci" then "l'intercommunalité #{@user.territory_name}"
+                       else @user.territory_name
+                       end
 
     mail(
       to: @user.email,
-      subject: 'Rappel : Configurez votre mot de passe - Territory Dashboard'
+      subject: "Rappel : activez votre accès à l'Observatoire social de territoire"
     )
   end
 
