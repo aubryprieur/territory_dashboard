@@ -1,0 +1,72 @@
+<%= render layout: "legal_pages/page", locals: { title: "Politique de confidentialité", updated_on: Date.new(2026, 11, 25) } do %>
+  <p>Cette page explique quelles données personnelles le service « Observatoire social de territoire » traite, pourquoi, combien de temps elles sont conservées et comment exercer vos droits, conformément au règlement général sur la protection des données (RGPD) et à la loi Informatique et Libertés.</p>
+  <p>Le service est réservé aux collectivités et organisations ayant signé un contrat avec COPAS. Les seules données personnelles traitées sont celles de leurs utilisateurs. Les indicateurs statistiques affichés sont des données agrégées et ne concernent aucune personne identifiable.</p>
+
+  <h2>Responsable du traitement</h2>
+  <p>COPAS – Conseil en pratiques et Analyses Sociales, SCOP ARL à capital variable, 229 rue de Solférino, 59000 Lille (SIRET 329 070 809 00093).</p>
+
+  <h2>Délégué à la protection des données</h2>
+  <p>Aubry Prieur – <a href="mailto:aubry.prieur@copas.coop">aubry.prieur@copas.coop</a>.</p>
+
+  <h2>Données traitées, finalités et bases légales</h2>
+  <table>
+    <thead>
+      <tr><th>Données</th><th>Pourquoi</th><th>Base légale</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Adresse électronique, mot de passe (stocké uniquement sous forme chiffrée), collectivité ou territoire de rattachement, rôle, statut du compte (actif, suspendu), dates de création, de confirmation et de mise à jour</td>
+        <td>Créer et gérer votre compte, vous donner accès au tableau de bord de votre territoire</td>
+        <td>Exécution du contrat conclu entre COPAS et votre organisation, et intérêt légitime de COPAS et de votre organisation à fournir l'accès prévu par ce contrat</td>
+      </tr>
+      <tr>
+        <td>Adresse électronique</td>
+        <td>Envoyer les messages liés au service : invitation et création du mot de passe, confirmation, réinitialisation du mot de passe</td>
+        <td>Idem</td>
+      </tr>
+      <tr>
+        <td>Données techniques de connexion (adresse IP, date et heure, page demandée, navigateur)</td>
+        <td>Assurer la sécurité et le bon fonctionnement du service, diagnostiquer les incidents</td>
+        <td>Intérêt légitime de COPAS à sécuriser le service</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Les comptes sont créés par COPAS à la demande de votre organisation. Vos données ne sont pas utilisées à des fins de prospection commerciale, ne sont ni vendues ni cédées, et ne font l'objet d'aucun profilage. Le service n'utilise aucun outil de mesure d'audience ni de publicité.</p>
+
+  <h2>Durée de conservation</h2>
+  <ul>
+    <li><strong>Données de compte</strong> : pendant toute la durée du contrat entre COPAS et votre organisation. Le compte est supprimé à la fin de ce contrat, ou plus tôt à la demande de votre organisation (par exemple si vous la quittez).</li>
+    <li><strong>Données techniques de connexion</strong> : pour une durée limitée, nécessaire à la sécurité du service et au diagnostic des incidents.</li>
+  </ul>
+
+  <h2>Destinataires et sous-traitants</h2>
+  <p>Vos données sont accessibles uniquement aux personnes de COPAS chargées d'administrer le service. COPAS fait appel aux prestataires suivants :</p>
+  <ul>
+    <li><strong>Scalingo SAS</strong> (Strasbourg) : hébergement du service et de la base de données, en France.</li>
+    <li><strong>Brevo (Sendinblue SAS)</strong> (Paris) : envoi des courriels du service. Brevo reçoit votre adresse électronique et le contenu du message.</li>
+    <li><strong>IGN, Géoplateforme</strong> : affichage des fonds de carte. Lors de l'affichage d'une carte, votre navigateur charge les images depuis les serveurs de l'IGN, qui reçoivent votre adresse IP.</li>
+    <li><strong>Services de diffusion de bibliothèques logicielles</strong> (unpkg, jsDelivr, SheetJS) : chargement de composants techniques (cartographie, export Excel, tri). Votre navigateur les télécharge depuis ces services, qui reçoivent votre adresse IP et peuvent la traiter hors de l'Union européenne.</li>
+  </ul>
+
+  <h2>Cookies</h2>
+  <p>Le service utilise uniquement des cookies strictement nécessaires à son fonctionnement. Ils sont dispensés de consentement (article 82 de la loi Informatique et Libertés) et aucun bandeau n'est donc affiché.</p>
+  <table>
+    <thead>
+      <tr><th>Cookie</th><th>Rôle</th><th>Durée</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>_territory_dashboard_session</code></td><td>Maintenir votre session de connexion et protéger les formulaires</td><td>Fin de la session de navigation</td></tr>
+      <tr><td><code>remember_user_token</code></td><td>Vous garder connecté si vous cochez « Se souvenir de moi »</td><td>2 semaines, supprimé à la déconnexion</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Sécurité</h2>
+  <p>Les échanges sont chiffrés (HTTPS), les mots de passe sont stockés sous forme chiffrée et l'accès aux données est limité aux personnes habilitées.</p>
+
+  <h2>Vos droits</h2>
+  <p>Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation du traitement et d'opposition concernant vos données. Pour les exercer, écrivez au délégué à la protection des données : <a href="mailto:aubry.prieur@copas.coop">aubry.prieur@copas.coop</a>. Une réponse vous sera apportée dans un délai d'un mois.</p>
+  <p>Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL (<a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">www.cnil.fr</a>).</p>
+
+  <h2>Modification de cette politique</h2>
+  <p>Cette politique peut évoluer, notamment en cas de nouvelle fonctionnalité. La date de dernière mise à jour figure en haut de la page.</p>
+<% end %>

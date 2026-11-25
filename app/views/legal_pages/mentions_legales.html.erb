@@ -1,0 +1,40 @@
+<%= render layout: "legal_pages/page", locals: { title: "Mentions légales", updated_on: Date.new(2026, 11, 25) } do %>
+  <p>Conformément à l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN), voici les informations relatives à l'éditeur et à l'hébergeur du service « Observatoire social de territoire », accessible à l'adresse <%= request.base_url %>.</p>
+
+  <h2>Éditeur du service</h2>
+  <p>
+    <strong>COPAS – Conseil en pratiques et Analyses Sociales</strong><br>
+    SCOP ARL (société coopérative de production à responsabilité limitée) à capital variable<br>
+    Siège social : 229 rue de Solférino, 59000 Lille<br>
+    SIRET : 329 070 809 00093 – RCS Lille Métropole 329 070 809<br>
+    N° de TVA intracommunautaire : FR80329070809<br>
+    Courriel : <a href="mailto:contact@copas.coop">contact@copas.coop</a><br>
+    Téléphone : 07 83 32 27 13<br>
+    Site : <a href="https://www.copas.coop/" target="_blank" rel="noopener">www.copas.coop</a>
+  </p>
+
+  <h2>Directeur de la publication</h2>
+  <p>Monsieur Aubry Prieur.</p>
+
+  <h2>Hébergeur</h2>
+  <p>
+    <strong>Scalingo SAS</strong><br>
+    13 rue Jacques Peirotes, 67000 Strasbourg<br>
+    RCS Strasbourg 808 665 483<br>
+    Site : <a href="https://scalingo.com/" target="_blank" rel="noopener">scalingo.com</a>
+  </p>
+  <p>Le service et ses données sont hébergés en France (région Paris).</p>
+
+  <h2>Propriété intellectuelle</h2>
+  <p>La structure du service, sa présentation, ses textes (définitions, commentaires et analyses des indicateurs), ses traitements statistiques et ses éléments graphiques sont la propriété de COPAS, sauf mention contraire. Toute reproduction ou représentation de tout ou partie du service, en dehors des usages prévus par les <%= link_to "conditions générales d'utilisation", cgu_path %>, est interdite sans autorisation écrite de COPAS.</p>
+  <p>Les données statistiques affichées proviennent de producteurs publics et restent soumises à leurs propres licences. La liste des sources figure sur la page <%= link_to "Sources des données", sources_donnees_path %>. Les fonds de carte sont fournis par l'IGN (Plan IGN, Géoplateforme).</p>
+
+  <h2>Données personnelles et cookies</h2>
+  <p>Le traitement des données personnelles et l'usage des cookies sont décrits dans la <%= link_to "politique de confidentialité", confidentialite_path %>.</p>
+
+  <h2>Liens externes</h2>
+  <p>Le service peut contenir des liens vers des sites tiers. COPAS n'exerce aucun contrôle sur ces sites et n'est pas responsable de leur contenu.</p>
+
+  <h2>Contact</h2>
+  <p>Pour toute question relative au service : <a href="mailto:contact@copas.coop">contact@copas.coop</a>.</p>
+<% end %>

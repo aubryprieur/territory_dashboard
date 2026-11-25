@@ -1,0 +1,29 @@
+<%# Gabarit commun des pages légales. Locals : title, updated_on (Date). %>
+<style>
+  .legal-content h2 { margin: 2.25rem 0 0.75rem; font-size: 1.25rem; font-weight: 700; color: #0f172a; }
+  .legal-content h3 { margin: 1.5rem 0 0.5rem; font-size: 1.05rem; font-weight: 600; color: #1f2937; }
+  .legal-content p, .legal-content li { line-height: 1.65; color: #374151; }
+  .legal-content p { margin: 0.6rem 0; }
+  .legal-content ul { margin: 0.6rem 0 0.6rem 1.25rem; list-style: disc; }
+  .legal-content li { margin: 0.25rem 0; }
+  .legal-content a { color: #3730a3; text-decoration: underline; }
+  .legal-content table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.95rem; }
+  .legal-content th, .legal-content td { border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; color: #374151; }
+  .legal-content th { background: #f9fafb; font-weight: 600; color: #111827; }
+</style>
+<div class="bg-white w-full">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <nav class="text-sm text-gray-500 mb-6 flex flex-wrap gap-x-4 gap-y-1">
+      <%= link_to "Mentions légales", mentions_legales_path, class: "hover:text-indigo-700" %>
+      <%= link_to "Confidentialité", confidentialite_path, class: "hover:text-indigo-700" %>
+      <%= link_to "Conditions d'utilisation", cgu_path, class: "hover:text-indigo-700" %>
+      <%= link_to "Sources des données", sources_donnees_path, class: "hover:text-indigo-700" %>
+      <%= link_to "Accessibilité", accessibilite_path, class: "hover:text-indigo-700" %>
+    </nav>
+    <h1 class="text-3xl font-bold text-gray-900"><%= title %></h1>
+    <p class="mt-2 text-sm text-gray-500">Dernière mise à jour : <%= l(updated_on, format: :long) %></p>
+    <div class="legal-content mt-6">
+      <%= yield %>
+    </div>
+  </div>
+</div>

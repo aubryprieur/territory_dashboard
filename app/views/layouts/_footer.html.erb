@@ -1,9 +1,14 @@
-<%# Pied de page simple : nom, contact, connexion %>
+<%# Pied de page simple : nom, contact, pages légales, connexion %>
 <footer class="bg-gray-50 border-t border-gray-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 flex flex-wrap items-center justify-between gap-4 text-sm text-gray-600">
     <span>© <%= Date.current.year %> Territory Dashboard · Observatoire social de territoire · réalisé par <a href="https://www.copas.coop/" target="_blank" rel="noopener" class="text-gray-700 hover:text-indigo-700 underline">Copas</a></span>
     <div class="flex flex-wrap gap-5">
       <a href="mailto:<%= contact_email %>" class="text-gray-600 hover:text-indigo-700">Contact</a>
+      <%= link_to "Mentions légales", mentions_legales_path, class: "text-gray-600 hover:text-indigo-700" %>
+      <%= link_to "Confidentialité", confidentialite_path, class: "text-gray-600 hover:text-indigo-700" %>
+      <%= link_to "CGU", cgu_path, class: "text-gray-600 hover:text-indigo-700" %>
+      <%= link_to "Sources des données", sources_donnees_path, class: "text-gray-600 hover:text-indigo-700" %>
+      <%= link_to "Accessibilité : non conforme", accessibilite_path, class: "text-gray-600 hover:text-indigo-700" %>
       <% unless user_signed_in? %><%= link_to "Se connecter", new_user_session_path, class: "text-gray-600 hover:text-indigo-700" %><% end %>
     </div>
   </div>

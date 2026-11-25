@@ -1,0 +1,39 @@
+<%
+  producers = [
+    ["INSEE", "Recensement de la population (population, ménages, familles, logement, emploi, diplômes, immigration) ; Filosofi (revenus, pauvreté) ; Base permanente des équipements (BPE) ; Flores et SIDE (établissements, créations d'entreprises) ; état civil (naissances) ; contours des IRIS"],
+    ["Cnaf (data.caf.fr)", "Foyers allocataires, personnes couvertes, prestations, accueil du jeune enfant"],
+    ["France Travail", "Demandeurs d'emploi en fin de mois (DEFM)"],
+    ["SDES – ministère de la Transition écologique", "Répertoire des logements locatifs des bailleurs sociaux (RPLS) ; base Sitadel (construction de logements)"],
+    ["DGFiP", "Impôt sur le revenu par collectivité territoriale (IRCOM)"],
+    ["Cnam", "Bénéficiaires du régime général de l'assurance maladie"],
+    ["Observatoire interrégimes des situations de fragilité", "Fragilités des retraités (Assurance maladie, Assurance retraite, MSA)"],
+    ["Observatoire national de la précarité énergétique", "Précarité énergétique (Géodip)"],
+    ["SSMSI – ministère de l'Intérieur", "Crimes et délits enregistrés"],
+    ["DEPP – ministère de l'Éducation nationale", "Établissements scolaires, indices de position sociale (IPS)"],
+    ["INJEP", "Licences et clubs sportifs (MEOS)"],
+    ["IGN – Géoplateforme", "Fonds de carte (Plan IGN)"]
+  ]
+%>
+<%= render layout: "legal_pages/page", locals: { title: "Sources des données", updated_on: Date.new(2026, 11, 25) } do %>
+  <p>Les indicateurs de l'Observatoire social de territoire sont calculés à partir de données publiques, ouvertes et gratuites. La source et le millésime de chaque indicateur sont précisés sous le graphique, la carte ou le tableau correspondant.</p>
+
+  <h2>Producteurs des données</h2>
+  <table>
+    <thead><tr><th>Producteur</th><th>Données utilisées</th></tr></thead>
+    <tbody>
+      <% producers.each do |name, data| %>
+        <tr><td><strong><%= name %></strong></td><td><%= data %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <h2>Licences</h2>
+  <p>Ces données sont diffusées par leurs producteurs en données ouvertes, pour la plupart sous la <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener">Licence Ouverte / Open Licence Etalab 2.0</a>. Celle-ci autorise leur réutilisation, à condition d'en mentionner la source et la date de dernière mise à jour.</p>
+  <p>Les indicateurs, rapports, regroupements et commentaires présentés dans le service sont des traitements réalisés par COPAS. Ils n'engagent pas les producteurs des données.</p>
+
+  <h2>Réutiliser les résultats</h2>
+  <p>Lorsque vous reprenez un graphique, une carte ou un export du service, indiquez la source affichée sous l'indicateur, suivie de « traitement : Observatoire social de territoire – COPAS ». Les exports en image intègrent déjà la source.</p>
+
+  <h2>Signaler une erreur</h2>
+  <p>Si vous constatez une valeur qui vous semble erronée, écrivez-nous à <a href="mailto:contact@copas.coop">contact@copas.coop</a> en précisant le territoire et l'indicateur concernés.</p>
+<% end %>

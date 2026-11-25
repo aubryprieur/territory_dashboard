@@ -40,6 +40,13 @@ Rails.application.routes.draw do
     end
   end
 
+  # Pages légales publiques
+  get 'mentions-legales', to: 'legal_pages#mentions_legales', as: :mentions_legales
+  get 'confidentialite', to: 'legal_pages#confidentialite', as: :confidentialite
+  get 'cgu', to: 'legal_pages#cgu', as: :cgu
+  get 'sources-des-donnees', to: 'legal_pages#sources', as: :sources_donnees
+  get 'accessibilite', to: 'legal_pages#accessibilite', as: :accessibilite
+
   # Route pour la page de compte suspendu
   get 'suspended_account', to: 'suspended_accounts#show'
 

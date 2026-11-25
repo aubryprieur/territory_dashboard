@@ -1,0 +1,49 @@
+<%= render layout: "legal_pages/page", locals: { title: "Conditions générales d'utilisation", updated_on: Date.new(2026, 11, 25) } do %>
+  <h2>1. Objet</h2>
+  <p>Les présentes conditions générales d'utilisation (CGU) fixent les règles d'accès et d'utilisation du service « Observatoire social de territoire » (le « service »), édité par COPAS – Conseil en pratiques et Analyses Sociales (« COPAS »). Le service met à disposition des indicateurs statistiques, des graphiques, des cartes et des analyses sur les communes et intercommunalités françaises.</p>
+  <p>Elles complètent le contrat signé entre COPAS et l'organisation de l'utilisateur (abonnement ou mission). En cas de contradiction, ce contrat prévaut.</p>
+
+  <h2>2. Accès au service</h2>
+  <p>L'accès au service est payant et réservé aux personnes autorisées par une collectivité ou une organisation ayant signé un contrat avec COPAS. Les comptes sont créés par COPAS à la demande de cette organisation. Chaque compte est rattaché à un territoire et donne accès aux tableaux de bord prévus par le contrat.</p>
+  <p>La page d'accueil, les présentes CGU et les autres pages d'information sont librement accessibles.</p>
+
+  <h2>3. Identifiants</h2>
+  <p>Chaque compte est personnel. L'utilisateur choisit son mot de passe lors de sa première connexion et s'engage à le garder confidentiel et à ne pas partager son accès. Il prévient COPAS sans délai (<a href="mailto:contact@copas.coop">contact@copas.coop</a>) s'il soupçonne une utilisation non autorisée de son compte.</p>
+
+  <h2>4. Utilisation autorisée</h2>
+  <p>L'utilisateur peut consulter le service et en réutiliser les résultats (graphiques, cartes, tableaux, exports Excel) pour les besoins de son organisation : diagnostics, rapports, notes, présentations, publications. Toute réutilisation mentionne la source des données indiquée sous chaque indicateur, suivie de la mention « traitement : Observatoire social de territoire – COPAS ».</p>
+  <p>Il est notamment interdit :</p>
+  <ul>
+    <li>de donner accès au service à des personnes non autorisées ;</li>
+    <li>d'extraire de façon massive ou automatisée le contenu du service (robots, scripts, aspiration) ;</li>
+    <li>de revendre ou de mettre à disposition de tiers le service, ou une partie substantielle de son contenu, en tant que tel ;</li>
+    <li>de reproduire le service ou ses textes pour concevoir un outil concurrent ;</li>
+    <li>de porter atteinte à la sécurité ou au bon fonctionnement du service.</li>
+  </ul>
+
+  <h2>5. Données et indicateurs</h2>
+  <p>Les indicateurs sont calculés à partir de données publiques diffusées par leurs producteurs (INSEE, Cnaf, ministères, etc.). Leurs sources et millésimes sont indiqués sous chaque indicateur et récapitulés sur la page <%= link_to "Sources des données", sources_donnees_path %>.</p>
+  <p>COPAS apporte le plus grand soin à leur traitement. Ces indicateurs restent cependant des estimations statistiques, dépendantes des données sources : ils peuvent comporter des imprécisions, porter sur des années différentes selon les sources et ne remplacent pas l'analyse d'un professionnel. Les interprétations et décisions prises à partir du service relèvent de la responsabilité de l'utilisateur.</p>
+
+  <h2>6. Propriété intellectuelle</h2>
+  <p>Le service, sa structure, ses textes (définitions, commentaires, analyses), ses traitements et sa présentation sont la propriété de COPAS. L'accès au service ne transfère aucun droit de propriété à l'utilisateur, en dehors des usages prévus à l'article 4. Les données sources restent soumises aux licences de leurs producteurs.</p>
+
+  <h2>7. Disponibilité et responsabilité</h2>
+  <p>COPAS s'efforce de rendre le service accessible en continu, sans pouvoir le garantir. Il peut être interrompu, notamment pour maintenance, mise à jour des données ou en cas d'incident. COPAS peut faire évoluer le contenu et les fonctionnalités du service.</p>
+  <p>Dans les limites prévues par le contrat et par la loi, COPAS ne peut être tenue responsable des dommages indirects liés à l'utilisation du service ou à son indisponibilité.</p>
+
+  <h2>8. Suspension et fin d'accès</h2>
+  <p>COPAS peut suspendre un compte en cas de manquement aux présentes CGU ou à la demande de l'organisation de l'utilisateur. Les comptes sont fermés et supprimés à la fin du contrat entre COPAS et l'organisation.</p>
+
+  <h2>9. Données personnelles</h2>
+  <p>Le traitement des données personnelles des utilisateurs est décrit dans la <%= link_to "politique de confidentialité", confidentialite_path %>.</p>
+
+  <h2>10. Modification des CGU</h2>
+  <p>COPAS peut modifier les présentes CGU. La version en vigueur est celle publiée sur cette page, avec sa date de mise à jour. Les utilisateurs sont informés des modifications importantes.</p>
+
+  <h2>11. Droit applicable</h2>
+  <p>Les présentes CGU sont soumises au droit français. En cas de différend, les parties recherchent d'abord une solution amiable. À défaut, le litige est porté devant les juridictions compétentes, sous réserve des stipulations du contrat.</p>
+
+  <h2>Contact</h2>
+  <p><a href="mailto:contact@copas.coop">contact@copas.coop</a> – 07 83 32 27 13.</p>
+<% end %>
