@@ -29,6 +29,7 @@ module SuspensionCheck
     (controller_name == 'confirmations') ||
     (controller_name == 'home') ||
     (controller_name == 'legal_pages') ||
+    (controller_name == 'contacts') ||
     (controller_name == 'suspended_accounts')
   end
 end

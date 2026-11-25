@@ -4,7 +4,7 @@
   de compte. Les enquêtes sont mises de côté (routes conservées, plus de lien dans le menu).
 %>
 <%
-  public_links = [["L'outil", "outil"], ["Thématiques", "thematiques"], ["Pour qui", "pour-qui"], ["Tarif", "tarif"], ["Contact", "contact"]]
+  public_links = [["L'outil", root_path(anchor: "outil")], ["Thématiques", root_path(anchor: "thematiques")], ["Pour qui", root_path(anchor: "pour-qui")], ["Tarif", root_path(anchor: "tarif")], ["Contact", contact_path]]
   app_links = []
   if user_signed_in?
     app_links << [current_user.super_admin? ? "Administration" : "Accueil", home_dashboard_path]
@@ -47,8 +47,8 @@
             </div>
           </div>
         <% else %>
-          <% public_links.each do |label, anchor| %>
-            <a href="<%= root_path(anchor: anchor) %>" class="text-gray-700 hover:text-indigo-700"><%= label %></a>
+          <% public_links.each do |label, href| %>
+            <a href="<%= href %>" class="text-gray-700 hover:text-indigo-700"><%= label %></a>
           <% end %>
           <%= link_to "Se connecter", new_user_session_path, class: "inline-flex items-center min-h-[44px] px-4 rounded-lg border border-indigo-200 text-indigo-700 font-semibold hover:bg-indigo-50" %>
         <% end %>
@@ -72,8 +72,8 @@
         <%= button_to "Déconnexion", destroy_user_session_path, method: :delete, class: "block w-full text-left py-2 text-base text-gray-700" %>
       </div>
     <% else %>
-      <% public_links.each do |label, anchor| %>
-        <a href="<%= root_path(anchor: anchor) %>" class="block py-2 text-base text-gray-700"><%= label %></a>
+      <% public_links.each do |label, href| %>
+        <a href="<%= href %>" class="block py-2 text-base text-gray-700"><%= label %></a>
       <% end %>
       <%= link_to "Se connecter", new_user_session_path, class: "block py-2 text-base font-semibold text-indigo-700" %>
     <% end %>

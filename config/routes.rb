@@ -40,6 +40,11 @@ Rails.application.routes.draw do
     end
   end
 
+  # Formulaire de contact public
+  get 'contact', to: 'contacts#new', as: :contact
+  post 'contact', to: 'contacts#create'
+  get 'contact/merci', to: 'contacts#sent', as: :contact_sent
+
   # Pages légales publiques
   get 'mentions-legales', to: 'legal_pages#mentions_legales', as: :mentions_legales
   get 'confidentialite', to: 'legal_pages#confidentialite', as: :confidentialite

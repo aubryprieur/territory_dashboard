@@ -1,15 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  libgeo: MyString
-  codgeo: MyString
-  epci: MyString
-  dep: MyString
-  reg: MyString
+lille:
+  libgeo: Lille
+  codgeo: "59350"
+  epci: "200093201"
+  dep: "59"
+  reg: "32"
 
-two:
-  libgeo: MyString
-  codgeo: MyString
-  epci: MyString
-  dep: MyString
-  reg: MyString
+sotteville:
+  libgeo: Sotteville-lès-Rouen
+  codgeo: "76681"
+  epci: "200023414"
+  dep: "76"
+  reg: "28"

@@ -1,11 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-# This model initially had no columns defined. If you add columns to the
-# model remove the "{}" from the fixture names and add the columns immediately
-# below each fixture, per the syntax in the comments below
-#
-one: {}
-# column: value
-#
-two: {}
-# column: value
+commune:
+  email: commune@example.org
+  territory_type: commune
+  territory_code: "59350"
+  territory_name: Lille
+  confirmed_at: 2026-01-01 00:00:00
+
+epci:
+  email: epci@example.org
+  territory_type: epci
+  territory_code: "200093201"
+  territory_name: Métropole Européenne de Lille
+  confirmed_at: 2026-01-01 00:00:00

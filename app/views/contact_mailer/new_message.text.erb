@@ -1,0 +1,14 @@
+Nouveau message depuis le formulaire de contact de l'Observatoire social de territoire
+
+Objet : <%= @contact.subject_label %>
+Nom : <%= @contact.name %>
+Organisation : <%= @contact.organization %>
+E-mail : <%= @contact.email %>
+Téléphone : <%= @contact.phone.presence || "non renseigné" %>
+Territoire concerné : <%= @contact.territory.presence || "non renseigné" %>
+
+Message :
+<%= @contact.message %>
+
+---
+Répondre à cet e-mail écrit directement à <%= @contact.email %>.

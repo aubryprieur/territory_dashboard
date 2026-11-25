@@ -1,0 +1,80 @@
+<%# Formulaire de contact public (ContactsController#new / #create). %>
+<%
+  input_cls = "mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+  label_cls = "block text-sm font-medium text-gray-700"
+%>
+<div class="bg-white w-full">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-wrap gap-12">
+    <div class="flex-1 min-w-[260px] max-w-sm">
+      <h1 class="text-3xl font-bold text-gray-900">Nous contacter</h1>
+      <p class="mt-4 text-gray-700 leading-relaxed">Une présentation de l'outil sur votre territoire, un devis, une question sur un indicateur ou sur votre accès : écrivez-nous, nous vous répondons rapidement.</p>
+      <div class="mt-8 space-y-3 text-sm text-gray-700">
+        <p><span class="font-semibold text-gray-900">Par e-mail</span><br><a href="mailto:<%= contact_email %>" class="text-indigo-700 underline"><%= contact_email %></a></p>
+        <p><span class="font-semibold text-gray-900">Par téléphone</span><br>07 83 32 27 13</p>
+        <p><span class="font-semibold text-gray-900">COPAS</span><br>229 rue de Solférino<br>59000 Lille</p>
+      </div>
+    </div>
+
+    <div class="flex-[2] min-w-[300px]">
+      <% if flash[:alert].present? %>
+        <div class="mb-6 rounded-md bg-red-50 border border-red-200 p-4 text-sm text-red-800" role="alert"><%= flash[:alert] %></div>
+      <% end %>
+      <% if @contact.errors.any? %>
+        <div class="mb-6 rounded-md bg-red-50 border border-red-200 p-4 text-sm text-red-800" role="alert">
+          <p class="font-semibold">Merci de corriger les points suivants :</p>
+          <ul class="mt-2 list-disc ml-5">
+            <% @contact.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%= form_with model: @contact, url: contact_path, method: :post, class: "space-y-5" do |f| %>
+        <div>
+          <%= f.label :subject, "Objet de votre demande", class: label_cls %>
+          <%= f.select :subject, ContactMessage::SUBJECTS.map { |k, v| [v, k] }, {}, class: input_cls %>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <%= f.label :name, "Nom et prénom *", class: label_cls %>
+            <%= f.text_field :name, required: true, maxlength: 120, autocomplete: "name", class: input_cls %>
+          </div>
+          <div>
+            <%= f.label :organization, "Organisation *", class: label_cls %>
+            <%= f.text_field :organization, required: true, maxlength: 200, autocomplete: "organization", placeholder: "Commune, intercommunalité, CCAS, bailleur…", class: input_cls %>
+          </div>
+          <div>
+            <%= f.label :email, "Adresse e-mail *", class: label_cls %>
+            <%= f.email_field :email, required: true, maxlength: 200, autocomplete: "email", class: input_cls %>
+          </div>
+          <div>
+            <%= f.label :phone, "Téléphone", class: label_cls %>
+            <%= f.telephone_field :phone, maxlength: 30, autocomplete: "tel", class: input_cls %>
+          </div>
+        </div>
+
+        <div>
+          <%= f.label :territory, "Territoire concerné", class: label_cls %>
+          <%= f.text_field :territory, maxlength: 200, placeholder: "Commune ou intercommunalité", class: input_cls %>
+        </div>
+
+        <div>
+          <%= f.label :message, "Message *", class: label_cls %>
+          <%= f.text_area :message, required: true, rows: 7, minlength: 10, maxlength: 5000, class: input_cls %>
+        </div>
+
+        <%# Champ piège : caché aux personnes, rempli par les robots %>
+        <div style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden" aria-hidden="true">
+          <%= f.label :website, "Ne pas remplir ce champ" %>
+          <%= f.text_field :website, tabindex: "-1", autocomplete: "off" %>
+        </div>
+
+        <p class="text-xs text-gray-500 leading-relaxed">* Champs obligatoires. Vos informations servent uniquement à répondre à votre demande et, le cas échéant, à vous adresser une proposition. Elles ne sont ni cédées ni utilisées pour d'autres envois. En savoir plus : <%= link_to "politique de confidentialité", confidentialite_path, class: "underline" %>.</p>
+
+        <div>
+          <%= f.submit "Envoyer le message", class: "inline-flex items-center min-h-[48px] px-6 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 cursor-pointer", data: { turbo_submits_with: "Envoi en cours…" } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

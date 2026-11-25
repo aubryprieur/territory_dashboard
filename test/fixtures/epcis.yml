@@ -1,13 +1,13 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  epci: MyString
-  libepci: MyString
-  nature_epci: MyString
-  nb_com: 1
+mel:
+  epci: "200093201"
+  libepci: Métropole Européenne de Lille
+  nature_epci: ME
+  nb_com: 95
 
-two:
-  epci: MyString
-  libepci: MyString
-  nature_epci: MyString
-  nb_com: 1
+rouen:
+  epci: "200023414"
+  libepci: Métropole Rouen Normandie
+  nature_epci: ME
+  nb_com: 71

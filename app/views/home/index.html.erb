@@ -25,7 +25,7 @@
         <h1 style="margin: 0; font-size: 48px; line-height: 1.08; font-weight: 700; color: #0f172a">Votre observatoire social de territoire, prêt à l'emploi</h1>
         <p style="margin: 20px 0 0; font-size: 19px; line-height: 1.55; color: #374151">Plus de 160 indicateurs issus des principales sources publiques, déjà mis en forme en graphiques, tableaux et cartes par quartier, pour chaque commune et chaque intercommunalité de France.</p>
         <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px">
-          <a href="#contact" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 8px; background: #4f46e5; color: #ffffff; text-decoration: none; font-weight: 600">Demander une présentation</a>
+          <a href="<%= contact_path(objet: "presentation") %>" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 8px; background: #4f46e5; color: #ffffff; text-decoration: none; font-weight: 600">Demander une présentation</a>
           <a href="#outil" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 8px; border: 1px solid #cbd5e1; color: #1f2937; text-decoration: none; font-weight: 600; background: #ffffff">Découvrir l'outil</a>
         </div>
         <p style="margin: 20px 0 0; font-size: 14px; color: #4b5563">Un observatoire réalisé par <a href="https://www.copas.coop/" target="_blank" rel="noopener" style="color: #3730a3; font-weight: 600">Copas</a>, coopérative qui accompagne les collectivités depuis plus de 40 ans.</p>
@@ -185,7 +185,7 @@
         <p style="margin: 14px 0 0; font-size: 18px; line-height: 1.55; color: #374151">L'abonnement dépend de la taille du territoire (commune ou intercommunalité). Contactez-nous pour une présentation de l'outil sur votre territoire et un devis.</p>
       </div>
       <div style="display: flex; flex-wrap: wrap; gap: 12px">
-        <a href="mailto:<%= contact_email %>" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 8px; background: #4f46e5; color: #ffffff; text-decoration: none; font-weight: 600">Nous contacter</a>
+        <a href="<%= contact_path(objet: "devis") %>" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 8px; background: #4f46e5; color: #ffffff; text-decoration: none; font-weight: 600">Nous contacter</a>
       </div>
     </div>
   </section>

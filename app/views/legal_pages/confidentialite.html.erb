@@ -1,6 +1,6 @@
 <%= render layout: "legal_pages/page", locals: { title: "Politique de confidentialité", updated_on: Date.new(2026, 11, 25) } do %>
   <p>Cette page explique quelles données personnelles le service « Observatoire social de territoire » traite, pourquoi, combien de temps elles sont conservées et comment exercer vos droits, conformément au règlement général sur la protection des données (RGPD) et à la loi Informatique et Libertés.</p>
-  <p>Le service est réservé aux collectivités et organisations ayant signé un contrat avec COPAS. Les seules données personnelles traitées sont celles de leurs utilisateurs. Les indicateurs statistiques affichés sont des données agrégées et ne concernent aucune personne identifiable.</p>
+  <p>Le service est réservé aux collectivités et organisations ayant signé un contrat avec COPAS. Les données personnelles traitées sont celles de leurs utilisateurs et des personnes qui nous écrivent via le formulaire de contact. Les indicateurs statistiques affichés sont des données agrégées et ne concernent aucune personne identifiable.</p>
 
   <h2>Responsable du traitement</h2>
   <p>COPAS – Conseil en pratiques et Analyses Sociales, SCOP ARL à capital variable, 229 rue de Solférino, 59000 Lille (SIRET 329 070 809 00093).</p>
@@ -25,17 +25,23 @@
         <td>Idem</td>
       </tr>
       <tr>
+        <td>Formulaire de contact : nom, organisation, adresse électronique, téléphone (facultatif), territoire concerné, contenu du message</td>
+        <td>Répondre à votre demande (présentation, devis, question) et, le cas échéant, vous adresser une proposition commerciale</td>
+        <td>Intérêt légitime de COPAS à répondre aux demandes qui lui sont adressées ; mesures précontractuelles prises à votre demande</td>
+      </tr>
+      <tr>
         <td>Données techniques de connexion (adresse IP, date et heure, page demandée, navigateur)</td>
         <td>Assurer la sécurité et le bon fonctionnement du service, diagnostiquer les incidents</td>
         <td>Intérêt légitime de COPAS à sécuriser le service</td>
       </tr>
     </tbody>
   </table>
-  <p>Les comptes sont créés par COPAS à la demande de votre organisation. Vos données ne sont pas utilisées à des fins de prospection commerciale, ne sont ni vendues ni cédées, et ne font l'objet d'aucun profilage. Le service n'utilise aucun outil de mesure d'audience ni de publicité.</p>
+  <p>Les comptes sont créés par COPAS à la demande de votre organisation. Vos données ne sont pas utilisées à des fins de prospection commerciale, ne sont ni vendues ni cédées, et ne font l'objet d'aucun profilage. Le service n'utilise aucun outil de mesure d'audience ni de publicité. Les messages du formulaire de contact ne sont pas enregistrés dans le service : ils sont transmis par courriel à COPAS.</p>
 
   <h2>Durée de conservation</h2>
   <ul>
     <li><strong>Données de compte</strong> : pendant toute la durée du contrat entre COPAS et votre organisation. Le compte est supprimé à la fin de ce contrat, ou plus tôt à la demande de votre organisation (par exemple si vous la quittez).</li>
+    <li><strong>Messages du formulaire de contact</strong> : conservés dans la messagerie de COPAS pendant 3 ans au plus après le dernier échange, sauf si un contrat est conclu (ils sont alors conservés pendant sa durée).</li>
     <li><strong>Données techniques de connexion</strong> : pour une durée limitée, nécessaire à la sécurité du service et au diagnostic des incidents.</li>
   </ul>
 
@@ -43,7 +49,7 @@
   <p>Vos données sont accessibles uniquement aux personnes de COPAS chargées d'administrer le service. COPAS fait appel aux prestataires suivants :</p>
   <ul>
     <li><strong>Scalingo SAS</strong> (Strasbourg) : hébergement du service et de la base de données, en France.</li>
-    <li><strong>Brevo (Sendinblue SAS)</strong> (Paris) : envoi des courriels du service. Brevo reçoit votre adresse électronique et le contenu du message.</li>
+    <li><strong>Brevo (Sendinblue SAS)</strong> (Paris) : envoi des courriels du service, y compris la transmission à COPAS des messages du formulaire de contact. Brevo reçoit l'adresse électronique du destinataire et le contenu du message.</li>
     <li><strong>IGN, Géoplateforme</strong> : affichage des fonds de carte. Lors de l'affichage d'une carte, votre navigateur charge les images depuis les serveurs de l'IGN, qui reçoivent votre adresse IP.</li>
     <li><strong>Services de diffusion de bibliothèques logicielles</strong> (unpkg, jsDelivr, SheetJS) : chargement de composants techniques (cartographie, export Excel, tri). Votre navigateur les télécharge depuis ces services, qui reçoivent votre adresse IP et peuvent la traiter hors de l'Union européenne.</li>
   </ul>
